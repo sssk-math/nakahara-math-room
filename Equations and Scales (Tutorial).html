@@ -1,0 +1,4354 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <!-- ========================================================
+     1. タイトル
+     ======================================================== -->
+  <title>方程式の上皿天秤シミュレーター</title>
+
+  <!-- ========================================================
+     2. MathJaxの設定と読み込み
+     ======================================================== -->
+  <script>
+    /* 2-1. MathJaxの基本設定 */
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <!-- ========================================================
+     3. スタイルシート (CSS)
+     ======================================================== -->
+  <style>
+    /* ========================================================
+       3-1. 全体設定・レイアウト
+       ======================================================== */
+    /* 3-1-1. 変数定義 */
+    :root {
+      --bg: #f5f7fa;
+      --card-bg: #ffffff;
+      --primary: #4a90e2;
+      --x-color: #ff5252;
+      --num-color: #1e88e5;
+      --neg-color: #ffffff;
+      --border-color: #cfd8dc;
+      --metal-main: #78909c;
+      --metal-dark: #455a64;
+      --metal-light: #b0bec5;
+    }
+
+    /* 3-1-2. body要素 */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #ffffff;
+      color: #333;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: manipulation;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* 3-1-3. アプリコンテナ (960px x 640px) */
+    .app-container {
+      width: 960px;
+      height: 640px;
+      aspect-ratio: 3 / 2;
+      flex-shrink: 0;
+      background-color: var(--bg);
+      border: 3px solid #37474f;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      box-sizing: border-box;
+      padding: 12px 20px 8px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 8px;
+      position: relative;
+      overflow: hidden;
+      transform-origin: top center;
+    }
+
+    /* ========================================================
+       3-1x. 画面切り替え (開始画面・チュートリアル・問題選択・演習)
+       ======================================================== */
+    .app-screen {
+      display: none;
+      width: 100%;
+      height: 100%;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .app-screen.active {
+      display: flex;
+    }
+
+    /* ========================================================
+       3-2. ヘッダー・タイトル
+       ======================================================== */
+    /* 3-2-1. 見出し(h1) */
+    h1 {
+      margin: 0;
+      font-size: 1.3rem;
+      color: #2c3e50;
+      text-align: center;
+    }
+
+    /* 3-2-2. ヘッダーレイアウト */
+    header {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      width: 100%;
+    }
+
+    /* 3-2-3. 利き手切り替えボタンエリア */
+    .title-bar {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 0px;
+    }
+
+    /* 3-2-4. 利き手切り替えボタン本体 */
+    .title-hand-btn {
+      padding: 6px 14px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      background-color: #e0e0e0;
+      color: #333;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .title-hand-btn.active { 
+      background-color: #1a73e8;
+      color: white;
+    }
+
+    /* 3-2-5. 利き手切り替え時のレイアウト反転 */
+    .main-content.left-handed {
+      flex-direction: row-reverse;
+    }
+
+    /* ========================================================
+       3-3. メインコンテンツ・パネル
+       ======================================================== */
+    /* 3-3-1. メインコンテンツ外枠 */
+    .main-content {
+      display: flex;
+      width: 100%;
+      flex: 1;
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    /* 3-3-2. 左側パネル */
+    .left-panel {
+      width: 450px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 12px;
+    }
+
+    /* 3-3-3. 右側パネル */
+    .right-panel {
+      width: 450px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* ========================================================
+       3-9. メッセージ・ステータス
+       ======================================================== */
+    /* 3-9-1. アラートメッセージ */
+    .alert-message {
+      min-height: 30px;
+      font-weight: bold;
+      color: #c62828;
+      font-size: 0.95rem;
+      text-align: center;
+      padding: 10px 12px;
+      background-color: #fff8e1;
+      border: 2px solid #ffe082;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+      transition: all 0.3s ease;
+      line-height: 1.4;
+    }
+    .alert-message.success {
+      color: #1b5e20;
+      background-color: #e8f5e9;
+      border-color: #a5d6a7;
+      font-size: 1.05rem;
+    }
+
+    /* ========================================================
+       3-8. 計算ノート
+       ======================================================== */
+    /* 3-8-1. ノートコンテナ */
+   .notebook-container {
+      position: relative;
+      background: var(--card-bg);
+      border-radius: 10px;
+      padding: 10px 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-height: 435px;
+      width: 425px;
+    }
+    .notebook-title {
+      font-size: 0.85rem;
+      font-weight: bold;
+      color: #546e7a;
+      border-bottom: 2px solid #eceff1;
+      padding-bottom: 4px;
+      margin-bottom: 4px;
+      flex-shrink: 0;
+    }
+    .notebook-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+    }
+
+    /* 3-8-2. ノート行レイアウト */
+    .notebook-row {
+      display: grid;
+      grid-template-columns: 1.6em 1fr auto 1fr 96px;
+      align-items: center;
+      gap: 4px;
+      font-size: 1.05rem;
+      padding: 4px 8px;
+      border-radius: 6px;
+      color: #78909c;
+      transition: all 0.3s ease;
+    }
+    .notebook-num {
+      text-align: center;
+      font-size: 0.85rem;
+      opacity: 0.7;
+    }
+    /* ３つの要素（左辺・＝・右辺）を上下中央ぞろえにする記述 */
+    .notebook-left,
+    .notebook-eq,
+    .notebook-right {
+      display: flex;
+      align-items: center;
+    }
+    .notebook-left {
+      justify-content: flex-end;
+    }
+    .notebook-right {
+      justify-content: flex-start;
+    }
+    .notebook-row.latest {
+      color: #1a237e;
+      font-weight: bold;
+      background-color: #e8eaf6;
+      border-left: 4px solid var(--primary);
+    }
+    .notebook-left { text-align: right; }
+    .notebook-eq { text-align: center; font-weight: bold; padding: 0 2px; }
+    .notebook-right { text-align: left; }
+    .notebook-note {
+      font-size: 0.78rem;
+      color: #00796b;
+      margin-left: 6px;
+      white-space: pre-line;
+      font-weight: normal;
+      width: 96px;
+      box-sizing: border-box;
+      line-height: 1.2;
+    }
+
+    /* ========================================================
+       3-4. コントロール・入力エリア
+       ======================================================== */
+    /* 3-4-1. コントロール枠 */
+    .controls {
+      background: var(--card-bg);
+      padding: 8px 16px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      display: flex;
+      flex-direction: row;
+      gap: 16px;
+      align-items: center;
+      width: 100%;
+      height: 110px;
+      align-self: center;
+      box-sizing: border-box;
+    }
+
+    /* 3-4-2. コントロール左側・右側 */
+    .controls-left {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: center;
+      flex: 1;
+    }
+    .controls-left label {
+      font-size: 0.85rem;
+      font-weight: bold;
+      color: #455a64;
+    }
+    .controls-right {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      color: #455a64;
+      border-left: 2px solid #eceff1;
+      padding-left: 12px;
+    }
+    .controls-right label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+    .controls-right input[type="checkbox"]:disabled + span {
+      color: #b0bec5;
+    }
+
+    /* 3-4-3. 各段の横並び用 */
+    .controls-row {
+      width: 100%;
+      height: auto;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 3-4-4. 入力枠とプレビュー枠の共通サイズ */
+    .controls-row input[type="text"],
+    .eq-math-preview {
+      width: 230px;
+      height: 56px;
+      box-sizing: border-box;
+      flex-shrink: 0;
+    }
+
+    /* 3-4-5. テキスト入力枠 */
+    input[type="text"] {
+      padding: 2px 8px;
+      font-size: 1rem;
+      min-height: 2.2em;
+      border: 2px solid var(--border-color);
+      border-radius: 6px;
+      text-align: center;
+      outline: none;
+    }
+    input[type="text"]:focus {
+      border-color: var(--primary);
+    }
+
+    /* 3-4-6. MathJaxプレビュー */
+    .eq-math-preview {
+      font-size: 1.1rem;
+      min-height: 2.2em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #ffffff;
+      border: 2px solid var(--border-color);
+      border-radius: 6px;
+      padding: 2px 8px;
+      cursor: pointer;
+    }
+    .hidden {
+      display: none !important;
+    }
+
+    /* ========================================================
+       3-4x. 開始画面
+       ======================================================== */
+    .start-screen {
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+      text-align: center;
+    }
+    .start-screen .start-title {
+      font-size: 1.7rem;
+      color: #2c3e50;
+      margin: 0;
+    }
+    .start-screen .start-subtitle {
+      font-size: 0.95rem;
+      color: #607d8b;
+      margin: -16px 0 0 0;
+    }
+    .start-screen .start-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 320px;
+    }
+    .btn-start-menu {
+      padding: 18px 20px;
+      font-size: 1.1rem;
+      border-radius: 10px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+    }
+    .btn-start-menu.btn-tutorial { background: #00897b; color: white; }
+    .btn-start-menu.btn-tutorial:hover { background: #00796b; }
+    .btn-start-menu.btn-select { background: var(--primary); color: white; }
+    .btn-start-menu.btn-select:hover { opacity: 0.9; }
+
+    /* ========================================================
+       3-4y. チュートリアル画面
+       ======================================================== */
+    #screen-tutorial {
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+    .tutorial-view {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+    .tutorial-heading {
+      font-size: 1.3rem;
+      color: #2c3e50;
+      margin: 0;
+    }
+    .tutorial-menu-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      width: 320px;
+    }
+    .btn-tutorial-prop {
+      padding: 22px 10px;
+      font-size: 1.15rem;
+      border-radius: 10px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+      color: white;
+    }
+    .btn-tutorial-prop-eq {
+      display: inline-block;
+      margin-top: 4px;
+      font-size: 0.8rem;
+      font-weight: normal;
+      opacity: 0.9;
+    }
+    .btn-tutorial-prop.prop-add { background: #ef5350; }
+    .btn-tutorial-prop.prop-add:hover { background: #e53935; }
+    .btn-tutorial-prop.prop-sub { background: #42a5f5; }
+    .btn-tutorial-prop.prop-sub:hover { background: #1e88e5; }
+    .btn-tutorial-prop.prop-mul { background: #ab47bc; }
+    .btn-tutorial-prop.prop-mul:hover { background: #8e24aa; }
+    .btn-tutorial-prop.prop-div { background: #26a69a; }
+    .btn-tutorial-prop.prop-div:hover { background: #00897b; }
+    .btn-back-link {
+      background: none;
+      color: #607d8b;
+      font-weight: normal;
+      text-decoration: underline;
+      box-shadow: none;
+      padding: 6px 10px;
+    }
+    .btn-back-link:hover { color: #37474f; }
+    .btn-tutorial-try {
+      background: #ff7043;
+      color: white;
+      padding: 14px 28px;
+      font-size: 1.05rem;
+      border-radius: 10px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+    }
+    .btn-tutorial-try:hover { background: #f4511e; }
+
+    /* 4-0-4b. 規定問題モード用HUD (演習画面の上部にシンプルに表示) */
+    .preset-hud {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+    }
+
+    /* 4-2-1a. チュートリアルHUD (計算ノートの空きスペースに重ねて表示するオーバーレイ) */
+    .tutorial-hud {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow-y: auto;
+      gap: 14px;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.94);
+      border-radius: 10px;
+      z-index: 20;
+    }
+    .tutorial-success-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      background: #fff8e1;
+      border: 2px solid #ffca28;
+      border-radius: 12px;
+      padding: 14px 20px;
+      margin: 0 auto;
+    }
+    .tutorial-success-text {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #f57f17;
+      margin: 0;
+    }
+    .tutorial-success-buttons {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+      width: 240px;
+    }
+    .btn-tutorial-next { background: var(--primary); color: white; padding: 12px 24px; font-size: 1rem; border-radius: 10px; }
+    .btn-tutorial-next:hover { opacity: 0.9; }
+
+    /* 5-0-3c. チュートリアル①: 本物の天秤・パレットを使った自動再生デモ */
+    .tutorial-demo-message {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      text-align: center;
+    }
+    .tutorial-demo-message p {
+      font-size: 1rem;
+      font-weight: bold;
+      color: #2c3e50;
+      margin: 0;
+    }
+    .tutorial-fly-badge {
+      position: fixed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      font-size: 0.8rem;
+      font-weight: bold;
+      z-index: 9999;
+      transition: left 1.2s ease, top 1.2s ease, opacity 0.6s ease;
+      pointer-events: none;
+    }
+    /* かける・わるの自動再生時は、飛んでいく球をパレットと同じ色にする */
+    .tutorial-fly-badge.ball-mult { background: #00e676; color: #004d40; }
+    .tutorial-fly-badge.ball-div { background: #ffd54f; color: #5d4037; }
+    /* デモ再生中・成功待ちの間、天秤とパレットの操作を無効化する */
+    .demo-lock {
+      pointer-events: none !important;
+    }
+    /* パレットを光らせてタップしたように見せる演出 */
+    .tutorial-pulse {
+      animation: tutorialPulseKeyframes 0.5s ease;
+    }
+    @keyframes tutorialPulseKeyframes {
+      0% { transform: scale(1); box-shadow: none; }
+      50% { transform: scale(1.2); box-shadow: 0 0 10px 4px rgba(255, 213, 79, 0.9); }
+      100% { transform: scale(1); box-shadow: none; }
+    }
+    /* お皿の球が分割されたように見せる演出 */
+    .tutorial-split-flash {
+      animation: tutorialSplitKeyframes 0.6s ease;
+    }
+    @keyframes tutorialSplitKeyframes {
+      0% { box-shadow: none; }
+      50% { box-shadow: 0 0 12px 4px rgba(79, 195, 247, 0.9); }
+      100% { box-shadow: none; }
+    }
+    /* 「もう一度見る」「チュートリアルに戻る」: 押しやすいよう大きめのボタンにする */
+    .btn-tutorial-hud-secondary {
+      margin-top: 4px;
+      background: #e3f2fd;
+      color: #1565c0;
+      border: 1px solid #90caf9;
+      font-weight: bold;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.10);
+      padding: 12px 24px;
+      font-size: 1rem;
+      border-radius: 10px;
+    }
+    .btn-tutorial-hud-secondary:hover { background: #bbdefb; }
+
+    /* ========================================================
+       3-4w. Phase5: 廃止したボタン・チェックボックス (コードは温存し非表示化のみ)
+       ======================================================== */
+    .legacy-hidden {
+      display: none !important;
+    }
+
+    /* ========================================================
+       3-4z. 問題選択画面
+       ======================================================== */
+    #screen-select {
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 24px;
+      gap: 20px;
+    }
+    .select-view {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+    .select-category-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      width: 320px;
+    }
+    .btn-preset-category {
+      padding: 16px 10px;
+      font-size: 1.05rem;
+      border-radius: 10px;
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+    }
+    .btn-preset-category:hover { opacity: 0.9; }
+    .btn-preset-category.btn-preset-random { background: #ff7043; margin-top: 6px; }
+    .btn-preset-category.btn-preset-random:hover { background: #f4511e; }
+    .preset-problem-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      width: auto;
+      height: auto;
+      padding: 4px;
+    }
+    /* 等式の性質: たす/ひく/かける/わるの行見出し付き4×4グリッド */
+    .preset-problem-grid {
+      display: grid;
+      grid-template-columns: auto 1fr 1fr 1fr;
+      gap: 10px;
+      padding: 4px;
+      align-items: stretch;
+    }
+    .preset-row-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 14px;
+      border-radius: 10px;
+      color: white;
+      font-weight: bold;
+      font-size: 1rem;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+    }
+    .preset-row-header.prop-add { background: #ef5350; }
+    .preset-row-header.prop-sub { background: #42a5f5; }
+    .preset-row-header.prop-mul { background: #ab47bc; }
+    .preset-row-header.prop-div { background: #26a69a; }
+    .btn-preset-problem {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 12px 8px;
+      border-radius: 10px;
+      background: #eceff1;
+      color: #2c3e50;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.10);
+    }
+    .btn-preset-problem:hover { background: #e0e4e7; }
+    .btn-preset-problem.preset-done {
+      background: #e8f5e9;
+      border: 2px solid #66bb6a;
+    }
+    .preset-problem-num {
+      font-size: 0.8rem;
+      color: #78909c;
+    }
+    .preset-problem-eq {
+      font-size: 0.95rem;
+    }
+    .preset-done-mark {
+      position: absolute;
+      top: 4px;
+      right: 6px;
+      font-size: 0.75rem;
+      color: #2e7d32;
+      font-weight: bold;
+      background: #c8e6c9;
+      border-radius: 4px;
+      padding: 1px 4px;
+    }
+
+    /* ========================================================
+       3-5. ボタン類
+       ======================================================== */
+    /* 3-5-1. 共通ボタンスタイル */
+    button {
+      padding: 6px 14px;
+      font-size: 0.9rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* 3-5-2. 各種ボタンカラー */
+    .btn-apply { background: var(--primary); color: white; }
+    .btn-apply:hover:not(:disabled) { opacity: 0.9; }
+    .btn-random { background: #e0e0e0; color: #333; }
+    .btn-random:hover:not(:disabled) { background: #d0d0d0; }
+    .btn-reset { background: #78909c; color: white; }
+    .btn-reset:hover { background: #607d8b; }
+    .btn-swap { background: #8e24aa; color: white; }
+    .btn-swap:hover:not(:disabled) { background: #7b1fa2; }
+    .btn-sign { background: #00897b; color: white; }
+    .btn-sign:hover:not(:disabled) { background: #00796b; }
+
+    /* ========================================================
+       3-6. パレットエリア
+       ======================================================== */
+    /* 3-6-1. パレット外枠 */
+    .palette-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+    }
+    .palette-container {
+      display: flex;
+      gap: 10px;
+      background: var(--card-bg);
+      padding: 6px 16px;
+      border-radius: 30px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      align-items: center;
+    }
+    .palette-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 3-6-2. パレットアイテム共通 */
+    .palette-title {
+      font-size: 0.8rem;
+      color: #666;
+      font-weight: bold;
+    }
+    .palette-item {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.85rem;
+      cursor: grab;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+      transition: transform 0.1s;
+      box-sizing: border-box;
+      touch-action: none;
+    }
+    .palette-item.disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+    .palette-item:active:not(.disabled) { transform: scale(1.1); cursor: grabbing; }
+    .palette-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* 3-6-3. パレットリセットボタン */
+    .btn-reset-palette {
+      background: #78909c;
+      color: white;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .btn-reset-palette:hover:not(:disabled) {
+      background: #607d8b;
+    }
+    .btn-reset-palette:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* ========================================================
+       3-7. アイテム（ボール・袋）とアニメーション
+       ======================================================== */
+    /* 3-7-1. ボール共通 */
+    .ball {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.8rem;
+      cursor: grab;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+      animation: popIn 0.2s ease-out;
+      box-sizing: border-box;
+      touch-action: none;
+    }
+    .ball.disabled {
+      cursor: not-allowed;
+    }
+
+    /* 3-7-2. ボールの種類ごとのカラー */
+    .ball-x-pos { background-color: var(--x-color); color: white; border: 2px solid #d32f2f; }
+    .ball-x-neg { background-color: var(--neg-color); color: var(--x-color); border: 2px dashed var(--x-color); }
+    .ball-num-pos { background-color: var(--num-color); color: white; border: 2px solid #0d47a1; }
+    .ball-num-neg { background-color: var(--neg-color); color: var(--num-color); border: 2px dashed var(--num-color); }
+    .ball-mult { background-color: #00e676; color: #004d40; border: 2px solid #00c853; }
+    .ball-div { background-color: #ffd54f; color: #5d4037; border: 2px solid #ffb300; }
+
+    /* 3-7-3. 袋アイテム */
+    .bag-item {
+      background: linear-gradient(135deg, #ff80ab, #f48fb1);
+      color: #880e4f;
+      border: 2px solid #c2185b;
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-weight: bold;
+      font-size: 0.85rem;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+      transition: transform 0.15s, background-color 0.15s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      animation: popIn 0.2s ease-out;
+      user-select: none;
+    }
+    .bag-item:hover:not(.disabled) {
+      transform: scale(1.08);
+      background: linear-gradient(135deg, #ff4081, #f50057);
+      color: white;
+    }
+    .bag-item.disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    /* 3-7-4. 分数袋 */
+    .bag-item.frac-bag {
+      background: linear-gradient(135deg, #81d4fa, #4fc3f7);
+      color: #01579b;
+      border: 2px solid #0288d1;
+    }
+    .bag-item.frac-bag:hover:not(.disabled) {
+      background: linear-gradient(135deg, #29b6f6, #0288d1);
+      color: white;
+    }
+    .frac-box {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.1;
+      padding: 0 2px;
+    }
+    .frac-num {
+      border-bottom: 1.5px solid currentColor;
+      padding-bottom: 1px;
+      text-align: center;
+      width: 100%;
+    }
+    .frac-den {
+      padding-top: 1px;
+      text-align: center;
+      width: 100%;
+    }
+
+    /* 3-7-5. アニメーション */
+    .ball.annihilating {
+      animation: annihilate 0.8s ease-in-out forwards;
+      pointer-events: none;
+      box-shadow: 0 0 15px 5px #fff9c4;
+      z-index: 10;
+    }
+    @keyframes annihilate {
+      0% { transform: scale(1); opacity: 1; filter: brightness(1); }
+      50% { transform: scale(1.3); opacity: 0.8; filter: brightness(1.5); }
+      100% { transform: scale(0); opacity: 0; filter: brightness(2); }
+    }
+    .bag-item.bursting {
+      animation: bagBurst 0.8s ease-out forwards;
+      pointer-events: none;
+      z-index: 10;
+    }
+    @keyframes bagBurst {
+      0% { transform: scale(1); opacity: 1; }
+      40% { transform: scale(1.25); opacity: 0.9; filter: brightness(1.3); }
+      60% { transform: scale(1.5); opacity: 0.5; filter: brightness(1.8); }
+      100% { transform: scale(1.8); opacity: 0; filter: brightness(2.5); }
+    }
+    .plate.flash-green {
+      animation: flashGreen 0.5s ease-out;
+    }
+    @keyframes flashGreen {
+      0% { background-color: #b9f6ca; border-color: #00c853; }
+      100% { background-color: #cfd8dc; border-color: var(--metal-main); }
+    }
+    .ball.flipping {
+      animation: flipCoin 0.5s ease-in-out forwards;
+    }
+    @keyframes flipCoin {
+      0% { transform: rotateY(0deg) scale(1); }
+      50% { transform: rotateY(90deg) scale(1.25); }
+      100% { transform: rotateY(0deg) scale(1); }
+    }
+    @keyframes popIn {
+      0% { transform: scale(0); }
+      100% { transform: scale(1); }
+    }
+
+    /* ========================================================
+       3-10. 上皿天秤ステージ
+       ======================================================== */
+    /* 3-10-1. ステージ全体 */
+    .stage {
+      position: relative;
+      width: 450px;
+      height: 190px;
+      margin-top: auto;
+    }
+
+    /* 3-10-2. 土台と支柱 */
+    .on-table-structure {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 410px;
+      height: 95px;
+    }
+    .main-base-box {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 50px;
+      background: var(--metal-dark);
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      z-index: 2;
+    }
+    .center-pillar {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 54px;
+      height: 45px;
+      background: var(--metal-main);
+      border-radius: 8px 8px 0 0;
+      z-index: 1;
+    }
+    .pointer-bg {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 38px;
+      height: 38px;
+      background: #eceff1;
+      border: 3px solid var(--metal-light);
+      border-radius: 50% 50% 0 0;
+    }
+    .pointer-needle {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 2px;
+      height: 30px;
+      background: #d32f2f;
+      transform-origin: bottom center;
+      transform: translateX(-50%) rotate(0deg);
+      transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+    .leg-hole {
+      position: absolute;
+      top: 0;
+      width: 32px;
+      height: 22px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 4px;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+    }
+    .leg-hole-left { left: 90px; }
+    .leg-hole-right { right: 90px; }
+
+    /* 3-10-3. 皿ユニット */
+    .movable-unit {
+      position: absolute;
+      top: 40px; 
+      width: 180px;
+      height: 145px;
+      transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+      z-index: 3;
+    }
+    .unit-left { left: 10px; }
+    .unit-right { right: 10px; }
+
+    /* 3-10-4. お皿本体 */
+    .plate {
+      position: absolute;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 170px;
+      min-height: 55px;
+      background: #cfd8dc;
+      border: 3px solid var(--metal-main);
+      border-radius: 4px 4px 12px 12px;
+      box-shadow: inset 0 -3px 0 rgba(255,255,255,0.8), 0 4px 6px rgba(0,0,0,0.1);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      align-content: flex-end;
+      justify-content: center;
+      gap: 4px;
+      padding: 6px;
+      box-sizing: border-box;
+      transition: background 0.2s;
+    }
+    .plate.drag-over {
+      background: #a5d6a7;
+      border-color: #2e7d32;
+    }
+    .plate-leg {
+      position: absolute;
+      top: 55px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 20px;
+      height: 90px;
+      background: var(--metal-light);
+      border-left: 2px solid rgba(0,0,0,0.1);
+      border-right: 2px solid rgba(255,255,255,0.2);
+      box-sizing: border-box;
+      z-index: -1;
+    }
+    .plate-leg::after {
+      content: '';
+      position: absolute;
+      top: 15px;
+      left: 3px;
+      width: 10px;
+      height: 60px;
+      background: rgba(0,0,0,0.05);
+      border-radius: 6px;
+    }
+
+    /* ========================================================
+       3-11. フッター・ガイド
+       ======================================================== */
+    /* 3-11-1. ガイドテキスト */
+    .guide-text {
+      color: #78909c;
+      font-size: 12px;
+    }
+
+    /* 3-11-2. フッター領域 */
+    .footer {
+      width: 100%;
+      text-align: center;
+      font-size: 12px;
+      color: #546e7a;
+      font-weight: bold;
+      padding-top: 4px;
+      border-top: 1px solid var(--border-color);
+    }
+  </style>
+</head>
+<body ondragover="handleDragOverBody(event)" ondrop="handleDropBody(event)">
+
+  <!-- ========================================================
+     4. アプリケーション本体
+     ======================================================== -->
+  <div class="app-container">
+
+    <!-- 4-0-1. 開始画面 -->
+    <div class="app-screen start-screen active" id="screen-start">
+      <h1 class="start-title">上皿天秤・方程式シミュレーター</h1>
+      <p class="start-subtitle">天秤を操作して、方程式の解き方を学ぼう</p>
+      <div class="start-menu">
+        <button class="btn-start-menu btn-tutorial" onclick="showScreen('screen-tutorial')">📘 チュートリアル</button>
+        <button class="btn-start-menu btn-select" onclick="showScreen('screen-select')">📝 問題選択</button>
+      </div>
+    </div>
+
+    <!-- 4-0-2. チュートリアル画面 -->
+    <div class="app-screen" id="screen-tutorial">
+
+      <!-- 4-0-2a. 4性質選択メニュー -->
+      <div class="tutorial-view" id="tutorial-menu-view">
+        <h2 class="tutorial-heading">学びたい性質を選んでね</h2>
+        <div class="tutorial-menu-grid">
+          <button class="btn-tutorial-prop prop-add" onclick="startTutorialProperty('add')">たす<br><span class="btn-tutorial-prop-eq" id="tutorialMenuEq-add"></span></button>
+          <button class="btn-tutorial-prop prop-sub" onclick="startTutorialProperty('sub')">ひく<br><span class="btn-tutorial-prop-eq" id="tutorialMenuEq-sub"></span></button>
+          <button class="btn-tutorial-prop prop-mul" onclick="startTutorialProperty('mul')">かける<br><span class="btn-tutorial-prop-eq" id="tutorialMenuEq-mul"></span></button>
+          <button class="btn-tutorial-prop prop-div" onclick="startTutorialProperty('div')">わる<br><span class="btn-tutorial-prop-eq" id="tutorialMenuEq-div"></span></button>
+        </div>
+        <button class="btn-tutorial-hud-secondary" onclick="showScreen('screen-start')">← 開始画面へ戻る</button>
+      </div>
+
+      <!-- 4-0-2b. 各性質の詳細(自動再生デモ＋実際にしてみましょう) -->
+      <div class="tutorial-view" id="tutorial-detail-view" style="display:none;">
+        <!-- Phase 3b/3cで実装予定 -->
+      </div>
+
+    </div>
+
+    <!-- 4-0-3. 問題選択画面 -->
+    <div class="app-screen" id="screen-select">
+
+      <!-- 4-0-3a. カテゴリ選択 -->
+      <div class="select-view" id="select-category-view">
+        <h2 class="tutorial-heading">問題を選ぼう</h2>
+        <div class="select-category-list" id="select-category-list"></div>
+        <button class="btn-tutorial-hud-secondary" onclick="showScreen('screen-start')">← 開始画面へ</button>
+      </div>
+
+      <!-- 4-0-3b. 問題一覧(カテゴリ内) -->
+      <div class="select-view" id="select-problem-view" style="display:none;">
+        <!-- JSで動的に描画 -->
+      </div>
+
+    </div>
+
+    <!-- 4-0-4. 問題演習画面 (既存アプリ本体) -->
+    <div class="app-screen" id="screen-practice">
+
+    <!-- 4-1. ヘッダー (タイトルバー) -->
+    <header>
+      <div class="title-bar">
+        <button class="title-hand-btn" id="hand-left-btn" onclick="changeHandedness('left')">👈 左利き</button>
+        <h1 id="practiceTitle">上皿天秤・方程式シミュレーター</h1>
+        <button class="title-hand-btn active" id="hand-right-btn" onclick="changeHandedness('right')">右利き 👉</button>
+      </div>
+    </header>
+
+    <!-- 4-2. メインコンテンツ -->
+    <div class="main-content">
+      <!-- 4-2-1. 左パネル (メッセージ、計算ノート) -->
+      <div class="left-panel">
+        <div class="notebook-container" id="notebookContainer">
+          <div class="notebook-title">📝 途中の計算ノート</div>
+          <div class="notebook-list" id="notebookList"></div>
+
+          <!-- 4-2-1a. チュートリアル用オーバーレイ(計算ノートの空きスペースに重ねて表示) -->
+          <div class="tutorial-hud" id="tutorialHud" style="display:none;">
+            <button class="btn-tutorial-try" id="btnDemoConfirm" onclick="startDemoPlayback()">操作確認</button>
+            <div class="tutorial-demo-message" id="tutorialDemoMessage"></div>
+            <button class="btn-tutorial-try" id="btnTutorialTry" style="display:none;" onclick="startTutorialHandsOn()">練習する</button>
+            <button class="btn-tutorial-hud-secondary" id="btnDemoReplay" style="display:none;" onclick="playTutorialDemo()">🔁 もう一度見る</button>
+            <div class="tutorial-success-panel" id="tutorialSuccessPanel" style="display:none;">
+              <p class="tutorial-success-text">🎉 成功！</p>
+              <div class="tutorial-success-buttons">
+                <button class="btn-tutorial-next" id="btnTutorialNext" onclick="tutorialGoNext()">次へ</button>
+                <button class="btn-tutorial-hud-secondary" onclick="enterTutorialDemo()">🔁 もう一度見る</button>
+                <button class="btn-tutorial-hud-secondary" onclick="exitTutorialPractice()">← チュートリアルに戻る</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4-2-1b. 規定問題モード用HUD (問題選択から演習に入った時のみ、計算ノートの下に表示) -->
+        <div class="preset-hud" id="presetHud" style="display:none;">
+          <button class="btn-tutorial-hud-secondary" id="btnPresetBack" onclick="exitPresetPractice()">← カテゴリ選択に戻る</button>
+        </div>
+
+        <!-- 4-2-1c. チュートリアル用「戻る」ボタン (チュートリアル中のみ、計算ノートの下に表示) -->
+        <div class="preset-hud" id="tutorialBackWrap" style="display:none;">
+          <button class="btn-tutorial-hud-secondary" id="btnTutorialBackLink" onclick="exitTutorialPractice()">← チュートリアルに戻る</button>
+        </div>
+      </div>
+
+      <!-- 4-2-2. 右パネル (コントロール、パレット、ステージ) -->
+      <div class="right-panel">
+        <div class="controls">
+          <div class="controls-left">
+            <div class="controls-row">
+              <label for="eqInput">方程式：</label>
+              <input type="text" id="eqInput" value="x+3=6">
+              <div id="eqMathPreview" class="eq-math-preview hidden"></div>
+            </div>
+            <div class="controls-row">
+              <button class="btn-apply legacy-hidden" id="btnApply" onclick="toggleManualInput()">セット</button>
+              <button class="btn-random legacy-hidden" id="btnRandom" onclick="generateQuizData()">ランダム</button>
+              <button class="btn-reset" id="btnReset" onclick="resetToInput()" title="初期状態に戻します">リセット</button>
+            </div>
+          </div>
+          <div class="controls-right legacy-hidden" id="controlsRight">
+            <label><input type="checkbox" id="chkEquality" checked onchange="updateCheckboxes()"><span>等式の性質</span></label>
+            <label><input type="checkbox" id="chkWithBrackets" disabled><span>かっこあり</span></label>
+            <label><input type="checkbox" id="chkWithFractions" disabled><span>分数あり</span></label>
+          </div>
+        </div>
+        <div class="palette-wrapper">
+          <div class="palette-actions">
+            <button class="btn-sign" id="btnSign" onclick="changeSigns()">符号入れかえ 【$×(-1)$】</button>
+            <button class="btn-swap" id="btnSwap" onclick="swapSides()">両辺入れかえ 【A=B⇔B=A】</button>
+          </div>
+          <div class="palette-row">
+            <div class="palette-container" id="paletteContainer">
+              <span class="palette-title">パレット：</span>
+              <div id="palette-x-pos" class="palette-item ball-x-pos" onpointerdown="handlePalettePointerDown(event, 'x')" title="x">x</div>
+              <div id="palette-x-neg" class="palette-item ball-x-neg legacy-hidden" onpointerdown="handlePalettePointerDown(event, '-x')" title="-x">-x</div>
+              <div id="palette-num-pos" class="palette-item ball-num-pos" onpointerdown="handlePalettePointerDown(event, '1')" title="1">1</div>
+              <div id="palette-num-neg" class="palette-item ball-num-neg legacy-hidden" onpointerdown="handlePalettePointerDown(event, '-1')" title="-1">-1</div>
+              <div id="palette-mult" class="palette-item ball-mult" onpointerdown="handlePalettePointerDown(event, 'mult')" title="倍">×2</div>
+              <div id="palette-div" class="palette-item ball-div" onpointerdown="handlePalettePointerDown(event, 'div')" title="割る">÷2</div>
+            </div>
+            <button class="btn-reset-palette" id="btnResetPalette" onclick="resetPalette()">戻す</button>
+          </div>
+        </div>
+
+        <div class="alert-message" id="alertMessage">
+          天秤を操作して、方程式を解こう！
+        </div>
+
+        <div class="stage">
+          <div class="on-table-structure">
+            <div class="center-pillar">
+              <div class="pointer-bg">
+                <div class="pointer-needle" id="needle"></div>
+              </div>
+            </div>
+            <div class="main-base-box">
+              <div class="leg-hole leg-hole-left"></div>
+              <div class="leg-hole leg-hole-right"></div>
+            </div>
+          </div>
+
+          <div class="movable-unit unit-left" id="unitLeft">
+            <div class="plate" id="plateLeft" 
+                 ondragover="handleDragOverPlate(event)" 
+                 ondragleave="handleDragLeavePlate(event)" 
+                 ondrop="handleDropPlate(event, 'left')"></div>
+            <div class="plate-leg"></div>
+          </div>
+
+          <div class="movable-unit unit-right" id="unitRight">
+            <div class="plate" id="plateRight" 
+                 ondragover="handleDragOverPlate(event)" 
+                 ondragleave="handleDragLeavePlate(event)" 
+                 ondrop="handleDropPlate(event, 'right')"></div>
+            <div class="plate-leg"></div>
+          </div>
+        </div>
+        <div class="guide-text" style="text-align: center; padding: 0 4px;">
+          💡 皿から外（画面のどこでも）へドラッグ＆ドロップすると取り除けます。<br>かっこがある式（赤枠）はクリックするとかっこがはずれします。
+        </div>
+      </div>
+    </div>
+    
+    <!-- 4-3. フッター -->
+    <div class="footer">
+      @中原先生の数学部屋
+    </div>
+
+    </div><!-- /#screen-practice -->
+
+  </div>
+
+  <!-- ========================================================
+     5. JavaScriptによる動作制御
+     ======================================================== -->
+  <script>
+    // ========================================================
+    // 5-0. 画面遷移 (開始画面・チュートリアル・問題選択・演習)
+    // ========================================================
+    /* 5-0-1. 指定した画面(id)だけを表示する */
+    function showScreen(screenId) {
+      document.querySelectorAll('.app-screen').forEach(function (el) {
+        el.classList.remove('active');
+      });
+      const target = document.getElementById(screenId);
+      if (target) target.classList.add('active');
+    }
+
+    /* 5-0-2. チュートリアル: 性質メニューの選択項目 (op = この問題を解くのに正しい操作) */
+    const TUTORIAL_PROPS = {
+      add: { label: 'たす',   eq: 'x-3=5',  op: { kind: 'add',    type: '1', val: 3 },
+        demoSteps: ['パレットの①をタップして③にしよう', '③を左の皿に移動しよう', '③を右の皿に移動しよう'] },
+      sub: { label: 'ひく',   eq: 'x+3=5',  op: { kind: 'remove', type: '1', val: 3 },
+        demoSteps: ['右の皿の⑥をタップして③③に分けよう', '左の皿の③をおろそう', '右の皿の③をおろそう'] },
+      mul: { label: 'かける', eq: 'x/3=4',  op: { kind: 'mult',   val: 3 },
+        demoSteps: ['パレットの×②をタップして×③にしよう', '×③を左の皿に移動しよう', '×③を右の皿に移動しよう'] },
+      div: { label: 'わる',   eq: '3x=15',  op: { kind: 'div',    val: 3 },
+        demoSteps: ['パレットの÷②をタップして÷③にしよう', '÷③を左の皿に移動しよう', '÷③を右の皿に移動しよう'] }
+    };
+    const TUTORIAL_PROP_ORDER = ['add', 'sub', 'mul', 'div'];
+    /* 5-0-2b. 演習画面タイトルの更新(チュートリアル中は性質名を付記する) */
+    const PRACTICE_TITLE_BASE = '上皿天秤・方程式シミュレーター';
+    function setPracticeTitle(suffix) {
+      const h1 = document.getElementById('practiceTitle');
+      if (h1) h1.textContent = suffix ? `${PRACTICE_TITLE_BASE}（${suffix}）` : PRACTICE_TITLE_BASE;
+    }
+
+    /* 5-0-2c. 操作の種類(op.kind)からバッジ表示文字列("+9"等)を作る */
+    function tutorialOpBadge(op) {
+      if (op.kind === 'add') return `+${op.val}`;
+      if (op.kind === 'remove') return `−${op.val}`;
+      if (op.kind === 'mult') return `×${op.val}`;
+      return `÷${op.val}`;
+    }
+
+    let currentTutorialProp = null;
+    let tutorialDemoRunId = 0;
+    let tutorialHandsOnStep = 0;
+
+    /* 5-0-3. チュートリアル: 性質を選んでデモ再生へ */
+    function startTutorialProperty(propKey) {
+      currentTutorialProp = propKey;
+      enterTutorialDemo();
+    }
+
+    /* 5-0-3a. 演習画面(本物の天秤・パレット)に切り替えて①デモを再生する */
+    function enterTutorialDemo() {
+      window.tutorialMode = true;
+      window.tutorialHandsOnActive = false;
+      window.presetMode = false;
+      window.tutorialSolved = false;
+      showScreen('screen-practice');
+      showRandomModeControls(false);
+
+      document.getElementById('tutorialHud').style.display = 'flex';
+      document.getElementById('tutorialSuccessPanel').style.display = 'none';
+      document.getElementById('tutorialDemoMessage').innerHTML = '';
+      document.getElementById('btnTutorialTry').style.display = 'none';
+      document.getElementById('btnDemoReplay').style.display = 'none';
+      document.getElementById('btnDemoConfirm').style.display = 'inline-block';
+      document.getElementById('tutorialBackWrap').style.display = 'flex';
+      setPracticeTitle(`等式の性質・${TUTORIAL_PROPS[currentTutorialProp].label}`);
+
+      // チュートリアルは常に「等式の性質」チェックON(移項禁止・詳しいノート表記)で行う
+      document.getElementById('chkEquality').checked = true;
+      updateCheckboxes();
+
+      document.getElementById('eqInput').value = TUTORIAL_PROPS[currentTutorialProp].eq;
+      setupFromInput();
+      lockPracticeInteraction(true);
+      // 自動再生は「操作確認」ボタンが押されるまで開始しない(startDemoPlaybackで開始)
+    }
+
+    /* 5-0-3a-1. 「操作確認」ボタンが押されたら自動再生を開始する */
+    function startDemoPlayback() {
+      document.getElementById('btnDemoConfirm').style.display = 'none';
+      playTutorialDemo();
+    }
+
+    /* 5-0-3b. デモ・成功待ちの間、天秤とパレットの操作を無効化する */
+    function lockPracticeInteraction(lock) {
+      const ids = ['paletteContainer', 'plateLeft', 'plateRight', 'btnSign', 'btnSwap', 'btnResetPalette'];
+      ids.forEach(function (id) {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('demo-lock', lock);
+      });
+    }
+
+    /* 5-0-3c. チュートリアル①: 本物の天秤・パレットを使った自動再生デモ(実際に解く問題と同じ式を使う) */
+    function playTutorialDemo() {
+      const prop = TUTORIAL_PROPS[currentTutorialProp];
+      const op = prop.op;
+      const runId = ++tutorialDemoRunId;
+      document.getElementById('eqInput').value = prop.eq;
+      setupFromInput();
+      document.getElementById('tutorialDemoMessage').innerHTML = '';
+
+      const finishDemo = () => {
+        if (runId !== tutorialDemoRunId) return;
+        document.getElementById('btnTutorialTry').style.display = 'inline-block';
+        document.getElementById('btnDemoReplay').style.display = 'inline-block';
+      };
+
+      setTimeout(() => {
+        if (runId !== tutorialDemoRunId) return;
+        if (op.kind === 'remove') {
+          playRemoveDemo(op, prop, runId, finishDemo);
+        } else {
+          playAddLikeDemo(op, prop, runId, finishDemo);
+        }
+      }, 900);
+    }
+
+    /* デモメッセージ(⑴⑵⑶)を積み重ねて追加する */
+    function setTutorialDemoStepMessage(prop, stepIndex) {
+      const msgEl = document.getElementById('tutorialDemoMessage');
+      if (!msgEl) return;
+      const text = (prop.demoSteps && prop.demoSteps[stepIndex]) || '';
+      const p = document.createElement('p');
+      p.textContent = text;
+      msgEl.appendChild(p);
+    }
+
+    /* 5-0-3c-1. 「たす」「かける」「わる」: パレットの値を①→③のように増やしてから、左→右の皿へ飛ばす */
+    function playAddLikeDemo(op, prop, runId, onDone) {
+      const badge = tutorialOpBadge(op);
+      const originEl =
+        op.kind === 'mult' ? document.getElementById('palette-mult') :
+        op.kind === 'div' ? document.getElementById('palette-div') :
+        document.getElementById('palette-num-pos');
+      const kindClass = op.kind === 'mult' ? 'ball-mult' : op.kind === 'div' ? 'ball-div' : '';
+      const fromVal = (op.kind === 'add') ? 1 : 2; // パレットの初期値(① もしくは ×②/÷②)
+
+      setTutorialDemoStepMessage(prop, 0);
+      pulsePaletteToValue(op.kind, fromVal, op.val, () => {
+        if (runId !== tutorialDemoRunId) return;
+        setTutorialDemoStepMessage(prop, 1);
+        const plateLeft = document.getElementById('plateLeft');
+        flyToPlate(originEl, plateLeft, badge, kindClass, () => {
+          if (runId !== tutorialDemoRunId) return;
+          applyTutorialDemoStep('left', op);
+          setTimeout(() => {
+            if (runId !== tutorialDemoRunId) return;
+            setTutorialDemoStepMessage(prop, 2);
+            const plateRight = document.getElementById('plateRight');
+            flyToPlate(originEl, plateRight, badge, kindClass, () => {
+              if (runId !== tutorialDemoRunId) return;
+              applyTutorialDemoStep('right', op);
+              onDone();
+            });
+          }, 900);
+        });
+      });
+    }
+
+    /* 5-0-3c-2. 「ひく」: 左の皿から降ろす→右の皿を分割する→右の皿から降ろす */
+    function playRemoveDemo(op, prop, runId, onDone) {
+      const badge = String(op.val); // 「-3」ではなく、球自体の見た目の数値(③)を表示する
+      const plateLeft = document.getElementById('plateLeft');
+      const plateRight = document.getElementById('plateRight');
+
+      setTutorialDemoStepMessage(prop, 0);
+
+      // ①右の皿を「同じ数の球2つ」に分割する演出(既存のsplitBall機能を利用)
+      splitBall('right', '1', getTotalNum(state.right));
+      plateRight.classList.add('tutorial-split-flash');
+      setTimeout(() => { plateRight.classList.remove('tutorial-split-flash'); }, 600);
+
+      setTimeout(() => {
+        if (runId !== tutorialDemoRunId) return;
+        setTutorialDemoStepMessage(prop, 1);
+        // ②左の皿: 飛び始める前に位置を記録してから、実際の球をすぐに消す
+        const leftRect = plateLeft.getBoundingClientRect();
+        applyTutorialDemoStep('left', op);
+        flyAwayFromRect(leftRect, badge, () => {
+          if (runId !== tutorialDemoRunId) return;
+
+          setTimeout(() => {
+            if (runId !== tutorialDemoRunId) return;
+            setTutorialDemoStepMessage(prop, 2);
+            // ③右の皿: 同様に、飛び始める前に位置を記録してから実際の球をすぐに消す
+            const rightRect = plateRight.getBoundingClientRect();
+            removeBallFromState('right', 'num', op.val, 0);
+            render();
+            flyAwayFromRect(rightRect, badge, () => {
+              if (runId !== tutorialDemoRunId) return;
+              onDone();
+            });
+          }, 1100);
+        });
+      }, 900);
+    }
+
+    /* 5-0-3c-3. パレットの数値を1段ずつ光らせながら目標値まで増やす(①→②→③のように見せる) */
+    function pulsePaletteToValue(kind, fromVal, toVal, onDone) {
+      const elId = kind === 'add' ? 'palette-num-pos' : kind === 'mult' ? 'palette-mult' : 'palette-div';
+      const el = document.getElementById(elId);
+      let current = fromVal;
+
+      const step = () => {
+        if (kind === 'add') { paletteState.selectedKey = '1'; paletteState.count = current; }
+        else if (kind === 'mult') { multFactor = current; }
+        else if (kind === 'div') { divFactor = current; }
+        updatePaletteUI();
+        if (el) {
+          el.classList.add('tutorial-pulse');
+          setTimeout(() => { el.classList.remove('tutorial-pulse'); }, 500);
+        }
+        if (current >= toVal) {
+          setTimeout(onDone, 900);
+        } else {
+          current++;
+          setTimeout(step, 900);
+        }
+      };
+      step();
+    }
+
+    /* 5-0-3d. デモの数値操作を実際の状態(state)に反映する */
+    function applyTutorialDemoStep(side, op) {
+      const s = state[side];
+      if (op.kind === 'add') s.num += op.val;
+      else if (op.kind === 'remove') s.num -= op.val;
+      else if (op.kind === 'mult') applyMultiplyToSide(s, op.val);
+      else if (op.kind === 'div') applyDivideToSide(s, op.val);
+      render();
+    }
+
+    /* 5-0-3e. パレット付近から皿へ、球が飛んでいくアニメーション(演出専用・状態には触れない) */
+    function flyToPlate(originEl, plateEl, text, kindClass, onArrive) {
+      if (!originEl || !plateEl) { onArrive(); return; }
+      const originRect = originEl.getBoundingClientRect();
+      const destRect = plateEl.getBoundingClientRect();
+      const badge = document.createElement('div');
+      badge.className = 'tutorial-fly-badge' + (kindClass ? ' ' + kindClass : '');
+      badge.textContent = text;
+      badge.style.left = (originRect.left + originRect.width / 2 - 17) + 'px';
+      badge.style.top = (originRect.top + originRect.height / 2 - 17) + 'px';
+      document.body.appendChild(badge);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          badge.style.left = (destRect.left + destRect.width / 2 - 17) + 'px';
+          badge.style.top = (destRect.top + destRect.height / 2 - 17) + 'px';
+        });
+      });
+      setTimeout(() => {
+        badge.remove();
+        onArrive();
+      }, 1300);
+    }
+
+    /* 5-0-3f. 皿から球が離れて消えるアニメーション(「ひく」の演出用) */
+    function flyAwayFromRect(rect, text, onDone) {
+      const badge = document.createElement('div');
+      badge.className = 'tutorial-fly-badge';
+      badge.textContent = text;
+      badge.style.left = (rect.left + rect.width / 2 - 17) + 'px';
+      badge.style.top = (rect.top + rect.height / 2 - 17) + 'px';
+      document.body.appendChild(badge);
+      // ①まず上に動く
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          badge.style.top = (rect.top - 60) + 'px';
+        });
+      });
+      setTimeout(() => {
+        // ②上に動き終わってから、続けてフェードアウトする
+        badge.style.opacity = '0';
+        setTimeout(() => {
+          badge.remove();
+          onDone();
+        }, 600);
+      }, 1300);
+    }
+
+    /* 5-0-4. チュートリアル: 性質メニューへ戻る */
+    function backToTutorialMenu() {
+      currentTutorialProp = null;
+      document.getElementById('tutorial-detail-view').style.display = 'none';
+      document.getElementById('tutorial-menu-view').style.display = 'flex';
+    }
+
+    // ========================================================
+    // 5-0x. チュートリアル: 「実際にしてみましょう」(演習エンジンの流用)
+    // ========================================================
+    /* 5-0x-1. デモを終え、実際の問題をセットして操作可能にする */
+    function startTutorialHandsOn() {
+      tutorialDemoRunId++; // 進行中のデモがあれば無効化する
+      window.tutorialSolved = false;
+      window.tutorialHandsOnActive = true;
+      tutorialHandsOnStep = 0;
+      document.getElementById('btnTutorialTry').style.display = 'none';
+      document.getElementById('btnDemoReplay').style.display = 'none';
+      document.getElementById('tutorialBackWrap').style.display = 'none';
+      document.getElementById('eqInput').value = TUTORIAL_PROPS[currentTutorialProp].eq;
+      setupFromInput();
+      lockPracticeInteraction(false);
+
+      const prop = TUTORIAL_PROPS[currentTutorialProp];
+      document.getElementById('tutorialDemoMessage').innerHTML = '';
+      setTutorialDemoStepMessage(prop, 0);
+    }
+
+    /* 5-0x-1b. 天秤への操作が1つ成功するたびに呼ばれ、次のメッセージを追加表示する */
+    function tutorialAdvanceHandsOnStep() {
+      if (tutorialHandsOnStep >= 2) return;
+      tutorialHandsOnStep++;
+      const prop = TUTORIAL_PROPS[currentTutorialProp];
+      setTutorialDemoStepMessage(prop, tutorialHandsOnStep);
+    }
+
+    /* 5-0x-1c. パレットの数値/倍率が目標値に達したかを判定する(たす・かける・わるの1段目) */
+    function tutorialCheckPaletteReady() {
+      if (tutorialHandsOnStep !== 0) return;
+      const op = TUTORIAL_PROPS[currentTutorialProp].op;
+      if (op.kind === 'add' && paletteState.selectedKey === '1' && paletteState.count === op.val) {
+        tutorialAdvanceHandsOnStep();
+      } else if (op.kind === 'mult' && multFactor === op.val) {
+        tutorialAdvanceHandsOnStep();
+      } else if (op.kind === 'div' && divFactor === op.val) {
+        tutorialAdvanceHandsOnStep();
+      }
+    }
+
+    /* 5-0x-2. チュートリアルの演習を終えて、4性質選択メニューに戻る */
+    function exitTutorialPractice() {
+      tutorialDemoRunId++; // 進行中のデモがあれば無効化する
+      window.tutorialMode = false;
+      window.tutorialHandsOnActive = false;
+      window.tutorialSolved = false;
+      lockPracticeInteraction(false);
+      document.getElementById('tutorialHud').style.display = 'none';
+      document.getElementById('tutorialBackWrap').style.display = 'none';
+      setPracticeTitle();
+      showScreen('screen-tutorial');
+      backToTutorialMenu();
+    }
+
+    /* 5-0x-3. 次の性質に進む(次の性質もまず①デモから) */
+    function tutorialGoNext() {
+      const idx = TUTORIAL_PROP_ORDER.indexOf(currentTutorialProp);
+      const nextProp = TUTORIAL_PROP_ORDER[(idx + 1) % TUTORIAL_PROP_ORDER.length];
+      currentTutorialProp = nextProp;
+      enterTutorialDemo();
+    }
+
+    /* 5-0x-4. 操作が期待通りか判定するゲート。falseの場合は「ちがうよ」を表示して呼び出し元で処理を中断する */
+    function tutorialCheckOp(kind, type, val, targetSide, alreadyPending) {
+      if (!window.tutorialMode) return true;
+      const expected = TUTORIAL_PROPS[currentTutorialProp].op;
+      if (!alreadyPending) {
+        const typeMismatch = (expected.type !== undefined && type !== expected.type);
+        if (expected.kind !== kind || targetSide !== 'left' || typeMismatch || Math.abs(val) !== expected.val) {
+          showAlert('ちがうよ', false);
+          return false;
+        }
+      }
+      return true;
+    }
+
+    /* 5-0x-5. 問題が解けた時にチュートリアル用の成功UI(ボタン)を表示する */
+    function tutorialOnSolved() {
+      window.tutorialSolved = true;
+      window.tutorialHandsOnActive = false;
+      const nextBtn = document.getElementById('btnTutorialNext');
+      const isLast = (currentTutorialProp === TUTORIAL_PROP_ORDER[TUTORIAL_PROP_ORDER.length - 1]);
+      if (isLast) {
+        nextBtn.textContent = '問題選択へ';
+        nextBtn.onclick = goToProblemSelectFromTutorial;
+      } else {
+        nextBtn.textContent = '次へ';
+        nextBtn.onclick = tutorialGoNext;
+      }
+      document.getElementById('tutorialSuccessPanel').style.display = 'flex';
+    }
+
+    /* 5-0x-5b. 「わる」を解き終えた後、「問題選択へ」ボタンから問題選択画面へ移動する */
+    function goToProblemSelectFromTutorial() {
+      window.tutorialMode = false;
+      window.tutorialSolved = false;
+      lockPracticeInteraction(false);
+      document.getElementById('tutorialHud').style.display = 'none';
+      document.getElementById('tutorialBackWrap').style.display = 'none';
+      setPracticeTitle();
+      showScreen('screen-select');
+      showPresetCategoryMenu();
+    }
+
+    // ========================================================
+    // 5-0y. 問題選択画面 (規定問題)
+    // ========================================================
+    /* 5-0y-1. 5カテゴリの固定問題リスト */
+    const PRESET_CATEGORIES = {
+      equality: {
+        label: '等式の性質',
+        problems: ['x-6=-1', 'x-9=3', 'x-8=-10', 'x+7=15', 'x+13=8', 'x+6=2', 'x/5=3', 'x/4=-5', '-1/6x=2', '5x=45', '-7x=14', '-8x=48'],
+        rows: [
+          { label: 'たす', colorClass: 'prop-add' },
+          { label: 'ひく', colorClass: 'prop-sub' },
+          { label: 'かける', colorClass: 'prop-mul' },
+          { label: 'わる', colorClass: 'prop-div' }
+        ]
+      },
+      basic: {
+        label: '基本の一次方程式',
+        problems: ['5x+8=23', '6x-5=-17', '-2x+3=5', '10x=6x-8', '4x=50-6x', '-8x=3-5x', '9x+2=4x+17', '5x-8=-17-4x', '3x+5=x+11']
+      },
+      paren: {
+        label: 'かっこがある方程式',
+        problems: ['7(x-5)=9x+1', '4x+1=3(x+2)', '7(x-4)=3x+8', '-4(x+3)=5(x-6)']
+      },
+      fraction: {
+        label: '分数を含む方程式',
+        problems: ['x=1/3x+1', '(x+1)/2=1/5x+2', '(x+1)/3=1/4x+1', '3/4x-7=2x+1/2', '(9x-5)/6=(8+x)/3', 'x-(x-1)/3=3']
+      },
+      various: {
+        label: 'いろいろな方程式',
+        problems: ['0.3x+2=0.1x+1.6', '800x=2400(x-2)', '0.5x-2.5=-x+2', '0.2x-0.03=0.3x+0.07']
+      }
+    };
+    const PRESET_CATEGORY_ORDER = ['equality', 'basic', 'paren', 'fraction', 'various'];
+    let presetCompleted = {}; // key: "カテゴリキー-問題番号" -> true (解いた問題の「済」マーク管理)
+    let currentPresetCategory = null;
+    let currentPresetIndex = null;
+
+    /* 5-0y-2. カテゴリ選択ボタンの描画(初期表示時に1回呼ぶ) */
+    function renderPresetCategoryList() {
+      const listEl = document.getElementById('select-category-list');
+      listEl.innerHTML = PRESET_CATEGORY_ORDER.map(function (key) {
+        return `<button class="btn-preset-category" onclick="showPresetCategory('${key}')">${PRESET_CATEGORIES[key].label}</button>`;
+      }).join('') + `<button class="btn-preset-category btn-preset-random" onclick="startRandomPreset()">🎲 ランダム生成</button>`;
+    }
+
+    /* 5-0-2d. チュートリアルメニュー(4性質ボタン)の下の式をMathJaxで描画する(初期表示時に1回呼ぶ) */
+    function renderTutorialMenuEqs() {
+      const els = TUTORIAL_PROP_ORDER.map(function (key) {
+        const el = document.getElementById('tutorialMenuEq-' + key);
+        if (el) el.innerHTML = `\\(${eqToLatex(TUTORIAL_PROPS[key].eq).replace('=', ' = ')}\\)`;
+        return el;
+      }).filter(Boolean);
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        MathJax.typesetPromise(els).catch(() => {});
+      }
+    }
+
+    /* 5-0y-3. カテゴリ選択画面に戻る */
+    function showPresetCategoryMenu() {
+      document.getElementById('select-problem-view').style.display = 'none';
+      document.getElementById('select-category-view').style.display = 'flex';
+    }
+
+    /* 5-0y-4. カテゴリを選んで問題一覧を表示する */
+    function showPresetCategory(catKey) {
+      currentPresetCategory = catKey;
+      document.getElementById('select-category-view').style.display = 'none';
+      document.getElementById('select-problem-view').style.display = 'flex';
+      renderPresetProblemList();
+    }
+
+    /* 5-0y-5. 問題一覧(番号ボタン＋済マーク)の描画 */
+    function renderPresetProblemList() {
+      const cat = PRESET_CATEGORIES[currentPresetCategory];
+      const view = document.getElementById('select-problem-view');
+      let itemsHtml;
+      let listClass = 'preset-problem-list';
+
+      if (cat.rows) {
+        // 等式の性質: たす/ひく/かける/わるの行見出し付き4×4グリッド
+        listClass = 'preset-problem-grid';
+        let globalIndex = 0;
+        itemsHtml = cat.rows.map(function (row) {
+          const headerHtml = `<div class="preset-row-header ${row.colorClass}">${row.label}</div>`;
+          const cellsHtml = [0, 1, 2].map(function () {
+            const i = globalIndex++;
+            const eq = cat.problems[i];
+            const key = currentPresetCategory + '-' + i;
+            const doneClass = presetCompleted[key] ? ' preset-done' : '';
+            const doneMark = presetCompleted[key] ? '<span class="preset-done-mark">済</span>' : '';
+            return `<button class="btn-preset-problem${doneClass}" onclick="startPresetProblem(${i})">` +
+                   `<span class="preset-problem-num">(${i + 1})</span>` +
+                   `<span class="preset-problem-eq">\\(${eqToLatex(eq).replace('=', ' = ')}\\)</span>${doneMark}</button>`;
+          }).join('');
+          return headerHtml + cellsHtml;
+        }).join('');
+      } else {
+        itemsHtml = cat.problems.map(function (eq, i) {
+          const key = currentPresetCategory + '-' + i;
+          const doneClass = presetCompleted[key] ? ' preset-done' : '';
+          const doneMark = presetCompleted[key] ? '<span class="preset-done-mark">済</span>' : '';
+          return `<button class="btn-preset-problem${doneClass}" onclick="startPresetProblem(${i})">` +
+                 `<span class="preset-problem-num">(${i + 1})</span>` +
+                 `<span class="preset-problem-eq">\\(${eqToLatex(eq).replace('=', ' = ')}\\)</span>${doneMark}</button>`;
+        }).join('');
+      }
+
+      view.innerHTML = `
+        <h2 class="tutorial-heading">${cat.label}</h2>
+        <div class="${listClass}">${itemsHtml}</div>
+        <button class="btn-tutorial-hud-secondary" onclick="showPresetCategoryMenu()">← カテゴリ選択に戻る</button>
+      `;
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        MathJax.typesetPromise([view]).catch(() => {});
+      }
+    }
+
+    /* 5-0y-6. 問題を選んで演習画面へ */
+    function startPresetProblem(index) {
+      currentPresetIndex = index;
+      window.presetMode = true;
+      window.tutorialMode = false;
+      showScreen('screen-practice');
+      setPracticeTitle();
+      showRandomModeControls(false);
+      document.getElementById('btnPresetBack').textContent = '← 問題一覧に戻る';
+      // 「等式の性質」カテゴリ以外は、等式の性質チェックをOFFにする(移項が使え、ノートも簡潔な表記になる)
+      document.getElementById('chkEquality').checked = (currentPresetCategory === 'equality');
+      updateCheckboxes();
+      document.getElementById('eqInput').value = PRESET_CATEGORIES[currentPresetCategory].problems[index];
+      setupFromInput();
+      document.getElementById('presetHud').style.display = 'flex';
+    }
+
+    /* 5-0y-6b. ランダム生成: 改訂前と同じ配置([等式の性質][かっこあり][分数あり]+[ランダム])を表示し、その場で1問生成して演習画面へ */
+    function startRandomPreset() {
+      currentPresetCategory = null;
+      currentPresetIndex = null;
+      window.presetMode = true;
+      window.tutorialMode = false;
+      showScreen('screen-practice');
+      setPracticeTitle();
+      showRandomModeControls(true);
+      manualInputActive = false;
+      document.getElementById('btnPresetBack').textContent = '← カテゴリ選択に戻る';
+      document.getElementById('btnRandom').disabled = false;
+      document.getElementById('btnReset').disabled = false;
+      generateQuizData();
+      document.getElementById('presetHud').style.display = 'flex';
+    }
+
+    /* 5-0y-6c. ランダム生成モード用のコントロール([ランダム]ボタン・3チェックボックス)の表示切替 */
+    function showRandomModeControls(show) {
+      document.getElementById('btnApply').classList.toggle('legacy-hidden', !show);
+      document.getElementById('btnRandom').classList.toggle('legacy-hidden', !show);
+      document.getElementById('controlsRight').classList.toggle('legacy-hidden', !show);
+    }
+
+    /* 5-0y-7. 演習を終えて問題選択に戻る(固定問題は問題一覧へ、ランダム生成はカテゴリ選択へ) */
+    function exitPresetPractice() {
+      window.presetMode = false;
+      showRandomModeControls(false);
+      document.getElementById('presetHud').style.display = 'none';
+      showScreen('screen-select');
+      if (currentPresetCategory) {
+        showPresetCategory(currentPresetCategory);
+      } else {
+        showPresetCategoryMenu();
+      }
+    }
+
+    // ========================================================
+    // 5-1. 共通ヘルパー関数
+    // ========================================================
+    /* 5-1-1. 最大公約数を求める関数 */
+    function gcd(a, b) {
+      a = Math.abs(a);
+      b = Math.abs(b);
+      while (b) {
+        let t = b;
+        b = a % b;
+        a = t;
+      }
+      return a;
+    }
+
+    /* 5-1-0b. 小数演算の誤差(浮動小数点ノイズ)を丸めて消すヘルパー */
+    function cleanNum(v) {
+      return Math.round(v * 1e9) / 1e9;
+    }
+
+    /* 5-1-1b. 式を最上位の項ごとに分割する（かっこの中は分割しない） */
+    function splitTopLevelTerms(str) {
+      const terms = [];
+      let depth = 0;
+      let current = '';
+      for (let i = 0; i < str.length; i++) {
+        const ch = str[i];
+        if (ch === '(') depth++;
+        if (ch === ')') depth--;
+        if (depth === 0 && (ch === '+' || ch === '-') && current !== '') {
+          terms.push(current);
+          current = ch;
+        } else {
+          current += ch;
+        }
+      }
+      if (current !== '') terms.push(current);
+      return terms;
+    }
+
+    /* 5-1-1c. 式を項ごとに分数(dfrac)化する */
+    function toPerTermFraction(str, divisor) {
+      const terms = splitTopLevelTerms(str);
+      if (terms.length === 1) {
+        // 単項式のときは符号を分離せず、そのまま分子に含める
+        return `\\dfrac{${str}}{${divisor}}`;
+      }
+      return terms.map((t, i) => {
+        let sign = '+';
+        let body = t;
+        if (t.startsWith('+')) { body = t.slice(1); }
+        else if (t.startsWith('-')) { sign = '-'; body = t.slice(1); }
+        const frac = `\\dfrac{${body}}{${divisor}}`;
+        return i === 0 ? (sign === '-' ? `-${frac}` : frac) : ` ${sign} ${frac}`;
+      }).join('');
+    }
+
+    /* 5-1-2. 係数や定数を文字列にフォーマットする関数 */
+    function formatTerm(val, isX, isFirst) {
+      if (Math.abs(val) < 1e-9) return '';
+      const absVal = Math.abs(val);
+      let term = '';
+      if (isX) {
+        if (Math.abs(absVal - Math.round(absVal)) < 1e-6) {
+          const intVal = Math.round(absVal);
+          term = intVal === 1 ? 'x' : `${intVal}x`;
+        } else {
+          const denom = Math.round(1 / absVal);
+          if (denom !== 0 && Math.abs(absVal * denom - 1) < 1e-4) {
+            term = `x/${denom}`;
+          } else {
+            term = `${cleanNum(absVal)}x`;
+          }
+        }
+      } else {
+        term = `${cleanNum(absVal)}`;
+      }
+      
+      if (isFirst) {
+        return val > 0 ? term : `-${term}`;
+      } else {
+        return val > 0 ? `+ ${term}` : `- ${term}`;
+      }
+    }
+
+    /* 5-1-3. 画面サイズに合わせて自動縮小・拡大する関数 */
+    function updateScale() {
+      const container = document.querySelector('.app-container');
+      if (!container) return;
+      const scaleX = window.innerWidth / 960;
+      const scaleY = window.innerHeight / 640;
+      const scale = Math.min(scaleX, scaleY);
+      container.style.transform = `scale(${scale})`;
+    }
+
+    function isPendingOp() {
+      return pendingMult !== null || pendingDiv !== null || pendingAdd !== null || pendingRemove !== null;
+    }
+    // 「皿の球を掴む」「クリックで分裂させる」は、おろす操作待ち（pendingRemove）の間も許可する
+    function isPendingOpForGrab() {
+      return pendingMult !== null || pendingDiv !== null || pendingAdd !== null;
+    }
+
+    // ========================================================
+    // 5-2. 状態管理変数
+    // ========================================================
+    /* 5-2-1. 天秤の状態 */
+    let state = {
+      left: { x: 0, num: 0, groups: [] },
+      right: { x: 0, num: 0, groups: [] }
+    };
+    let baseState = {
+      left: { x: 0, num: 0, groups: [] },
+      right: { x: 0, num: 0, groups: [] }
+    };
+
+    /* 5-2-2. 動作に関する変数 */
+    let currentXValue = 2;
+    let pendingAdd = null;
+    let pendingRemove = null;
+    let lastAllowSwap = false;
+    let pendingMult = null;
+    let multFactor = 2;
+    const multFactors = [2, 3, 4, 5, 6, 10, 12];
+    let divFactor = 2;
+    const divFactors = [2, 3, 4, 5, 6, 7, 8, 9];
+    let pendingDiv = null;
+    let draggedData = null;
+    let isCompleted = false;
+
+    /* 5-2-3. 計算ノートの記録配列 */
+    let calcNotebook = [];
+
+    // ========================================================
+    // 5-3. 計算ノートUI処理
+    // ========================================================
+    /* 5-3-1. ノートに式を追加する関数 */
+    function addNotebookEntry(leftExpr, rightExpr, noteText = '', isToggleOp = false, meta = {}) {
+      if (isToggleOp) {
+        if (calcNotebook.length > 0 && calcNotebook[calcNotebook.length - 1].toggleType === noteText) {
+          calcNotebook.pop();
+          renderNotebook();
+          return;
+        }
+      }
+      if (noteText === 'かっこを\n　はずした' && calcNotebook.length > 0 && calcNotebook[calcNotebook.length - 1].note === 'かっこを\n　はずした') {
+        calcNotebook.pop();
+      }
+      if (calcNotebook.length > 0) {
+        const last = calcNotebook[calcNotebook.length - 1];
+        if (last.left === leftExpr && last.right === rightExpr) return;
+      }
+      calcNotebook.push({ 
+        left: leftExpr, 
+        right: rightExpr, 
+        note: noteText, 
+        toggleType: isToggleOp ? noteText : null,
+        opType: meta.opType || null,
+        divideK: meta.divideK || null,
+        ...meta
+      });
+      renderNotebook();
+    }
+
+    /* 5-3-2. 数式をTeX表記に変換する関数 */
+    function toTex(str) {
+      if (!str) return '';
+      return eqToLatex(str);
+    }
+
+    /* 5-3-3. 計算ノートを描画する関数 */
+    function renderNotebook() {
+      const listEl = document.getElementById('notebookList');
+      if (!listEl) return;
+      listEl.innerHTML = '';
+
+      const circledNums = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','⑪','⑫','⑬','⑭','⑮','⑯','⑰','⑱','⑲','⑳'];
+      calcNotebook.forEach((entry, index) => {
+        const isLatest = index === calcNotebook.length - 1;
+        const row = document.createElement('div');
+        row.className = `notebook-row ${isLatest ? 'latest' : ''}`;
+
+        const numDiv = document.createElement('div');
+        numDiv.className = 'notebook-num';
+        numDiv.textContent = index < circledNums.length ? circledNums[index] : `${index + 1}`;
+
+        const leftDiv = document.createElement('div');
+        leftDiv.className = 'notebook-left';
+        leftDiv.innerHTML = `\\(${toTex(entry.left)}\\)`;
+
+        const eqDiv = document.createElement('div');
+        eqDiv.className = 'notebook-eq';
+        eqDiv.textContent = '=';
+
+        const rightDiv = document.createElement('div');
+        rightDiv.className = 'notebook-right';
+        rightDiv.innerHTML = `\\(${toTex(entry.right)}\\)`;
+
+        const noteDiv = document.createElement('div');
+        noteDiv.className = 'notebook-note';
+        noteDiv.textContent = entry.note ? `：${entry.note}` : '';
+
+        row.appendChild(numDiv);
+        row.appendChild(leftDiv);
+        row.appendChild(eqDiv);
+        row.appendChild(rightDiv);
+        row.appendChild(noteDiv);
+        listEl.appendChild(row);
+      });
+
+      const scrollToBottom = () => {
+        const listEl2 = document.getElementById('notebookList');
+        if (listEl2) listEl2.scrollTop = listEl2.scrollHeight;
+      };
+
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        MathJax.typesetPromise([listEl]).then(scrollToBottom).catch(() => scrollToBottom());
+      } else {
+        scrollToBottom();
+      }
+    }
+
+    // ========================================================
+    // 5-4. パレット操作処理
+    // ========================================================
+    /* 5-4-1. パレットの状態 */
+    let paletteState = {
+      selectedKey: null,
+      count: 1
+    };
+
+    /* 5-4-2. 掛け算の倍率切り替え */
+    /* 5-4-1a-2. 現在の分数の分母の最小公倍数を求める(両辺の分数をまとめて消せる倍率) */
+    /* 現在の値が小数の場合、それを整数にするために必要な10のべき乗を返す(整数・分数なら1) */
+    function decimalClearFactor(v) {
+      for (let p = 0; p <= 6; p++) {
+        const f = Math.pow(10, p);
+        if (Math.abs(v * f - Math.round(v * f)) < 1e-6) return f;
+      }
+      return 1;
+    }
+
+    function getDynamicMultN() {
+      const denoms = [];
+      state.left.groups.forEach(g => { if ((g.denom || 1) > 1) denoms.push(g.denom); });
+      state.right.groups.forEach(g => { if ((g.denom || 1) > 1) denoms.push(g.denom); });
+      // 分数の分母に加えて、小数を整数にするために必要な倍率も対象に含める
+      [state.left.x, state.left.num, state.right.x, state.right.num].forEach(v => {
+        if (!Array.isArray(v)) {
+          const f = decimalClearFactor(v);
+          if (f > 1) denoms.push(f);
+        }
+      });
+      if (denoms.length === 0) return null;
+      const lcm2 = (a, b) => (a * b) / gcd(a, b);
+      return denoms.reduce((acc, d) => lcm2(acc, d), 1);
+    }
+
+    function toggleMultFactor(e) {
+      if (isCompleted || window.isAnimating || (paletteState.selectedKey !== null && paletteState.selectedKey !== 'mult') || pendingMult !== null) return;
+      if (e) e.stopPropagation();
+      const dynN = getDynamicMultN();
+      const cycle = (dynN !== null && !multFactors.includes(dynN)) ? [...multFactors, dynN] : multFactors;
+      const idx = cycle.indexOf(multFactor);
+      multFactor = cycle[(idx + 1) % cycle.length];
+      paletteState.selectedKey = 'mult';
+      updatePaletteUI();
+      if (window.tutorialHandsOnActive) tutorialCheckPaletteReady();
+    }
+
+    /* 5-4-2a-2. 「ax=b」の形になっているか判定し、その a を返す */
+    function getDynamicDivN() {
+      const isPureX = (s) => !Array.isArray(s.x) && !Array.isArray(s.num) && s.groups.length === 0;
+      if (!isPureX(state.left) || !isPureX(state.right)) return null;
+      const lx = state.left.x, lnum = state.left.num;
+      const rx = state.right.x, rnum = state.right.num;
+      if (lx !== 0 && lnum === 0 && rx === 0 && rnum !== 0) return Math.abs(lx);
+      if (rx !== 0 && rnum === 0 && lx === 0 && lnum !== 0) return Math.abs(rx);
+      return null;
+    }
+
+    /* 5-4-2b. 割り算の数値切り替え */
+    function toggleDivFactor(e) {
+      if (isCompleted || window.isAnimating || (paletteState.selectedKey !== null && paletteState.selectedKey !== 'div') || pendingDiv !== null) return;
+      if (e) e.stopPropagation();
+      const dynN = getDynamicDivN();
+      const cycle = (dynN !== null && !divFactors.includes(dynN)) ? [...divFactors, dynN] : divFactors;
+      const idx = cycle.indexOf(divFactor);
+      divFactor = cycle[(idx + 1) % cycle.length];
+      paletteState.selectedKey = 'div';
+      updatePaletteUI();
+      if (window.tutorialHandsOnActive) tutorialCheckPaletteReady();
+    }
+
+    /* 5-4-3. パレット状態リセット */
+   function resetPalette() {
+      paletteState.selectedKey = null;
+      paletteState.count = 1;
+      pendingMult = null;
+      multFactor = 2;
+      pendingDiv = null;
+      divFactor = 2;
+      pendingAdd = null;
+      pendingRemove = null;
+      updatePaletteUI();
+    }
+
+    /* 5-4-4. パレットUIの更新 */
+   function updatePaletteUI() {
+      const keys = ['x', '-x', '1', '-1'];
+      const ids = {
+        'x': 'palette-x-pos', '-x': 'palette-x-neg',
+        '1': 'palette-num-pos', '-1': 'palette-num-neg'
+      };
+
+      const anyPending = (pendingMult !== null || pendingDiv !== null || pendingAdd !== null || pendingRemove !== null);
+
+      const multEl = document.getElementById('palette-mult');
+      if (multEl) {
+        multEl.textContent = `×${multFactor}`;
+        if (anyPending) {
+          if (pendingMult !== null) {
+            multEl.classList.remove('disabled');
+          } else {
+            multEl.classList.add('disabled');
+          }
+        } else if (paletteState.selectedKey !== null && paletteState.selectedKey !== 'mult') {
+          multEl.classList.add('disabled');
+        } else {
+          multEl.classList.remove('disabled');
+        }
+      }
+
+      const divEl = document.getElementById('palette-div');
+      if (divEl) {
+        divEl.textContent = `÷${divFactor}`;
+        if (anyPending) {
+          if (pendingDiv !== null) {
+            divEl.classList.remove('disabled');
+          } else {
+            divEl.classList.add('disabled');
+          }
+        } else if (paletteState.selectedKey !== null && paletteState.selectedKey !== 'div') {
+          divEl.classList.add('disabled');
+        } else {
+          divEl.classList.remove('disabled');
+        }
+      }
+
+      keys.forEach(key => {
+        const el = document.getElementById(ids[key]);
+        if (!el) return;
+
+        if (pendingAdd !== null) {
+          if (key === pendingAdd.key) {
+            el.classList.remove('disabled');
+            el.textContent = formatTerm(pendingAdd.val, key.includes('x'), true);
+          } else {
+            el.classList.add('disabled');
+            const val = (key === 'x' || key === '1') ? 1 : -1;
+            el.textContent = formatTerm(val, key.includes('x'), true);
+          }
+        } else if (anyPending) {
+          el.classList.add('disabled');
+          const val = (key === 'x' || key === '1') ? 1 : -1;
+          el.textContent = formatTerm(val, key.includes('x'), true);
+        } else if (paletteState.selectedKey === null || paletteState.selectedKey === key) {
+          el.classList.remove('disabled');
+          const val = (key === 'x' || key === '1') 
+            ? (paletteState.selectedKey === key ? paletteState.count : 1) 
+            : (paletteState.selectedKey === key ? -paletteState.count : -1);
+          el.textContent = formatTerm(val, key.includes('x'), true);
+        } else {
+          el.classList.add('disabled');
+          const val = (key === 'x' || key === '1') ? 1 : -1;
+          el.textContent = formatTerm(val, key.includes('x'), true);
+        }
+      });
+    }
+
+    /* 5-4-5. パレットアイテムドラッグ開始 */
+    function handlePalettePointerDown(e, key) {
+      if (isCompleted || window.isAnimating) return;
+      if (e.button !== undefined && e.button !== 0) return;
+      if (pendingMult !== null && key !== 'mult') return;
+      if (pendingDiv !== null && key !== 'div') return;
+      if (pendingAdd !== null && key !== pendingAdd.key) return;
+      if (pendingRemove !== null) return;
+      if (paletteState.selectedKey !== null && paletteState.selectedKey !== key) return;
+      e.preventDefault();
+
+      const startX = e.clientX;
+      const startY = e.clientY;
+      let isDragging = false;
+      let ghost = null;
+
+      const type = (key === 'mult') ? 'mult' : (key === 'div') ? 'div' : ((key === 'x' || key === '-x') ? 'x' : '1');
+      const mult = (key === 'x' || key === '1') ? 1 : -1;
+      const currentVal = (key === 'mult') ? multFactor : (key === 'div') ? divFactor : ((paletteState.selectedKey === key ? paletteState.count : 1) * mult);
+
+      const onPointerMove = (moveEvent) => {
+        const dist = Math.hypot(moveEvent.clientX - startX, moveEvent.clientY - startY);
+        if (!isDragging && dist > 5) {
+          isDragging = true;
+          draggedData = { source: 'palette', type, val: currentVal, key };
+          ghost = document.createElement('div');
+          ghost.className = `ball ${type === 'mult' ? 'ball-mult' : (type === 'div' ? 'ball-div' : (type === 'x' ? (currentVal > 0 ? 'ball-x-pos' : 'ball-x-neg') : (currentVal > 0 ? 'ball-num-pos' : 'ball-num-neg')))}`;
+          ghost.textContent = formatTerm(currentVal, type === 'x', true);
+          setBallSize(ghost, type, currentVal);
+          ghost.style.position = 'fixed';
+          ghost.style.pointerEvents = 'none';
+          ghost.style.zIndex = '9999';
+          ghost.style.transform = `scale(${getAppScale()})`;
+          ghost.style.transformOrigin = 'center center';
+          document.body.appendChild(ghost);
+        }
+
+        if (isDragging && ghost) {
+          ghost.style.left = `${moveEvent.clientX - 15}px`;
+          ghost.style.top = `${moveEvent.clientY - 15}px`;
+        }
+      };
+
+      const onPointerUp = (upEvent) => {
+        document.removeEventListener('pointermove', onPointerMove);
+        document.removeEventListener('pointerup', onPointerUp);
+
+        if (ghost && ghost.parentNode) ghost.parentNode.removeChild(ghost);
+
+        if (isDragging) {
+          const droppedElement = document.elementFromPoint(upEvent.clientX, upEvent.clientY);
+          if (droppedElement) {
+            const plateLeftEl = document.getElementById('plateLeft');
+            const plateRightEl = document.getElementById('plateRight');
+            const isLeftPlate = plateLeftEl.contains(droppedElement) || droppedElement === plateLeftEl;
+            const isRightPlate = plateRightEl.contains(droppedElement) || droppedElement === plateRightEl;
+
+            const dummyEvent = {
+              preventDefault: () => {}, stopPropagation: () => {},
+              currentTarget: isLeftPlate ? plateLeftEl : plateRightEl
+            };
+
+            if (isLeftPlate) {
+              handleDropPlate(dummyEvent, 'left');
+            } else if (isRightPlate) {
+              handleDropPlate(dummyEvent, 'right');
+            } else {
+              draggedData = null;
+            }
+          } else {
+            draggedData = null;
+          }
+        } else {
+          if (key === 'mult') {
+            toggleMultFactor(null);
+          } else if (key === 'div') {
+            toggleDivFactor(null);
+          } else if (pendingAdd !== null) {
+            // ロック中はタップでの数値変更を無視する（反対側の皿には同じ数を置く必要があるため）
+          } else {
+            if (paletteState.selectedKey === key) {
+              paletteState.count = paletteState.count < 9 ? paletteState.count + 1 : 1;
+            } else {
+              paletteState.selectedKey = key;
+              paletteState.count = 2; 
+            }
+            updatePaletteUI();
+            if (window.tutorialHandsOnActive) tutorialCheckPaletteReady();
+          }
+        }
+      };
+      document.addEventListener('pointermove', onPointerMove);
+      document.addEventListener('pointerup', onPointerUp);
+    }
+
+    // ========================================================
+    // 5-5. 入力とパース・プレビュー処理
+    // ========================================================
+    /* 5-5-1. チェックボックスの連動 */
+    function updateCheckboxes() {
+      const chkEquality = document.getElementById('chkEquality').checked;
+      const chkWithBrackets = document.getElementById('chkWithBrackets');
+      const chkWithFractions = document.getElementById('chkWithFractions');
+      if (chkEquality) {
+        chkWithBrackets.disabled = true;
+        chkWithFractions.disabled = true;
+      } else {
+        chkWithBrackets.disabled = false;
+        chkWithFractions.disabled = false;
+      }
+      document.getElementById('btnSwap').disabled = chkEquality || (isCompleted && !lastAllowSwap);
+    }
+
+    /* 5-5-2. MathJaxプレビューの更新 */
+    /* 5-5-2b. 数式文字列(a/b形式の分数を含む)をLaTeX(\dfrac記法)に変換する共通関数 */
+    function eqToLatex(val) {
+      let s = val;
+      // ①係数分数(数字/数字がxの直前にある場合): 例 "3/4x" → "\dfrac{3}{4}x"
+      s = s.replace(/(-?)(\d+)\/(\d+)x/g, '$1\\dfrac{$2}{$3}x');
+      // ②分子がかっこの分数: 例 "(x+1)/2" → "\dfrac{x+1}{2}"
+      s = s.replace(/(-?)\s*\(([^)]+)\)\/([^\s=/]+)/g, '$1\\dfrac{$2}{$3}');
+      // ③残りの単純な分数(定数項・x/数字など): 例 "1/2"→"\dfrac{1}{2}", "x/3"→"\dfrac{x}{3}"
+      s = s.replace(/(-?)([^\s=/()+-]+)\/([^\s=/()+-]+)/g, '$1\\dfrac{$2}{$3}');
+      s = s
+        .replace(/\*/g, '\\times ')
+        .replace(/\(/g, '\\left(')
+        .replace(/\)/g, '\\right)');
+      return s;
+    }
+
+    function updateEqPreview() {
+      const inputEl = document.getElementById('eqInput');
+      const previewEl = document.getElementById('eqMathPreview');
+      if (!inputEl || !previewEl) return;
+      let val = inputEl.value.trim();
+      if (!val) {
+        previewEl.innerHTML = '\\( \\quad \\)';
+      } else {
+        previewEl.innerHTML = `\\(${eqToLatex(val)}\\)`;
+      }
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        MathJax.typesetPromise([previewEl]).catch(() => {});
+      }
+    }
+
+    function showEqInput() {
+      const inputEl = document.getElementById('eqInput');
+      const previewEl = document.getElementById('eqMathPreview');
+      if (inputEl && previewEl) {
+        inputEl.classList.remove('hidden');
+        previewEl.classList.add('hidden');
+        inputEl.focus();
+      }
+    }
+
+    function showEqPreview() {
+      const inputEl = document.getElementById('eqInput');
+      const previewEl = document.getElementById('eqMathPreview');
+      if (inputEl && previewEl) {
+        updateEqPreview();
+        inputEl.classList.add('hidden');
+        previewEl.classList.remove('hidden');
+      }
+    }
+
+    /* 5-5-2d. 「セット」ボタン: 押すたびに手入力の開始/適用を切り替える(ランダム生成モード専用) */
+    let manualInputActive = false;
+    function toggleManualInput() {
+      if (!manualInputActive) {
+        manualInputActive = true;
+        showEqInput();
+        document.getElementById('btnRandom').disabled = true;
+        document.getElementById('btnReset').disabled = true;
+      } else {
+        manualInputActive = false;
+        setupFromInput();
+        showEqPreview();
+        document.getElementById('btnRandom').disabled = false;
+        document.getElementById('btnReset').disabled = false;
+      }
+    }
+
+    /* 5-5-3. ページ読み込み時初期化 */
+    window.onload = () => {
+      const inputEl = document.getElementById('eqInput');
+      const previewEl = document.getElementById('eqMathPreview');
+      if (inputEl && previewEl) {
+        inputEl.addEventListener('input', updateEqPreview);
+        // 数式プレビューをタップして手入力を始める機能は全画面で無効化(セットボタンからのみ手入力できる)
+        // 入力欄のフォーカスが外れても自動ではプレビューに戻さない(セットボタンの2回目の押下でのみ確定する)
+      }
+      updateScale();
+      window.addEventListener('resize', updateScale);
+      setupFromInput();
+      showEqPreview();
+      renderPresetCategoryList();
+      renderTutorialMenuEqs();
+
+      // iPad等のSafari/Chromeはviewportのuser-scalable=noを無視するため、
+      // ダブルタップを検知してブラウザ標準の拡大動作自体を止める
+      // (ボタン等の操作要素への連打は、意図した操作を妨げないよう対象から除外する)
+      let lastTouchEnd = 0;
+      document.addEventListener('touchend', (e) => {
+        const now = Date.now();
+        const isInteractive = e.target.closest('button, input, select, textarea, label, a, .palette-item');
+        if (!isInteractive && now - lastTouchEnd <= 350) {
+          e.preventDefault();
+        }
+        lastTouchEnd = now;
+      }, { passive: false });
+    };
+
+    /* 5-5-4. 両辺の合計値取得 */
+    function getTotalX(sideState) {
+      const groupX = sideState.groups.reduce((sum, g) => sum + ((g.sign || 1) * g.x * (g.count || 1) / (g.denom || 1)), 0);
+      const valX = Array.isArray(sideState.x) ? sideState.x.reduce((a, b) => a + b, 0) : sideState.x;
+      return valX + groupX;
+    }
+    function getTotalNum(sideState) {
+      const groupNum = sideState.groups.reduce((sum, g) => sum + ((g.sign || 1) * g.num * (g.count || 1) / (g.denom || 1)), 0);
+      const valNum = Array.isArray(sideState.num) ? sideState.num.reduce((a, b) => a + b, 0) : sideState.num;
+      return valNum + groupNum;
+    }
+
+    /* 5-5-4b. 片側をf倍する処理(handleDropPlateのmult分岐・チュートリアルデモの両方から呼び出す) */
+    function applyMultiplyToSide(sideState, f) {
+      sideState.x = Array.isArray(sideState.x) ? sideState.x.map(v => v * f) : sideState.x * f;
+      sideState.num = Array.isArray(sideState.num) ? sideState.num.map(v => v * f) : sideState.num * f;
+      sideState.groups.forEach(g => {
+        const d = g.denom || 1;
+        const common = gcd(f, d);
+        const multCoeff = f / common;
+        g.denom = d / common;
+        g.count = (g.count || 1) * multCoeff;
+      });
+      sideState.groups = sideState.groups.filter(g => {
+        if ((g.denom || 1) === 1) {
+          const isSingleTerm = g.num === 0 || g.x === 0;
+          const isPositiveSingleCount = (g.sign || 1) === 1 && (g.count || 1) === 1;
+          if (isSingleTerm || isPositiveSingleCount) {
+            sideState.x += (g.sign || 1) * g.x * (g.count || 1);
+            sideState.num += (g.sign || 1) * g.num * (g.count || 1);
+            return false;
+          }
+        }
+        return true;
+      });
+    }
+
+    /* 5-5-4c. 片側をfで割る処理(handleDropPlateのdiv分岐・チュートリアルデモの両方から呼び出す) */
+    function applyDivideToSide(sideState, f) {
+      sideState.x = sideState.x / f;
+      sideState.num = sideState.num / f;
+      sideState.groups.forEach(g => { g.count = (g.count || 1) / f; });
+      sideState.groups = sideState.groups.filter(g => {
+        const gSign = g.sign || 1;
+        const isFrac = g.denom && g.denom > 1;
+        if ((g.count || 1) === 1 && gSign === 1 && !isFrac) {
+          sideState.x += g.x;
+          sideState.num += g.num;
+          return false;
+        }
+        return true;
+      });
+    }
+
+    /* 5-5-5. 入力からのセットアップ */
+    function setupFromInput() {
+      if (window.isAnimating) return;
+      window.isAnimating = false;
+      const input = document.getElementById('eqInput').value.replace(/\s+/g, '');
+      const parts = input.split('=');
+      
+      if (parts.length !== 2) {
+        alert('「=」を含む正しい方程式を入力してください（例: 2(x + 4) = 12）');
+        return;
+      }
+
+      const left = parseSide(parts[0]);
+      const right = parseSide(parts[1]);
+
+      const diffX = getTotalX(left) - getTotalX(right);
+      const diffNum = getTotalNum(right) - getTotalNum(left);
+
+      if (diffX !== 0) {
+        currentXValue = diffNum / diffX;
+      } else {
+        currentXValue = 2;
+      }
+
+      state.left = JSON.parse(JSON.stringify(left));
+      state.right = JSON.parse(JSON.stringify(right));
+      saveBaseState();
+      document.getElementById('eqInput').value = `${formatSideState(state.left)} = ${formatSideState(state.right)}`;
+      
+      setLockState(false);
+      pendingMult = null;
+      resetPalette();
+      showAlert('天秤を操作して、方程式を解こう！', false);
+      render();
+
+      calcNotebook = [];
+      addNotebookEntry(formatSideState(state.left), formatSideState(state.right), '問題');
+      showEqPreview();
+    }
+
+    function setBallSize(ballEl, type, val) {
+      if (type === '1' || type === 'num') {
+        const absVal = Math.min(Math.abs(val), 50);
+        const scale = Math.pow(absVal, 1 / 4);
+        const size = 30 * scale;
+        const fontSize = 0.8 * scale;
+        ballEl.style.width = `${size}px`;
+        ballEl.style.height = `${size}px`;
+        ballEl.style.fontSize = `${fontSize}rem`;
+      } else {
+        ballEl.style.width = '30px';
+        ballEl.style.height = '30px';
+        ballEl.style.fontSize = '0.8rem';
+      }
+    }
+
+    /* 5-5-6. 数式のパース */
+    function parseSide(str) {
+      let groups = [];
+      let x = 0;
+      let num = 0;
+      const fracGroupRegex = /([+-]?)(?:\(([^)]+)\)|([^\s=/+-]+))\s*\/\s*(-?\d+)(x?)/g;
+      let cleanStr = str;
+      let match;
+
+      while ((match = fracGroupRegex.exec(str)) !== null) {
+        let sign = match[1] === '-' ? -1 : 1;
+        let innerStr = match[2] || match[3];
+        let inner = parseTerms(innerStr);
+        let denom = parseInt(match[4], 10);
+        const hasTrailingX = (match[5] === 'x');
+        if (denom !== 0) {
+          if (denom < 0) { denom = -denom; sign = -sign; }
+          if (hasTrailingX) {
+            // 分数の直後にxが続く場合(例: "3/4x" = (3/4)×x)は、xにかかる係数の分数として扱う
+            groups.push({ x: inner.x + inner.num, num: 0, denom: denom, sign: sign });
+          } else {
+            groups.push({ x: inner.x, num: inner.num, denom: denom, sign: sign });
+          }
+        }
+        cleanStr = cleanStr.replace(match[0], '');
+      }
+
+      const groupRegex = /([+-]?\d*)\(([^)]+)\)/g;
+      let strForGroup = cleanStr;
+
+      while ((match = groupRegex.exec(strForGroup)) !== null) {
+        let coeffStr = match[1];
+        let coeff = 1;
+        if (coeffStr === '-') coeff = -1;
+        else if (coeffStr === '+' || coeffStr === '') coeff = 1;
+        else coeff = parseInt(coeffStr, 10);
+
+        const inner = parseTerms(match[2]);
+        const sign = coeff < 0 ? -1 : 1;
+        const count = Math.abs(coeff);
+
+        if (coeff === 1 || inner.num === 0) {
+          x += coeff * inner.x;
+          num += coeff * inner.num;
+        } else {
+          groups.push({ x: inner.x, num: inner.num, denom: 1, sign: sign, count: count });
+        }
+        cleanStr = cleanStr.replace(match[0], '');
+      }
+      const rest = parseTerms(cleanStr);
+      x += rest.x;
+      num += rest.num;
+
+      return { x, num, groups };
+    }
+
+    function parseTerms(str) {
+      let x = 0;
+      let num = 0;
+      if (!str) return { x, num };
+      const terms = str.match(/([+-]?[^+-]+)/g) || [];
+      terms.forEach(term => {
+        if (term.includes('x')) {
+          let coeffStr = term.replace('x', '');
+          if (coeffStr.includes('/')) {
+            const parts = coeffStr.split('/');
+            let nStr = parts[0];
+            let dStr = parts[1].replace(/[()]/g, '');
+            let nVal = (nStr === '' || nStr === '+') ? 1 : (nStr === '-' ? -1 : parseFloat(nStr));
+            let dVal = parseFloat(dStr);
+            if (!isNaN(nVal) && !isNaN(dVal) && dVal !== 0) {
+              x += nVal / dVal;
+            }
+          } else {
+            if (coeffStr === '' || coeffStr === '+') coeffStr = '1';
+            if (coeffStr === '-') coeffStr = '-1';
+            x += parseFloat(coeffStr);
+          }
+        } else {
+          num += parseFloat(term);
+        }
+      });
+      return { x, num };
+    }
+
+    function resetToInput() {
+      if (window.isAnimating) return;
+      setupFromInput();
+    }
+
+    // ========================================================
+    // 5-6. ランダム問題生成
+    // ========================================================
+    /* 5-6-1. ランダム問題生成 */
+    function generateQuizData() {
+      if (window.isAnimating) return;
+      const chkEquality = document.getElementById('chkEquality').checked;
+      const chkWithBrackets = document.getElementById('chkWithBrackets').checked;
+      const chkWithFractions = document.getElementById('chkWithFractions').checked;
+
+      const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+      const getRandomNonZero = (min, max, excludeList = []) => {
+          let val;
+          do { val = getRandomInt(min, max); } while (val === 0 || excludeList.includes(val));
+          return val;
+      };
+
+      let leftStr = '';
+      let rightStr = '';
+      let valid = false;
+
+      while (!valid) {
+          let xVal = getRandomNonZero(-5, 5);
+          if (chkEquality) {
+              const type = getRandomInt(0, 2);
+              if (type === 0) {
+                  const a = getRandomNonZero(-9, 9);
+                  const b = xVal + a;
+                  leftStr = a > 0 ? `x + ${a}` : `x - ${Math.abs(a)}`;
+                  rightStr = `${b}`;
+                  valid = true;
+              } else if (type === 1) {
+                  const a = getRandomNonZero(-5, 5, [1]);
+                  const b = a * xVal;
+                  leftStr = a === -1 ? `-x` : `${a}x`;
+                  rightStr = `${b}`;
+                  valid = true;
+              } else {
+                  const allowed = [-6, -4, -3, -2, 2, 3, 4, 6];
+                  const a = allowed[getRandomInt(0, allowed.length - 1)];
+                  const b = allowed[getRandomInt(0, allowed.length - 1)];
+                  const xSol = a * b;
+                  if (xSol >= -36 && xSol <= 36) {
+                      leftStr = a > 0 ? `x/${a}` : `-x/${Math.abs(a)}`;
+                      rightStr = `${b}`;
+                      valid = true;
+                  }
+              }
+          } else {
+              let leftCandidates = [];
+              let rightCandidates = [];
+              if (!chkWithBrackets && !chkWithFractions) {
+                leftCandidates = ['N']; rightCandidates = ['N'];
+              } else if (chkWithBrackets && !chkWithFractions) {
+                leftCandidates = ['N', 'K']; rightCandidates = ['N', 'K'];
+              } else if (!chkWithBrackets && chkWithFractions) {
+                leftCandidates = ['N', 'B']; rightCandidates = ['N', 'B'];
+              } else {
+                leftCandidates = ['N', 'K', 'B', 'F']; rightCandidates = ['N', 'K', 'B', 'F'];
+              }
+
+              let lPat = leftCandidates[getRandomInt(0, leftCandidates.length - 1)];
+              let rPat = rightCandidates[getRandomInt(0, rightCandidates.length - 1)];
+
+              if (chkWithFractions && !['B', 'F'].includes(lPat) && !['B', 'F'].includes(rPat)) continue;
+
+              let freeLDenom = null, freeRDenom = null;
+              if (!chkWithBrackets && chkWithFractions) {
+                const denomPool = [2, 3, 4, 6, -2, -3, -4, -6];
+                if (lPat === 'B') freeLDenom = denomPool[getRandomInt(0, denomPool.length - 1)];
+                if (rPat === 'B') freeRDenom = denomPool[getRandomInt(0, denomPool.length - 1)];
+                if (freeLDenom !== null || freeRDenom !== null) {
+                  const a1 = Math.abs(freeLDenom || 1);
+                  const a2 = Math.abs(freeRDenom || 1);
+                  const lcmVal = (a1 * a2) / gcd(a1, a2);
+                  xVal = lcmVal * getRandomNonZero(-3, 3);
+                }
+              }
+
+              let leftVal = 0, leftCoeff = 0, lStr = '';
+              const getDivisors = (n) => {
+                  let divs = []; let absN = Math.abs(n);
+                  for (let i = 2; i <= absN; i++) {
+                      if (absN % i === 0) { divs.push(i); divs.push(-i); }
+                  }
+                  return divs;
+              };
+
+              let lA, lB;
+              if (lPat === 'N') {
+                  lA = getRandomNonZero(-5, 5); lB = getRandomInt(-5, 5);
+                  leftVal = lA * xVal + lB; leftCoeff = lA;
+                  const parts = [];
+                  if (lA !== 0) parts.push(formatTerm(lA, true, true));
+                  if (lB !== 0) parts.push(formatTerm(lB, false, parts.length === 0));
+                  lStr = parts.length > 0 ? parts.join(' ') : '0';
+              } else if (lPat === 'K') {
+                  lA = getRandomNonZero(-5, 5, [1]); lB = getRandomInt(-5, 5);
+                  if (Math.abs(lA * lB) > 9) continue;
+                  leftVal = lA * (xVal + lB); leftCoeff = lA;
+                  let innerStr = formatTerm(1, true, true);
+                  if (lB !== 0) innerStr += ' ' + formatTerm(lB, false, false);
+                  let prefix = lA === 1 ? '' : (lA === -1 ? '-' : `${lA}`);
+                  lStr = lB === 0 ? formatTerm(lA, true, true) : (lA === 1 ? innerStr : `${prefix}(${innerStr})`);
+              } else if (lPat === 'B') {
+                  if (freeLDenom !== null) {
+                    lA = freeLDenom;
+                  } else {
+                    let divs = getDivisors(xVal).filter(d => [2, 3, 4, 6, -2, -3, -4, -6].includes(d));
+                    if (divs.length === 0) continue;
+                    lA = divs[getRandomInt(0, divs.length - 1)];
+                  }
+                  lB = getRandomInt(-5, 5);
+                  leftVal = (xVal / lA) + lB; leftCoeff = 1 / lA;
+                  const parts = [];
+                  parts.push(lA > 0 ? `x/${lA}` : `-x/${Math.abs(lA)}`);
+                  if (lB !== 0) parts.push(lB > 0 ? `+ ${lB}` : `- ${Math.abs(lB)}`);
+                  lStr = parts.join(' ');
+              } else if (lPat === 'F') {
+                  const allowedDenoms = [-6, -4, -3, -2, 2, 3, 4, 6];
+                  lA = allowedDenoms[getRandomInt(0, allowedDenoms.length - 1)];
+                  let bCands = [];
+                  for (let b = -5; b <= 5; b++) {
+                      if ((xVal + b) % lA === 0) bCands.push(b);
+                  }
+                  if (bCands.length === 0) continue;
+                  lB = bCands[getRandomInt(0, bCands.length - 1)];
+                  leftVal = (xVal + lB) / lA; leftCoeff = 1 / lA;
+                  let innerStr = formatTerm(1, true, true);
+                  if (lB !== 0) innerStr += ' ' + formatTerm(lB, false, false);
+                  lStr = lA > 0 ? `(${innerStr})/${lA}` : `-(${innerStr})/${Math.abs(lA)}`;
+              }
+
+              let rightCoeff = 0, rStr = '', rA, rB;
+              if (rPat === 'N') {
+                  rA = getRandomNonZero(-5, 5); rB = leftVal - rA * xVal;
+                  if (rB < -15 || rB > 15) continue;
+                  rightCoeff = rA;
+                  const parts = [];
+                  if (rA !== 0) parts.push(formatTerm(rA, true, true));
+                  if (rB !== 0) parts.push(formatTerm(rB, false, parts.length === 0));
+                  rStr = parts.length > 0 ? parts.join(' ') : '0';
+              } else if (rPat === 'K') {
+                  rA = getRandomNonZero(-5, 5, [1]);
+                  if (leftVal % rA !== 0) continue;
+                  rB = (leftVal / rA) - xVal;
+                  if (rB < -5 || rB > 5) continue;
+                  if (Math.abs(rA * rB) > 9) continue;
+                  rightCoeff = rA;
+                  let innerStr = formatTerm(1, true, true);
+                  if (rB !== 0) innerStr += ' ' + formatTerm(rB, false, false);
+                  let prefix = rA === 1 ? '' : (rA === -1 ? '-' : `${rA}`);
+                  rStr = rB === 0 ? formatTerm(rA, true, true) : (rA === 1 ? innerStr : `${prefix}(${innerStr})`);
+              } else if (rPat === 'B') {
+                  if (freeRDenom !== null) {
+                    rA = freeRDenom;
+                  } else {
+                    let divs = getDivisors(xVal).filter(d => [2, 3, 4, 6, -2, -3, -4, -6].includes(d));
+                    if (divs.length === 0) continue;
+                    rA = divs[getRandomInt(0, divs.length - 1)];
+                  }
+                  rB = leftVal - (xVal / rA);
+                  if (rB < -15 || rB > 15) continue;
+                  rightCoeff = 1 / rA;
+                  const parts = [];
+                  parts.push(rA > 0 ? `x/${rA}` : `-x/${Math.abs(rA)}`);
+                  if (rB !== 0) parts.push(rB > 0 ? `+ ${rB}` : `- ${Math.abs(rB)}`);
+                  rStr = parts.join(' ');
+              } else if (rPat === 'F') {
+                  const allowedDenoms = [-6, -4, -3, -2, 2, 3, 4, 6];
+                  rA = allowedDenoms[getRandomInt(0, allowedDenoms.length - 1)];
+                  rB = leftVal * rA - xVal;
+                  if (rB < -15 || rB > 15) continue;
+                  rightCoeff = 1 / rA;
+                  let innerStr = formatTerm(1, true, true);
+                  if (rB !== 0) innerStr += ' ' + formatTerm(rB, false, false);
+                  rStr = rA > 0 ? `(${innerStr})/${rA}` : `-(${innerStr})/${Math.abs(rA)}`;
+              }
+
+              if (chkWithBrackets && !lStr.includes('(') && !rStr.includes('(')) continue;
+
+              if (Math.abs(leftCoeff - rightCoeff) < 0.001) continue;
+
+              leftStr = lStr;
+              rightStr = rStr;
+              valid = true;
+          }
+      }
+      document.getElementById('eqInput').value = `${leftStr} = ${rightStr}`;
+      setupFromInput();
+      showEqPreview();
+    }
+
+    // ========================================================
+    // 5-7. 状態保存とロック制御
+    // ========================================================
+    /* 5-7-1. ベース状態の保存 */
+    function saveBaseState() {
+      baseState.left = JSON.parse(JSON.stringify(state.left));
+      baseState.right = JSON.parse(JSON.stringify(state.right));
+    }
+
+    /* 5-7-2. UIのロック設定 */
+    function setLockState(locked, allowSwap = false, allowSign = false) {
+      isCompleted = locked;
+      lastAllowSwap = allowSwap;
+      const chkEqualityNow = document.getElementById('chkEquality').checked;
+      document.getElementById('btnSwap').disabled = (locked && !allowSwap) || chkEqualityNow;
+      document.getElementById('btnSign').disabled = locked && !allowSign;
+      const btnResetPal = document.getElementById('btnResetPalette');
+      if (btnResetPal) btnResetPal.disabled = locked;
+
+      if (locked) {
+        const paletteItems = document.querySelectorAll('.palette-item');
+        paletteItems.forEach(item => item.classList.add('disabled'));
+      } else {
+        updatePaletteUI();
+      }
+    }
+
+    // ========================================================
+    // 5-8. 天秤操作（ボタンアクション）
+    // ========================================================
+    /* 5-8-1. 袋を破く（展開） */
+    function popBag(side, index) {
+      if (isCompleted || window.isAnimating) return;
+      if (isPendingOp()) {
+        showAlert('反対側の皿の操作を先に終えてね！', false);
+        return;
+      }
+      const group = state[side].groups[index];
+      if (group.denom && group.denom > 1) {
+        showAlert(`先に両辺を ${group.denom} 倍して分母を払おう！`, false);
+        return;
+      }
+      window.isAnimating = true;
+      setLockState(true);
+
+      const plateEl = document.getElementById(side === 'left' ? 'plateLeft' : 'plateRight');
+      const bagEls = plateEl.querySelectorAll('.bag-item');
+
+      if (bagEls[index]) bagEls[index].classList.add('bursting');
+
+      setTimeout(() => {
+        const gSign = group.sign || 1;
+        const gCount = group.count || 1;
+        const gx = gSign * group.x * gCount;
+        const gnum = gSign * group.num * gCount;
+        state[side].groups.splice(index, 1);
+
+        const hasSplit = Array.isArray(state[side].x) || Array.isArray(state[side].num);
+        const curX = Array.isArray(state[side].x) ? state[side].x.reduce((a, b) => a + b, 0) : state[side].x;
+        const curNum = Array.isArray(state[side].num) ? state[side].num.reduce((a, b) => a + b, 0) : state[side].num;
+        const cancelXCount = (!hasSplit && curX * gx < 0) ? Math.min(Math.abs(curX), Math.abs(gx)) : 0;
+        const cancelNumCount = (!hasSplit && curNum * gnum < 0) ? Math.min(Math.abs(curNum), Math.abs(gnum)) : 0;
+        const willAnnihilate = cancelXCount > 0 || cancelNumCount > 0;
+
+        if (willAnnihilate) {
+          renderPlate('plateLeft', state.left, 'left');
+          renderPlate('plateRight', state.right, 'right');
+          state[side].x += gx;
+          state[side].num += gnum;
+          updateScaleAndStatus();
+
+          const targetPlateEl = document.getElementById(side === 'left' ? 'plateLeft' : 'plateRight');
+          let ballX = null;
+          let ballNum = null;
+
+          if (gx !== 0) {
+            ballX = document.createElement('div');
+            ballX.className = `ball ${gx > 0 ? 'ball-x-pos' : 'ball-x-neg'}`;
+            ballX.textContent = formatTerm(gx, true, true);
+            setBallSize(ballX, 'x', gx);
+            targetPlateEl.appendChild(ballX);
+          }
+          if (gnum !== 0) {
+            ballNum = document.createElement('div');
+            ballNum.className = `ball ${gnum > 0 ? 'ball-num-pos' : 'ball-num-neg'}`;
+            ballNum.textContent = formatTerm(gnum, false, true);
+            setBallSize(ballNum, '1', gnum);
+            targetPlateEl.appendChild(ballNum);
+          }
+
+          setTimeout(() => {
+            if (cancelXCount > 0 && ballX) {
+              ballX.classList.add('annihilating');
+              const selector = gx > 0 ? '.ball-x-neg' : '.ball-x-pos';
+              const existingBall = targetPlateEl.querySelector(selector);
+              if (existingBall) existingBall.classList.add('annihilating');
+            }
+            if (cancelNumCount > 0 && ballNum) {
+              ballNum.classList.add('annihilating');
+              const selector = gnum > 0 ? '.ball-num-neg' : '.ball-num-pos';
+              const existingBall = targetPlateEl.querySelector(selector);
+              if (existingBall) existingBall.classList.add('annihilating');
+            }
+            setTimeout(() => {
+              window.isAnimating = false;
+              setLockState(false);
+              showAlert('かっこをはずしたよ！', false);
+              render();
+              addNotebookEntry(formatSideState(state.left), formatSideState(state.right), 'かっこを\n　はずした');
+              checkCompletion();
+            }, 800);
+          }, 500);
+        } else {
+          if (Array.isArray(state[side].x)) state[side].x.push(gx); else state[side].x += gx;
+          if (Array.isArray(state[side].num)) state[side].num.push(gnum); else state[side].num += gnum;
+          window.isAnimating = false;
+          setLockState(false);
+          showAlert('かっこをはずしたよ！', false);
+          render();
+          addNotebookEntry(formatSideState(state.left), formatSideState(state.right), 'かっこを\n　はずした');
+          checkCompletion();
+        }
+      }, 800);
+    }
+
+    /* 5-8-3. 両辺入れかえ */
+   function swapSides() {
+      if (document.getElementById('btnSwap').disabled || window.isAnimating) return;
+      if (isPendingOp()) {
+        showAlert('反対側の皿の操作を先に終えてね！', false);
+        return;
+      }
+      const tempState = state.left;
+      state.left = state.right;
+      state.right = tempState;
+      const tempBase = baseState.left;
+      baseState.left = baseState.right;
+      baseState.right = tempBase;
+
+      showAlert('両辺を入れかえたよ！', false);
+      render();
+      addNotebookEntry(formatSideState(state.left), formatSideState(state.right), '両辺を\n　入れかえた', true);
+      checkCompletion();
+    }
+
+    /* 5-8-4. 符号入れかえ */
+    function changeSigns() {
+      if (window.isAnimating) return;
+      if (isPendingOp()) {
+        showAlert('反対側の皿の操作を先に終えてね！', false);
+        return;
+      }
+
+      const invertSide = (s) => {
+        s.x = Array.isArray(s.x) ? s.x.map(v => -v) : -s.x;
+        s.num = Array.isArray(s.num) ? s.num.map(v => -v) : -s.num;
+        s.groups.forEach(g => { g.sign = -(g.sign || 1); });
+        s.groups = s.groups.filter(g => {
+          if ((g.denom || 1) === 1) {
+            const isSingleTerm = g.num === 0 || g.x === 0;
+            const isPositiveSingleCount = (g.sign || 1) === 1 && (g.count || 1) === 1;
+            if (isSingleTerm || isPositiveSingleCount) {
+              s.x += (g.sign || 1) * g.x * (g.count || 1);
+              s.num += (g.sign || 1) * g.num * (g.count || 1);
+              return false;
+            }
+          }
+          return true;
+        });
+      };
+
+      // 直前が「等分（divide）」または「かけ算（mult）」の一連の操作だった場合、そのノート履歴を削除して取得する
+      let divideEntries = [];
+      while (calcNotebook.length > 0 && calcNotebook[calcNotebook.length - 1].opType === 'divide') {
+        divideEntries.unshift(calcNotebook.pop());
+      }
+
+      let multEntries = [];
+      while (calcNotebook.length > 0 && calcNotebook[calcNotebook.length - 1].opType === 'mult') {
+        multEntries.unshift(calcNotebook.pop());
+      }
+
+      invertSide(state.left);
+      invertSide(state.right);
+      invertSide(baseState.left);
+      invertSide(baseState.right);
+
+      if (divideEntries.length > 0) {
+        // 直前の等分処理をマイナスで割る処理へ書き換える
+        const firstDiv = divideEntries[0];
+        const prevK = firstDiv.divideK;
+        const newK = -prevK;
+        const origLeft = firstDiv.origLeft;
+        const origRight = firstDiv.origRight;
+
+        showAlert(`すべての項の符号を入れかえたよ！`, false);
+
+        const chkEquality = document.getElementById('chkEquality').checked;
+        if (chkEquality && origLeft !== undefined && origRight !== undefined) {
+          const stepLeft = toPerTermFraction(origLeft, newK);
+          const stepRight = toPerTermFraction(origRight, newK);
+          addNotebookEntry(stepLeft, stepRight, `両辺を\n　${newK}で割った`, false, { opType: 'divide', origLeft, origRight, divideK: newK });
+          addNotebookEntry(formatSideState(state.left), stepRight, '', false, { opType: 'divide', divideK: newK });
+          saveBaseState();
+          addNotebookEntry(formatSideState(state.left), formatSideState(state.right), '', false, { opType: 'divide', divideK: newK });
+        } else {
+          const stepLeft = toPerTermFraction(origLeft, newK);
+          const stepRight = toPerTermFraction(origRight, newK);
+          addNotebookEntry(stepLeft, stepRight, `両辺を\n　 ${newK} で割った`, false, { opType: 'divide', origLeft, origRight, divideK: newK });
+          saveBaseState();
+          addNotebookEntry(formatSideState(state.left), formatSideState(state.right), '', false, { opType: 'divide', origLeft, origRight, divideK: newK });
+        }
+      } else if (multEntries.length > 0) {
+        // 直前がかけ算（mult）だった場合、直前の3つの式を消去してマイナス倍の処理に書き換える（修正②）
+        const firstMult = multEntries[0];
+        const origLeft = firstMult.origLeft;
+        const origRight = firstMult.origRight;
+        const origFactor = firstMult.origFactor;
+        const newFactor = -origFactor;
+
+        showAlert(`すべての項の符号を入れかえたよ！`, false);
+
+        const factorStr = newFactor > 0 ? `${newFactor}` : `(${newFactor})`;
+        const wrapPoly = (str) => {
+            const trimmed = str.trim();
+            if (/^-?\d*\(.+\)$/.test(trimmed)) return str;
+            const terms = splitTopLevelTerms(trimmed);
+            return terms.length > 1 ? `(${str})` : str;
+          };
+        const stepLeft = `${wrapPoly(origLeft)} * ${factorStr}`;
+        const stepRight = `${wrapPoly(origRight)} * ${factorStr}`;
+
+        const chkEquality = document.getElementById('chkEquality').checked;
+        if (chkEquality) {
+          addNotebookEntry(stepLeft, stepRight, `両辺を\n　${newFactor}倍した`, false, { opType: 'mult', origLeft, origRight, origFactor: newFactor });
+          addNotebookEntry(formatSideState(state.left), stepRight, '', false, { opType: 'mult', origLeft, origRight, origFactor: newFactor });
+          saveBaseState();
+          addNotebookEntry(formatSideState(state.left), formatSideState(state.right), '', false, { opType: 'mult', origLeft, origRight, origFactor: newFactor });
+        } else {
+          addNotebookEntry(stepLeft, stepRight, `両辺を\n　${newFactor} 倍した`, false, { opType: 'mult', origLeft, origRight, origFactor: newFactor });
+          saveBaseState();
+          addNotebookEntry(formatSideState(state.left), formatSideState(state.right), '', false, { opType: 'mult', origLeft, origRight, origFactor: newFactor });
+        }
+      } else {
+        showAlert('すべての項の符号を入れかえたよ！', false);
+        addNotebookEntry(formatSideState(state.left), formatSideState(state.right), '符号を\n　入れかえた', true, { opType: 'sign' });
+      }
+
+      isCompleted = false;
+      const isSolved = checkCompletion();
+      if (!isSolved) {
+        setLockState(false);
+      }
+      render();
+    }
+
+    // ========================================================
+    // 5-9. 描画・アニメーション処理
+    // ========================================================
+    /* 5-9-1. アラートメッセージ表示 */
+    function showAlert(msg, isSuccess = false) {
+      const alertEl = document.getElementById('alertMessage');
+      alertEl.innerHTML = msg;
+      if (isSuccess) alertEl.classList.add('success');
+      else alertEl.classList.remove('success');
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        MathJax.typesetPromise([alertEl]).catch(() => {});
+      }
+    }
+
+    /* 5-9-2. 画面全体の再描画 */
+    function render() {
+      renderPlate('plateLeft', state.left, 'left');
+      renderPlate('plateRight', state.right, 'right');
+      updateScaleAndStatus();
+    }
+
+    /* 5-9-3. お皿の描画 */
+    function renderPlate(plateId, plateState, side) {
+      const plate = document.getElementById(plateId);
+      plate.innerHTML = '';
+      plateState.groups.forEach((g, index) => {
+        const bag = document.createElement('div');
+        const isFrac = g.denom && g.denom > 1;
+        bag.className = `bag-item ${isFrac ? 'frac-bag' : ''} ${isCompleted ? 'disabled' : ''}`;
+        
+        let innerParts = [];
+        if (g.x !== 0) innerParts.push(formatTerm(g.x, true, true));
+        if (g.num !== 0) innerParts.push(formatTerm(g.num, false, innerParts.length === 0));
+        let innerStr = innerParts.join(' ');
+        const sign = g.sign || 1;
+        const cnt = g.count || 1;
+        const cntStr = cnt > 1 ? cnt : '';
+        const hasOp = innerParts.length > 1;
+        const needsParen = hasOp || (sign === -1 && innerStr.startsWith('-'));
+
+        if (isFrac) {
+          const needsFracParen = hasOp || innerStr.startsWith('-');
+          const numStr = (cnt > 1 || needsFracParen) ? `${cntStr}(${innerStr})` : innerStr;
+          bag.innerHTML = `${sign === -1 ? '-' : ''}<div class="frac-box"><div class="frac-num">${numStr}</div><div class="frac-den">${g.denom}</div></div>`;
+          bag.title = '両辺をかけて分母を払うと開けます';
+        } else {
+          if (sign === 1 && cnt === 1) {
+            bag.textContent = innerStr;
+          } else {
+            bag.textContent = (cnt > 1 || needsParen) ? `${sign === -1 ? '-' : ''}${cntStr}(${innerStr})` : `${sign === -1 ? '-' : ''}${innerStr}`;
+          }
+          bag.title = 'クリックして袋を破く（展開）';
+        }
+        if (!isCompleted) bag.onclick = () => popBag(side, index);
+        plate.appendChild(bag);
+      });
+      renderBalls(plate, 'x', plateState.x, side);
+      renderBalls(plate, '1', plateState.num, side);
+    }
+    
+    function renderBalls(container, type, count, side) {
+      const vals = Array.isArray(count) ? count : [count];
+      vals.forEach((val, index) => {
+        if (Math.abs(val) < 1e-9) return;
+        const isPositive = val > 0;
+        const ball = document.createElement('div');
+        ball.className = `ball ${type === 'x' ? (isPositive ? 'ball-x-pos' : 'ball-x-neg') : (isPositive ? 'ball-num-pos' : 'ball-num-neg')}`;
+        ball.textContent = formatTerm(val, type === 'x', true);
+        setBallSize(ball, type, val);
+
+        if (!isCompleted) {
+          if (typeof handlePointerDown === 'function') {
+            ball.onpointerdown = (e) => handlePointerDown(e, 'plate', side, type, val, index);
+          }
+        } else {
+          ball.classList.add('disabled');
+        }
+        container.appendChild(ball);
+      });
+    }
+
+    /* 5-9-3-2. 球の分裂（分解）処理 */
+    function splitBall(side, type, val) {
+      if (isCompleted || window.isAnimating) return;
+      if (isPendingOpForGrab()) {
+        showAlert('反対側の皿の操作を先に終えてね！', false);
+        return;
+      }
+
+      // すでに配列（2つ以上に分裂済み）の場合は3つ以上には分裂させない
+      if (Array.isArray(state[side][type === 'x' ? 'x' : 'num'])) return;
+
+      if (side === 'left' && type === 'x') {
+        const B = getTotalX(baseState.right);
+        if (B === 0) return; // 相手の皿にターゲットが存在しない（0）場合はクリック不可
+        const A = val;
+        state.left.x = [B, A - B];
+        render();
+      } else if (side === 'right' && (type === '1' || type === 'num')) {
+        const D = getTotalNum(baseState.left);
+        if (D === 0) return; // 相手の皿にターゲットが存在しない（0）場合はクリック不可
+        const C = val;
+        state.right.num = [D, C - D];
+        render();
+        if (window.tutorialHandsOnActive) tutorialAdvanceHandsOnStep();
+      }
+    }
+
+    /* 分裂状態に対応したボール取り除き処理 */
+    function removeBallFromState(side, type, val, index) {
+      const prop = (type === 'x' || type === 'ball-x-pos' || type === 'ball-x-neg') ? 'x' : 'num';
+      const current = state[side][prop];
+      if (Array.isArray(current)) {
+        if (index !== undefined && index !== null && index >= 0 && index < current.length) {
+          current.splice(index, 1);
+        } else {
+          const idx = current.indexOf(val);
+          if (idx !== -1) current.splice(idx, 1);
+        }
+        if (current.length === 1) {
+          state[side][prop] = current[0];
+        } else if (current.length === 0) {
+          state[side][prop] = 0;
+        }
+      } else {
+        state[side][prop] -= val;
+      }
+    }
+
+    /* 5-9-4. 状態変更の有無をチェック */
+    function hasStateDiff() {
+      return (
+        getTotalX(state.left) !== getTotalX(baseState.left) ||
+        getTotalNum(state.left) !== getTotalNum(baseState.left) ||
+        getTotalX(state.right) !== getTotalX(baseState.right) ||
+        getTotalNum(state.right) !== getTotalNum(baseState.right) ||
+        state.left.groups.length !== baseState.left.groups.length ||
+        state.right.groups.length !== baseState.right.groups.length
+      );
+    }
+
+    /* 5-9-5. 天秤の傾きとステータスの更新 */
+    function updateScaleAndStatus() {
+      const weightLeft = (getTotalX(state.left) * currentXValue) + getTotalNum(state.left);
+      const weightRight = (getTotalX(state.right) * currentXValue) + getTotalNum(state.right);
+      let diff = weightLeft - weightRight;
+
+      if (pendingMult !== null) {
+        diff = pendingMult.side === 'left' ? 1 : -1;
+      } else if (pendingDiv !== null) {
+        diff = pendingDiv.side === 'left' ? -1 : 1;
+      } else if (pendingAdd !== null) {
+        const isHeavy = pendingAdd.val > 0;
+        diff = pendingAdd.side === 'left' ? (isHeavy ? 1 : -1) : (isHeavy ? -1 : 1);
+      } else if (pendingRemove !== null) {
+        const isHeavy = pendingRemove.val < 0;
+        diff = pendingRemove.side === 'left' ? (isHeavy ? 1 : -1) : (isHeavy ? -1 : 1);
+      }
+
+      const unitLeft = document.getElementById('unitLeft');
+      const unitRight = document.getElementById('unitRight');
+      const needle = document.getElementById('needle');
+
+      const FIXED_SHIFT = 20; 
+      const FIXED_ANGLE = 20; 
+      let targetShiftY = 0;
+      let targetAngle = 0;
+
+      if (diff > 0.001) {
+        targetShiftY = FIXED_SHIFT;   
+        targetAngle = FIXED_ANGLE;
+      } else if (diff < -0.001) {
+        targetShiftY = -FIXED_SHIFT;  
+        targetAngle = -FIXED_ANGLE;
+      }
+
+      const prevDiff = window.currentDiff !== undefined ? window.currentDiff : diff;
+      window.currentDiff = diff;
+      const diffChange = diff - prevDiff;
+
+      const prevShiftY = window.currentShiftY !== undefined ? window.currentShiftY : 0;
+      window.currentShiftY = targetShiftY;
+
+      if (targetShiftY !== 0 && targetShiftY === prevShiftY && Math.abs(diffChange) > 0.001) {
+        const bounceOffset = diffChange > 0 ? 5 : -5;
+        unitLeft.style.transform = `translateY(${targetShiftY + bounceOffset}px)`;
+        unitRight.style.transform = `translateY(${-targetShiftY - bounceOffset}px)`;
+        needle.style.transform = `translateX(-50%) rotate(${targetAngle + (bounceOffset > 0 ? 5 : -5)}deg)`;
+
+        setTimeout(() => {
+          unitLeft.style.transform = `translateY(${targetShiftY}px)`;
+          unitRight.style.transform = `translateY(${-targetShiftY}px)`;
+          needle.style.transform = `translateX(-50%) rotate(${targetAngle}deg)`;
+        }, 150);
+      } else {
+        unitLeft.style.transform = `translateY(${targetShiftY}px)`;
+        unitRight.style.transform = `translateY(${-targetShiftY}px)`;
+        needle.style.transform = `translateX(-50%) rotate(${targetAngle}deg)`;
+      }
+
+      const isBalanced = Math.abs(diff) < 0.001;
+
+      const btnResetPal = document.getElementById('btnResetPalette');
+      if (btnResetPal && !isCompleted) btnResetPal.disabled = !isBalanced;
+
+      if (isBalanced && hasStateDiff() && !window.isAnimating && pendingMult === null) {
+        saveBaseState();
+      }
+    }
+
+    /* 5-9-6. 辺の状態を文字列フォーマット化 */
+    function formatSideState(s) {
+      let parts = [];
+      if (s.groups.length > 0) {
+        let groupCounts = {};
+        s.groups.forEach(g => {
+          const denom = g.denom || 1;
+          const sign = g.sign || 1;
+          // xだけの係数分数(例: 3/4x)は、xを分子に含めず分数の外に出して表示する
+          const isXCoeffFrac = (denom > 1 && g.num === 0 && g.x !== 0);
+          let innerStr, hasOp, needsParen;
+          if (isXCoeffFrac) {
+            innerStr = String(Math.abs(g.x));
+            hasOp = false;
+            needsParen = false;
+          } else {
+            let innerParts = [];
+            if (g.x !== 0) innerParts.push(formatTerm(g.x, true, true));
+            if (g.num !== 0) innerParts.push(formatTerm(g.num, false, innerParts.length === 0));
+            innerStr = innerParts.join(' ');
+            hasOp = innerParts.length > 1;
+            needsParen = hasOp || (sign === -1 && innerStr.startsWith('-'));
+          }
+          let key = '';
+          if (denom > 1) {
+            if (sign === -1) {
+              key = needsParen ? `-( ${innerStr} )/${denom}` : `-${innerStr}/${denom}`;
+            } else {
+              key = needsParen ? `(${innerStr})/${denom}` : `${innerStr}/${denom}`;
+            }
+          } else {
+            key = needsParen ? (sign === -1 ? `-(${innerStr})` : `(${innerStr})`) : (sign === -1 ? `-${innerStr}` : innerStr);
+          }
+          if (isXCoeffFrac) key += '_x';
+          if (!groupCounts[key]) {
+            groupCounts[key] = { count: 0, sign: sign, isFrac: denom > 1, isXCoeffFrac: isXCoeffFrac, innerStr: innerStr, denom: denom, hasOp: hasOp, needsParen: needsParen };
+          }
+          groupCounts[key].count += (g.count || 1);
+        });
+
+        for (let key in groupCounts) {
+          const item = groupCounts[key];
+          const count = item.count;
+          const sign = item.sign;
+          const isFirst = parts.length === 0;
+          let term = '';
+          const needsParen = item.needsParen;
+          if (item.isFrac) {
+            const core = item.isXCoeffFrac
+              ? `${item.innerStr}/${item.denom}x`
+              : (needsParen ? `(${item.innerStr})/${item.denom}` : `${item.innerStr}/${item.denom}`);
+            if (sign === -1) {
+              if (count === 1) {
+                term = isFirst ? `-${core}` : `- ${core}`;
+              } else {
+                term = isFirst ? `-${count}*${core}` : `- ${count}*${core}`;
+              }
+            } else {
+              if (count === 1) {
+                term = isFirst ? core : (core.startsWith('-') ? `- ${core.slice(1)}` : `+ ${core}`);
+              } else {
+                term = isFirst ? `${count}${core}` : `+ ${count}${core}`;
+              }
+            }
+          } else {
+            const core = needsParen ? `(${item.innerStr})` : item.innerStr;
+            if (sign === -1) {
+              if (count === 1) {
+                term = isFirst ? `-${core}` : `- ${core}`;
+              } else {
+                term = isFirst ? `-${count}${core}` : `- ${count}${core}`;
+              }
+            } else {
+              if (count === 1) {
+                term = isFirst ? item.innerStr : (item.innerStr.startsWith('-') ? `- ${item.innerStr.slice(1)}` : `+ ${item.innerStr}`);
+              } else {
+                term = isFirst ? `${count}${core}` : `+ ${count}${core}`;
+              }
+            }
+          }
+          parts.push(term);
+        }
+      }
+      const xVals = Array.isArray(s.x) ? s.x : [s.x];
+      xVals.forEach(v => {
+        if (Math.abs(v) > 1e-9) parts.push(formatTerm(v, true, parts.length === 0));
+      });
+      const numVals = Array.isArray(s.num) ? s.num : [s.num];
+      numVals.forEach(v => {
+        if (Math.abs(v) > 1e-9) parts.push(formatTerm(v, false, parts.length === 0));
+      });
+      return parts.length > 0 ? parts.join(' ') : '0';
+    }
+
+    // ========================================================
+    // 5-10. ドラッグ＆ドロップ制御
+    // ========================================================
+    /* 5-10-1. 変更タイプの判定 */
+    function getActiveChangeType() {
+      const deltaX_L = getTotalX(state.left) - getTotalX(baseState.left);
+      const deltaNum_L = getTotalNum(state.left) - getTotalNum(baseState.left);
+      const deltaX_R = getTotalX(state.right) - getTotalX(baseState.right);
+      const deltaNum_R = getTotalNum(state.right) - getTotalNum(baseState.right);
+      const leftChanged = (Math.abs(deltaX_L) > 1e-9 || Math.abs(deltaNum_L) > 1e-9);
+      const rightChanged = (Math.abs(deltaX_R) > 1e-9 || Math.abs(deltaNum_R) > 1e-9);
+
+      if (leftChanged && !rightChanged) {
+        if (Math.abs(deltaX_L) > 1e-9) return 'x';
+        if (Math.abs(deltaNum_L) > 1e-9) return '1';
+      } else if (rightChanged && !leftChanged) {
+        if (Math.abs(deltaX_R) > 1e-9) return 'x';
+        if (Math.abs(deltaNum_R) > 1e-9) return '1';
+      }
+      return null;
+    }
+
+    /* 5-10-2. ドラッグ開始イベント */
+    function handlePaletteDragStart(e, type, val) {
+      if (isCompleted) return;
+      draggedData = { source: 'palette', type, val };
+    }
+    function handlePlateDragStart(e, side, type, val) {
+      if (isCompleted) return;
+      draggedData = { source: 'plate', side, type, val };
+      e.stopPropagation();
+    }
+
+    /* 5-10-3. お皿へのドロップ制御 */
+    function handleDragOverPlate(e) {
+      if (isCompleted) return;
+      e.preventDefault();
+      e.stopPropagation();
+      e.currentTarget.classList.add('drag-over');
+    }
+    function handleDragLeavePlate(e) {
+      e.currentTarget.classList.remove('drag-over');
+    }
+    function handleDropPlate(e, targetSide) {
+      if (isCompleted) return;
+      e.preventDefault();
+      e.stopPropagation();
+      e.currentTarget.classList.remove('drag-over');
+
+      if (!draggedData) return;
+      if (window.isAnimating) return;
+ 
+      if (draggedData.type === 'mult') {
+        let factor = draggedData.val;
+        if (!tutorialCheckOp('mult', undefined, factor, targetSide, pendingMult !== null)) { draggedData = null; return; }
+        if (window.tutorialHandsOnActive && pendingMult === null) tutorialAdvanceHandsOnStep();
+        if (pendingMult && pendingMult.side !== targetSide && pendingMult.factor !== factor) {
+          showAlert(`左右で違う倍率はかけられないよ！（現在は ×${pendingMult.factor} です）`, false);
+          draggedData = null;
+          return;
+        }
+        if (pendingMult && pendingMult.side === targetSide) {
+          showAlert(`反対側の皿も ${pendingMult.factor} 倍してね！`, false);
+          draggedData = null;
+          return;
+        }
+        // 整数にならない（分母が割り切れない）かどうかの判定
+        const hasUnreducibleFraction = state[targetSide].groups.some(g => {
+          const d = g.denom || 1;
+          return (factor % d !== 0);
+        });
+
+        if (hasUnreducibleFraction) {
+          showAlert('整数にならないよ', false);
+          draggedData = null;
+          return;
+        }
+
+        const multiplySide = applyMultiplyToSide;
+
+        const targetPlateEl = document.getElementById(targetSide === 'left' ? 'plateLeft' : 'plateRight');
+
+        if (!pendingMult) {
+          pendingMult = { factor: factor, side: targetSide };
+          multiplySide(state[targetSide], factor);
+          targetPlateEl.classList.add('flash-green');
+          setTimeout(() => targetPlateEl.classList.remove('flash-green'), 500);
+          render();
+          updatePaletteUI();
+          showAlert(`片方の皿を ${factor} 倍したよ！反対側の皿も ${factor} 倍してね。`, false);
+          draggedData = null;
+          return;
+        } else {
+          multiplySide(state[targetSide], factor);
+
+          targetPlateEl.classList.add('flash-green');
+          setTimeout(() => targetPlateEl.classList.remove('flash-green'), 500);
+
+          let effectiveFactor = factor;
+          let origLeft = formatSideState(baseState.left);
+          let origRight = formatSideState(baseState.right);
+
+          // 直前が「符号入れかえ」だった場合、そのノート履歴を削除してマイナス倍（-2倍など）の処理に書き換える
+          if (calcNotebook.length > 0 && calcNotebook[calcNotebook.length - 1].opType === 'sign') {
+            calcNotebook.pop();
+            effectiveFactor = -factor;
+            if (calcNotebook.length > 0) {
+              const prevEntry = calcNotebook[calcNotebook.length - 1];
+              origLeft = prevEntry.left;
+              origRight = prevEntry.right;
+            }
+          }
+
+          const factorStr = effectiveFactor > 0 ? `${effectiveFactor}` : `(${effectiveFactor})`;
+          const wrapPoly = (str) => {
+            const trimmed = str.trim();
+            if (/^-?\d*\(.+\)$/.test(trimmed)) return str;
+            const terms = splitTopLevelTerms(trimmed);
+            return terms.length > 1 ? `(${str})` : str;
+          };
+          const stepLeft = `${wrapPoly(origLeft)} * ${factorStr}`;
+          const stepRight = `${wrapPoly(origRight)} * ${factorStr}`;
+
+          const chkEquality = document.getElementById('chkEquality').checked;
+          if (chkEquality) {
+            // 2. 両辺への操作
+            addNotebookEntry(stepLeft, stepRight, `両辺を\n　 ${effectiveFactor} 倍した`, false, { opType: 'mult', origLeft, origRight, origFactor: effectiveFactor });
+            // 3. 左辺のみ整理（右辺未計算）
+            addNotebookEntry(formatSideState(state.left), stepRight, '', false, { opType: 'mult', origLeft, origRight, origFactor: effectiveFactor });
+            // 4. 基準状態更新 & 計算結果
+            saveBaseState();
+            pendingMult = null;
+            multFactor = 2;
+            paletteState.selectedKey = null;
+            render();
+            updatePaletteUI();
+            addNotebookEntry(formatSideState(state.left), formatSideState(state.right), '', false, { opType: 'mult', origLeft, origRight, origFactor: effectiveFactor });
+          } else {
+            addNotebookEntry(stepLeft, stepRight, `両辺を\n　 ${effectiveFactor} 倍した`, false, { opType: 'mult', origLeft, origRight, origFactor: effectiveFactor });
+            saveBaseState();
+            pendingMult = null;
+            multFactor = 2;
+            paletteState.selectedKey = null;
+            render();
+            updatePaletteUI();
+            addNotebookEntry(formatSideState(state.left), formatSideState(state.right), '', false, { opType: 'mult', origLeft, origRight, origFactor: effectiveFactor });
+          }
+          showAlert(`両辺を ${effectiveFactor} 倍して再び釣り合ったね！`, false);
+          checkCompletion();
+          draggedData = null;
+          return;
+        }
+      }
+
+    if (draggedData.type === 'div') {
+        let factor = draggedData.val;
+        if (!tutorialCheckOp('div', undefined, factor, targetSide, pendingDiv !== null)) { draggedData = null; return; }
+        if (window.tutorialHandsOnActive && pendingDiv === null) tutorialAdvanceHandsOnStep();
+        if (pendingDiv && pendingDiv.side !== targetSide && pendingDiv.factor !== factor) {
+          showAlert(`左右で違う数では割れないよ！（現在は ÷${pendingDiv.factor} です）`, false);
+          draggedData = null;
+          return;
+        }
+        if (pendingDiv && pendingDiv.side === targetSide) {
+          showAlert(`反対側の皿も ${pendingDiv.factor} で割ってね！`, false);
+          draggedData = null;
+          return;
+        }
+
+        const targetState = state[targetSide];
+        const hasFraction = targetState.groups.some(g => (g.denom || 1) > 1);
+        const hasSplit = Array.isArray(targetState.x) || Array.isArray(targetState.num);
+
+        if (hasFraction || hasSplit) {
+          showAlert('これ以上割れないよ', false);
+          draggedData = null;
+          return;
+        }
+
+        const divisorVals = [targetState.x, targetState.num, ...targetState.groups.map(g => g.count || 1)];
+        const canDivide = divisorVals.every(v => v % factor === 0);
+
+        if (!canDivide) {
+          showAlert('これは割れないよ', false);
+          draggedData = null;
+          return;
+        }
+
+        const divideSide = applyDivideToSide;
+
+        const targetPlateEl = document.getElementById(targetSide === 'left' ? 'plateLeft' : 'plateRight');
+
+        if (!pendingDiv) {
+          pendingDiv = { factor: factor, side: targetSide };
+          divideSide(state[targetSide], factor);
+          targetPlateEl.classList.add('flash-green');
+          setTimeout(() => targetPlateEl.classList.remove('flash-green'), 500);
+          render();
+          updatePaletteUI();
+          showAlert(`片方の皿を ${factor} で割ったよ！反対側の皿も ${factor} で割ってね。`, false);
+          draggedData = null;
+          return;
+        } else {
+          divideSide(state[targetSide], factor);
+
+          targetPlateEl.classList.add('flash-green');
+          setTimeout(() => targetPlateEl.classList.remove('flash-green'), 500);
+
+          let effectiveDivFactor = factor;
+          let origLeft = formatSideState(baseState.left);
+          let origRight = formatSideState(baseState.right);
+
+          if (calcNotebook.length > 0 && calcNotebook[calcNotebook.length - 1].opType === 'sign') {
+            calcNotebook.pop();
+            effectiveDivFactor = -factor;
+            if (calcNotebook.length > 0) {
+              const prevEntry = calcNotebook[calcNotebook.length - 1];
+              origLeft = prevEntry.left;
+              origRight = prevEntry.right;
+            }
+          }
+
+          const stepLeft = toPerTermFraction(origLeft, effectiveDivFactor);
+          const stepRight = toPerTermFraction(origRight, effectiveDivFactor);
+
+          const chkEquality = document.getElementById('chkEquality').checked;
+          if (chkEquality) {
+            addNotebookEntry(stepLeft, stepRight, `両辺を\n　 ${effectiveDivFactor}で割った`, false, { opType: 'divide', origLeft, origRight, divideK: effectiveDivFactor });
+            addNotebookEntry(formatSideState(state.left), stepRight, '', false, { opType: 'divide', origLeft, origRight, divideK: effectiveDivFactor });
+            saveBaseState();
+            pendingDiv = null;
+            divFactor = 2;
+            paletteState.selectedKey = null;
+            render();
+            updatePaletteUI();
+            addNotebookEntry(formatSideState(state.left), formatSideState(state.right), '', false, { opType: 'divide', origLeft, origRight, divideK: effectiveDivFactor });
+          } else {
+            addNotebookEntry(stepLeft, stepRight, `両辺を\n　 ${effectiveDivFactor} で割った`, false, { opType: 'divide', origLeft, origRight, divideK: effectiveDivFactor });
+            saveBaseState();
+            pendingDiv = null;
+            divFactor = 2;
+            paletteState.selectedKey = null;
+            render();
+            updatePaletteUI();
+            addNotebookEntry(formatSideState(state.left), formatSideState(state.right), '', false, { opType: 'divide', origLeft, origRight, divideK: effectiveDivFactor });
+          }
+          showAlert(`両辺を ${effectiveDivFactor} で割って再び釣り合ったね！`, false);
+          checkCompletion();
+          draggedData = null;
+          return;
+        }
+      }
+
+    if (draggedData.source === 'palette' && draggedData.type !== 'mult' && draggedData.type !== 'div') {
+        if (pendingAdd && pendingAdd.side === targetSide) {
+          showAlert('反対側の皿にも同じ球を置いてね！', false);
+          draggedData = null;
+          render();
+          return;
+        }
+        if (pendingAdd && (pendingAdd.key !== draggedData.key || pendingAdd.val !== draggedData.val)) {
+          showAlert('左右で違う球では合わせられないよ！', false);
+          draggedData = null;
+          render();
+          return;
+        }
+      }
+
+      const isTransfer = (draggedData.source === 'plate' && draggedData.side !== targetSide);
+
+      if (pendingRemove !== null) {
+        showAlert('反対側の皿からおろしてね！', false);
+        draggedData = null;
+        render();
+        return;
+      }
+
+      const activeType = getActiveChangeType();
+
+      if (activeType && activeType !== draggedData.type) {
+        if (draggedData.source === 'palette') showAlert('それは増やせないよ', false);
+        else if (isTransfer) showAlert('それは移項できないよ', false);
+        else showAlert('それは減らせないよ', false);
+        draggedData = null;
+        render();
+        return;
+      }
+
+      let nextState = JSON.parse(JSON.stringify(state));
+      const droppedVal = (isTransfer) ? -draggedData.val : draggedData.val;
+      const target = state[targetSide];
+
+      if (isTransfer && document.getElementById('chkEquality').checked) {
+        showAlert('パレットから両辺に同じ操作をしてね。', false);
+        draggedData = null;
+        render();
+        return;
+      }
+
+      if (isTransfer) {
+        window.isAnimating = true;
+        setLockState(true);
+
+        const targetPlateEl = document.getElementById(targetSide === 'left' ? 'plateLeft' : 'plateRight');
+        const srcSide = draggedData.side === 'left' ? '左辺' : '右辺';
+        const tgtSide = targetSide === 'left' ? '左辺' : '右辺';
+        let termStr = '';
+        let opStr = '';
+        if (draggedData.type === 'x') {
+          const absVal = Math.abs(draggedData.val);
+          const xStr = absVal === 1 ? 'x' : `${absVal}x`;
+          termStr = draggedData.val > 0 ? `+${xStr}` : `-${xStr}`;
+          opStr = draggedData.val > 0 ? `- ${xStr}` : `+ ${xStr}`;
+        } else {
+          termStr = draggedData.val > 0 ? `+${draggedData.val}` : `${draggedData.val}`;
+          opStr = draggedData.val > 0 ? `- ${draggedData.val}` : `+ ${Math.abs(draggedData.val)}`;
+        }
+
+        const isContinuousTranspose = calcNotebook.length > 0 && 
+            (calcNotebook[calcNotebook.length - 1].opType === 'transpose' || 
+             calcNotebook[calcNotebook.length - 1].opType === 'transpose_result');
+
+        let startLeft = null;
+        let startRight = null;
+        let transToLeft = [];
+        let transToRight = [];
+        let transferredItems = [];
+        let lastTranspose = null;
+
+        if (isContinuousTranspose) {
+          for (let i = calcNotebook.length - 1; i >= 0; i--) {
+            if (calcNotebook[i].opType === 'transpose') {
+              lastTranspose = calcNotebook[i];
+            } else if (calcNotebook[i].opType !== 'transpose_result') {
+              break;
+            }
+          }
+          if (lastTranspose && lastTranspose.startLeft) {
+            startLeft = JSON.parse(JSON.stringify(lastTranspose.startLeft));
+            startRight = JSON.parse(JSON.stringify(lastTranspose.startRight));
+            transToLeft = lastTranspose.transToLeft ? [...lastTranspose.transToLeft] : [];
+            transToRight = lastTranspose.transToRight ? [...lastTranspose.transToRight] : [];
+            transferredItems = lastTranspose.transferredItems ? [...lastTranspose.transferredItems] : [];
+          }
+          while (calcNotebook.length > 0 && 
+                (calcNotebook[calcNotebook.length - 1].opType === 'transpose' || 
+                 calcNotebook[calcNotebook.length - 1].opType === 'transpose_result')) {
+            calcNotebook.pop();
+          }
+        }
+
+        if (!startLeft) {
+          startLeft = JSON.parse(JSON.stringify(baseState.left));
+          startRight = JSON.parse(JSON.stringify(baseState.right));
+        }
+
+        let curLeft = JSON.parse(JSON.stringify(startLeft));
+        let curRight = JSON.parse(JSON.stringify(startRight));
+
+        if (draggedData.side === 'left') {
+          transToRight.push(opStr);
+        } else {
+          transToLeft.push(opStr);
+        }
+
+        var details = (isContinuousTranspose && lastTranspose && lastTranspose.transferredDetails)
+          ? [...lastTranspose.transferredDetails, { side: draggedData.side, type: draggedData.type, val: draggedData.val }]
+          : [{ side: draggedData.side, type: draggedData.type, val: draggedData.val }];
+
+        details.forEach(item => {
+          if (item.side === 'left') {
+            if (item.type === 'x') curLeft.x -= item.val;
+            else curLeft.num -= item.val;
+          } else {
+            if (item.type === 'x') curRight.x -= item.val;
+            else curRight.num -= item.val;
+          }
+        });
+
+        let stepLeft = formatSideState(curLeft);
+        if (transToLeft.length > 0) {
+          if (stepLeft === '0') stepLeft = transToLeft.join(' ').replace(/^\+\s*/, '');
+          else stepLeft += ' ' + transToLeft.join(' ');
+        }
+        
+        let stepRight = formatSideState(curRight);
+        if (transToRight.length > 0) {
+          if (stepRight === '0') stepRight = transToRight.join(' ').replace(/^\+\s*/, '');
+          else stepRight += ' ' + transToRight.join(' ');
+        }
+
+        const formatTermText = (type, val) => {
+          if (type === 'x') {
+            const absVal = Math.abs(val);
+            const xStr = absVal === 1 ? 'x' : `${absVal}x`;
+            return val > 0 ? `${xStr}` : `-${xStr}`;
+          } else {
+            return val > 0 ? `+${val}` : `${val}`;
+          }
+        };
+
+        const leftTermList = details.filter(d => d.side === 'left').map(d => formatTermText(d.type, d.val));
+        const rightTermList = details.filter(d => d.side === 'right').map(d => formatTermText(d.type, d.val));
+        const noteText = `${[...leftTermList, ...rightTermList].join(' と ')} を\n　移項した`;
+
+        addNotebookEntry(stepLeft, stepRight, noteText, false, { 
+          opType: 'transpose',
+          startLeft: startLeft,
+          startRight: startRight,
+          transToLeft: transToLeft,
+          transToRight: transToRight,
+          transferredItems: transferredItems,
+          transferredDetails: details
+        });
+
+        const willCancel = (draggedData.type === 'x' && state[targetSide].x * droppedVal < 0) || 
+                           (draggedData.type === '1' && state[targetSide].num * droppedVal < 0);
+
+        if (draggedData.type === 'x') {
+          state[draggedData.side].x -= draggedData.val;
+          baseState[draggedData.side].x -= draggedData.val;
+        } else {
+          state[draggedData.side].num -= draggedData.val;
+          baseState[draggedData.side].num -= draggedData.val;
+        }
+
+        renderPlate('plateLeft', state.left, 'left');
+        renderPlate('plateRight', state.right, 'right');
+
+        if (draggedData.type === 'x') {
+          state[targetSide].x += droppedVal;
+        } else {
+          state[targetSide].num += droppedVal;
+        }
+
+        if (!willCancel) saveBaseState();
+
+        updateScaleAndStatus();
+
+        const flipBall = document.createElement('div');
+        const initialClass = draggedData.type === 'x' 
+          ? (draggedData.val > 0 ? 'ball-x-pos' : 'ball-x-neg') 
+          : (draggedData.val > 0 ? 'ball-num-pos' : 'ball-num-neg');
+        
+        flipBall.className = `ball ${initialClass} flipping`;
+        flipBall.textContent = formatTerm(draggedData.val, draggedData.type === 'x', true);
+        setBallSize(flipBall, draggedData.type, draggedData.val);
+        targetPlateEl.appendChild(flipBall);
+
+        setTimeout(() => {
+          const flippedClass = draggedData.type === 'x' 
+            ? (droppedVal > 0 ? 'ball-x-pos' : 'ball-x-neg') 
+            : (droppedVal > 0 ? 'ball-num-pos' : 'ball-num-neg');
+          
+          flipBall.className = `ball ${flippedClass} flipping`;
+          flipBall.textContent = formatTerm(droppedVal, draggedData.type === 'x', true);
+        }, 250);
+
+        setTimeout(() => {
+          flipBall.classList.remove('flipping');
+          if (willCancel) {
+            flipBall.classList.add('annihilating');
+            const existingClass = draggedData.type === 'x' 
+              ? (droppedVal > 0 ? '.ball-x-neg' : '.ball-x-pos') 
+              : (droppedVal > 0 ? '.ball-num-neg' : '.ball-num-pos');
+            const targetExisting = targetPlateEl.querySelector(existingClass);
+            if (targetExisting) targetExisting.classList.add('annihilating');
+
+            setTimeout(() => {
+              window.isAnimating = false;
+              setLockState(false);
+              applyStateChange();
+            }, 1000);
+          } else {
+            window.isAnimating = false;
+            setLockState(false);
+            applyStateChange();
+          }
+        }, 500);
+
+        return;
+      }
+
+      const hasOpposite = (val, dropped) => Array.isArray(val) ? val.some(v => v * dropped < 0) : (val * dropped < 0);
+      const willCancel = (draggedData.type === 'x' && hasOpposite(target.x, droppedVal)) || 
+                         (draggedData.type === '1' && hasOpposite(target.num, droppedVal));
+
+      if (willCancel) {
+        window.isAnimating = true;
+        setLockState(true);
+
+        const plateEl = document.getElementById(targetSide === 'left' ? 'plateLeft' : 'plateRight');
+        const dummyBall = document.createElement('div');
+        dummyBall.className = `ball ${draggedData.type === 'x' ? (droppedVal > 0 ? 'ball-x-pos' : 'ball-x-neg') : (droppedVal > 0 ? 'ball-num-pos' : 'ball-num-neg')} annihilating`;
+        dummyBall.textContent = formatTerm(droppedVal, draggedData.type === 'x', true);
+        setBallSize(dummyBall, draggedData.type, droppedVal);
+        plateEl.appendChild(dummyBall);
+
+        const existingClass = draggedData.type === 'x' ? (droppedVal > 0 ? '.ball-x-neg' : '.ball-x-pos') : (droppedVal > 0 ? '.ball-num-neg' : '.ball-num-pos');
+        const targetExisting = plateEl.querySelector(existingClass);
+        if (targetExisting) targetExisting.classList.add('annihilating');
+
+        setTimeout(() => {
+          window.isAnimating = false;
+          setLockState(false);
+          applyStateChange();
+        }, 1000);
+      } else {
+        applyStateChange();
+      }
+
+      function applyStateChange() {
+        if (draggedData.source === 'palette') {
+          const tgt = nextState[targetSide];
+          const applyToProp = (prop) => {
+            if (Array.isArray(tgt[prop])) {
+              const idx = tgt[prop].findIndex(v => v * draggedData.val < 0);
+              if (idx !== -1) {
+                tgt[prop][idx] += draggedData.val;
+                if (tgt[prop][idx] === 0) tgt[prop].splice(idx, 1);
+                if (tgt[prop].length === 1) tgt[prop] = tgt[prop][0];
+              } else {
+                tgt[prop].push(draggedData.val);
+              }
+            } else {
+              tgt[prop] += draggedData.val;
+            }
+          };
+          if (draggedData.type === 'x') applyToProp('x');
+          else applyToProp('num');
+        } else if (draggedData.source === 'plate') {
+          if (isTransfer) {
+            const src = nextState[draggedData.side];
+            const tgt = nextState[targetSide];
+            if (draggedData.type === 'x') {
+              src.x -= draggedData.val;
+              tgt.x += (-draggedData.val);
+            } else {
+              src.num -= draggedData.val;
+              tgt.num += (-draggedData.val);
+            }
+          }
+        }
+
+        if (isTransfer) {
+          saveBaseState();
+          render();
+          addNotebookEntry(formatSideState(state.left), formatSideState(state.right), '', false, { opType: 'transpose_result' });
+          if (!checkCompletion()) showAlert('移項したよ！（符号が変わったね）', false);
+          draggedData = null;
+        } else if (draggedData.source === 'palette') {
+          const wasPending = (pendingAdd !== null);
+          const addKey = draggedData.key;
+          const addVal = draggedData.val;
+          if (!tutorialCheckOp('add', draggedData.type, addVal, targetSide, wasPending)) { draggedData = null; render(); return; }
+          if (window.tutorialHandsOnActive && !wasPending) tutorialAdvanceHandsOnStep();
+          const chkEquality = document.getElementById('chkEquality').checked;
+          
+          if (wasPending) {
+            pendingAdd = null;
+            paletteState.selectedKey = null;
+            paletteState.count = 1;
+          } else {
+            pendingAdd = { key: addKey, val: addVal, side: targetSide };
+            paletteState.selectedKey = addKey;
+          }
+          
+          validateAndUpdateState(nextState, 'add');
+          
+          if (!wasPending && !chkEquality) {
+            showAlert('反対側の皿にも同じ球を置いてね！', false);
+          }
+          
+          updatePaletteUI();
+          draggedData = null;
+        } else {
+          validateAndUpdateState(nextState);
+          draggedData = null;
+        }
+      }
+    }
+
+    /* 5-10-4. 画面外（body）へのドロップ制御 */
+    function handleDragOverBody(e) {
+      if (isCompleted) return;
+      e.preventDefault();
+    }
+    function handleDropBody(e) {
+      if (isCompleted) return;
+      e.preventDefault();
+      if (draggedData && draggedData.source === 'plate') {
+        const chkEqualityForRemove = document.getElementById('chkEquality').checked;
+
+        // 等式の性質OFFのときは、マイナスの球(-x, -1)は皿の外に取り除けないようにする(反対側の皿への移項は可)
+        if (!chkEqualityForRemove && draggedData.val < 0) {
+          showAlert('それは取れないよ。', false);
+          draggedData = null;
+          render();
+          return;
+        }
+
+        const activeType = getActiveChangeType();
+        if (activeType && activeType !== draggedData.type) {
+          showAlert('それは減らせないよ', false);
+          draggedData = null;
+          render();
+          return;
+        }
+
+        if (chkEqualityForRemove && draggedData.side === 'left' && draggedData.type === '1' && draggedData.val < 0) {
+          showAlert('それは取れないよ。パレットから同じ数をたそう！', false);
+          draggedData = null;
+          render();
+          return;
+        }
+
+        if (pendingRemove && pendingRemove.side === draggedData.side) {
+          showAlert('反対側の皿からおろしてね！', false);
+          draggedData = null;
+          render();
+          return;
+        }
+        if (pendingRemove && (pendingRemove.type !== draggedData.type || pendingRemove.val !== draggedData.val)) {
+          showAlert('左右で違う球では揃えられないよ！', false);
+          draggedData = null;
+          render();
+          return;
+        }
+
+        const wasPending = (pendingRemove !== null);
+        const removeType = draggedData.type;
+        const removeVal = draggedData.val;
+        const removeSide = draggedData.side;
+        if (!tutorialCheckOp('remove', removeType, removeVal, removeSide, wasPending)) { draggedData = null; render(); return; }
+        if (window.tutorialHandsOnActive && !wasPending) tutorialAdvanceHandsOnStep();
+
+        // 直接減算ではなく、配列対応の removeBallFromState を呼び出して除去処理を行う
+        removeBallFromState(draggedData.side, draggedData.type, draggedData.val, draggedData.index);
+        let nextState = JSON.parse(JSON.stringify(state));
+
+        if (wasPending) {
+          pendingRemove = null;
+        } else {
+          pendingRemove = { type: removeType, val: removeVal, side: removeSide };
+        }
+
+        validateAndUpdateState(nextState, 'remove');
+
+        if (!wasPending && !document.getElementById('chkEquality').checked) {
+          showAlert('反対側の皿からも同じ球をおろしてね！', false);
+        }
+        
+        updatePaletteUI();
+        draggedData = null;
+      }
+    }
+
+    /* 5-10-5. アプリのスケール取得 */
+    function getAppScale() {
+      const container = document.querySelector('.app-container');
+      if (!container) return 1;
+      const rect = container.getBoundingClientRect();
+      return rect.width / 960 || 1;
+    }
+
+    /* 5-10-6. お皿のアイテムドラッグ処理 */
+    function handlePointerDown(e, source, side, type, val, index) {
+      if (isCompleted || window.isAnimating) return;
+      if (isPendingOpForGrab()) {
+        showAlert('反対側の皿の操作を先に終えてね！', false);
+        return;
+      }
+      if (e.button !== undefined && e.button !== 0) return;
+      e.preventDefault();
+
+      const startX = e.clientX;
+      const startY = e.clientY;
+      let isDragging = false;
+      let ghost = null;
+      const targetEl = e.currentTarget;
+
+      const onPointerMove = (moveEvent) => {
+        const dist = Math.hypot(moveEvent.clientX - startX, moveEvent.clientY - startY);
+        
+        // 5px以上動いたらドラッグ操作を開始
+        if (!isDragging && dist > 5) {
+          isDragging = true;
+          draggedData = { source, side, type, val, index };
+
+          if (targetEl) targetEl.style.visibility = 'hidden';
+
+          ghost = document.createElement('div');
+          ghost.className = `ball ${type === 'x' ? (val > 0 ? 'ball-x-pos' : 'ball-x-neg') : (val > 0 ? 'ball-num-pos' : 'ball-num-neg')}`;
+          ghost.textContent = formatTerm(val, type === 'x', true);
+          setBallSize(ghost, type, val);
+          ghost.style.position = 'fixed';
+          ghost.style.pointerEvents = 'none'; 
+          ghost.style.zIndex = '9999';
+          ghost.style.transform = `scale(${getAppScale()})`;
+          ghost.style.transformOrigin = 'center center';
+          document.body.appendChild(ghost);
+        }
+
+        if (isDragging && ghost) {
+          ghost.style.left = `${moveEvent.clientX - 15}px`;
+          ghost.style.top = `${moveEvent.clientY - 15}px`;
+        }
+      };
+
+      const onPointerUp = (upEvent) => {
+        document.removeEventListener('pointermove', onPointerMove);
+        document.removeEventListener('pointerup', onPointerUp);
+
+        if (ghost && ghost.parentNode) ghost.parentNode.removeChild(ghost);
+
+        if (isDragging) {
+          // ドロップ先の判定と処理を実行
+          const droppedElement = document.elementFromPoint(upEvent.clientX, upEvent.clientY);
+          if (droppedElement) {
+            const plateLeftEl = document.getElementById('plateLeft');
+            const plateRightEl = document.getElementById('plateRight');
+            const isLeftPlate = plateLeftEl.contains(droppedElement) || droppedElement === plateLeftEl;
+            const isRightPlate = plateRightEl.contains(droppedElement) || droppedElement === plateRightEl;
+
+            const dummyEvent = {
+              preventDefault: () => {}, stopPropagation: () => {},
+              currentTarget: isLeftPlate ? plateLeftEl : plateRightEl
+            };
+
+            if (isLeftPlate) {
+              handleDropPlate(dummyEvent, 'left');
+            } else if (isRightPlate) {
+              handleDropPlate(dummyEvent, 'right');
+            } else {
+              handleDropBody(upEvent);
+            }
+          } else {
+            handleDropBody(upEvent);
+          }
+        } else {
+          // ドラッグされずにクリックされた場合は球の分裂（分解）処理を呼び出す
+          if (targetEl) targetEl.style.visibility = 'visible';
+          splitBall(side, type, val);
+        }
+      };
+      document.addEventListener('pointermove', onPointerMove);
+      document.addEventListener('pointerup', onPointerUp);
+    }
+
+    // ========================================================
+    // 5-11. バリデーション・完了判定・その他
+    // ========================================================
+    /* 5-11-1. 状態の検証と更新 */
+    function validateAndUpdateState(nextState, actionType) {
+      const chkEquality = document.getElementById('chkEquality').checked;
+      const deltaX_L = getTotalX(nextState.left) - getTotalX(baseState.left);
+      const deltaNum_L = getTotalNum(nextState.left) - getTotalNum(baseState.left);
+      const deltaX_R = getTotalX(nextState.right) - getTotalX(baseState.right);
+      const deltaNum_R = getTotalNum(nextState.right) - getTotalNum(baseState.right);
+
+      const leftChanged = (Math.abs(deltaX_L) > 1e-9 || Math.abs(deltaNum_L) > 1e-9);
+      const rightChanged = (Math.abs(deltaX_R) > 1e-9 || Math.abs(deltaNum_R) > 1e-9);
+      const isSameOp = (Math.abs(deltaX_L - deltaX_R) < 1e-9) && (Math.abs(deltaNum_L - deltaNum_R) < 1e-9);
+
+      // 一時的な操作状態（片側の変更）を保持するために state を更新
+      state = JSON.parse(JSON.stringify(nextState));
+
+      if (isSameOp && leftChanged) {
+        // 1行目（操作直後）専用の表記。actionTypeが分かる場合は「たした/ひいた」、
+        // 分からない場合（同一皿内の操作など）は従来通りdeltaの符号で判定する。
+        let opStr = '';
+        let opTerm = '';
+        // 2行目以降（従来通りの表記）は、actionTypeに関わらず常にこちらを使う。
+        let plainOpStr = '';
+        let plainOpTerm = '';
+
+        const isAdd = (actionType === 'add') ? true : (actionType === 'remove') ? false : null;
+
+        if (Math.abs(deltaX_L) > 1e-9) {
+          const absVal = cleanNum(Math.abs(deltaX_L));
+          const term = absVal === 1 ? 'x' : `${absVal}x`;
+          plainOpTerm = deltaX_L > 0 ? `+ ${term}` : `- ${term}`;
+          plainOpStr = deltaX_L > 0 ? `両辺に\n　 ${term} を加えた` : `両辺から\n　 ${term} を引いた`;
+
+          if (isAdd === null) {
+            opTerm = plainOpTerm;
+            opStr = plainOpStr;
+          } else {
+            const rawVal = cleanNum(isAdd ? deltaX_L : -deltaX_L);
+            const absTerm = Math.abs(rawVal) === 1 ? 'x' : `${Math.abs(rawVal)}x`;
+            const plainTerm = rawVal < 0 ? `-${absTerm}` : absTerm;
+            const parenTerm = rawVal < 0 ? `(-${absTerm})` : absTerm;
+            opTerm = isAdd ? `+ ${parenTerm}` : `- ${parenTerm}`;
+            opStr = isAdd ? `両辺に\n　 ${plainTerm} をたした` : `両辺から\n　 ${plainTerm} をひいた`;
+          }
+        } else if (Math.abs(deltaNum_L) > 1e-9) {
+          const absVal = cleanNum(Math.abs(deltaNum_L));
+          plainOpTerm = deltaNum_L > 0 ? `+ ${absVal}` : `- ${absVal}`;
+          plainOpStr = deltaNum_L > 0 ? `両辺に\n　 ${absVal} を加えた` : `両辺から\n　 ${absVal} を引いた`;
+
+          if (isAdd === null) {
+            opTerm = plainOpTerm;
+            opStr = plainOpStr;
+          } else {
+            const rawVal = cleanNum(isAdd ? deltaNum_L : -deltaNum_L);
+            const absValRaw = Math.abs(rawVal);
+            const plainTerm = rawVal < 0 ? `-${absValRaw}` : `${absValRaw}`;
+            const parenTerm = rawVal < 0 ? `(-${absValRaw})` : `${absValRaw}`;
+            opTerm = isAdd ? `+ ${parenTerm}` : `- ${parenTerm}`;
+            opStr = isAdd ? `両辺に\n　 ${plainTerm} をたした` : `両辺から\n　 ${plainTerm} をひいた`;
+          }
+        }
+
+        const baseLeftStr = formatSideState(baseState.left);
+        const baseRightStr = formatSideState(baseState.right);
+        const stepLeft = baseLeftStr === '0' ? opTerm.replace(/^\+\s*/, '') : `${baseLeftStr} ${opTerm}`;
+        const stepRight = baseRightStr === '0' ? opTerm.replace(/^\+\s*/, '') : `${baseRightStr} ${opTerm}`;
+        // 2行目以降で使う、従来通りの（+3 / -3のような）表記
+        const plainStepRight = baseRightStr === '0' ? plainOpTerm.replace(/^\+\s*/, '') : `${baseRightStr} ${plainOpTerm}`;
+
+        if (chkEquality) {
+          // 2. 両辺への操作
+          addNotebookEntry(stepLeft, stepRight, opStr);
+          // 3. 左辺のみ整理（右辺未計算）
+          addNotebookEntry(formatSideState(state.left), plainStepRight, '');
+          // 4. 基準状態更新 & 計算結果
+          saveBaseState();
+          addNotebookEntry(formatSideState(state.left), formatSideState(state.right), '');
+        } else {
+          addNotebookEntry(stepLeft, stepRight, opStr);
+          saveBaseState();
+          addNotebookEntry(formatSideState(state.left), formatSideState(state.right), '');
+        }
+
+        showAlert('両辺に同じ操作をしたので、釣り合っているね！', false);
+      } else if (chkEquality && (leftChanged !== rightChanged)) {
+        showAlert('反対側の皿にも同じ操作をしてね！', false);
+      }
+
+      render();
+      checkCompletion();
+    }
+    
+    /* 5-11-2. 正解判定 */
+    function checkCompletion() {
+      if (state.left.groups.length > 0 || state.right.groups.length > 0) return false;
+
+      // 天秤が釣り合っていない場合は正解判定を行わない
+      const weightLeft = (getTotalX(state.left) * currentXValue) + getTotalNum(state.left);
+      const weightRight = (getTotalX(state.right) * currentXValue) + getTotalNum(state.right);
+      if (Math.abs(weightLeft - weightRight) >= 0.001) return false;
+
+      const lx = state.left.x, ln = state.left.num;
+      const rx = state.right.x, rn = state.right.num;
+      const isZero = (v) => Math.abs(v) < 1e-9;
+      const isOne = (v) => Math.abs(v - 1) < 1e-9;
+
+      const solvedNormal = (isOne(lx) && isZero(ln) && isZero(rx));
+      const solvedReverse = (isOne(rx) && isZero(rn) && isZero(lx));
+
+      if (solvedNormal || solvedReverse) {
+        setLockState(true, solvedReverse, false);
+
+        if (window.presetMode && solvedNormal) {
+          presetCompleted[currentPresetCategory + '-' + currentPresetIndex] = true;
+        }
+
+        const leftIsX = solvedNormal;
+        if (leftIsX) {
+          const xVal = cleanNum(state.right.num);
+          showAlert(`🎉 x の値がわかったよ！$( x = ${xVal} )$`, true);
+          if (calcNotebook.length > 0) {
+            const lastEntry = calcNotebook[calcNotebook.length - 1];
+            if (lastEntry.note) {
+              if (!lastEntry.note.endsWith('解')) {
+                lastEntry.note += '\n　／解';
+              }
+            } else {
+              lastEntry.note = '解';
+            }
+          }
+        } else {
+          showAlert(`最後に両辺を入れかえよう！`, false);
+        }
+        renderNotebook();
+        if (window.tutorialMode && leftIsX) {
+          tutorialOnSolved();
+        }
+        return true;
+      }
+
+      const almostNormal = (lx === -1 && ln === 0 && rx === 0);
+      const almostReverse = (rx === -1 && rn === 0 && lx === 0);
+      
+      if (almostNormal || almostReverse) {
+        setLockState(true, false, true);
+        return false;
+      }
+      return false;
+    }
+
+    /* 5-11-3. 利き手の切り替え */
+    function changeHandedness(hand) {
+      const leftBtn = document.getElementById('hand-left-btn');
+      const rightBtn = document.getElementById('hand-right-btn');
+      const mainContent = document.querySelector('.main-content');
+
+      if (hand === 'left') {
+        leftBtn.classList.add('active');
+        rightBtn.classList.remove('active');
+        mainContent.classList.add('left-handed');
+      } else {
+        rightBtn.classList.add('active');
+        leftBtn.classList.remove('active');
+        mainContent.classList.remove('left-handed');
+      }
+    }
+
+  </script>
+</body>
+</html>
