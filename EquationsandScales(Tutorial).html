@@ -1954,7 +1954,7 @@
           term = intVal === 1 ? 'x' : `${intVal}x`;
         } else {
           const denom = Math.round(1 / absVal);
-          if (denom !== 0 && Math.abs(absVal * denom - 1) < 1e-4) {
+          if (!window.preferDecimalDisplay && denom !== 0 && Math.abs(absVal * denom - 1) < 1e-4) {
             term = `x/${denom}`;
           } else {
             term = `${cleanNum(absVal)}x`;
@@ -2550,6 +2550,9 @@
       window.isAnimating = false;
       const input = document.getElementById('eqInput').value.replace(/\s+/g, '');
       const parts = input.split('=');
+
+      // 小数点を含む入力かどうかを記録しておき、x係数を分数表記(x/10等)に変換しないようにする
+      window.preferDecimalDisplay = /\d\.\d/.test(input);
       
       if (parts.length !== 2) {
         alert('「=」を含む正しい方程式を入力してください（例: 2(x + 4) = 12）');
@@ -2586,7 +2589,7 @@
 
     function setBallSize(ballEl, type, val) {
       if (type === '1' || type === 'num') {
-        const absVal = Math.min(Math.abs(val), 50);
+        const absVal = Math.min(Math.max(Math.abs(val), 1), 50);
         const scale = Math.pow(absVal, 1 / 4);
         const size = 30 * scale;
         const fontSize = 0.8 * scale;
