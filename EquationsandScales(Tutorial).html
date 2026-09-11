@@ -224,7 +224,7 @@
       display: flex;
       flex-direction: column;
       gap: 4px;
-      max-height: 435px;
+      max-height: 520px;
       width: 425px;
     }
     .notebook-title {
@@ -1740,7 +1740,7 @@
       },
       fraction: {
         label: '分数を含む方程式',
-        problems: ['x=1/3x+1', '(x+1)/2=1/5x+2', '(x+1)/3=1/4x+1', '3/4x-7=2x+1/2', '(9x-5)/6=(8+x)/3', 'x-(x-1)/3=3']
+        problems: ['x=1/3x+2', '(x+1)/2=1/5x+2', '(x+1)/3=1/4x+1', '3/4x-7=2x+1/2', '(9x-5)/6=(8+x)/3', 'x-(x-1)/3=3']
       },
       various: {
         label: 'いろいろな方程式',
@@ -2157,14 +2157,26 @@
     }
 
     /* 5-4-2a-2. 「ax=b」の形になっているか判定し、その a を返す */
+    /* 「かっこの外」にある数値(x係数・定数項・かっこ前の倍率)を集めて、その最大公約数を返す。
+       かっこの中の数値(グループのx/num)は計算の対象に含めない。 */
     function getDynamicDivN() {
-      const isPureX = (s) => !Array.isArray(s.x) && !Array.isArray(s.num) && s.groups.length === 0;
-      if (!isPureX(state.left) || !isPureX(state.right)) return null;
-      const lx = state.left.x, lnum = state.left.num;
-      const rx = state.right.x, rnum = state.right.num;
-      if (lx !== 0 && lnum === 0 && rx === 0 && rnum !== 0) return Math.abs(lx);
-      if (rx !== 0 && rnum === 0 && lx === 0 && lnum !== 0) return Math.abs(rx);
-      return null;
+      const vals = [];
+      const collect = (s) => {
+        if (!Array.isArray(s.x) && s.x !== 0) vals.push(Math.abs(s.x));
+        if (!Array.isArray(s.num) && s.num !== 0) vals.push(Math.abs(s.num));
+        s.groups.forEach(g => {
+          const c = Math.abs(g.count || 1);
+          if (c !== 0) vals.push(c);
+        });
+      };
+      collect(state.left);
+      collect(state.right);
+      if (vals.length < 2) return null;
+      // 小数や分数など整数でない値が混ざる場合は、この仕組みの対象外にする
+      if (!vals.every(v => Math.abs(v - Math.round(v)) < 1e-9)) return null;
+      const intVals = vals.map(v => Math.round(v));
+      const g = intVals.reduce((acc, v) => gcd(acc, v));
+      return g > 1 ? g : null;
     }
 
     /* 5-4-2b. 割り算の数値切り替え */
@@ -3340,6 +3352,14 @@
     /* 5-9-6. 辺の状態を文字列フォーマット化 */
     function formatSideState(s) {
       let parts = [];
+      const xVals = Array.isArray(s.x) ? s.x : [s.x];
+      xVals.forEach(v => {
+        if (Math.abs(v) > 1e-9) parts.push(formatTerm(v, true, parts.length === 0));
+      });
+      const numVals = Array.isArray(s.num) ? s.num : [s.num];
+      numVals.forEach(v => {
+        if (Math.abs(v) > 1e-9) parts.push(formatTerm(v, false, parts.length === 0));
+      });
       if (s.groups.length > 0) {
         let groupCounts = {};
         s.groups.forEach(g => {
@@ -3420,14 +3440,6 @@
           parts.push(term);
         }
       }
-      const xVals = Array.isArray(s.x) ? s.x : [s.x];
-      xVals.forEach(v => {
-        if (Math.abs(v) > 1e-9) parts.push(formatTerm(v, true, parts.length === 0));
-      });
-      const numVals = Array.isArray(s.num) ? s.num : [s.num];
-      numVals.forEach(v => {
-        if (Math.abs(v) > 1e-9) parts.push(formatTerm(v, false, parts.length === 0));
-      });
       return parts.length > 0 ? parts.join(' ') : '0';
     }
 
@@ -3569,14 +3581,13 @@
             updatePaletteUI();
             addNotebookEntry(formatSideState(state.left), formatSideState(state.right), '', false, { opType: 'mult', origLeft, origRight, origFactor: effectiveFactor });
           } else {
-            addNotebookEntry(stepLeft, stepRight, `両辺を\n　 ${effectiveFactor} 倍した`, false, { opType: 'mult', origLeft, origRight, origFactor: effectiveFactor });
             saveBaseState();
             pendingMult = null;
             multFactor = 2;
             paletteState.selectedKey = null;
             render();
             updatePaletteUI();
-            addNotebookEntry(formatSideState(state.left), formatSideState(state.right), '', false, { opType: 'mult', origLeft, origRight, origFactor: effectiveFactor });
+            addNotebookEntry(formatSideState(state.left), formatSideState(state.right), `両辺を\n　 ${effectiveFactor} 倍した`, false, { opType: 'mult', origLeft, origRight, origFactor: effectiveFactor });
           }
           showAlert(`両辺を ${effectiveFactor} 倍して再び釣り合ったね！`, false);
           checkCompletion();
@@ -3668,14 +3679,13 @@
             updatePaletteUI();
             addNotebookEntry(formatSideState(state.left), formatSideState(state.right), '', false, { opType: 'divide', origLeft, origRight, divideK: effectiveDivFactor });
           } else {
-            addNotebookEntry(stepLeft, stepRight, `両辺を\n　 ${effectiveDivFactor} で割った`, false, { opType: 'divide', origLeft, origRight, divideK: effectiveDivFactor });
             saveBaseState();
             pendingDiv = null;
             divFactor = 2;
             paletteState.selectedKey = null;
             render();
             updatePaletteUI();
-            addNotebookEntry(formatSideState(state.left), formatSideState(state.right), '', false, { opType: 'divide', origLeft, origRight, divideK: effectiveDivFactor });
+            addNotebookEntry(formatSideState(state.left), formatSideState(state.right), `両辺を\n　 ${effectiveDivFactor} で割った`, false, { opType: 'divide', origLeft, origRight, divideK: effectiveDivFactor });
           }
           showAlert(`両辺を ${effectiveDivFactor} で割って再び釣り合ったね！`, false);
           checkCompletion();
