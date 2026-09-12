@@ -707,7 +707,7 @@
     .btn-preset-category.btn-preset-random:hover { background: #f4511e; }
     .preset-problem-list {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-columns: 1fr 1fr;
       gap: 12px;
       width: auto;
       height: auto;
@@ -2723,7 +2723,9 @@
             // 分数の直後にxが続く場合(例: "3/4x" = (3/4)×x)は、xにかかる係数の分数として扱う
             groups.push({ x: inner.x + inner.num, num: 0, denom: denom, sign: sign });
           } else {
-            groups.push({ x: inner.x, num: inner.num, denom: denom, sign: sign });
+            // 分子がxそのものの場合(例: "x/5")は、表示でも「x/denom」の形を保つ印を付ける
+            const xNumeratorStyle = (innerStr === 'x' && inner.x === 1 && inner.num === 0);
+            groups.push({ x: inner.x, num: inner.num, denom: denom, sign: sign, xNumeratorStyle: xNumeratorStyle });
           }
         }
         cleanStr = cleanStr.replace(match[0], '');
@@ -3468,7 +3470,7 @@
           const denom = g.denom || 1;
           const sign = g.sign || 1;
           // xだけの係数分数(例: 3/4x)は、xを分子に含めず分数の外に出して表示する
-          const isXCoeffFrac = (denom > 1 && g.num === 0 && g.x !== 0);
+          const isXCoeffFrac = (denom > 1 && g.num === 0 && g.x !== 0 && !g.xNumeratorStyle);
           let innerStr, hasOp, needsParen;
           if (isXCoeffFrac) {
             innerStr = String(Math.abs(g.x));
