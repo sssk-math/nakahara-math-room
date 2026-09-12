@@ -1748,7 +1748,26 @@
       }
     };
     const PRESET_CATEGORY_ORDER = ['equality', 'basic', 'paren', 'fraction', 'various'];
-    let presetCompleted = {}; // key: "カテゴリキー-問題番号" -> true (解いた問題の「済」マーク管理)
+    let presetCompleted = loadPresetCompleted(); // key: "カテゴリキー-問題番号" -> true (解いた問題の「済」マーク管理、localStorageに保存)
+
+    /* 進捗(解いた問題)をlocalStorageから読み込む */
+    function loadPresetCompleted() {
+      try {
+        const saved = localStorage.getItem('presetCompleted');
+        return saved ? JSON.parse(saved) : {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    /* 進捗(解いた問題)をlocalStorageに保存する */
+    function savePresetCompleted() {
+      try {
+        localStorage.setItem('presetCompleted', JSON.stringify(presetCompleted));
+      } catch (e) {
+        // 保存に失敗しても演習自体は継続できるようにする
+      }
+    }
     let currentPresetCategory = null;
     let currentPresetIndex = null;
 
@@ -4309,6 +4328,7 @@
 
         if (window.presetMode && solvedNormal) {
           presetCompleted[currentPresetCategory + '-' + currentPresetIndex] = true;
+          savePresetCompleted();
         }
 
         const leftIsX = solvedNormal;
