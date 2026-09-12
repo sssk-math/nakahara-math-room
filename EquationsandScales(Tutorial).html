@@ -432,6 +432,52 @@
     .btn-start-menu.btn-tutorial:hover { background: #00796b; }
     .btn-start-menu.btn-select { background: var(--primary); color: white; }
     .btn-start-menu.btn-select:hover { opacity: 0.9; }
+    .btn-start-menu.btn-settings { background: #78909c; color: white; }
+    .btn-start-menu.btn-settings:hover { background: #607d8b; }
+
+    /* 設定画面・リセット確認モーダル */
+    .reset-confirm-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+    .reset-confirm-box {
+      background: white;
+      border-radius: 14px;
+      padding: 24px;
+      max-width: 320px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    }
+    .reset-confirm-text {
+      font-size: 1rem;
+      color: #2c3e50;
+      text-align: center;
+      margin: 0;
+    }
+    .reset-confirm-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+    }
+    .btn-reset-confirm {
+      background: #e53935;
+      color: white;
+      font-weight: bold;
+      padding: 12px 24px;
+      font-size: 1rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    .btn-reset-confirm:hover { background: #c62828; }
 
     /* ========================================================
        3-4y. チュートリアル画面
@@ -1141,6 +1187,27 @@
       <div class="start-menu">
         <button class="btn-start-menu btn-tutorial" onclick="showScreen('screen-tutorial')">📘 チュートリアル</button>
         <button class="btn-start-menu btn-select" onclick="showScreen('screen-select')">📝 問題選択</button>
+        <button class="btn-start-menu btn-settings" onclick="showScreen('screen-settings')">⚙️ 設定</button>
+      </div>
+    </div>
+
+    <!-- 4-0-1b. 設定画面 -->
+    <div class="app-screen" id="screen-settings">
+      <div class="tutorial-view">
+        <h2 class="tutorial-heading">設定</h2>
+        <button class="btn-preset-category btn-preset-random" onclick="showResetConfirm()">🗑️ 取り組みをリセットする</button>
+        <button class="btn-tutorial-hud-secondary" onclick="showScreen('screen-start')">← 開始画面へ</button>
+      </div>
+    </div>
+
+    <!-- 4-0-1c. リセット確認モーダル -->
+    <div class="reset-confirm-overlay" id="resetConfirmModal" style="display:none;">
+      <div class="reset-confirm-box">
+        <p class="reset-confirm-text">すべての取り組みがリセットされます。よろしいですか？</p>
+        <div class="reset-confirm-buttons">
+          <button class="btn-tutorial-hud-secondary" onclick="hideResetConfirm()">キャンセルする</button>
+          <button class="btn-reset-confirm" onclick="confirmResetProgress()">リセットする</button>
+        </div>
       </div>
     </div>
 
@@ -1767,6 +1834,19 @@
       } catch (e) {
         // 保存に失敗しても演習自体は継続できるようにする
       }
+    }
+
+    /* 設定画面: リセット確認モーダルの表示/非表示/実行 */
+    function showResetConfirm() {
+      document.getElementById('resetConfirmModal').style.display = 'flex';
+    }
+    function hideResetConfirm() {
+      document.getElementById('resetConfirmModal').style.display = 'none';
+    }
+    function confirmResetProgress() {
+      presetCompleted = {};
+      savePresetCompleted();
+      hideResetConfirm();
     }
     let currentPresetCategory = null;
     let currentPresetIndex = null;
