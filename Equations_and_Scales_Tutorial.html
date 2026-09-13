@@ -764,12 +764,10 @@
       position: absolute;
       top: 4px;
       right: 6px;
-      font-size: 0.75rem;
-      color: #2e7d32;
+      font-size: 0.7rem;
+      color: #f9a825;
       font-weight: bold;
-      background: #c8e6c9;
-      border-radius: 4px;
-      padding: 1px 4px;
+      letter-spacing: -1px;
     }
 
     /* ========================================================
@@ -1185,8 +1183,8 @@
       <h1 class="start-title">上皿天秤・方程式シミュレーター</h1>
       <p class="start-subtitle">天秤を操作して、方程式の解き方を学ぼう</p>
       <div class="start-menu">
-        <button class="btn-start-menu btn-tutorial" onclick="showScreen('screen-tutorial')">📘 チュートリアル</button>
         <button class="btn-start-menu btn-select" onclick="showScreen('screen-select')">📝 問題選択</button>
+        <button class="btn-start-menu btn-tutorial" onclick="showScreen('screen-tutorial')">📘 チュートリアル</button>
         <button class="btn-start-menu btn-settings" onclick="showScreen('screen-settings')">⚙️ 設定</button>
       </div>
     </div>
@@ -1851,6 +1849,82 @@
     let currentPresetCategory = null;
     let currentPresetIndex = null;
 
+    /* ★評価用: 天秤への操作回数・移項使用・初手の記録 */
+    let presetStepCount = 0;
+    let presetUsedTranspose = false;
+    let presetFirstMove = null; // 例: {type:'add'} {type:'mult', factor:10} {type:'transpose'}
+
+    function presetResetTracking() {
+      presetStepCount = 0;
+      presetUsedTranspose = false;
+      presetFirstMove = null;
+    }
+
+    /* 天秤への操作が1回成立するたびに呼ぶ(問題選択の固定問題のときだけ記録する) */
+    function presetTrackMove(type, factor) {
+      if (!window.presetMode || !currentPresetCategory) return;
+      presetStepCount++;
+      if (presetFirstMove === null) {
+        presetFirstMove = (factor !== undefined) ? { type, factor } : { type };
+      }
+    }
+
+    /* 移項が成立した時に呼ぶ */
+    function presetTrackTranspose() {
+      if (!window.presetMode || !currentPresetCategory) return;
+      presetStepCount++;
+      presetUsedTranspose = true;
+      if (presetFirstMove === null) presetFirstMove = { type: 'transpose' };
+    }
+
+    /* ★評価の基準データ(★★★に必要な天秤操作回数。等式の性質/基本/かっこ/分数は問題番号順) */
+    const EQUALITY_THREE_STAR_STEPS = [2, 2, 2, 2, 2, 2, 2, 2, 3, 2, 3, 2];
+    const BASIC_THREE_STAR_STEPS = [3, 3, 3, 3, 3, 3, 4, 4, 4];
+    const PAREN_THREE_STAR_STEPS = [6, 3, 5, 7];
+    const FRACTION_THREE_STAR_STEPS = [5, 7, 5, 7, 7, 6];
+    const VARIOUS_CRITERIA = [
+      { threeStar: { type: 'mult', factor: 10, steps: 5 }, twoStar: { sameAsThreeMove: false, firstIsTranspose: true, maxSteps: 8 } },
+      { threeStar: { type: 'div', factor: 800, steps: 7 }, twoStar: { sameAsThreeMove: false, maxSteps: 7 } },
+      { threeStar: { type: 'mult', factor: 2, steps: 6 }, twoStar: { sameAsThreeMove: false, maxSteps: 10 } },
+      { threeStar: { type: 'mult', factor: 100, steps: 7 }, twoStar: { sameAsThreeMove: false, maxSteps: 9 } }
+    ];
+
+    /* 解けた時点での記録(presetStepCount/presetUsedTranspose/presetFirstMove)から★の数(1〜3)を判定する */
+    function computePresetStars() {
+      const idx = currentPresetIndex;
+      const cat = currentPresetCategory;
+      const fm = presetFirstMove;
+      const isFirstMove = (type, factor) => !!fm && fm.type === type && fm.factor === factor;
+
+      if (cat === 'equality') {
+        const need = EQUALITY_THREE_STAR_STEPS[idx];
+        return (presetStepCount === need) ? 3 : 1;
+      }
+
+      if (cat === 'basic' || cat === 'paren' || cat === 'fraction') {
+        const stepsArr = cat === 'basic' ? BASIC_THREE_STAR_STEPS : cat === 'paren' ? PAREN_THREE_STAR_STEPS : FRACTION_THREE_STAR_STEPS;
+        const need = stepsArr[idx];
+        if (presetUsedTranspose && presetStepCount === need) return 3;
+        if (!presetUsedTranspose && presetStepCount <= need + 4) return 2;
+        return 1;
+      }
+
+      if (cat === 'various') {
+        const c = VARIOUS_CRITERIA[idx];
+        const three = c.threeStar;
+        if (isFirstMove(three.type, three.factor) && presetUsedTranspose && presetStepCount === three.steps) return 3;
+        const two = c.twoStar;
+        if (two.firstIsTranspose) {
+          if (isFirstMove('transpose') && presetStepCount <= two.maxSteps) return 2;
+        } else {
+          const matchesThreeMove = isFirstMove(three.type, three.factor);
+          if (!matchesThreeMove && presetStepCount <= two.maxSteps) return 2;
+        }
+        return 1;
+      }
+
+      return 1;
+    }
     /* 5-0y-2. カテゴリ選択ボタンの描画(初期表示時に1回呼ぶ) */
     function renderPresetCategoryList() {
       const listEl = document.getElementById('select-category-list');
@@ -1886,6 +1960,16 @@
     }
 
     /* 5-0y-5. 問題一覧(番号ボタン＋済マーク)の描画 */
+    /* 済マークの代わりに★評価(1〜3、0は未挑戦)を表示するHTMLを作る */
+    function presetStarMarkHtml(stars) {
+      const filled = stars || 0;
+      let html = '';
+      for (let i = 0; i < 3; i++) {
+        html += i < filled ? '★' : '☆';
+      }
+      return `<span class="preset-done-mark">${html}</span>`;
+    }
+
     function renderPresetProblemList() {
       const cat = PRESET_CATEGORIES[currentPresetCategory];
       const view = document.getElementById('select-problem-view');
@@ -1903,7 +1987,7 @@
             const eq = cat.problems[i];
             const key = currentPresetCategory + '-' + i;
             const doneClass = presetCompleted[key] ? ' preset-done' : '';
-            const doneMark = presetCompleted[key] ? '<span class="preset-done-mark">済</span>' : '';
+            const doneMark = presetStarMarkHtml(presetCompleted[key]);
             return `<button class="btn-preset-problem${doneClass}" onclick="startPresetProblem(${i})">` +
                    `<span class="preset-problem-num">(${i + 1})</span>` +
                    `<span class="preset-problem-eq">\\(${eqToLatex(eq).replace('=', ' = ')}\\)</span>${doneMark}</button>`;
@@ -1914,7 +1998,7 @@
         itemsHtml = cat.problems.map(function (eq, i) {
           const key = currentPresetCategory + '-' + i;
           const doneClass = presetCompleted[key] ? ' preset-done' : '';
-          const doneMark = presetCompleted[key] ? '<span class="preset-done-mark">済</span>' : '';
+          const doneMark = presetStarMarkHtml(presetCompleted[key]);
           return `<button class="btn-preset-problem${doneClass}" onclick="startPresetProblem(${i})">` +
                  `<span class="preset-problem-num">(${i + 1})</span>` +
                  `<span class="preset-problem-eq">\\(${eqToLatex(eq).replace('=', ' = ')}\\)</span>${doneMark}</button>`;
@@ -1939,6 +2023,7 @@
       showScreen('screen-practice');
       setPracticeTitle();
       showRandomModeControls(false);
+      presetResetTracking();
       document.getElementById('btnPresetBack').textContent = '← 問題一覧に戻る';
       // 「等式の性質」カテゴリ以外は、等式の性質チェックをOFFにする(移項が使え、ノートも簡潔な表記になる)
       document.getElementById('chkEquality').checked = (currentPresetCategory === 'equality');
@@ -3632,6 +3717,7 @@
         if (!pendingMult) {
           pendingMult = { factor: factor, side: targetSide };
           multiplySide(state[targetSide], factor);
+          presetTrackMove('mult', factor);
           targetPlateEl.classList.add('flash-green');
           setTimeout(() => targetPlateEl.classList.remove('flash-green'), 500);
           render();
@@ -3641,6 +3727,7 @@
           return;
         } else {
           multiplySide(state[targetSide], factor);
+          presetTrackMove('mult', factor);
 
           targetPlateEl.classList.add('flash-green');
           setTimeout(() => targetPlateEl.classList.remove('flash-green'), 500);
@@ -3741,6 +3828,7 @@
         if (!pendingDiv) {
           pendingDiv = { factor: factor, side: targetSide };
           divideSide(state[targetSide], factor);
+          presetTrackMove('div', factor);
           targetPlateEl.classList.add('flash-green');
           setTimeout(() => targetPlateEl.classList.remove('flash-green'), 500);
           render();
@@ -3750,6 +3838,7 @@
           return;
         } else {
           divideSide(state[targetSide], factor);
+          presetTrackMove('div', factor);
 
           targetPlateEl.classList.add('flash-green');
           setTimeout(() => targetPlateEl.classList.remove('flash-green'), 500);
@@ -4091,6 +4180,7 @@
 
         if (isTransfer) {
           saveBaseState();
+          presetTrackTranspose();
           render();
           addNotebookEntry(formatSideState(state.left), formatSideState(state.right), '', false, { opType: 'transpose_result' });
           if (!checkCompletion()) showAlert('移項したよ！（符号が変わったね）', false);
@@ -4112,6 +4202,7 @@
             paletteState.selectedKey = addKey;
           }
           
+          presetTrackMove('add');
           validateAndUpdateState(nextState, 'add');
           
           if (!wasPending && !chkEquality) {
@@ -4191,6 +4282,7 @@
           pendingRemove = { type: removeType, val: removeVal, side: removeSide };
         }
 
+        presetTrackMove('remove');
         validateAndUpdateState(nextState, 'remove');
 
         if (!wasPending && !document.getElementById('chkEquality').checked) {
@@ -4409,7 +4501,10 @@
         setLockState(true, solvedReverse, false);
 
         if (window.presetMode && solvedNormal) {
-          presetCompleted[currentPresetCategory + '-' + currentPresetIndex] = true;
+          const key = currentPresetCategory + '-' + currentPresetIndex;
+          const stars = computePresetStars();
+          const prevStars = presetCompleted[key] || 0;
+          presetCompleted[key] = Math.max(prevStars, stars);
           savePresetCompleted();
         }
 
