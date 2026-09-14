@@ -1377,7 +1377,7 @@
     
     <!-- 4-3. フッター -->
     <div class="footer">
-      @中原先生の数学部屋
+      ©中原先生の数学部屋
     </div>
 
     </div><!-- /#screen-practice -->
@@ -1797,6 +1797,7 @@
       },
       basic: {
         label: '基本の一次方程式',
+        gridColumns: 3,
         problems: ['5x+8=23', '6x-5=-17', '-2x+3=5', '10x=6x-8', '4x=50-6x', '-8x=3-5x', '9x+2=4x+17', '5x-8=-17-4x', '3x+5=x+11']
       },
       paren: {
@@ -1805,6 +1806,7 @@
       },
       fraction: {
         label: '分数を含む方程式',
+        gridColumns: 3,
         problems: ['x=1/3x+2', '(x+1)/2=1/5x+2', '(x+1)/3=1/4x+1', '3/4x-7=2x+1/2', '(9x-5)/6=(8+x)/3', 'x-(x-1)/3=3']
       },
       various: {
@@ -2007,7 +2009,7 @@
 
       view.innerHTML = `
         <h2 class="tutorial-heading">${cat.label}</h2>
-        <div class="${listClass}">${itemsHtml}</div>
+        <div class="${listClass}"${cat.gridColumns ? ` style="grid-template-columns: repeat(${cat.gridColumns}, 1fr);"` : ''}>${itemsHtml}</div>
         <button class="btn-tutorial-hud-secondary" onclick="showPresetCategoryMenu()">← カテゴリ選択に戻る</button>
       `;
       if (window.MathJax && window.MathJax.typesetPromise) {
@@ -2193,7 +2195,7 @@
     let lastAllowSwap = false;
     let pendingMult = null;
     let multFactor = 2;
-    const multFactors = [2, 3, 4, 5, 6, 10, 12];
+    const multFactors = [2, 3, 4, 5, 6, 7, 8, 9];
     let divFactor = 2;
     const divFactors = [2, 3, 4, 5, 6, 7, 8, 9];
     let pendingDiv = null;
@@ -3036,7 +3038,7 @@
                   if (freeRDenom !== null) {
                     rA = freeRDenom;
                   } else {
-                    let divs = getDivisors(xVal).filter(d => [2, 3, 4, 6, -2, -3, -4, -6].includes(d));
+                    let divs = getDivisors(xVal).filter(d => [2, 3, 4, 5, 6, -2, -3, -4, -5, -6].includes(d));
                     if (divs.length === 0) continue;
                     rA = divs[getRandomInt(0, divs.length - 1)];
                   }
@@ -3048,7 +3050,7 @@
                   if (rB !== 0) parts.push(rB > 0 ? `+ ${rB}` : `- ${Math.abs(rB)}`);
                   rStr = parts.join(' ');
               } else if (rPat === 'F') {
-                  const allowedDenoms = [-6, -4, -3, -2, 2, 3, 4, 6];
+                  const allowedDenoms = [-6, -5, -4, -3, -2, 2, 3, 4, 5, 6];
                   rA = allowedDenoms[getRandomInt(0, allowedDenoms.length - 1)];
                   rB = leftVal * rA - xVal;
                   if (rB < -15 || rB > 15) continue;
@@ -3904,6 +3906,29 @@
 
       const isTransfer = (draggedData.source === 'plate' && draggedData.side !== targetSide);
 
+      /* 分割済みの球(配列)にも対応した値の除去・追加ヘルパー(移項用) */
+      const removeExactFromField = (obj, fieldName, val) => {
+        const cur = obj[fieldName];
+        if (Array.isArray(cur)) {
+          const idx = cur.findIndex(v => Math.abs(v - val) < 1e-9);
+          if (idx !== -1) cur.splice(idx, 1);
+          else cur[0] = (cur[0] || 0) - val;
+          if (cur.length === 0) obj[fieldName] = 0;
+          else if (cur.length === 1) obj[fieldName] = cur[0];
+        } else {
+          obj[fieldName] = cur - val;
+        }
+      };
+      const addToField = (obj, fieldName, val) => {
+        const cur = obj[fieldName];
+        if (Array.isArray(cur)) {
+          cur.push(val);
+        } else {
+          obj[fieldName] = cur + val;
+        }
+      };
+      const fieldTotal = (v) => Array.isArray(v) ? v.reduce((a, b) => a + b, 0) : v;
+
       if (pendingRemove !== null) {
         showAlert('反対側の皿からおろしてね！', false);
         draggedData = null;
@@ -4005,11 +4030,11 @@
 
         details.forEach(item => {
           if (item.side === 'left') {
-            if (item.type === 'x') curLeft.x -= item.val;
-            else curLeft.num -= item.val;
+            if (item.type === 'x') removeExactFromField(curLeft, 'x', item.val);
+            else removeExactFromField(curLeft, 'num', item.val);
           } else {
-            if (item.type === 'x') curRight.x -= item.val;
-            else curRight.num -= item.val;
+            if (item.type === 'x') removeExactFromField(curRight, 'x', item.val);
+            else removeExactFromField(curRight, 'num', item.val);
           }
         });
 
@@ -4049,24 +4074,24 @@
           transferredDetails: details
         });
 
-        const willCancel = (draggedData.type === 'x' && state[targetSide].x * droppedVal < 0) || 
-                           (draggedData.type === '1' && state[targetSide].num * droppedVal < 0);
+        const willCancel = (draggedData.type === 'x' && fieldTotal(state[targetSide].x) * droppedVal < 0) ||
+                           (draggedData.type === '1' && fieldTotal(state[targetSide].num) * droppedVal < 0);
 
         if (draggedData.type === 'x') {
-          state[draggedData.side].x -= draggedData.val;
-          baseState[draggedData.side].x -= draggedData.val;
+          removeExactFromField(state[draggedData.side], 'x', draggedData.val);
+          removeExactFromField(baseState[draggedData.side], 'x', draggedData.val);
         } else {
-          state[draggedData.side].num -= draggedData.val;
-          baseState[draggedData.side].num -= draggedData.val;
+          removeExactFromField(state[draggedData.side], 'num', draggedData.val);
+          removeExactFromField(baseState[draggedData.side], 'num', draggedData.val);
         }
 
         renderPlate('plateLeft', state.left, 'left');
         renderPlate('plateRight', state.right, 'right');
 
         if (draggedData.type === 'x') {
-          state[targetSide].x += droppedVal;
+          addToField(state[targetSide], 'x', droppedVal);
         } else {
-          state[targetSide].num += droppedVal;
+          addToField(state[targetSide], 'num', droppedVal);
         }
 
         if (!willCancel) saveBaseState();
