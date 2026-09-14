@@ -3922,7 +3922,12 @@
       const addToField = (obj, fieldName, val) => {
         const cur = obj[fieldName];
         if (Array.isArray(cur)) {
-          cur.push(val);
+          // 打ち消し合う値(符号違いで同じ大きさ)があれば両方取り除き、なければ新しい値を追加する
+          const idx = cur.findIndex(v => Math.abs(v + val) < 1e-9);
+          if (idx !== -1) cur.splice(idx, 1);
+          else cur.push(val);
+          if (cur.length === 0) obj[fieldName] = 0;
+          else if (cur.length === 1) obj[fieldName] = cur[0];
         } else {
           obj[fieldName] = cur + val;
         }
