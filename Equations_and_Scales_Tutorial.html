@@ -3183,6 +3183,7 @@
               showAlert('かっこをはずしたよ！', false);
               render();
               addNotebookEntry(formatSideState(state.left), formatSideState(state.right), 'かっこを\n　はずした');
+              presetTrackMove('popBag');
               checkCompletion();
             }, 800);
           }, 500);
@@ -3194,6 +3195,7 @@
           showAlert('かっこをはずしたよ！', false);
           render();
           addNotebookEntry(formatSideState(state.left), formatSideState(state.right), 'かっこを\n　はずした');
+          presetTrackMove('popBag');
           checkCompletion();
         }
       }, 800);
@@ -3216,6 +3218,7 @@
       showAlert('両辺を入れかえたよ！', false);
       render();
       addNotebookEntry(formatSideState(state.left), formatSideState(state.right), '両辺を\n　入れかえた', true);
+      presetTrackMove('swapSides');
       checkCompletion();
     }
 
@@ -3323,6 +3326,7 @@
       }
 
       isCompleted = false;
+      presetTrackMove('signChange');
       const isSolved = checkCompletion();
       if (!isSolved) {
         setLockState(false);
