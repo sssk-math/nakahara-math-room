@@ -987,6 +987,112 @@
             color: #fff;
             cursor: not-allowed;
         }
+        /* --- 記録画面：カード表示 --- */
+        .kiroku-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            width: 360px;
+            margin: 0 auto;
+        }
+
+        .kiroku-card {
+            background-color: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 14px 18px;
+            text-align: center;
+        }
+
+        .kiroku-card-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 6px;
+        }
+
+        .kiroku-card-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1a73e8;
+        }
+        /* --- 設定画面：リセットボタン(中央寄せ) --- */
+        .settei-reset-buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .settei-reset-btn {
+            width: 280px;
+            height: 52px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #c0392b;
+            background-color: #fdecea;
+            border: 1px solid #f1a9a0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .settei-reset-btn:active {
+            background-color: #f8d3ce;
+        }
+
+        /* --- リセット確認モーダル --- */
+        .reset-confirm-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            border-radius: 12px;
+        }
+
+        .reset-confirm-box {
+            width: 340px;
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 24px 20px;
+            text-align: center;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+        }
+
+        .reset-confirm-message {
+            font-size: 15px;
+            color: #333;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .reset-confirm-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .reset-confirm-cancel, .reset-confirm-ok {
+            flex: 1;
+            height: 44px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            border: none;
+        }
+
+        .reset-confirm-cancel {
+            background-color: #e9ecef;
+            color: #333;
+        }
+
+        .reset-confirm-ok {
+            background-color: #e74c3c;
+            color: #fff;
+        }
     </style>
 </head>
 
@@ -999,8 +1105,8 @@
             </div>
             <div class="start-menu">
                 <button class="start-menu-btn" onclick="showScreen('screen-mondai'); renderMondaiGrid();">📚 問題選択</button>
-                <button class="start-menu-btn" onclick="showScreen('screen-kentei')">📝 検定</button>
-                <button class="start-menu-btn" onclick="showScreen('screen-kiroku')">🏆 記録</button>
+                <button class="start-menu-btn" onclick="enterKenteiScreen()">📝 検定</button>
+                <button class="start-menu-btn" onclick="showScreen('screen-kiroku'); renderKirokuScreen();">🏆 記録</button>
                 <button class="start-menu-btn" onclick="showScreen('screen-settei')">⚙️ 設定</button>
             </div>
         </div>
@@ -1016,16 +1122,42 @@
             </div>
         </div>
 
-        <div id="screen-kiroku" class="app-screen placeholder-screen" style="display:none;">
+        <div id="screen-kiroku" class="app-screen" style="display:none; align-items:center; justify-content:center; gap:20px;">
             <div class="sub-screen-header"><h1>🏆 記録</h1></div>
-            <div class="placeholder-message">準備中です（次のステップで実装します）</div>
+            <div class="kiroku-cards">
+                <div class="kiroku-card">
+                    <div class="kiroku-card-label">問題選択：クリア問題数</div>
+                    <div class="kiroku-card-value" id="kiroku-mondai-count">0 / 306</div>
+                </div>
+                <div class="kiroku-card">
+                    <div class="kiroku-card-label">検定：ベストタイム</div>
+                    <div class="kiroku-card-value" id="kiroku-best-time">--:--.-</div>
+                </div>
+                <div class="kiroku-card">
+                    <div class="kiroku-card-label">検定：連続正解記録</div>
+                    <div class="kiroku-card-value" id="kiroku-streak">0問連続正解中</div>
+                </div>
+            </div>
             <button class="btn-tutorial-hud-secondary" onclick="showScreen('screen-start')">←開始画面へ</button>
         </div>
 
         <div id="screen-settei" class="app-screen placeholder-screen" style="display:none;">
             <div class="sub-screen-header"><h1>⚙️ 設定</h1></div>
-            <div class="placeholder-message">準備中です（次のステップで実装します）</div>
+            <div class="settei-reset-buttons">
+                <button class="settei-reset-btn" onclick="openResetConfirm('mondai')">🗑️ 問題選択をリセットする</button>
+                <button class="settei-reset-btn" onclick="openResetConfirm('kiroku')">🗑️ 記録をリセットする</button>
+            </div>
             <button class="btn-tutorial-hud-secondary" onclick="showScreen('screen-start')">←開始画面へ</button>
+        </div>
+
+        <div id="reset-confirm-modal" class="reset-confirm-overlay" style="display:none;">
+            <div class="reset-confirm-box">
+                <div class="reset-confirm-message" id="reset-confirm-message"></div>
+                <div class="reset-confirm-buttons">
+                    <button class="reset-confirm-cancel" onclick="closeResetConfirm()">キャンセル</button>
+                    <button class="reset-confirm-ok" onclick="confirmReset()">リセットする</button>
+                </div>
+            </div>
         </div>
 
         <div id="screen-kentei" class="app-screen" style="display:none;">
@@ -1247,6 +1379,11 @@
             initValidationControls();
             quizData = generateQuizData();
             loadPracticeProgress();
+            loadKenteiRecords();
+            if (bestNormalTimeMs !== null) {
+                const bestDisplayEl = document.getElementById('best-normal-display');
+                if (bestDisplayEl) bestDisplayEl.innerText = `ベストタイム(6問): ${formatMs(bestNormalTimeMs)}`;
+            }
             showStartLayout();
         });
 
@@ -1328,6 +1465,34 @@
                 ? `<span style="color:#aaa; font-size:24px;">【スタート】を押して挑戦しよう</span>`
                 : `<span style="color:#aaa; font-size:24px;">生徒番号を入力→【スタート】</span>`;
             document.getElementById('hint-text').innerHTML = "目指せ！パーフェクト！";
+
+            // 途中式枠・ステップモードのリセット
+            const gExpr = document.getElementById('group-expression');
+            if (gExpr) {
+                gExpr.className = "input-box-group";
+                gExpr.style.display = 'none';
+            }
+            isStepMode = false;
+            currentStep = 1;
+            activeEditorId = 'math-editor-answer';
+            document.getElementById('label-answer-text').innerText = '答え';
+            const badgeExpr = document.getElementById('badge-expression');
+            const badgeAns = document.getElementById('badge-answer');
+            if (badgeExpr) badgeExpr.textContent = "入力中";
+            if (badgeAns) badgeAns.textContent = "入力中";
+            const exprEd = document.getElementById('math-editor-expression');
+            if (exprEd) {
+                exprEd.innerHTML = '';
+                exprEd.classList.remove('wide-fraction-mode');
+                createTextBlock(exprEd, "");
+            }
+
+            // タイマー表示のリセット（問題選択モード中は「--:--.-」表示のまま維持）
+            if (!practiceMode) {
+                const timerDisplayEl = document.getElementById('timer-display');
+                if (timerDisplayEl) timerDisplayEl.innerText = '⏱️ 00:00.0';
+            }
+
             const currentEd = document.getElementById(activeEditorId);
             if (currentEd) {
                 currentEd.innerHTML = '';
@@ -1515,7 +1680,13 @@
                 }
 
                 const hintBody = document.getElementById('hint-text');
-                if (currentQuestionWrongCount === 0) score++;
+                if (currentQuestionWrongCount === 0) {
+                    score++;
+                    if (!practiceMode) {
+                        correctStreakCount++;
+                        saveKenteiRecords();
+                    }
+                }
                 if (document.activeElement) document.activeElement.blur();
                 refreshMathJaxPreview();
                 if (currentQuestionIndex === 5) {
@@ -1640,6 +1811,10 @@
         /* --- ステップのエラーを表示する関数 --- */
         function showStepError(groupEl) {
             currentQuestionWrongCount++;                           
+            if (!practiceMode && correctStreakCount !== 0) {
+                correctStreakCount = 0;
+                saveKenteiRecords();
+            }
             // 間違い回数が増えたタイミングでタイマーを再判定（2回ミスで停止）
             startQuestionTimer();
             // 2回ミスでステップモード（じっくりタイム）発動
@@ -2470,6 +2645,7 @@
                 bestNormalTimeMs = totalElapsedTimeMs;
                 document.getElementById('best-normal-display').innerText = `ベストタイム(6問): ${finalTimeStr}`;
                 document.getElementById('best-update-message').innerText = "🎉 ベスト更新！";
+                saveKenteiRecords();
             }
             
             const numInput = numberField ? numberField.value.trim() : "";
@@ -2512,6 +2688,12 @@
             if (target) {
                 target.style.display = 'flex';
             }
+        }
+
+        /* --- 開始画面から検定へ入る際、常に新しい6問・初期状態にリセットする --- */
+        function enterKenteiScreen() {
+            restartQuiz();
+            showScreen('screen-kentei');
         }
 
         /* ==========================================================================
@@ -2826,7 +3008,43 @@ const FIXED_PROBLEMS = [
 {html:'$-4x + (-4x)$',ansStep:'(-4-4)x',answer:'-8x',pattern:'neg_neg'}
 ];
 
-        /* --- 問題選択モードのグローバル状態 --- */
+        /* --- 設定画面：リセット確認モーダルの制御 --- */
+        let pendingResetType = null;
+
+        function openResetConfirm(type) {
+            pendingResetType = type;
+            const msgEl = document.getElementById('reset-confirm-message');
+            if (msgEl) {
+                msgEl.textContent = (type === 'mondai')
+                    ? '問題選択の取り組み（★/☆の記録）がすべてリセットされます。よろしいですか？'
+                    : '検定のベストタイム・連続正解記録がリセットされます。よろしいですか？';
+            }
+            const modal = document.getElementById('reset-confirm-modal');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function closeResetConfirm() {
+            pendingResetType = null;
+            const modal = document.getElementById('reset-confirm-modal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function confirmReset() {
+            if (pendingResetType === 'mondai') {
+                resetPracticeProgress();
+            } else if (pendingResetType === 'kiroku') {
+                bestNormalTimeMs = null;
+                correctStreakCount = 0;
+                saveKenteiRecords();
+                if (!practiceMode) {
+                    const bestDisplayEl = document.getElementById('best-normal-display');
+                    if (bestDisplayEl) bestDisplayEl.innerText = 'ベストタイム(6問): --:--.-';
+                }
+            }
+            closeResetConfirm();
+        }
+
+
         let practiceMode              = false;
         let practiceCurrentIndex      = null;
         let practiceProgress          = [];   // 0=未挑戦, 1=ミスありクリア, 2=ノーミスクリア（★）
@@ -2836,6 +3054,53 @@ const FIXED_PROBLEMS = [
         let savedBestDisplayText       = null;
 
         const PRACTICE_PROGRESS_KEY = 'doukou_no_wa_practice_progress_v1';
+
+        /* --- 検定の記録(ベストタイム・連続正解記録) --- */
+        let correctStreakCount = 0;
+        const KENTEI_RECORDS_KEY = 'doukou_no_wa_kentei_records_v1';
+
+        function formatMs(ms) {
+            const totalMs = Math.max(0, Math.round(ms));
+            const min = Math.floor(totalMs / 60000);
+            const sec = Math.floor((totalMs % 60000) / 1000);
+            const msec = Math.floor((totalMs % 1000) / 100);
+            return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}.${msec}`;
+        }
+
+        function loadKenteiRecords() {
+            try {
+                const raw = localStorage.getItem(KENTEI_RECORDS_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    bestNormalTimeMs = (typeof parsed.bestTimeMs === 'number') ? parsed.bestTimeMs : null;
+                    correctStreakCount = (typeof parsed.streak === 'number') ? parsed.streak : 0;
+                    return;
+                }
+            } catch (e) { /* 読み込み失敗時は初期化 */ }
+            bestNormalTimeMs = null;
+            correctStreakCount = 0;
+        }
+
+        function saveKenteiRecords() {
+            try {
+                localStorage.setItem(KENTEI_RECORDS_KEY, JSON.stringify({ bestTimeMs: bestNormalTimeMs, streak: correctStreakCount }));
+            } catch (e) { /* 保存失敗時は何もしない */ }
+        }
+
+        /* --- 記録画面を描画する関数 --- */
+        function renderKirokuScreen() {
+            const clearedCount = practiceProgress.filter(s => s >= 1).length;
+            const mondaiCountEl = document.getElementById('kiroku-mondai-count');
+            if (mondaiCountEl) mondaiCountEl.textContent = `${clearedCount} / ${FIXED_PROBLEMS.length}`;
+
+            const bestTimeEl = document.getElementById('kiroku-best-time');
+            if (bestTimeEl) bestTimeEl.textContent = (bestNormalTimeMs !== null) ? formatMs(bestNormalTimeMs) : '--:--.-';
+
+            const streakEl = document.getElementById('kiroku-streak');
+            if (streakEl) streakEl.textContent = `${correctStreakCount}問連続正解中`;
+        }
+
+
 
         function loadPracticeProgress() {
             try {
