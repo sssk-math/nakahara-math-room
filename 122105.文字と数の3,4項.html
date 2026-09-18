@@ -1,0 +1,2422 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文字式の加減（Step5：文字と数の3,4項）</title>
+    <script>
+    /* ==========================================================================
+       1. MathJaxの基本設定
+       ========================================================================== */
+    window.MathJax = {
+        tex: {
+        inlineMath: [['$', '$']],
+        displayMath: [['$$', '$$']]
+        },
+        options: {
+        enableMenu: false
+        }
+    };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    
+    <style>
+    /* ==========================================================================
+       2. 画面全体の基本デザイン
+       ========================================================================== */
+    /* --- 全称要素の基本設定 --- */
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    /* --- ボディの基本スタイル --- */
+    body {
+        background-color: #ffffff;
+        font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+        min-height: 100vh;
+        overflow: hidden;
+    }
+
+    /* --- アプリコンテナのレイアウト設定 --- */
+    #app-container {
+        width: 960px;
+        height: 640px;
+        aspect-ratio: 3 / 2;
+        flex-shrink: 0;
+        background-color: #ffffff;
+        border: 2px solid #333333;
+        border-radius: 12px;
+        position: relative;
+        transform-origin: top center;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        padding: 10px 20px 28px;
+    }
+
+    /* ==========================================================================
+       3. ヘッダー・タイトル・利き手切り替えボタン
+       ========================================================================== */
+    /* --- ヘッダー領域のレイアウト設定 --- */
+    header { 
+        text-align: center; 
+    }
+
+    /* --- タイトル見出しのスタイル --- */
+    h1 { 
+        font-size: 24px; 
+        color: #333; 
+        margin-bottom: 5px; 
+    }
+
+    /* --- タイトルバーのグリッドレイアウト --- */
+    .title-bar {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 0px;
+    }
+
+    /* --- 利き手設定ボタンの共通スタイル --- */
+    .title-hand-btn {
+        padding: 6px 14px;
+        font-size: 0.85rem;
+        font-weight: bold;
+        background-color: #e0e0e0;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+    }
+
+    /* --- 利き手設定ボタンの活性状態スタイル --- */
+    .title-hand-btn.active { 
+        background-color: #1a73e8;
+        color: white;
+    }
+
+    /* --- 左利きレイアウト（反転配置）のスタイル --- */
+    .game-layout.left-handed {
+        flex-direction: row-reverse;
+    }
+
+    /* ==========================================================================
+       4. タイマー・自己ベスト・生徒番号入力エリア
+       ========================================================================== */
+    /* --- タイマーコンテナのレイアウト設定 --- */
+    .timer-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #f1f3f4;
+        padding: 8px 16px;
+        border-radius: 6px;
+        margin-top: 8px;
+        margin-bottom: 0px;
+        font-weight: bold;
+        box-sizing: border-box;
+        height: 52px;
+    }
+
+    /* --- タイマー表示のスタイル --- */
+    #timer-display {
+        font-size: 20px;
+        color: #1a73e8;
+        font-variant-numeric: tabular-nums;
+        min-width: 110px;
+    }
+    
+    /* --- 記録表示ボックスのスタイル --- */
+    .record-box {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        border-left: 2px solid #ccc;
+        padding-left: 12px;
+        height: 100%;
+    }
+
+    /* --- ベスト記録更新メッセージのスタイル --- */
+    #best-update-message {
+        font-size: 12px;
+        font-weight: bold;
+        color: #1a73e8;
+        white-space: nowrap;
+        height: 1.2em;
+        margin-bottom: 1px;
+    }
+
+    /* --- ベスト記録ラベルのコンテナスタイル --- */
+    .best-label-container {
+        display: flex;
+        gap: 15px;
+        font-size: 12px;
+        color: #5f6368;
+        white-space: nowrap;
+    }
+
+    /* --- 生徒番号入力エリアのスタイル --- */
+    .number-field-wrapper {
+        position: relative;
+        display: inline-block;
+    }
+
+    /* --- ログイン入力フィールドの共通スタイル --- */
+    .login-input {
+        font-size: 15px;
+        padding: 4px 8px;
+        border: 2px solid #ccc;
+        border-radius: 6px;
+        outline: none;
+        box-sizing: border-box;
+        font-weight: normal;
+        width: 80px;
+    }
+
+    /* --- 入力フィールドのフォーカス時スタイル --- */
+    .login-input:focus {
+        border-color: #1a73e8;
+    }
+
+    /* --- 専用テンキー付き吹き出しのスタイル --- */
+    .input-tooltip {
+        display: none;
+        position: absolute;
+        top: 120%;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #ffffff;
+        border: 2px solid #333333;
+        color: #333333;
+        padding: 12px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        z-index: 100;
+        width: 210px;
+    }
+
+    /* --- input-tooltipのツールチップ表示用スタイル --- */
+    .input-tooltip::before {
+        content: "";
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border-width: 8px;
+        border-style: solid;
+        border-color: transparent transparent #333333 transparent;
+    }
+
+    /* --- ツールチップを表示状態にするスタイル --- */
+    .input-tooltip.show {
+        display: block;
+    }
+
+    /* --- ヒント表示用のツールチップスタイル --- */
+    .tooltip-hint {
+        font-size: 11px;
+        font-weight: bold;
+        color: #5f6368;
+        margin-bottom: 8px;
+        text-align: center;
+        line-height: 1.4;
+        white-space: nowrap;
+    }
+
+    /* --- ミニテンキーのグリッド配置 --- */
+    .keypad-mini {
+        display: grid;
+        grid-template-columns: repeat(3, 56px);
+        gap: 6px;
+        justify-content: center;
+    }
+
+    /* --- 小さなボタンやキーのスタイル --- */
+    .key-mini {
+        height: 40px;
+        font-size: 18px;
+        font-weight: bold;
+        background-color: #f1f3f5;
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        user-select: none;
+    }
+
+    /* --- 小さなボタンが押下された時のスタイル --- */
+    .key-mini:active {
+        background-color: #dee2e6;
+    }
+
+    /* --- クリアボタン(小)のスタイル --- */
+    .key-mini.btn-clear {
+        grid-column: span 2;
+        background-color: #ffebee;
+        border-color: #ffcdd2;
+        color: #c62828;
+        font-size: 14px;
+    }
+
+    /* --- クリアボタン(小)が押下された時のスタイル --- */
+    .key-mini.btn-clear:active {
+        background-color: #ffcdd2;
+    }
+
+    /* --- エラーメッセージ表示用のスタイル --- */
+    .error-msg {
+        color: #d32f2f;
+        font-size: 12px;
+        margin-top: 8px;
+        font-weight: bold;
+        display: none;
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    /* --- 送信ボタンのスタイル --- */
+    #send-btn {
+        padding: 6px 12px;
+        font-size: 15px;
+        background-color: #1a73e8;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        height: 34px;
+        min-width: 76px;
+        text-align: center;
+        font-weight: bold;
+    }
+
+    /* --- 送信ボタンが無効化された時のスタイル --- */
+    #send-btn:disabled {
+        background-color: #ccc;
+        color: #888;
+        cursor: not-allowed;
+    }
+
+    /* ==========================================================================
+       5. メインゲーム画面・左右パネル
+       ========================================================================== */
+    /* --- ゲームメインレイアウトの構造設定 --- */
+    .game-layout {
+        display: flex;
+        flex-grow: 1;
+        width: 100%;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 20px;
+        margin-top: 8px;
+    }
+
+    /* --- 左パネル（問題表示エリア）のレイアウト --- */
+    .left-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        height: 100%;
+    }
+
+    /* --- 右パネル（操作・キーパッドエリア）のレイアウト --- */
+    .right-panel {
+        width: 285px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* ==========================================================================
+       6. 問題文・出題数式表示エリア
+       ========================================================================== */
+    /* ---問題表示のレイアウト --- */
+    .question-wrapper {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    /* --- 問題文のテキスト表示スタイル --- */
+    .question-text { 
+        font-size: 18px; 
+        color: #333; 
+        font-weight: bold; 
+    }
+
+    /* --- 進捗表示のスタイル --- */
+    .progress { 
+        font-size: 16px; 
+        color: #666; 
+        font-weight: bold;
+    }
+    
+    /* --- 数式表示エリアのスタイル設定 --- */
+    .formula-display {
+        font-size: 28px;
+        line-height: 1.4;
+        text-align: center;
+        color: #000;
+        margin-bottom: 12px;
+        background-color: #f8f9fa;
+        padding: 10px 15px;
+        border-radius: 8px;
+        border: 2px solid #ccc;
+        height: 95px;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* --- 数式表示コンテナのレイアウト設定 --- */
+    .formula-display mjx-container { 
+        display: inline !important; 
+        white-space: normal; 
+    }
+
+    /* ==========================================================================
+       7. 入力枠のスタイル
+       ========================================================================== */
+    /* --- 入力ブロックコンテナのレイアウト設定 --- */
+    .input-block-container { 
+        display: flex; 
+        flex-direction: column; 
+        gap: 3px; 
+        width: 100%; 
+        margin-bottom: 10px; 
+    }
+
+    /* --- 入力グループの基本レイアウト設定 --- */
+    .input-box-group {
+        background: #ffffff;
+        border: 2px solid #ced4da;
+        border-radius: 8px;
+        padding: 8px 14px;
+        height: auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        position: relative;
+        cursor: pointer;
+    }
+
+    /* --- 入力グループのフォーカス状態スタイル --- */
+    .input-box-group.active-focus { 
+        border-color: #007bff; 
+        background-color: #f0f7ff; 
+        box-shadow: 0 0 0 3px rgba(0,123,255,0.15); 
+    }
+
+    /* --- 入力グループの正解確定時スタイル --- */
+    .input-box-group.locked-correct { 
+        border-color: #81c784; 
+        background-color: #e8f5e9; 
+        cursor: default; 
+    }
+
+    /* --- 入力グループの無効化状態スタイル --- */
+    .input-box-group.locked-disabled { 
+        border-color: #e9ecef; 
+        background-color: #f8f9fa; 
+        opacity: 0.6; 
+        cursor: not-allowed; 
+    }
+
+    /* --- 入力グループの入力エラー時スタイル --- */
+    .input-box-group.error-shake { 
+        border-color: #e57373; 
+        background-color: #ffebee; 
+    }
+
+    /* --- 入力ラベルのスタイル --- */
+    .input-label { 
+        font-size: 13px; 
+        color: #495057; 
+        font-weight: bold; 
+        margin-bottom: 2px; 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+    }
+
+    /* --- ステップバッジのスタイル --- */
+    .step-badge { 
+        font-size: 11px; 
+        padding: 1px 6px; 
+        border-radius: 4px; 
+        background-color: #dee2e6; 
+        color: #495057; 
+    }
+
+    /* --- 正解確定時のステップバッジスタイル --- */
+    .locked-correct .step-badge { 
+        background-color: #28a745; 
+        color: white; 
+    }
+
+    /* --- 数式レンダリング領域のスタイル --- */
+    .mathjax-render-zone { 
+        min-height: 38px; 
+        font-size: 24px; 
+        padding-left: 30px; 
+        color: #212529; 
+        display: flex; 
+        align-items: center; 
+        justify-content: flex-start; 
+        overflow: hidden; 
+    }
+
+    /* --- 途中式と答えの入力枠を、ユーザーのタップ・クリック操作から完全に遮断 --- */
+    #math-editor-expression,
+    #math-editor-answer {
+        pointer-events: none;
+    }
+
+    /* --- プレースホルダーのスタイル --- */
+    .placeholder-text {
+        font-size: 16px;
+        color: #adb5bd;
+    }
+
+    /* --- プレースホルダー（入力ヒント）専用のスタイル --- */
+    .editor-text-node::placeholder {
+        font-size: 16px;
+        color: #adb5bd; 
+    }
+
+    /* ==========================================================================
+       10. ヒント枠のスタイル（右パネル下部）
+       ========================================================================== */
+    /* --- ヒントコンテナのレイアウト設定 --- */
+    .hint-container { 
+        width: 100%; 
+        height: 205px; 
+        background-color: #fff9db; 
+        border: 1px dashed #f59f00; 
+        border-radius: 8px; 
+        padding: 10px 12px; 
+        box-sizing: border-box; 
+        display: flex; 
+        flex-direction: column; 
+        overflow-y: auto; 
+        margin-bottom: 8px; 
+    }
+
+    /* --- ヒントタイトルのスタイル --- */
+    .hint-title { 
+        font-size: 13px; 
+        font-weight: bold; 
+        color: #f59f00; 
+        margin-bottom: 4px; 
+        text-align: left; 
+    }
+
+    /* --- ヒント本文のスタイル --- */
+    .hint-body { 
+        font-size: 16px; 
+        font-weight: bold;
+        color: #495057; 
+        line-height: 1.4; 
+        text-align: left; 
+    }
+
+    /* ==========================================================================
+       8. ソフトキーパッドおよび各種ボタン
+       ========================================================================== */
+    /* --- キーパッドのグリッドレイアウト設定 --- */
+    .keypad { 
+        display: grid; 
+        grid-template-columns: repeat(5, 56px); 
+        gap: 1px; 
+        margin-bottom: 8px; 
+    }
+
+    /* --- 各キーの共通スタイル --- */
+    .key {
+        height: 46px;
+        font-size: 24px;
+        font-weight: bold;
+        background-color: #f1f3f5;
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.1s;
+    }
+
+    /* --- キー押下時のインタラクションスタイル --- */
+    .key:active:not(:disabled) { 
+        background-color: #dee2e6; 
+        transform: scale(0.95); 
+    }
+    
+    /* --- 演算子キーのスタイル --- */
+    .key.op-btn { 
+        background-color: #e7f5ff; 
+        border-color: #a5d8ff; 
+        color: #007bff; 
+        font-size: 20px; 
+    }
+
+    /* --- 変数キーのスタイル --- */
+    .key.var-btn { 
+        background-color: #f3f0ff; 
+        border-color: #d0bfff; 
+        color: #6f42c1; 
+        font-family: 'MathJax_Math', 'Times New Roman', Times, serif; 
+        font-style: italic; 
+        font-weight: normal; 
+        font-size: 26px; 
+    }
+
+    /* --- 単位キーのスタイル --- */
+    .key.unit-btn { 
+        background-color: #fff0f6; 
+        border-color: #ffdeeb; 
+        color: #d6336c; 
+        font-size: 18px; 
+        font-weight: bold; 
+    }
+
+    /* --- 分数キーのスタイル --- */
+    .key.frac-btn { 
+        background-color: #fff9db; 
+        border-color: #fff3bf; 
+        color: #f59f00; 
+        font-size: 18px; 
+    }
+
+    /* --- 括弧キーのスタイル --- */
+    .key.paren-btn { 
+        background-color: #ebfbee; 
+        border-color: #b2f2bb; 
+        color: #2b8a3e; 
+        font-size: 20px; 
+    }
+
+    /* --- 方向キーのスタイル --- */
+    .key.arrow-btn { 
+        background-color: #fff3e0; 
+        border-color: #ffe0b2; 
+        color: #e65100; 
+        font-weight: bold; 
+    }
+
+    /* --- 無効化されたキーのスタイル --- */
+    .keypad button:disabled { 
+        background-color: #d1d5db !important; 
+        color: #9ca3af !important; 
+        border-color: #cbd5e1 !important; 
+        cursor: not-allowed; 
+        opacity: 0.6; 
+        box-shadow: none !important; 
+        transform: none !important; 
+    }
+
+    /* --- 制御キー（アクション・クリア）のレイアウト設定 --- */
+    .control-keys { 
+        display: grid; 
+        grid-template-columns: repeat(3, 92px); 
+        gap: 4px; 
+        width: 100%; 
+        justify-content: center; 
+    }
+
+    /* --- アクションボタンのスタイル --- */
+    .key.action-btn { 
+        background-color: #28a745; 
+        color: #fff; 
+        font-size: 18px; 
+        height: 46px; 
+        border-color: #1e7e34; 
+        width: 100%; 
+    }
+
+    /* --- 判定モード時のアクションボタンスタイル --- */
+    .key.action-btn.judge-mode { 
+        background-color: #007bff; 
+        border-color: #0069d9; 
+    }
+
+    /* --- クリアボタンのスタイル --- */
+    .key.clear-btn { 
+        background-color: #e9ecef; 
+        font-size: 16px; 
+        height: 46px; 
+        width: 100%; 
+        color: #333; 
+    }
+
+    /* --- 数式エディタのコンテナスタイル --- */
+    .math-editor-container {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+        z-index: -1;
+        width: 0;
+        height: 0;
+        overflow: hidden;
+    }
+
+    /* --- ワイド分数モード時のコンテナスタイル --- */
+    .math-editor-container.wide-fraction-mode {
+        height: 86px;
+        padding: 4px 14px;
+        flex-wrap: wrap;
+        overflow: visible;
+        border: none !important; 
+        background-color: transparent !important; 
+    }
+
+    /* --- エディタのテキストノードスタイル --- */
+    .editor-text-node {
+        border: none;
+        outline: none;
+        font-size: 26px; 
+        text-align: left;
+        min-width: 20px;
+        height: 38px;
+        background: transparent;
+        color: #000000;
+        pointer-events: none; 
+    }
+
+    /* --- エディタの分数ノードスタイル --- */
+    .editor-fraction-node {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        vertical-align: middle;
+        min-width: 50px;
+        margin: 0 4px;
+    }
+
+    /* --- @エディタの分数線スタイル --- */
+    .editor-fraction-line {
+        width: 100%;
+        height: 2px;
+        background-color: #333;
+        margin: 3px 0;
+    }
+
+    /* --- エディタの分数フィールドスタイル --- */
+    .editor-fraction-field {
+        width: 50px;
+        height: 30px;
+        font-size: 24px; 
+        text-align: center;
+        border: none !important; 
+        background-color: transparent !important; 
+        outline: none;
+        color: #000000;
+        pointer-events: none; 
+        font-family: 'Times New Roman', Times, serif !important; 
+        font-style: italic !important; 
+    }
+
+    /* ==========================================================================
+       9. 正解・不正解メッセージ・フッター
+       ========================================================================== */
+    /* --- 結果メッセージの表示スタイル --- */
+    .result-message { 
+        font-size: 17px; 
+        font-weight: bold; 
+        min-height: 48px; 
+        text-align: center; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        margin-left: auto; 
+        margin-right: auto; 
+        margin-top: 0px; 
+        white-space: pre-wrap; 
+        width: 100%; 
+    }
+
+    /* --- 正解時のメッセージカラー --- */
+    .correct { 
+        color: #28a745; 
+    }
+
+    /* --- 不正解時のメッセージカラー --- */
+    .incorrect { 
+        color: #e67e22; 
+    }
+
+    /* --- フッターのスタイル --- */
+    footer {
+        width: 100%;
+        text-align: center;
+        font-size: 12px;
+        color: #000000;
+        font-weight: bold;
+        padding-top: 4px;
+        border-top: 1px solid #cfd8dc;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        background-color: #ffffff;
+        border-radius: 0 0 10px 10px;
+        padding-bottom: 4px;
+    }
+
+    </style>
+</head>
+
+<body>
+    <div id="app-container">
+    <header>
+        <div class="title-bar">
+        <button class="title-hand-btn" id="hand-left-btn" onclick="changeHandedness('left')">👈 左利き</button>
+        <h1>文字式の加減（Step5：文字と数の3,4項）</h1>
+        <button class="title-hand-btn active" id="hand-right-btn" onclick="changeHandedness('right')">右利き 👉</button>
+        </div>
+    </header>
+
+    <div class="timer-container">
+        <div style="display: flex; align-items: center; gap: 15px;">
+        <div id="timer-display">⏱️ 00:00.0</div>
+        <div class="record-box">
+            <div id="best-update-message"></div>
+            <div class="best-label-container">
+            <div id="best-normal-display">ベストタイム(6問): --:--.-</div>
+            </div>
+        </div>
+        </div>
+        
+        <div style="display: flex; align-items: center; gap: 8px;">
+        <div class="number-field-wrapper" id="wrapper-area">
+        <input type="text" id="number-field" class="login-input" placeholder="生徒番号" readonly autocomplete="off">
+        
+        <div class="input-tooltip" id="number-tooltip">
+            <div class="tooltip-hint">
+            💡 1年2組34番 → 「1234」<br>
+            <span style="font-size: 10px; color: #888;">クラス: 1〜5組 / 番号: 01〜35</span>
+            </div>
+            
+            <div class="keypad-mini">
+            <button class="key-mini" onclick="pressNum('7')">7</button>
+            <button class="key-mini" onclick="pressNum('8')">8</button>
+            <button class="key-mini" onclick="pressNum('9')">9</button>
+            
+            <button class="key-mini" onclick="pressNum('4')">4</button>
+            <button class="key-mini" onclick="pressNum('5')">5</button>
+            <button class="key-mini" onclick="pressNum('6')">6</button>
+            
+            <button class="key-mini" onclick="pressNum('1')">1</button>
+            <button class="key-mini" onclick="pressNum('2')">2</button>
+            <button class="key-mini" onclick="pressNum('3')">3</button>
+            
+            <button class="key-mini" onclick="pressNum('0')">0</button>
+            <button class="key-mini btn-clear" onclick="pressClear()">⌫ 消す</button>
+            </div>
+            
+            <div class="error-msg" id="error-display">存在しない番号です</div>
+        </div>
+        </div>
+        <button id="send-btn" onclick="manualSendToGoogleForm()" disabled>送信</button>
+    </div>
+    </div>
+    
+    <div class="main-content" id="quiz-screen">
+        <div class="game-layout">
+        <div class="left-panel">
+            <div class="question-wrapper">
+            <span class="question-text">次の計算をしなさい。</span>
+            <span id="countdown-timer" style="display:none; color:#e57373; font-weight:bold; margin-left:15px; font-size:18px;"></span>
+            <span class="progress" id="progress">第 - 問／全 6 問。</span>
+            </div>
+            <div class="formula-display" id="formula-box"></div>
+
+            <div class="input-block-container" id="dynamic-input-container">
+
+            <!-- 途中式の枠（初期状態は非表示） -->
+            <div class="input-box-group" id="group-expression" style="display: none;" onclick="focusDefaultNode('math-editor-expression')">
+                <div class="input-label">
+                <span>① 途中式</span>
+                <span class="step-badge" id="badge-expression">入力中</span>
+                </div>
+
+                <!-- プレビュー表示用の領域 -->
+                <div id="math-preview-expression" class="mathjax-render-zone"></div>
+                <div id="math-editor-expression" class="math-editor-container"></div>
+            </div>
+
+            <!-- 答えの枠 -->
+            <div class="input-box-group locked-disabled" id="group-answer" onclick="focusDefaultNode('math-editor-answer')">
+                <div class="input-label">
+                <span id="label-answer-text">① 答え</span>
+                <span class="step-badge" id="badge-answer">ロック中</span>
+                </div>
+
+                <!-- プレビュー表示用の領域 -->
+                <div id="math-preview-answer" class="mathjax-render-zone"></div>
+                <div id="math-editor-answer" class="math-editor-container"></div>
+            </div>
+            </div>
+            
+            <div class="result-message" id="result-message"></div>
+        </div>
+
+        <div class="right-panel">
+            <div class="hint-container" id="hint-container">
+            <div class="hint-title">💡 考え方のヒント</div>
+            <div class="hint-body" id="hint-text">目指せ！パーフェクト！</div>
+            </div>
+
+            <div class="keypad">
+            <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('7')">$7$</button>
+            <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('8')">$8$</button>
+            <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('9')">$9$</button>
+            <button class="key var-btn" disabled></button>
+            <button class="key var-btn" disabled></button>
+
+            <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('4')">$4$</button>
+            <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('5')">$5$</button>
+            <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('6')">$6$</button>
+            <button class="key op-btn" onmousedown="event.preventDefault()" onclick="pressKey('+')">$+$</button>
+            <button class="key op-btn" onmousedown="event.preventDefault()" onclick="pressKey('-')">$-$</button>
+
+            <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('1')">$1$</button>
+            <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('2')">$2$</button>
+            <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('3')">$3$</button>
+            <button class="key op-btn" onmousedown="event.preventDefault()" onclick="pressKey('×')" disabled>$×$</button>
+            <button class="key op-btn" onmousedown="event.preventDefault()" onclick="pressKey('÷')" disabled>$÷$</button>
+
+            <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('0')">$0$</button>
+            <button class="key paren-btn" onmousedown="event.preventDefault()" onclick="pressKey('(')" disabled>$($</button>
+            <button class="key paren-btn" onmousedown="event.preventDefault()" onclick="pressKey(')')" disabled>$)$</button>
+            <button class="key var-btn" onmousedown="event.preventDefault()" onclick="pressKey('x')">$x$</button>
+            <button class="key var-btn" disabled></button>
+             </div>
+            <div class="control-keys">
+            <button class="key action-btn" id="action-btn" onclick="handleAction()">スタート</button>
+            <button class="key clear-btn" id="clear-btn" onmousedown="event.preventDefault()" onclick="handleCenterBtn()">消す</button>
+            <button class="key clear-btn" id="clear-all-btn" onmousedown="event.preventDefault()" onclick="handleRightBtn()">全消去</button>
+            </div>
+
+        </div>
+        </div>
+    </div>
+
+    <footer>
+        © 中原先生の数学部屋
+    </footer>
+    </div>
+
+    <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
+
+    <script>
+    /* ==========================================================================
+       JS: グローバル変数・連携用設定
+       ========================================================================== */
+    const GOOGLE_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSdn86PewDs4V8zXuiQAVmauEFYMM0o40clcdSyfreNnGTPfzg/formResponse';
+    const FORM_NUM_ID     = 'entry.351767117';   // 問題番号
+    const FORM_NAME_ID    = 'entry.785004272';   // 名前
+    const FORM_TIME_ID    = 'entry.1218861448';  // クリアタイム
+    const FORM_STAGE_COUNT_ID = 'entry.2033679053';  // 正解数
+
+    let startTime          = 0;
+    let timerInterval      = null;
+    let bestNormalTimeMs       = null;
+    let lastClearTimeText      = "";
+    let elapsedBeforeResume    = 0;
+
+    let gameStarted        = false;
+    let isCompleted        = false;
+    let isCorrectState     = false;
+    let quizData           = [];
+    let currentQuestionIndex   = 0;
+    let score          = 0;
+    let currentQuestionWrongCount = 0;
+
+    // 💡 ステップモード用変数
+    let userInput          = "";
+    let lastSubmittedInput     = "";
+    let userInputExpr      = "";
+    let userInputAns       = "";
+    let isStepMode         = false;
+    let currentStep        = 1;
+
+    // 💡 30秒タイマー用変数
+    let questionTimerId    = null;
+    let questionTimeLeft       = 30;
+    let currentControlState    = 'start';
+    let activeEditorId = 'math-editor-answer';
+
+    const container        = document.getElementById('app-container');
+    const formulaBox       = document.getElementById('formula-box');
+    const actionBtn        = document.getElementById('action-btn');
+    const clearBtn         = document.getElementById('clear-btn');
+    const clearAllBtn      = document.getElementById('clear-all-btn');
+    const resultMsgEl      = document.getElementById('result-message');
+    const progressEl       = document.getElementById('progress');
+
+    let mathjaxPromise     = Promise.resolve();
+
+    /* --- 生徒番号テンキー用変数 --- */
+    const numberField = document.getElementById('number-field');
+    const tooltip = document.getElementById('number-tooltip');
+    const errorDisplay = document.getElementById('error-display');
+    let isConfirmed = false;
+
+    function updateMathJax(elements) {
+        if (window.MathJax && MathJax.typesetPromise) {
+        if (MathJax.typesetClear) MathJax.typesetClear(elements);
+        mathjaxPromise = mathjaxPromise.then(() => MathJax.typesetPromise(elements))
+            .catch((err) => console.log("MathJax typesetting failed: " + err.message));
+        }
+    }
+
+    /* ==========================================================================
+       JS: 画面リサイズ
+       ========================================================================== */
+    /* --- アプリのサイズを調整する関数 --- */
+    function resizeApp() {
+        const scale = Math.min(window.innerWidth / 960, window.innerHeight / 640, 1);
+        container.style.transform = `scale(${scale})`;
+    }
+    window.addEventListener('resize', resizeApp);
+    window.addEventListener('DOMContentLoaded', () => {
+        resizeApp();
+        initValidationControls();
+        quizData = generateQuizData();
+        showStartLayout();
+    });
+
+    /* ==========================================================================
+       JS: リアルタイムMathJaxプレビュー処理
+       ========================================================================== */
+    /* --- MathJaxプレビューを更新する関数 --- */
+    function refreshMathJaxPreview() {
+        ['math-editor-expression', 'math-editor-answer'].forEach(editorId => {
+        const ed = document.getElementById(editorId);
+        if (!ed) return;
+
+        // 現在アクティブなエディタに対応するプレビュー領域を決定
+        let previewId = (editorId === 'math-editor-expression') ? 'math-preview-expression' : 'math-preview-answer';
+        const preview = document.getElementById(previewId);
+        if (!preview) return;
+
+        let latex = "";
+        const activeNode = document.activeElement;
+
+        ed.childNodes.forEach(node => {
+            if (!node.classList) return;
+            if (node.classList.contains('editor-fraction-node')) {
+            const topInput    = node.querySelector('.frac-top');
+            const bottomInput = node.querySelector('.frac-bottom');
+
+            let topVal    = topInput    ? topInput.value    : "";
+            let bottomVal = bottomInput ? bottomInput.value : "";
+
+            if (topVal === "" && (activeNode !== topInput || editorId !== activeEditorId)) topVal = "\\color{#ccc}{\\square}";
+            if (bottomVal === "" && (activeNode !== bottomInput || editorId !== activeEditorId)) bottomVal = "\\color{#ccc}{\\square}";
+
+            latex += `\\frac{${topVal}}{${bottomVal}}`;
+            } else if (node.classList.contains('editor-text-node')) {
+            let val = node.value || "";
+
+            if (val === "" && ed.childNodes.length === 1 && (activeNode !== node || editorId !== activeEditorId)) {
+                let placeholderText = (editorId === 'math-editor-expression') ? "ここに途中式を入力" : "ここに答えを入力";
+                preview.innerHTML = `<span style="color:#adb5bd; font-size:16px;">${placeholderText}</span>`;
+                return;
+            }
+
+            val = val.replace(/×/g, "\\times");
+            latex += val;
+            }
+        });
+
+        if (latex !== "") {
+            preview.innerHTML = `$` + latex + `$`;
+            updateMathJax([preview]);
+        } else {
+            let placeholderText = (editorId === 'math-editor-expression') ? "ここに途中式を入力" : "ここに答えを入力";
+            preview.innerHTML = `<span style="color:#adb5bd; font-size:16px;">${placeholderText}</span>`;
+        }
+
+        });
+    }
+
+    /* ==========================================================================
+       JS: 初期画面レイアウト
+       ========================================================================== */
+    /* --- 開始レイアウトを表示する関数 --- */
+    function showStartLayout() {
+        // 【追加】「もう一回」押下時のロック解除・初期化処理
+        window.isAlreadySubmitted = false;
+        const sendBtnTop = document.getElementById('send-btn');
+        if (sendBtnTop) {
+        sendBtnTop.textContent = "送信";
+        sendBtnTop.disabled = true;
+        }
+        if (numberField) {
+        numberField.disabled = false;
+        }
+
+        gameStarted = false;
+        isCompleted = false;
+        progressEl.textContent = "第 - 問／全 6 問";
+        formulaBox.innerHTML = `<span style="color:#aaa; font-size:24px;">生徒番号を入力→【スタート】</span>`;
+        document.getElementById('hint-text').innerHTML = "目指せ！パーフェクト！";
+        const currentEd = document.getElementById(activeEditorId);
+        if (currentEd) {
+        currentEd.innerHTML = '';
+        currentEd.classList.remove('wide-fraction-mode');
+        createTextBlock(currentEd, "");
+        updateInputWidths();
+        }
+    
+        document.getElementById('group-answer').className = "input-box-group locked-disabled";
+        updateControlKeysState('start');
+        resultMsgEl.textContent = "";
+        
+        refreshMathJaxPreview();
+    }
+    
+    /* ==========================================================================
+       JS: ゲーム進行（開始→出題）
+       ========================================================================== */
+    /* --- クイズゲームを開始する関数 --- */
+    function startQuizGame() {
+        window.isAlreadySubmitted = false; 
+        gameStarted = true;
+        score = 0;
+        currentQuestionIndex = 0;
+        startTimerClock();       
+        
+        // ゲーム開始後に生徒番号を選択不可にし、テンキー付き吹き出しを閉じる
+        if (numberField) numberField.disabled = true;
+        if (tooltip) tooltip.classList.remove('show');
+
+        loadQuestion(); 
+        if (actionBtn) actionBtn.className = "key action-btn judge-mode"; 
+    }
+
+    /* --- 問題データの読み込み処理 --- */
+    function loadQuestion() {
+        isCompleted = false;
+        currentQuestionWrongCount = 0; 
+        lastSubmittedInput = ""; 
+        resultMsgEl.textContent = ""; 
+        resultMsgEl.className = "result-message";
+
+        const gAns = document.getElementById('group-answer');
+        gAns.className = "input-box-group active-focus";
+
+        const gExpr = document.getElementById('group-expression');
+        if (gExpr) {
+        gExpr.className = "input-box-group";
+        gExpr.style.display = 'none';
+        }
+
+        const currentEd = document.getElementById(activeEditorId);
+        activeEditorId = 'math-editor-answer';
+        isStepMode = false;
+        currentStep = 1;
+
+        // 途中式の枠を隠し、答えのラベルを①に戻す
+        document.getElementById('label-answer-text').innerText = '① 答え';
+        document.getElementById('badge-expression').textContent = "入力中";
+        document.getElementById('badge-answer').textContent = "入力中";
+
+        // 💡【修正点】途中式枠のエディタ（math-editor-expression）の中身を初期化
+        const exprEd = document.getElementById('math-editor-expression');
+        if (exprEd) {
+        exprEd.innerHTML = '';
+        exprEd.classList.remove('wide-fraction-mode');
+        createTextBlock(exprEd, "");
+        }
+
+        // 答え枠のエディタ（math-editor-answer）の中身を初期化
+        const ansEd = document.getElementById('math-editor-answer');
+        if (ansEd) {
+        ansEd.innerHTML = '';
+        ansEd.classList.remove('wide-fraction-mode');
+        createTextBlock(ansEd, "");
+        }
+        updateInputWidths();
+
+        updateControlKeysState('playing');
+
+        const q = quizData[currentQuestionIndex];
+        progressEl.textContent = `第 ${currentQuestionIndex + 1} 問 / 全 6 問`;
+        formulaBox.innerHTML = q.html;
+        updateMathJax([formulaBox]);
+
+        // ===== 初期ヒント =====
+        document.getElementById('hint-text').innerHTML = HINT_MASTER.status.initial;
+
+        // プレビューの初期クリーンアップ
+        document.getElementById('math-preview-expression').innerHTML = `<span style="color:#adb5bd; font-size:16px;">ここに途中式を入力</span>`;
+        document.getElementById('math-preview-answer').innerHTML = `<span style="color:#adb5bd; font-size:16px;">ここに答えを入力</span>`;
+        setTimeout(() => {
+        focusDefaultNode();
+        refreshMathJaxPreview();
+        }, 50);
+
+        startQuestionTimer();
+    }
+
+    /* --- 結合されたユーザー回答を取得する関数 --- */
+    function getCombinedUserAnswer() {
+        const ed = document.getElementById(activeEditorId);
+        if (!ed) return "";
+        let result = "";
+        ed.childNodes.forEach(node => {
+        if (node.classList && node.classList.contains('editor-fraction-node')) {
+            const top = node.querySelector('.frac-top') ? node.querySelector('.frac-top').value : "";
+            const bottom = node.querySelector('.frac-bottom') ? node.querySelector('.frac-bottom').value : "";
+            result += `${top}/${bottom}`;
+        } else if (node.classList && node.classList.contains('editor-text-node')) {
+            result += node.value;
+        }
+        });
+        return result;
+    }
+
+    /* --- 回答を判定する関数 --- */
+    function checkAnswer() {
+        const q = quizData[currentQuestionIndex];
+        startQuestionTimer();
+        let userStr = getCombinedUserAnswer().replace(/\s+/g, "").trim();
+        const targetGroup = document.getElementById('group-answer');
+
+        // 入力が空、または分数の枠だけの場合は判定を弾く
+        if (!userStr || userStr === "/" || userStr.match(/^\/[0-9]+$/) || userStr.match(/^.*\/$/)) return;
+        if (currentQuestionWrongCount > 0 && userStr === lastSubmittedInput) {
+        targetGroup.classList.remove('error-shake');
+        void targetGroup.offsetWidth; 
+        targetGroup.classList.add('error-shake');
+        return;
+        }
+
+        // 分数のUI構造に合わせた文字式の正規化
+        userStr = userStr.replace(/([0-9]*)x\/([0-9]+)/g, (match, p1, p2) => {
+        let num = (p1 === "") ? "1" : p1;
+        return num + "/" + p2 + "x";
+        });
+
+        // 途中式入力モード時の厳密な判定
+        if (isStepMode && activeEditorId === 'math-editor-expression') {
+        if (userStr === q.ansStep || (!q.ansStep.startsWith('-') && userStr === '+' + q.ansStep)) {
+            document.getElementById('group-expression').className = "input-box-group locked-correct";
+            document.getElementById('badge-expression').textContent = "正解！";
+            
+            // 次は答えの枠にフォーカスを切り替える
+            currentStep = 2;
+            lastSubmittedInput = ""; // 👈 【追加】途中式クリア時に過去の誤答記憶をリセット！
+            activeEditorId = 'math-editor-answer';
+            document.getElementById('group-answer').className = "input-box-group active-focus";
+            document.getElementById('badge-answer').textContent = "入力中";
+            focusDefaultNode();
+            refreshMathJaxPreview();
+            updateControlKeysState('playing'); // 👈 【追加】答え入力用にボタン・キー状態を更新！
+
+            document.getElementById('hint-text').innerHTML = HINT_MASTER.mistakes.stepMode.stepSuccess;
+
+        } else {
+            lastSubmittedInput = userStr;
+            const wasStepMode = isStepMode;
+            showStepError(document.getElementById('group-expression'));
+
+            // 新しくステップモードに移行した場合はヒントを上書きしない
+            if (!wasStepMode && isStepMode) {
+            } else {
+            updateDynamicHint(userStr, q);
+            }
+        }
+        return;
+        }
+
+        // 通常の答え合わせ
+        if (userStr === q.answer) {
+        isCompleted = true;
+        clearInterval(questionTimerId);
+        document.getElementById('countdown-timer').style.display = 'none';
+        document.getElementById('group-answer').className = "input-box-group locked-correct";
+        document.getElementById('badge-answer').textContent = "正解！"; 
+        
+        if(document.getElementById('group-expression').style.display !== 'none') {
+            document.getElementById('group-expression').className = "input-box-group locked-correct";
+        }
+
+        const hintBody = document.getElementById('hint-text');
+        if (currentQuestionWrongCount === 0) score++;
+        if (document.activeElement) document.activeElement.blur();
+        refreshMathJaxPreview();
+        if (currentQuestionIndex === 5) {
+            stopTimerClockAndEvaluate(); 
+            resultMsgEl.textContent = `全 6 問中 ${score} 問ノーミス正解！`;
+            resultMsgEl.className = "result-message correct";
+
+            progressEl.textContent = (score === 6) ? HINT_MASTER.status.perfect : HINT_MASTER.status.finished;
+            hintBody.innerHTML = HINT_MASTER.status.sendPrompt;
+
+            updateControlKeysState('finished');
+            updateSendButtonState();
+        } else {
+            resultMsgEl.textContent = "";
+
+            if (currentQuestionWrongCount === 0) hintBody.innerHTML = HINT_MASTER.status.correctFirst;
+            else hintBody.innerHTML = HINT_MASTER.status.correctFixed;
+
+            updateControlKeysState('cleared');
+        }
+        } else {
+        lastSubmittedInput = userStr;
+        const wasStepMode = isStepMode;
+        showStepError(targetGroup);
+
+        // 新しくステップモードに移行した場合はヒントを上書きしない
+        if (!wasStepMode && isStepMode) {
+        } else {
+            updateDynamicHint(userStr, q);
+        }
+        }
+    }
+
+    /* --- 生徒のミスに合わせてヒントを切り替える関数 --- */
+    function updateDynamicHint(userStr, q) {
+        const hintBody = document.getElementById('hint-text');
+        if (!hintBody) return;
+
+        if (isStepMode) {
+        // ステップモード中のミス
+        if (currentStep === 1) {
+            // 途中式を入力させている最中
+            const op = currentQuestionIndex >= 3 ? '÷' : '×';
+            hintBody.innerHTML = HINT_MASTER.mistakes.stepMode.stepWrong.replace('×', op);
+        } else {
+            // 最後の答えを入力させている最中
+            hintBody.innerHTML = HINT_MASTER.mistakes.stepMode.giveUp;
+        }
+
+        } else {
+        // 通常モード中のミス
+        if (currentQuestionWrongCount === 1) {
+            hintBody.innerHTML = getFirstMistakeHint(userStr, q);
+        } else {
+            // 万が一のフォールバック
+            hintBody.innerHTML = HINT_MASTER.mistakes.first.otherWrong;
+        }
+        }
+        
+        // MathJaxで数式を再描画
+        if (typeof updateMathJax === 'function') {
+        updateMathJax([hintBody]);
+        }
+    }
+
+    /* --- 1回目のミス原因を判定してヒントを返す関数 --- */
+    function getFirstMistakeHint(userStr, q) {
+        // ① 正解の要素を抽出
+        const isCorrectNegative = q.answer.startsWith('-');
+        const correctAbs = q.answer.replace('-', '');
+        const correctNum = correctAbs.replace('x', '');
+
+        // ② ユーザー入力の要素を抽出
+        let userSign = "";
+        let userAbs = "";
+        if (userStr.startsWith("-") || userStr.startsWith("+")) {
+        userSign = userStr.charAt(0);
+        userAbs = userStr.substring(1).trim();
+        } else {
+        userAbs = userStr.trim();
+        }
+        
+        const isUserNegative = (userSign === "-");
+        const hasChar = userAbs.includes("x");
+        const userNum = userAbs.replace('x', '');
+
+        // ③ 個別の正誤判定
+        const isSignWrong = (isUserNegative !== isCorrectNegative);
+        const isNumWrong = (userNum !== correctNum);
+        const isCharWrong = !hasChar;
+
+        // ④ 複合ミス（2つ以上の間違い）の判定
+        if (isSignWrong && isNumWrong) {
+        // 「符号＋数」の間違い（otherWrong）
+        return HINT_MASTER.mistakes.first.otherWrong;
+        }
+        if (isSignWrong && isCharWrong) {
+        // 「符号＋文字」の間違い
+        return HINT_MASTER.mistakes.first.signWrong + "<br>文字も忘れずに！";
+        }
+        if (isNumWrong && isCharWrong) {
+        // 「数＋文字」の間違い
+        // ※矛盾を防ぐため、calcWrongをベースにしています
+        return HINT_MASTER.mistakes.first.calcWrong + "<br>文字も忘れずに！";
+        }
+
+        // ⑤ 単独ミスの判定
+        if (isSignWrong) {
+        return HINT_MASTER.mistakes.first.signWrong;
+        }
+        if (isCharWrong) {
+        return HINT_MASTER.mistakes.first.charWrong;
+        }
+        if (isNumWrong) {
+        return HINT_MASTER.mistakes.first.calcWrong;
+        }
+
+        // 予期せぬミス
+        return HINT_MASTER.mistakes.first.otherWrong;
+    }
+
+    /* --- ステップのエラーを表示する関数 --- */
+    function showStepError(groupEl) {
+        currentQuestionWrongCount++;               
+        // 間違い回数が増えたタイミングでタイマーを再判定（2回ミスで停止）
+        startQuestionTimer();
+        // 2回ミスでステップモード（じっくりタイム）発動
+        if (currentQuestionWrongCount >= 2 && !isStepMode) {
+        isStepMode = true;
+        currentStep = 1;
+        activeEditorId = 'math-editor-expression'; // テンキーの入力先を「途中式」に切り替え
+        // 途中式の枠を表示させ、答えのラベルを②に変更する
+        document.getElementById('group-expression').style.display = 'flex';
+        document.getElementById('label-answer-text').innerText = '② 答え';
+        
+        document.getElementById('group-expression').className = "input-box-group error-shake";
+        document.getElementById('group-answer').className = "input-box-group locked-disabled";
+        // 答えの入力枠とプレビューをリセットし、プレースホルダー化する
+        const ansEd = document.getElementById('math-editor-answer');
+        if (ansEd) {
+            ansEd.innerHTML = '';
+            ansEd.classList.remove('wide-fraction-mode');
+            createTextBlock(ansEd, "");
+        }
+        document.getElementById('math-preview-answer').innerHTML = `<span style="color:#adb5bd; font-size:16px;">ここに答えを入力</span>`;
+        updateControlKeysState('expression'); 
+        
+        const hintBody = document.getElementById('hint-text');
+        
+        const op = currentQuestionIndex >= 3 ? '÷' : '×';
+        hintBody.innerHTML = HINT_MASTER.mistakes.stepMode.stepIntro.replace('×', op);
+
+        // 画面にテキストを出した直後に、MathJaxの再変換を指示する
+        if (typeof updateMathJax === 'function') {
+            updateMathJax([hintBody]);
+        }
+
+        // 途中式エディタの中にテキストブロックを生成
+        const exprEd = document.getElementById('math-editor-expression');
+        if (exprEd.childNodes.length === 0) {
+            createTextBlock(exprEd, "");
+        }
+
+        // 途中式の入力枠にフォーカスを当てる
+        setTimeout(() => {
+            const input = exprEd.querySelector('.editor-text-node') || exprEd.querySelector('input');
+            if (input) input.focus();
+            refreshMathJaxPreview();
+        }, 50);
+
+        return; // 2回ミス時はここで処理を終了
+        }
+
+        if (groupEl) {
+        groupEl.classList.remove('error-shake');
+        void groupEl.offsetWidth;
+        groupEl.classList.add('error-shake');
+        }
+    }
+
+    /* --- 次の問題へ進む関数 --- */
+    function nextQuestion() {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < quizData.length) { loadQuestion(); }
+    }
+
+    /* --- クイズを再開する関数 --- */
+    function restartQuiz() {
+        quizData = generateQuizData(); 
+        showStartLayout(); 
+    }
+
+    /* --- 削除動作を制御する関数 --- */
+    function handleDeleteBehavior(active) {
+        const currentEd = document.getElementById(activeEditorId);
+        const isFrac = active.classList.contains('editor-fraction-field');
+        if (isFrac) {
+        const fracNode = active.closest('.editor-fraction-node');
+        const fields = fracNode.querySelectorAll('.editor-fraction-field');
+        if (fields[0].value.length === 0 && fields[1].value.length === 0) {
+            let prev = fracNode.previousSibling;
+            fracNode.remove();
+            if (prev) prev.focus();
+            else createTextBlock(currentEd, "").focus();
+        }
+        } else {
+        const allNodes = currentEd.querySelectorAll('.editor-text-node, .editor-fraction-node');
+        if (allNodes.length > 1) {
+            let prev = active.previousSibling;
+            active.remove();
+            if (prev) {
+            if (prev.classList.contains('editor-fraction-node')) {
+                prev.querySelectorAll('.editor-fraction-field')[1].focus();
+            } else prev.focus();
+            }
+        }
+        }
+        
+        if (currentEd.querySelectorAll('.editor-fraction-node').length === 0) {
+        currentEd.classList.remove('wide-fraction-mode');
+        }
+        updateInputWidths();
+    }
+    /* ==========================================================================
+       JS: 30秒タイマー
+       ========================================================================== */
+    /* --- 問題のタイマーを開始する関数 --- */
+    function startQuestionTimer() {
+        clearInterval(questionTimerId);
+        if (!gameStarted || isCompleted) {
+        document.getElementById('countdown-timer').style.display = 'none';
+        return;
+        }
+
+        // 3回目以降（2回ミス）はカウントダウンを停止して「じっくりタイム」にする
+        if (currentQuestionWrongCount >= 2) {
+        document.getElementById('countdown-timer').style.display = 'inline-block';
+        document.getElementById('countdown-timer').textContent = "じっくりタイム";
+        return;
+        }
+        questionTimeLeft = 30;
+        updateQuestionTimerUI();
+        document.getElementById('countdown-timer').style.display = 'inline-block';
+        
+        questionTimerId = setInterval(() => {
+        questionTimeLeft--;
+        updateQuestionTimerUI();
+        if (questionTimeLeft <= 0) {
+            handleQuestionTimeout();
+        }
+        }, 1000);
+    }
+
+    /* --- 問題のタイマーUIを更新する関数 --- */
+    function updateQuestionTimerUI() {
+        const el = document.getElementById('countdown-timer');
+        if (el) el.textContent = `残り ${questionTimeLeft}秒`;
+    }
+
+    /* --- 問題のタイムアウトを処理する関数 --- */
+    function handleQuestionTimeout() {
+        clearInterval(questionTimerId);
+        let targetGroup;
+        if (!isStepMode) {
+        targetGroup = document.getElementById('group-answer');
+        } else {
+        targetGroup = (currentStep === 1) ? document.getElementById('group-expression') : document.getElementById('group-answer');
+        }
+        
+        showStepError(targetGroup);
+        
+        // タイムアップ専用ヒント
+        const hintBody = document.getElementById('hint-text');
+        if (isStepMode && currentStep === 1) {
+
+        const op = currentQuestionIndex >= 3 ? '÷' : '×';
+        hintBody.innerHTML = HINT_MASTER.timeout.stepMode.replace('×', op);
+        
+        } else {
+        hintBody.innerHTML = HINT_MASTER.timeout.default;
+        }
+
+        if (typeof updateMathJax === 'function') {
+        updateMathJax([hintBody]);
+        }
+
+        startQuestionTimer();
+    }
+
+    /* ==========================================================================
+       JS: テンキー入力
+       ========================================================================== */
+    /* --- キー入力を処理する関数 --- */
+    function pressKey(key) {
+        if (!gameStarted || isCompleted) return;
+        const currentEd = document.getElementById(activeEditorId);
+
+        if (!currentEd) return;
+        let active = document.activeElement;
+
+        if (!active || !currentEd.contains(active) || (!active.classList.contains('editor-text-node') && !active.classList.contains('editor-fraction-field'))) {
+        const inputs = currentEd.querySelectorAll('input');
+        active = inputs[inputs.length - 1];
+        if (active) active.focus();
+        }
+
+        if (!active) return;
+        // 入力を始めたら、現在対象となっている枠を赤色（error-shake）から青色（active-focus）にする
+        const targetGroup = (activeEditorId === 'math-editor-expression') 
+        ? document.getElementById('group-expression') 
+        : document.getElementById('group-answer');
+        if (targetGroup && targetGroup.classList.contains('error-shake')) {
+        targetGroup.classList.remove('error-shake');
+        targetGroup.classList.add('active-focus');
+        }
+        
+        if (key === 'clear') {
+        currentEd.innerHTML = ''; 
+        createTextBlock(currentEd, "").focus();
+        currentEd.classList.remove('wide-fraction-mode');
+        updateInputWidths();
+        refreshMathJaxPreview(); 
+        updateControlKeysState(currentControlState);
+        return;
+        }
+        
+        if (key === 'Backspace') {
+        const isFrac = active.classList.contains('editor-fraction-field');
+        
+        // 1. 分数の中にフォーカスがある場合：分数枠を一括削除
+        if (isFrac) {
+            const fracNode = active.closest('.editor-fraction-node');
+            let prev = fracNode.previousSibling;
+            fracNode.remove();
+            
+            // 削除後、直前のテキストノードにフォーカスを戻す
+            if (prev) {
+            prev.focus();
+            } else {
+            createTextBlock(currentEd, "").focus();
+            }
+            
+            // 分数がなくなったらワイドモードを解除
+            if (currentEd.querySelectorAll('.editor-fraction-node').length === 0) {
+            currentEd.classList.remove('wide-fraction-mode');
+            }
+        }
+        // 2. テキスト枠の先頭にフォーカスがあり、直前が分数枠の場合：直前の分数枠を一括削除
+        else if (active.selectionStart === 0 && active.selectionEnd === 0 && active.previousSibling && active.previousSibling.classList.contains('editor-fraction-node')) {
+            const fracNode = active.previousSibling;
+            fracNode.remove();
+            
+            if (currentEd.querySelectorAll('.editor-fraction-node').length === 0) {
+            currentEd.classList.remove('wide-fraction-mode');
+            }
+            active.focus();
+        }
+        // 3. それ以外（通常の文字削除や、空のテキストノードの削除）
+        else {
+            if (active.value.length === 0) { 
+            handleDeleteBehavior(active); 
+            } else {
+            const start = active.selectionStart;
+            const end = active.selectionEnd;
+            const val = active.value;
+            if (start !== end) {
+                active.value = val.substring(0, start) + val.substring(end);
+                active.selectionStart = active.selectionEnd = start;
+            } else if (start > 0) {
+                active.value = val.substring(0, start - 1) + val.substring(start);
+                active.selectionStart = active.selectionEnd = start - 1;
+            }
+            }
+        }
+
+        } else {
+
+        // 分数の中にいる状態で、数字(0-9)以外のキーが押されたら、自動的に右側のテキスト枠へ脱出する
+        if (!/^[0-9]$/.test(key) && active.classList.contains('editor-fraction-field')) {
+
+            const fracNode = active.closest('.editor-fraction-node');
+            if (fracNode && fracNode.nextSibling && fracNode.nextSibling.classList.contains('editor-text-node')) {
+            active = fracNode.nextSibling;
+            }
+        }
+
+        const start = active.selectionStart;
+        active.value = active.value.substring(0, start) + key + active.value.substring(active.selectionEnd);
+        active.selectionStart = active.selectionEnd = start + key.length;
+        }
+
+        updateInputWidths();
+        active.focus();
+        
+        refreshMathJaxPreview();
+         // ★追加箇所(2)：入力や削除直後にボタン状態を更新
+        updateControlKeysState(currentControlState);
+    }
+
+    /* ==========================================================================
+       JS: 生徒番号用ミニテンキー制御
+       ========================================================================== */
+    /* --- 1. 入力欄クリック・タップ時、および画面外タップ時の制御初期化 --- */
+    function initValidationControls() {
+        if (!numberField) return;
+
+        // 入力欄クリック時の処理
+        numberField.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (isConfirmed || numberField.value !== '') {
+            numberField.value = '';
+            isConfirmed = false;
+            errorDisplay.style.display = 'none';
+            updateSendButtonState();
+        }
+        tooltip.classList.add('show');
+        numberField.focus();
+        });
+
+        tooltip.addEventListener('click', (e) => {
+        e.stopPropagation();
+        });
+
+        // 枠外（画面の別の場所）をタップしたときに未確定ならリセットして閉じる
+        document.addEventListener('click', (e) => {
+        if (tooltip.classList.contains('show') && !isConfirmed) {
+            numberField.value = '';
+            errorDisplay.style.display = 'none';
+            tooltip.classList.remove('show');
+            numberField.blur();
+            updateSendButtonState();
+        }
+        });
+    }
+
+    /* --- 2. 数字キー押下時の処理 --- */
+    function pressNum(num) {
+        if (!numberField) return;
+        let currentVal = numberField.value;
+
+        // すでに4桁入っている（エラー状態）のに新しく数字が押された場合、
+        // 自動的にリセットして、その数字を1桁目にする
+        if (currentVal.length === 4) {
+        currentVal = '';
+        errorDisplay.style.display = 'none';
+        }
+
+        currentVal += num;
+        numberField.value = currentVal;
+        updateSendButtonState();
+
+        // 4桁入力された瞬間にバリデーション判定
+        if (currentVal.length === 4) {
+        const isValid = /^(9999|[1-3][1-5](0[1-9]|[1-2][0-9]|3[0-5]))$/.test(currentVal);
+
+        if (isValid) {
+            completeInput(currentVal); 
+        } else {
+            errorDisplay.style.display = 'block';
+        }
+        }
+    }
+
+    /* --- 3. 入力完了時の確定処理 --- */
+    function completeInput(value) {
+        isConfirmed = true;
+        tooltip.classList.remove('show');
+        numberField.blur();
+        console.log('確定した番号: ' + value);
+        updateSendButtonState();
+    }
+
+    /* --- 4. 「消す」キー（1文字削除）押下時の処理 --- */
+    function pressClear() {
+        if (!numberField) return;
+        let currentVal = numberField.value;
+        if (currentVal.length > 0) {
+        numberField.value = currentVal.slice(0, -1);
+        }
+        errorDisplay.style.display = 'none';
+        isConfirmed = false;
+        updateSendButtonState();
+    }
+
+    /* ==========================================================================
+       JS: コントロールキー
+       ========================================================================== */
+    /* --- アクションを処理する関数 --- */
+    function handleAction() {
+        if (!gameStarted) {
+        startQuizGame();
+        return;
+        }
+        if (isCompleted) {
+        if (currentQuestionIndex === 5) {
+            restartQuiz();
+            return;
+        }
+        nextQuestion();
+        return;
+        }
+
+        checkAnswer(); 
+    }
+
+    /* --- コントロールキーの状態更新関数 --- */
+    function updateControlKeysState(state) {
+        currentControlState = state;
+        actionBtn.className = "key action-btn";
+        clearBtn.className = "key clear-btn";
+        clearAllBtn.className = "key clear-btn";
+
+        if (state === 'start') {
+        actionBtn.textContent = "スタート";
+        actionBtn.disabled = false;
+        clearBtn.textContent = "消す";
+        clearBtn.disabled = true;
+        clearAllBtn.textContent = "全消去";
+        clearAllBtn.disabled = true;
+        } else if (state === 'playing' || state === 'expression') {
+        actionBtn.textContent = "判定する";
+        actionBtn.className = "key action-btn judge-mode"; 
+
+        const isEmpty = (getCombinedUserAnswer().length === 0);
+
+        if (!isStepMode) {
+            if (isEmpty) {
+            actionBtn.disabled = true;
+            clearBtn.textContent = "途中式";
+            clearBtn.className = "key action-btn"; 
+            clearBtn.disabled = false;
+            clearAllBtn.textContent = "全消去";
+            clearAllBtn.disabled = true;
+            } else {
+            actionBtn.disabled = false;
+            clearBtn.textContent = "消す";
+            clearBtn.disabled = false;
+            clearAllBtn.textContent = "全消去";
+            clearAllBtn.disabled = false;
+            }
+        } else {
+            clearBtn.textContent = "消す";
+            clearAllBtn.textContent = "全消去";
+            if (isEmpty) {
+            actionBtn.disabled = true;
+            clearBtn.disabled = true;
+            clearAllBtn.disabled = true;
+            } else {
+            actionBtn.disabled = false;
+            clearBtn.disabled = false;
+            clearAllBtn.disabled = false;
+            }
+        }
+        } else if (state === 'cleared') {
+        actionBtn.textContent = "次の問題";
+        actionBtn.className = "key action-btn judge-mode";
+        actionBtn.disabled = false;
+        clearBtn.textContent = "消す";
+        clearBtn.disabled = true;
+        clearAllBtn.textContent = "全消去";
+        clearAllBtn.disabled = true;
+        } else if (state === 'finished') {
+        actionBtn.textContent = "全問終了";
+        actionBtn.className = "key clear-btn"; 
+        actionBtn.disabled = true;
+        clearBtn.textContent = "送信";
+        clearBtn.className = "key action-btn judge-mode";
+        clearBtn.disabled = false;
+        clearAllBtn.textContent = "もう一回";
+        clearAllBtn.className = "key action-btn"; 
+        clearAllBtn.disabled = false;
+        }
+
+        document.querySelectorAll('.key.paren-btn').forEach(btn => {
+        if ((state === 'playing' || state === 'expression') && isStepMode && currentStep === 1) {
+            btn.disabled = false;
+        } else {
+            btn.disabled = true;
+        }
+        });
+    }
+
+    /* --- 中央ボタンの操作を処理する関数 --- */
+    function handleCenterBtn() {
+        if (currentControlState === 'finished') {
+        manualSendToGoogleForm();
+        } else if ((currentControlState === 'playing' || currentControlState === 'expression') && !isStepMode && getCombinedUserAnswer().length === 0) {
+        // ステップモード（途中式モード）へ移行
+        isStepMode = true;
+        currentStep = 1;
+        
+        // ▼ここを変更（自分で「途中式」を押したときの専用ヒントを表示）
+        const op = currentQuestionIndex >= 3 ? '÷' : '×';
+        document.getElementById('hint-text').innerHTML = HINT_MASTER.status.manualStep.replace('×', op);
+        // ▲ここまで
+
+        // 既存の枠を表示・フォーカスする処理
+        activeEditorId = 'math-editor-expression';
+        
+        // 途中式の枠を表示させ、答えのラベルを②に変更
+        document.getElementById('group-expression').style.display = 'flex';
+        document.getElementById('label-answer-text').innerText = '② 答え';
+        document.getElementById('badge-expression').textContent = "入力中";
+        document.getElementById('badge-answer').textContent = "ロック中";
+        
+        // 枠のデザイン（アクティブ状態）を更新
+        document.getElementById('group-expression').className = "input-box-group active-focus";
+        document.getElementById('group-answer').className = "input-box-group locked-disabled";
+        
+        // 途中式エディタのテキストブロックを準備
+        const exprEd = document.getElementById('math-editor-expression');
+        if (exprEd.childNodes.length === 0) {
+            createTextBlock(exprEd, "");
+        }
+        
+           // フォーカスを当ててプレビューを更新
+        focusDefaultNode('math-editor-expression');
+        updateControlKeysState('expression'); 
+        } else {
+        pressKey('Backspace');
+        }
+    }
+
+    /* --- 右ボタンの操作を処理する関数 --- */
+    function handleRightBtn() {
+        if (currentControlState === 'finished') {
+        restartQuiz();
+        } else {
+        pressKey('clear');
+        }
+    }
+    /* ==========================================================================
+       JS: 分数
+       ========================================================================== */
+    /* --- デフォルトノードにフォーカスを当てる関数 --- */
+    function focusDefaultNode(editorId = activeEditorId) {
+        if (!gameStarted || isCompleted) return;
+
+        // 追加：対象の枠がロックされている場合は処理を中断し、選択不可にする
+        const targetGroupId = (editorId === 'math-editor-expression') ? 'group-expression' : 'group-answer';
+        const targetGroup = document.getElementById(targetGroupId);
+        if (targetGroup && targetGroup.classList.contains('locked-disabled')) {
+        return; 
+        }
+
+        const ed = document.getElementById(editorId);
+        if (ed) {
+        activeEditorId = editorId;
+        
+        // 枠のアクティブクラス（見た目の強調）の切り替え
+        if (editorId === 'math-editor-expression') {
+            document.getElementById('group-expression').classList.add('active-focus');
+            document.getElementById('group-answer').classList.remove('active-focus');
+        } else {
+            document.getElementById('group-answer').classList.add('active-focus');
+            if (document.getElementById('group-expression')) {
+            document.getElementById('group-expression').classList.remove('active-focus');
+            }
+        }
+        
+        // 実際の入力フォーカスを当てる
+        const input = ed.querySelector('.editor-text-node') || ed.querySelector('input');
+        if (input) input.focus();
+        refreshMathJaxPreview();
+        }
+    }
+
+    /* --- テキストブロックを作成する関数 --- */
+    function createTextBlock(containerEl, initialValue = "") {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'editor-text-node';
+        input.value = initialValue;
+        input.autocomplete = 'off';
+        input.inputMode = 'none'; 
+        input.readOnly = true;
+        if (containerEl.childNodes.length === 0) {
+        if (containerEl.id === 'math-editor-expression') {
+            input.placeholder = "ここに途中式を入力";
+        } else {
+            input.placeholder = "ここに答えを入力";
+        }
+        }
+        
+        input.addEventListener('keydown', (e) => e.preventDefault());
+        containerEl.appendChild(input);
+        return input;
+    }
+    
+    /* --- 分母を分数形式に変換する関数 --- */
+    function convertDenominatorToFraction() {
+        if (!gameStarted || isCompleted) return;
+        const currentEd = document.getElementById(activeEditorId);
+        let currentInputNode = document.activeElement;
+        if (!currentInputNode || !currentEd.contains(currentInputNode) || !currentInputNode.classList.contains('editor-text-node')) {
+            const inputs = currentEd.querySelectorAll('.editor-text-node');
+            currentInputNode = inputs[inputs.length - 1];
+        }
+        if (!currentInputNode) return;
+        const currentText = currentInputNode.value || "";
+        
+        // 末尾の連続する数字だけを抽出し、手前の記号と切り分ける
+        const match = currentText.match(/^(.*?)(\d+)$/);
+        let keepText = currentText; 
+        let denValue = "";      
+        if (match) {
+            keepText = match[1];
+            denValue = match[2];
+        }
+        const fractionNode = document.createElement("div");
+        fractionNode.className = "editor-fraction-node";
+        const numInput = document.createElement("input");
+        numInput.type = "text";
+        numInput.className = "editor-fraction-field frac-top";
+        numInput.inputMode = "none";
+        numInput.readOnly = true; 
+        const line = document.createElement("div");
+        line.className = "editor-fraction-line";
+        const denInput = document.createElement("input");
+        denInput.type = "text";
+        denInput.className = "editor-fraction-field frac-bottom";
+        denInput.inputMode = "none";
+        denInput.readOnly = true; 
+
+        // 切り分けた数字を分母にセット
+        denInput.value = denValue;
+        numInput.addEventListener('keydown', (e) => e.preventDefault());
+        denInput.addEventListener('keydown', (e) => e.preventDefault());
+        fractionNode.appendChild(numInput);
+        fractionNode.appendChild(line);
+        fractionNode.appendChild(denInput);
+
+        // 手前の記号だけを残し、その直後に分数を挿入する
+        currentInputNode.value = keepText;
+        currentInputNode.parentNode.insertBefore(fractionNode, currentInputNode.nextSibling);
+        const nextTextNode = createTextBlock(currentEd, "");
+        currentEd.insertBefore(nextTextNode, fractionNode.nextSibling);
+        currentEd.classList.add('wide-fraction-mode'); 
+        updateInputWidths();
+        
+        numInput.focus();
+        refreshMathJaxPreview();
+        updateControlKeysState(currentControlState);
+    }
+
+    /* --- 入力フィールドの幅を更新する関数 --- */
+    function updateInputWidths() {
+        const ed = document.getElementById(activeEditorId);
+        if (!ed) return;
+        ed.querySelectorAll('.editor-text-node').forEach(node => {
+            let displayStr = node.value || "";
+            let w = displayStr.length * 15 + 12;
+            
+            if (displayStr === "" && node.placeholder) w = 220;
+            
+            node.style.width = `${Math.max(20, w)}px`;
+        });
+    }
+
+    /* ==========================================================================
+       JS: 利き手切り替え
+       ========================================================================== */
+    /* --- 利き手を変更する関数 --- */
+    function changeHandedness(hand) {
+        const workspace = document.querySelector('.game-layout');
+        const rightBtn = document.getElementById('hand-right-btn');
+        const leftBtn = document.getElementById('hand-left-btn');
+        if (hand === 'left') {
+        workspace.classList.add('left-handed');
+        leftBtn.classList.add('active');
+        rightBtn.classList.remove('active');
+        } else {
+        workspace.classList.remove('left-handed');
+        rightBtn.classList.add('active');
+        leftBtn.classList.remove('active');
+        }
+    }
+
+    /* ==========================================================================
+       JS: 送信フォーム・タイマー処理（安全ガード付き）
+       ========================================================================== */
+    /* --- 送信ボタンおよびクリアボタンのアクティブ状態の更新 --- */
+    function updateSendButtonState() {
+        // すでに送信完了している場合は状態を上書きしない
+        if (window.isAlreadySubmitted) return;
+
+        const numVal = numberField ? numberField.value.trim() : "";
+        const sendBtnTop = document.getElementById('send-btn');       
+        const sendBtnBottom = document.getElementById('clear-btn');   
+    
+        if (sendBtnTop && sendBtnTop.textContent === "完了") return;
+
+        // 生徒番号が4桁で確定(isConfirmed)しており、かつゲームクリア状態であれば送信可能
+        const canSend = (isCorrectState && numVal !== "" && /^\d{4}$/.test(numVal) && isConfirmed);
+        
+        if (sendBtnTop) sendBtnTop.disabled = !canSend;
+        if (currentControlState === 'finished') {
+        if (sendBtnBottom) {
+            sendBtnBottom.disabled = !canSend;
+            if (!canSend) sendBtnBottom.className = "key clear-btn"; 
+            else sendBtnBottom.className = "key action-btn judge-mode"; 
+        }
+        }
+    }
+
+    /* --- フォーム送信を実行する関数 --- */
+    function executeFormSubmit(num, name, timeText, stageCount) {
+        const form = document.createElement('form');
+        form.action = GOOGLE_FORM_URL;
+        form.method = 'POST';
+        form.target = 'hidden_iframe';
+        
+        const fields = {
+        [FORM_NUM_ID]:     num,                   
+        [FORM_NAME_ID]:    name,
+        [FORM_TIME_ID]:    timeText,    
+        [FORM_STAGE_COUNT_ID]: stageCount          
+        };
+        for (const key in fields) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = fields[key];
+        form.appendChild(input);
+        }
+        document.body.appendChild(form);
+        try { form.submit(); } catch (e) { console.error('送信エラー', e); }
+        document.body.removeChild(form);
+    }
+
+    /* --- Googleフォームへ手動で送信する関数 --- */
+    function manualSendToGoogleForm() {
+        const numInput = numberField ? numberField.value.trim() : "";
+        if (numInput === "" || !isConfirmed || !/^\d{4}$/.test(numInput) || !isCorrectState || window.isAlreadySubmitted) {
+        return;
+        }
+        
+        const sendBtnTop = document.getElementById('send-btn');
+        const sendBtnBottom = document.getElementById('clear-btn'); 
+        
+        if (sendBtnTop) {
+        sendBtnTop.textContent = "送信中";
+        sendBtnTop.disabled = true; 
+        }
+        if (currentControlState === 'finished' && sendBtnBottom) {
+        sendBtnBottom.textContent = "送信中";
+        sendBtnBottom.disabled = true;
+        sendBtnBottom.className = "key clear-btn"; 
+        }
+        
+        // データ送信
+        const currentTimerText = document.getElementById('timer-display').innerText.replace('⏱️ ', '');
+        const timeToSend = lastClearTimeText || currentTimerText;
+        executeFormSubmit(numInput, "", timeToSend, score);
+        window.isAlreadySubmitted = true;
+        
+        // 送信後は生徒番号をロックして変更不可にする
+        if (numberField) numberField.disabled = true;
+        if (tooltip) tooltip.classList.remove('show');
+    
+        setTimeout(() => { 
+        if (sendBtnTop) sendBtnTop.textContent = "完了"; 
+        if (currentControlState === 'finished' && sendBtnBottom) {
+            sendBtnBottom.textContent = "完了";
+            sendBtnBottom.className = "key clear-btn"; 
+        }
+        }, 1000);
+    }
+
+    /* ==========================================================================
+       JS: タイマー
+       ========================================================================== */
+    /* --- タイマーを更新する関数 --- */
+    function updateTimer() {
+        const diff = (Date.now() - startTime) + elapsedBeforeResume;
+        const min = Math.floor(diff / 60000);
+        const sec = Math.floor((diff % 60000) / 1000);
+        const msec = Math.floor((diff % 1000) / 100);
+        const minStr = String(min).padStart(2, '0');
+        const secStr = String(sec).padStart(2, '0');
+        document.getElementById('timer-display').innerText = `⏱️ ${minStr}:${secStr}.${msec}`;
+    }
+    /* --- タイマークロックを開始する関数 --- */
+    function startTimerClock() {
+        isCorrectState = false;
+        lastClearTimeText = "";
+        elapsedBeforeResume = 0;
+        
+        startTime = Date.now();
+        clearInterval(timerInterval);
+        timerInterval = setInterval(updateTimer, 100);
+        document.getElementById('best-update-message').innerText = "";
+        const sendBtn = document.getElementById('send-btn');
+        if (sendBtn) {
+        sendBtn.disabled = true;
+        sendBtn.textContent = "送信";
+        }
+        if (numberField) numberField.disabled = false;
+    }
+    /* --- タイマークロックを停止し、結果を評価する関数 --- */
+    function stopTimerClockAndEvaluate() {
+        clearInterval(timerInterval);
+        isCorrectState = true; 
+        clearInterval(questionTimerId);
+        document.getElementById('countdown-timer').style.display = 'none';
+        const finalTimeStr = document.getElementById('timer-display').innerText.replace('⏱️ ', '');
+        lastClearTimeText = finalTimeStr;
+        
+        const totalElapsedTimeMs = (Date.now() - startTime) + elapsedBeforeResume;
+        elapsedBeforeResume = totalElapsedTimeMs;
+        if (bestNormalTimeMs === null || totalElapsedTimeMs < bestNormalTimeMs) {
+        bestNormalTimeMs = totalElapsedTimeMs;
+        document.getElementById('best-normal-display').innerText = `ベストタイム(6問): ${finalTimeStr}`;
+        document.getElementById('best-update-message').innerText = "🎉 ベスト更新！";
+        }
+        
+        const numInput = numberField ? numberField.value.trim() : "";
+        const isValidNum = (isConfirmed && /^\d{4}$/.test(numInput));
+        
+        if (isValidNum && !window.isAlreadySubmitted) {
+        // ルートA：事前に入力済みの場合 → 自動送信して完全ロック
+        executeFormSubmit(numInput, "", lastClearTimeText, score);
+        window.isAlreadySubmitted = true; 
+        
+        const sendBtnTop = document.getElementById('send-btn');
+        const sendBtnBottom = document.getElementById('clear-btn');
+        if (sendBtnTop) {
+            sendBtnTop.textContent = "完了";
+            sendBtnTop.disabled = true;
+        }
+        if (sendBtnBottom) {
+            sendBtnBottom.textContent = "完了";
+            sendBtnBottom.disabled = true;
+            sendBtnBottom.className = "key clear-btn";
+        }
+        if (numberField) numberField.disabled = true;
+        } else {
+        // ルートB：未入力の場合 → 手動入力のためにロック解除
+        window.isAlreadySubmitted = false;
+        if (numberField) numberField.disabled = false;
+        }
+        
+        updateSendButtonState();
+    }
+
+    /* ==========================================================================
+       JS: クイズデータ自動生成
+       ========================================================================== */
+    /* --- クイズデータを生成する関数 --- */
+    function generateQuizData() {
+        let list = [];
+
+        // 内部用の安全な乱数生成（0を除外した-9〜9の整数）
+        function getValidRand() {
+        let v = 0;
+        while (v === 0) {
+            v = Math.floor(Math.random() * 19) - 9; // -9 から 9
+        }
+        return v;
+        }
+
+        // 4項問題用の全6パターン
+        let patterns4 = [
+        ["M", "M", "N", "N"], // 文字・文字・数・数
+        ["M", "N", "M", "N"], // 文字・数・文字・数
+        ["M", "N", "N", "M"], // 文字・数・数・文字
+        ["N", "M", "M", "N"], // 数・文字・文字・数
+        ["N", "M", "N", "M"], // 数・文字・数・文字
+        ["N", "N", "M", "M"]  // 数・数・文字・文字
+        ];
+
+        // 4項パターンの配列をシャッフル
+        for (let i = patterns4.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [patterns4[i], patterns4[j]] = [patterns4[j], patterns4[i]];
+        }
+
+        // 式の各項を綺麗につなぐヘルパー関数
+        function joinTerms(terms) {
+        let expr = "";
+        for (let k = 0; k < terms.length; k++) {
+            let term = terms[k];
+            if (k === 0) {
+            expr += term;
+            } else {
+            if (term.startsWith("-")) {
+                expr += " - " + term.substring(1);
+            } else {
+                expr += " + " + term;
+            }
+            }
+        }
+        return expr;
+        }
+
+        // 1問ずつの生成ループ
+        for (let i = 0; i < 6; i++) {
+        let totalX = 0;
+        let totalNum = 0;
+        let problemTerms = [];
+        let xTerms = [];    // 【追加】文字の項だけを一時保存する配列
+        let numTerms = [];  // 【追加】数字の項だけを一時保存する配列
+
+        if (i === 0) {
+            // 【問1】M ➡ N ➡ M （3項固定）
+            let A = getValidRand();
+            let B = getValidRand();
+            let C = getValidRand();
+
+            totalX = A + C;
+            totalNum = B;
+
+            let termA = (A === 1) ? "x" : (A === -1) ? "-x" : A + "x";
+            let termB = String(B);
+            let termC = (C === 1) ? "x" : (C === -1) ? "-x" : C + "x";
+
+            problemTerms = [termA, termB, termC];
+            xTerms = [termA, termC]; // 【追加】
+            numTerms = [termB];     // 【追加】
+
+        } else if (i === 1) {
+            // 【問2】N ➡ M ➡ N （3項固定）
+            let A = getValidRand();
+            let B = getValidRand();
+            let C = getValidRand();
+
+            totalX = B;
+            totalNum = A + C;
+
+            let termA = String(A);
+            let termB = (B === 1) ? "x" : (B === -1) ? "-x" : B + "x";
+            let termC = String(C);
+
+            problemTerms = [termA, termB, termC];
+            xTerms = [termB];      // 【追加】
+            numTerms = [termA, termC]; // 【追加】
+
+        } else {
+            // 【問3〜6】シャッフルされた4項パターンを適用
+            let currentPattern = patterns4[i - 2];
+            let vals = [getValidRand(), getValidRand(), getValidRand(), getValidRand()];
+
+            for (let k = 0; k < 4; k++) {
+            let type = currentPattern[k];
+            let val = vals[k];
+
+            if (type === "M") {
+                totalX += val;
+                let term = (val === 1) ? "x" : (val === -1) ? "-x" : val + "x";
+                problemTerms.push(term);
+                xTerms.push(term); // 【追加】文字配列へ
+            } else {
+                totalNum += val;
+                problemTerms.push(String(val));
+                numTerms.push(String(val)); // 【追加】数字配列へ
+            }
+            }
+        }
+
+        // 問題文の文字列組み立て
+        let qText = joinTerms(problemTerms);
+
+        // 【追加】並び替えステップの文字列組み立て（文字配列と数字配列を結合して通す）
+        let stepTerms = xTerms.concat(numTerms);
+        let stepText = joinTerms(stepTerms);
+
+        // 模範解答の文字列組み立て（文字 ➡ 数の順）
+        let ansText = "";
+        
+        // 1. 文字の項の処理
+        if (totalX !== 0) {
+            if (totalX === 1) {
+            ansText += "x";
+            } else if (totalX === -1) {
+            ansText += "-x";
+            } else {
+            ansText += totalX + "x";
+            }
+        }
+
+        // 2. 数字の項の処理
+        if (totalNum !== 0) {
+            if (totalX !== 0) {
+            if (totalNum > 0) {
+                ansText += " + " + totalNum;
+            } else {
+                ansText += " - " + Math.abs(totalNum);
+            }
+            } else {
+            ansText += totalNum;
+            }
+        } else {
+            if (totalX === 0) {
+            ansText = "0";
+            }
+        }
+
+        // スペースを詰めて完全一致判定に対応させる
+        ansText = ansText.replace(/\s+/g, "");
+
+        // HTML側の仕様（MathJaxなどのドル記号）に合わせて ansStep を追加
+        list.push({
+            html: `$${qText}$`,
+            answer: ansText,
+            ansStep: stepText.replace(/\s+/g, "") // 【追加】
+        });
+        }
+
+        return list;
+    }
+
+    /* ==========================================================================
+       JS: ヒント文言・一括管理エリア（設定エリア）
+       ========================================================================== */
+    /* --- ヒント情報のマスターデータ --- */
+    const HINT_MASTER = {
+        // ① 通常時の回答状況に応じたメッセージ
+        status: {
+        initial: "まずはノーヒントで！",
+        perfect: "全問ノーミスパーフェクト！",
+        finished: "全問終了！",
+        correctFirst: "一発正解！<br>『次の問題へ』を押そう。",
+        correctFixed: "ナイス修正！<br>『次の問題へ』を押そう。",
+        sendPrompt: "全問終了！<br>『送信』ボタンを押そう。",
+        manualStep: "「文字の項→数字の項」の順に<br>並び替えた途中式を書こう！" 
+        },
+        // ② ミスを重ねたときのアドバイス
+        mistakes: {
+        // 【ミス1回目】ノーマルモード時のヒント
+        first: {
+            signWrong: "計算は合ってるよ！<br>符号（$+$ や $-$）が違うよ。<br>答えの符号をもう一度確認！",
+            calcWrong: "符号は合ってるよ！<br>数字の計算間違いがないか<br>もう一度確かめよう。",
+            charWrong: "符号も計算もバッチリ！<br>うしろの文字（$x$）を<br>忘れずにつけよう！", 
+            otherWrong: "何かが違うよ。<br>符号・数字・文字を<br>もう一度、丁寧に！"
+        },
+        
+        // 【ミス2回目以降】ステップモード時のヒント
+        stepMode: {
+            stepIntro: "2回間違えたので、<br>文字の項と数字の項を<br>並び替えた途中式を書こう！",
+            stepSuccess: "並び替えバッチリ！<br>文字どうし、数字どうしを<br>それぞれ計算して<br>最後の答えを出そう！",
+            stepWrong: "途中式が違うよ！<br>「文字の項→数字の項」の順に、<br>符号をつけたまま並び替えよう！",
+            giveUp: "符号のまとめ方と<br>数字の計算をもう一度確認！<br>文字（$x$）も忘れずにね。"
+        }
+        },
+        // ③ タイムアップ時のメッセージ
+        timeout: {
+        default: "時間切れ！<br>正負の数の計算を思い出して、<br>もう一度考えてみよう！",
+        stepMode: "時間切れ！<br>まずは<br>$\\「文字の項→数の項」$の順<br>に並び替えて、<br>それぞれ計算してみよう！"
+        }
+    };
+
+    </script>
+</body>
+</html>
