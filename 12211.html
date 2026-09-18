@@ -1011,7 +1011,7 @@
         }
 
         .kiroku-card-value {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: bold;
             color: #1a73e8;
         }
@@ -1114,7 +1114,6 @@
         <div id="screen-mondai" class="app-screen" style="display:none;">
             <div class="sub-screen-header">
                 <h1>📚 問題選択</h1>
-                <div id="mondai-progress-count" class="mondai-progress-count">クリア問題数：0 / 306</div>
             </div>
             <div id="mondai-grid-wrap" class="mondai-grid"></div>
             <div style="text-align:center; margin-top:8px;">
@@ -1127,7 +1126,7 @@
             <div class="kiroku-cards">
                 <div class="kiroku-card">
                     <div class="kiroku-card-label">問題選択：クリア問題数</div>
-                    <div class="kiroku-card-value" id="kiroku-mondai-count">0 / 306</div>
+                    <div class="kiroku-card-value" id="kiroku-mondai-count">★：0問／☆：0問</div>
                 </div>
                 <div class="kiroku-card">
                     <div class="kiroku-card-label">検定：ベストタイム</div>
@@ -1135,7 +1134,7 @@
                 </div>
                 <div class="kiroku-card">
                     <div class="kiroku-card-label">検定：連続正解記録</div>
-                    <div class="kiroku-card-value" id="kiroku-streak">0問連続正解中</div>
+                    <div class="kiroku-card-value" id="kiroku-streak">現在：0問／最高：0問</div>
                 </div>
             </div>
             <button class="btn-tutorial-hud-secondary" onclick="showScreen('screen-start')">←開始画面へ</button>
@@ -1684,6 +1683,7 @@
                     score++;
                     if (!practiceMode) {
                         correctStreakCount++;
+                        if (correctStreakCount > maxStreakCount) maxStreakCount = correctStreakCount;
                         saveKenteiRecords();
                     }
                 }
@@ -3035,6 +3035,7 @@ const FIXED_PROBLEMS = [
             } else if (pendingResetType === 'kiroku') {
                 bestNormalTimeMs = null;
                 correctStreakCount = 0;
+                maxStreakCount = 0;
                 saveKenteiRecords();
                 if (!practiceMode) {
                     const bestDisplayEl = document.getElementById('best-normal-display');
@@ -3057,6 +3058,7 @@ const FIXED_PROBLEMS = [
 
         /* --- 検定の記録(ベストタイム・連続正解記録) --- */
         let correctStreakCount = 0;
+        let maxStreakCount = 0;
         const KENTEI_RECORDS_KEY = 'doukou_no_wa_kentei_records_v1';
 
         function formatMs(ms) {
@@ -3074,30 +3076,33 @@ const FIXED_PROBLEMS = [
                     const parsed = JSON.parse(raw);
                     bestNormalTimeMs = (typeof parsed.bestTimeMs === 'number') ? parsed.bestTimeMs : null;
                     correctStreakCount = (typeof parsed.streak === 'number') ? parsed.streak : 0;
+                    maxStreakCount = (typeof parsed.maxStreak === 'number') ? parsed.maxStreak : 0;
                     return;
                 }
             } catch (e) { /* 読み込み失敗時は初期化 */ }
             bestNormalTimeMs = null;
             correctStreakCount = 0;
+            maxStreakCount = 0;
         }
 
         function saveKenteiRecords() {
             try {
-                localStorage.setItem(KENTEI_RECORDS_KEY, JSON.stringify({ bestTimeMs: bestNormalTimeMs, streak: correctStreakCount }));
+                localStorage.setItem(KENTEI_RECORDS_KEY, JSON.stringify({ bestTimeMs: bestNormalTimeMs, streak: correctStreakCount, maxStreak: maxStreakCount }));
             } catch (e) { /* 保存失敗時は何もしない */ }
         }
 
         /* --- 記録画面を描画する関数 --- */
         function renderKirokuScreen() {
-            const clearedCount = practiceProgress.filter(s => s >= 1).length;
+            const perfectCount = practiceProgress.filter(s => s === 2).length;
+            const mistakeCount = practiceProgress.filter(s => s === 1).length;
             const mondaiCountEl = document.getElementById('kiroku-mondai-count');
-            if (mondaiCountEl) mondaiCountEl.textContent = `${clearedCount} / ${FIXED_PROBLEMS.length}`;
+            if (mondaiCountEl) mondaiCountEl.textContent = `★：${perfectCount}問／☆：${mistakeCount}問`;
 
             const bestTimeEl = document.getElementById('kiroku-best-time');
             if (bestTimeEl) bestTimeEl.textContent = (bestNormalTimeMs !== null) ? formatMs(bestNormalTimeMs) : '--:--.-';
 
             const streakEl = document.getElementById('kiroku-streak');
-            if (streakEl) streakEl.textContent = `${correctStreakCount}問連続正解中`;
+            if (streakEl) streakEl.textContent = `現在：${correctStreakCount}問／最高：${maxStreakCount}問`;
         }
 
 
@@ -3162,10 +3167,6 @@ const FIXED_PROBLEMS = [
             wrap.innerHTML = html;
             wrap.scrollTop = 0;
             updateMathJax([wrap]);
-
-            const clearedCount = practiceProgress.filter(s => s >= 1).length;
-            const countEl = document.getElementById('mondai-progress-count');
-            if (countEl) countEl.textContent = `クリア問題数：${clearedCount} / ${FIXED_PROBLEMS.length}`;
         }
 
         /* --- 固定問題の演習を開始する関数 --- */
