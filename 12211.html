@@ -1729,8 +1729,7 @@
                 // ステップモード中のミス
                 if (currentStep === 1) {
                     // 途中式を入力させている最中
-                    const op = currentQuestionIndex >= 3 ? '÷' : '×';
-                    hintBody.innerHTML = HINT_MASTER.mistakes.stepMode.stepWrong.replace('×', op);
+                    hintBody.innerHTML = `係数をまとめて<br>「$${q.ansStep}$」と入力しよう`;
                 } else {
                     // 最後の答えを入力させている最中
                     hintBody.innerHTML = HINT_MASTER.mistakes.stepMode.giveUp;
