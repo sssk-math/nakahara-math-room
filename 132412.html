@@ -747,11 +747,381 @@
     border-radius: 0 0 10px 10px;
     padding-bottom: 4px;
     }
+
+        /* ==========================================================================
+           9. 開始画面・問題選択/記録/設定 画面（新規追加分）
+           ========================================================================== */
+        /* --- 各画面の共通コンテナ --- */
+        .app-screen {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+            background-color: #eceff1;
+        }
+
+        /* --- 検定画面は従来通り白背景のまま --- */
+        #screen-kentei {
+            background-color: #ffffff;
+        }
+
+        /* --- 開始画面 --- */
+        .start-screen {
+            justify-content: center;
+            align-items: center;
+            gap: 28px;
+        }
+
+        .start-title-main {
+            font-size: 18px;
+            font-weight: normal;
+            color: #333;
+        }
+
+        .start-title-sub {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+            margin-top: 4px;
+        }
+
+        .start-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 320px;
+        }
+
+        .start-menu-btn {
+            height: 64px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #fff;
+            background-color: #1a73e8;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .start-menu-btn:active {
+            transform: scale(0.97);
+        }
+
+        /* --- 各サブ画面共通のヘッダー行 --- */
+        .sub-screen-header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .sub-screen-header h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 0;
+        }
+
+        /* --- 戻るボタン（水色ベース、方程式シミュレーターと同系統） --- */
+        .btn-tutorial-hud-secondary {
+            padding: 10px 18px;
+            font-size: 15px;
+            font-weight: bold;
+            background-color: #e3f2fd;
+            color: #1565c0;
+            border: 1px solid #90caf9;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-tutorial-hud-secondary:active {
+            background-color: #bbdefb;
+        }
+
+        /* --- 問題選択・記録・設定：仮のプレースホルダー画面 --- */
+        .placeholder-screen {
+            justify-content: center;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .placeholder-message {
+            font-size: 18px;
+            color: #888;
+        }
+        /* --- 検定画面：問題選択モード中はタイマー等を見た目だけ残してグレーアウト --- */
+        .practice-disabled {
+            opacity: 0.4;
+            pointer-events: none;
+            filter: grayscale(60%);
+        }
+
+        /* --- 問題選択：進捗カウント表示 --- */
+        .mondai-progress-count {
+            font-size: 14px;
+            color: #555;
+            margin-top: 2px;
+        }
+
+        /* --- 問題選択：300問グリッド --- */
+        .mondai-grid {
+            flex: 1;
+            min-height: 0;
+            max-height: 495px;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 3px;
+            padding: 4px;
+            background-color: #ffffff;
+            border-radius: 8px;
+        }
+
+        .grid-cell {
+            position: relative;
+            height: 40px;
+            font-size: 11px;
+            background-color: #e7f5ff;
+            border: 1px solid #a5d8ff;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            padding: 1px;
+        }
+
+        .grid-cell.locked {
+            background-color: #e9ecef;
+            border-color: #ced4da;
+            color: #adb5bd;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .grid-cell.available:active {
+            transform: scale(0.95);
+        }
+
+        .grid-cell.star-perfect {
+            background-color: #fff9db;
+            border-color: #ffe066;
+        }
+
+        .grid-cell.star-mistake {
+            background-color: #f1f3f5;
+            border-color: #ced4da;
+        }
+
+        .grid-cell-star {
+            position: absolute;
+            top: 1px;
+            right: 3px;
+            font-size: 12px;
+        }
+
+        .star-perfect-mark { color: #f5a623; }
+        .star-mistake-mark { color: #999; }
+
+        .grid-cell-formula {
+            font-size: 12px;
+            line-height: 1.1;
+        }
+
+        .grid-cell-num {
+            font-size: 9px;
+            color: #999;
+            margin-top: 1px;
+        }
+        /* --- 戻るボタン専用の配色（もう一回等と区別するオレンジ） --- */
+        .key.action-btn-back {
+            background-color: #fb8c00;
+            color: #fff;
+            border: none;
+            font-size: 18px;
+            height: 46px;
+            width: 100%;
+        }
+
+        .key.action-btn-back:disabled {
+            background-color: #ffcc80;
+            color: #fff;
+            cursor: not-allowed;
+        }
+        /* --- 記録画面：カード表示 --- */
+        .kiroku-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            width: 360px;
+            margin: 0 auto;
+        }
+
+        .kiroku-card {
+            background-color: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 14px 18px;
+            text-align: center;
+        }
+
+        .kiroku-card-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 6px;
+        }
+
+        .kiroku-card-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1a73e8;
+        }
+        /* --- 設定画面：リセットボタン(中央寄せ) --- */
+        .settei-reset-buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .settei-reset-btn {
+            width: 280px;
+            height: 52px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #c0392b;
+            background-color: #fdecea;
+            border: 1px solid #f1a9a0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .settei-reset-btn:active {
+            background-color: #f8d3ce;
+        }
+
+        /* --- リセット確認モーダル --- */
+        .reset-confirm-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            border-radius: 12px;
+        }
+
+        .reset-confirm-box {
+            width: 340px;
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 24px 20px;
+            text-align: center;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+        }
+
+        .reset-confirm-message {
+            font-size: 15px;
+            color: #333;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .reset-confirm-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .reset-confirm-cancel, .reset-confirm-ok {
+            flex: 1;
+            height: 44px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            border: none;
+        }
+
+        .reset-confirm-cancel {
+            background-color: #e9ecef;
+            color: #333;
+        }
+
+        .reset-confirm-ok {
+            background-color: #e74c3c;
+            color: #fff;
+        }
     </style>
 </head>
 
 <body>
     <div id="app-container">
+        <div id="screen-start" class="app-screen start-screen">
+            <div class="start-title" style="text-align:center;">
+                <div class="start-title-main">方程式</div>
+                <div class="start-title-sub">Step12：異分母をふくむ方程式①</div>
+            </div>
+            <div class="start-menu">
+                <button class="start-menu-btn" onclick="showScreen('screen-mondai'); renderMondaiGrid();">📚 問題選択</button>
+                <button class="start-menu-btn" onclick="enterKenteiScreen()">📝 検定</button>
+                <button class="start-menu-btn" onclick="showScreen('screen-kiroku'); renderKirokuScreen();">🏆 記録</button>
+                <button class="start-menu-btn" onclick="showScreen('screen-settei')">⚙️ 設定</button>
+            </div>
+        </div>
+
+        <div id="screen-mondai" class="app-screen" style="display:none;">
+            <div class="sub-screen-header">
+                <h1>📚 問題選択</h1>
+            </div>
+            <div id="mondai-grid-wrap" class="mondai-grid"></div>
+            <div style="text-align:center; margin-top:8px;">
+                <button class="btn-tutorial-hud-secondary" onclick="showScreen('screen-start')">←開始画面へ</button>
+            </div>
+        </div>
+
+        <div id="screen-kiroku" class="app-screen" style="display:none; align-items:center; justify-content:center; gap:20px;">
+            <div class="sub-screen-header"><h1>🏆 記録</h1></div>
+            <div class="kiroku-cards">
+                <div class="kiroku-card">
+                    <div class="kiroku-card-label">問題選択：クリア問題数</div>
+                    <div class="kiroku-card-value" id="kiroku-mondai-count">★：0問／☆：0問</div>
+                </div>
+                <div class="kiroku-card">
+                    <div class="kiroku-card-label">検定：ベストタイム</div>
+                    <div class="kiroku-card-value" id="kiroku-best-time">--:--.-</div>
+                </div>
+                <div class="kiroku-card">
+                    <div class="kiroku-card-label">検定：連続正解記録</div>
+                    <div class="kiroku-card-value" id="kiroku-streak">現在：0問／最高：0問</div>
+                </div>
+            </div>
+            <button class="btn-tutorial-hud-secondary" onclick="showScreen('screen-start')">←開始画面へ</button>
+        </div>
+
+        <div id="screen-settei" class="app-screen placeholder-screen" style="display:none;">
+            <div class="sub-screen-header"><h1>⚙️ 設定</h1></div>
+            <div class="settei-reset-buttons">
+                <button class="settei-reset-btn" onclick="openResetConfirm('mondai')">🗑️ 問題選択をリセットする</button>
+                <button class="settei-reset-btn" onclick="openResetConfirm('kiroku')">🗑️ 記録をリセットする</button>
+            </div>
+            <button class="btn-tutorial-hud-secondary" onclick="showScreen('screen-start')">←開始画面へ</button>
+        </div>
+
+        <div id="reset-confirm-modal" class="reset-confirm-overlay" style="display:none;">
+            <div class="reset-confirm-box">
+                <div class="reset-confirm-message" id="reset-confirm-message"></div>
+                <div class="reset-confirm-buttons">
+                    <button class="reset-confirm-cancel" onclick="closeResetConfirm()">キャンセル</button>
+                    <button class="reset-confirm-ok" onclick="confirmReset()">リセットする</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-kentei" class="app-screen" style="display:none;">
         <header>
             <div class="title-bar">
                 <button class="title-hand-btn" id="hand-left-btn" onclick="changeHandedness('left')">👈 左利き</button>
@@ -760,7 +1130,7 @@
             </div>
         </header>
 
-        <div class="timer-container">
+        <div class="timer-container" id="timer-container-area">
             <div style="display: flex; align-items: center; gap: 15px;">
                 <div id="timer-display">⏱️ 00:00.0</div>
                 <div class="record-box">
@@ -910,6 +1280,7 @@
                 </div>
             </div>
         </div>
+        </div>
 
         <footer>
             © 中原先生の数学部屋
@@ -973,6 +1344,7 @@
     }
 
     function startTimerClock() {
+        if (practiceMode) return;
         isCorrectState = false;
         lastClearTimeText = "";
         elapsedBeforeResume = 0;
@@ -1013,6 +1385,7 @@
             bestNormalTimeMs = totalElapsedTimeMs;
             document.getElementById('best-normal-display').innerText = `ベストタイム(4問): ${finalTimeStr}`;
             document.getElementById('best-update-message').innerText = "🎉 ベスト更新！";
+            saveKenteiRecords();
         }
         
         const numInput = numberField ? numberField.value.trim() : "";
@@ -1554,6 +1927,10 @@
             return;
         }
         if (isCompleted) {
+            if (practiceMode) {
+                recordPracticeResult();
+                return;
+            }
             if (currentQuestionIndex === 3) {
                 restartQuiz();
                 return;
@@ -1565,6 +1942,14 @@
     }
 
     function handleRightBtn() {
+        if (currentControlState === 'start') {
+            goBackFromKentei();
+            return;
+        }
+        if (practiceMode && currentControlState === 'cleared') {
+            recordPracticeResult();
+            return;
+        }
         if (currentControlState === 'finished') {
             restartQuiz();
         } else {
@@ -1573,6 +1958,10 @@
     }
 
     function handleCenterBtn() {
+        if (practiceMode && currentControlState === 'cleared') {
+            advancePracticeToNext();
+            return;
+        }
         if (currentControlState === 'finished') {
             manualSendToGoogleForm();
         } else {
@@ -1589,7 +1978,7 @@
         if (state === 'start') {
             actionBtn.textContent = "スタート"; actionBtn.disabled = false;
             clearBtn.textContent = "消す"; clearBtn.disabled = true;
-            clearAllBtn.textContent = "全消去"; clearAllBtn.disabled = true;
+            clearAllBtn.textContent = "戻る"; clearAllBtn.className = "key action-btn-back"; clearAllBtn.disabled = false;
         } else if (state === 'playing') {
             actionBtn.textContent = "判定する";
             actionBtn.className = "key action-btn judge-mode";
@@ -1597,9 +1986,15 @@
             clearBtn.textContent = "消す"; clearBtn.className = "key clear-btn"; clearBtn.disabled = false;
             clearAllBtn.textContent = "全消去"; clearAllBtn.disabled = false;
         } else if (state === 'cleared') {
-            actionBtn.textContent = "次の問題"; actionBtn.className = "key action-btn judge-mode"; actionBtn.disabled = false;
-            clearBtn.textContent = "消す"; clearBtn.disabled = true;
-            clearAllBtn.textContent = "全消去"; clearAllBtn.disabled = true;
+            if (practiceMode) {
+                actionBtn.textContent = "終了"; actionBtn.className = "key clear-btn"; actionBtn.disabled = true;
+                clearBtn.textContent = "次へ"; clearBtn.className = "key action-btn judge-mode"; clearBtn.disabled = false;
+                clearAllBtn.textContent = "戻る"; clearAllBtn.className = "key action-btn-back"; clearAllBtn.disabled = false;
+            } else {
+                actionBtn.textContent = "次の問題"; actionBtn.className = "key action-btn judge-mode"; actionBtn.disabled = false;
+                clearBtn.textContent = "消す"; clearBtn.disabled = true;
+                clearAllBtn.textContent = "全消去"; clearAllBtn.disabled = true;
+            }
         } else if (state === 'finished') {
             actionBtn.textContent = "全問終了"; actionBtn.className = "key clear-btn"; actionBtn.disabled = true;
             clearBtn.textContent = "送信"; clearBtn.className = "key action-btn judge-mode"; clearBtn.disabled = false;
@@ -1665,7 +2060,9 @@
         gameStarted = false;
         isCompleted = false;
         progressEl.textContent = "スタートボタンを押してください";
-        formulaBox.innerHTML = `<span style="color:#aaa; font-size:24px;">生徒番号を入力→【スタート】</span>`;
+        formulaBox.innerHTML = practiceMode
+            ? `<span style="color:#aaa; font-size:24px;">【スタート】を押して挑戦しよう</span>`
+            : `<span style="color:#aaa; font-size:24px;">生徒番号を入力→【スタート】</span>`;
         document.getElementById('hint-text').innerHTML = HINT_DATA.start;
 
         document.getElementById('badge-clear-denom').textContent = "ロック中";
@@ -1746,7 +2143,9 @@
         updateControlKeysState('playing');
 
         const q = quizData[currentQuestionIndex];
-        progressEl.textContent = `第 ${currentQuestionIndex + 1} 問 / 全 4 問`;
+        progressEl.textContent = practiceMode
+            ? `問題 ${practiceCurrentIndex + 1} / ${FIXED_PROBLEMS.length}`
+            : `第 ${currentQuestionIndex + 1} 問 / 全 4 問`;
         
         formulaBox.innerHTML = `
             <div class="equation-grid">
@@ -1886,7 +2285,14 @@
                 document.getElementById('group-answer').className = "input-box-group locked-correct";
                 document.getElementById('badge-answer').textContent = "正解！";
 
-                if (currentQuestionWrongCount === 0) score++;
+                if (currentQuestionWrongCount === 0) {
+                    score++;
+                    if (!practiceMode) {
+                        correctStreakCount++;
+                        if (correctStreakCount > maxStreakCount) maxStreakCount = correctStreakCount;
+                        saveKenteiRecords();
+                    }
+                }
                 if (document.activeElement) document.activeElement.blur();
                 refreshMathJaxPreview();
 
@@ -1911,6 +2317,10 @@
 
     function showStepError(groupEl) {
         currentQuestionWrongCount++;
+        if (!practiceMode && correctStreakCount !== 0) {
+            correctStreakCount = 0;
+            saveKenteiRecords();
+        }
         startQuestionTimer();
         if (groupEl) {
             groupEl.classList.remove('error-shake');
@@ -2173,120 +2583,719 @@
 
         const lcm = (a, b) => Math.abs(a * b) / gcd(Math.abs(a), Math.abs(b));
 
-        function generateQuizData() {
-        // 1問ぶんのパターン問題を生成する内部関数
-        const generatePatternQuiz = (pattern) => {
-            while (true) {
-                let leftPart = "", rightPart = "";
-                let L_a = 0, L_c = 0, R_a = 0, R_c = 0;
-                let M = 1;
-                let b = 1, f = 1;
+    /* ==========================================================================
+       固定問題(問題選択用・320問)
+       ========================================================================== */
+const FIXED_PROBLEMS = [
+{leftPart:"\\frac{1}{6}x+2",rightPart:"\\frac{5}{12}x+1",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["2x+24", "24+2x"],expRightList:["5x+12", "12+5x"],transLeftList:["2x-5x", "-5x+2x"],transRightList:["12-24", "-24+12"],arrLeftAns:"-3x",arrRightAns:"-12",answer:"4"},
+{leftPart:"3+\\frac{5}{6}x",rightPart:"\\frac{1}{12}x+2",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["10x+36", "36+10x"],expRightList:["x+24", "24+x"],transLeftList:["10x-x", "-x+10x"],transRightList:["24-36", "-36+24"],arrLeftAns:"9x",arrRightAns:"-12",answer:"-4/3"},
+{leftPart:"\\frac{1}{6}x+2",rightPart:"2+\\frac{5}{12}x",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["2x+24", "24+2x"],expRightList:["5x+24", "24+5x"],transLeftList:["2x-5x", "-5x+2x"],transRightList:["24-24", "-24+24"],arrLeftAns:"-3x",arrRightAns:"0",answer:"0"},
+{leftPart:"3+\\frac{3}{5}x",rightPart:"2+\\frac{4}{15}x",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["9x+45", "45+9x"],expRightList:["4x+30", "30+4x"],transLeftList:["9x-4x", "-4x+9x"],transRightList:["30-45", "-45+30"],arrLeftAns:"5x",arrRightAns:"-15",answer:"-3"},
+{leftPart:"\\frac{3}{2}x",rightPart:"\\frac{1}{6}x+6",clearDenomLeftAns:"×6",clearDenomRightAns:"×6",expLeftList:["9x"],expRightList:["x+36", "36+x"],transLeftList:["9x-x", "-x+9x"],transRightList:["36"],arrLeftAns:"8x",arrRightAns:"36",answer:"9/2"},
+{leftPart:"\\frac{3}{5}x",rightPart:"3+\\frac{4}{15}x",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["9x"],expRightList:["4x+45", "45+4x"],transLeftList:["9x-4x", "-4x+9x"],transRightList:["45"],arrLeftAns:"5x",arrRightAns:"45",answer:"9"},
+{leftPart:"\\frac{3}{2}x+2",rightPart:"\\frac{5}{24}x",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["36x+48", "48+36x"],expRightList:["5x"],transLeftList:["36x-5x", "-5x+36x"],transRightList:["-48"],arrLeftAns:"31x",arrRightAns:"-48",answer:"-48/31"},
+{leftPart:"3+\\frac{3}{2}x",rightPart:"\\frac{5}{18}x",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["27x+54", "54+27x"],expRightList:["5x"],transLeftList:["27x-5x", "-5x+27x"],transRightList:["-54"],arrLeftAns:"22x",arrRightAns:"-54",answer:"-27/11"},
+{leftPart:"\\frac{5}{4}x+9",rightPart:"2x+\\frac{3}{8}",clearDenomLeftAns:"×8",clearDenomRightAns:"×8",expLeftList:["10x+72", "72+10x"],expRightList:["16x+3", "3+16x"],transLeftList:["10x-16x", "-16x+10x"],transRightList:["3-72", "-72+3"],arrLeftAns:"-6x",arrRightAns:"-69",answer:"23/2"},
+{leftPart:"3+\\frac{3}{4}x",rightPart:"2x+\\frac{5}{16}",clearDenomLeftAns:"×16",clearDenomRightAns:"×16",expLeftList:["12x+48", "48+12x"],expRightList:["32x+5", "5+32x"],transLeftList:["12x-32x", "-32x+12x"],transRightList:["5-48", "-48+5"],arrLeftAns:"-20x",arrRightAns:"-43",answer:"43/20"},
+{leftPart:"\\frac{3}{5}x+2",rightPart:"\\frac{1}{10}+x",clearDenomLeftAns:"×10",clearDenomRightAns:"×10",expLeftList:["6x+20", "20+6x"],expRightList:["10x+1", "1+10x"],transLeftList:["6x-10x", "-10x+6x"],transRightList:["1-20", "-20+1"],arrLeftAns:"-4x",arrRightAns:"-19",answer:"19/4"},
+{leftPart:"2+\\frac{2}{5}x",rightPart:"\\frac{1}{15}+2x",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["6x+30", "30+6x"],expRightList:["30x+1", "1+30x"],transLeftList:["6x-30x", "-30x+6x"],transRightList:["1-30", "-30+1"],arrLeftAns:"-24x",arrRightAns:"-29",answer:"29/24"},
+{leftPart:"\\frac{1}{2}x",rightPart:"2x+\\frac{5}{12}",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["6x"],expRightList:["24x+5", "5+24x"],transLeftList:["6x-24x", "-24x+6x"],transRightList:["5"],arrLeftAns:"-18x",arrRightAns:"5",answer:"-5/18"},
+{leftPart:"\\frac{5}{6}x",rightPart:"\\frac{5}{12}+2x",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["10x"],expRightList:["24x+5", "5+24x"],transLeftList:["10x-24x", "-24x+10x"],transRightList:["5"],arrLeftAns:"-14x",arrRightAns:"5",answer:"-5/14"},
+{leftPart:"\\frac{3}{5}x+1",rightPart:"x",clearDenomLeftAns:"×10",clearDenomRightAns:"×10",expLeftList:["6x+10", "10+6x"],expRightList:["10x"],transLeftList:["6x-10x", "-10x+6x"],transRightList:["-10"],arrLeftAns:"-4x",arrRightAns:"-10",answer:"5/2"},
+{leftPart:"3+\\frac{2}{3}x",rightPart:"x",clearDenomLeftAns:"×21",clearDenomRightAns:"×21",expLeftList:["14x+63", "63+14x"],expRightList:["21x"],transLeftList:["14x-21x", "-21x+14x"],transRightList:["-63"],arrLeftAns:"-7x",arrRightAns:"-63",answer:"9"},
+{leftPart:"x+\\frac{5}{3}",rightPart:"2x+\\frac{5}{24}",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["24x+40", "40+24x"],expRightList:["48x+5", "5+48x"],transLeftList:["24x-48x", "-48x+24x"],transRightList:["5-40", "-40+5"],arrLeftAns:"-24x",arrRightAns:"-35",answer:"35/24"},
+{leftPart:"\\frac{5}{3}+x",rightPart:"2x+\\frac{4}{15}",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["15x+25", "25+15x"],expRightList:["30x+4", "4+30x"],transLeftList:["15x-30x", "-30x+15x"],transRightList:["4-25", "-25+4"],arrLeftAns:"-15x",arrRightAns:"-21",answer:"7/5"},
+{leftPart:"x+\\frac{1}{6}",rightPart:"\\frac{1}{24}+2x",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["24x+4", "4+24x"],expRightList:["48x+1", "1+48x"],transLeftList:["24x-48x", "-48x+24x"],transRightList:["1-4", "-4+1"],arrLeftAns:"-24x",arrRightAns:"-3",answer:"1/8"},
+{leftPart:"\\frac{3}{5}+2x",rightPart:"\\frac{1}{10}+x",clearDenomLeftAns:"×10",clearDenomRightAns:"×10",expLeftList:["20x+6", "6+20x"],expRightList:["10x+1", "1+10x"],transLeftList:["20x-10x", "-10x+20x"],transRightList:["1-6", "-6+1"],arrLeftAns:"10x",arrRightAns:"-5",answer:"-1/2"},
+{leftPart:"x",rightPart:"2x+\\frac{5}{24}",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["24x"],expRightList:["48x+5", "5+48x"],transLeftList:["24x-48x", "-48x+24x"],transRightList:["5"],arrLeftAns:"-24x",arrRightAns:"5",answer:"-5/24"},
+{leftPart:"2x",rightPart:"\\frac{5}{12}+x",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["24x"],expRightList:["12x+5", "5+12x"],transLeftList:["24x-12x", "-12x+24x"],transRightList:["5"],arrLeftAns:"12x",arrRightAns:"5",answer:"5/12"},
+{leftPart:"x+\\frac{3}{2}",rightPart:"2x",clearDenomLeftAns:"×22",clearDenomRightAns:"×22",expLeftList:["22x+33", "33+22x"],expRightList:["44x"],transLeftList:["22x-44x", "-44x+22x"],transRightList:["-33"],arrLeftAns:"-22x",arrRightAns:"-33",answer:"3/2"},
+{leftPart:"\\frac{3}{5}+x",rightPart:"2x",clearDenomLeftAns:"×10",clearDenomRightAns:"×10",expLeftList:["10x+6", "6+10x"],expRightList:["20x"],transLeftList:["10x-20x", "-20x+10x"],transRightList:["-6"],arrLeftAns:"-10x",arrRightAns:"-6",answer:"3/5"},
+{leftPart:"x+\\frac{3}{5}",rightPart:"\\frac{3}{10}x+3",clearDenomLeftAns:"×10",clearDenomRightAns:"×10",expLeftList:["10x+6", "6+10x"],expRightList:["3x+30", "30+3x"],transLeftList:["10x-3x", "-3x+10x"],transRightList:["30-6", "-6+30"],arrLeftAns:"7x",arrRightAns:"24",answer:"24/7"},
+{leftPart:"\\frac{3}{2}+x",rightPart:"\\frac{1}{14}x+3",clearDenomLeftAns:"×14",clearDenomRightAns:"×14",expLeftList:["14x+21", "21+14x"],expRightList:["x+42", "42+x"],transLeftList:["14x-x", "-x+14x"],transRightList:["42-21", "-21+42"],arrLeftAns:"13x",arrRightAns:"21",answer:"21/13"},
+{leftPart:"4x+\\frac{1}{2}",rightPart:"8+\\frac{1}{6}x",clearDenomLeftAns:"×6",clearDenomRightAns:"×6",expLeftList:["24x+3", "3+24x"],expRightList:["x+48", "48+x"],transLeftList:["24x-x", "-x+24x"],transRightList:["48-3", "-3+48"],arrLeftAns:"23x",arrRightAns:"45",answer:"45/23"},
+{leftPart:"\\frac{3}{2}+2x",rightPart:"2+\\frac{3}{4}x",clearDenomLeftAns:"×4",clearDenomRightAns:"×4",expLeftList:["8x+6", "6+8x"],expRightList:["3x+8", "8+3x"],transLeftList:["8x-3x", "-3x+8x"],transRightList:["8-6", "-6+8"],arrLeftAns:"5x",arrRightAns:"2",answer:"2/5"},
+{leftPart:"x",rightPart:"\\frac{1}{15}x+3",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["15x"],expRightList:["x+45", "45+x"],transLeftList:["15x-x", "-x+15x"],transRightList:["45"],arrLeftAns:"14x",arrRightAns:"45",answer:"45/14"},
+{leftPart:"x",rightPart:"3+\\frac{1}{18}x",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["18x"],expRightList:["x+54", "54+x"],transLeftList:["18x-x", "-x+18x"],transRightList:["54"],arrLeftAns:"17x",arrRightAns:"54",answer:"54/17"},
+{leftPart:"x+\\frac{3}{5}",rightPart:"\\frac{1}{10}x",clearDenomLeftAns:"×10",clearDenomRightAns:"×10",expLeftList:["10x+6", "6+10x"],expRightList:["x"],transLeftList:["10x-x", "-x+10x"],transRightList:["-6"],arrLeftAns:"9x",arrRightAns:"-6",answer:"-2/3"},
+{leftPart:"\\frac{1}{6}+2x",rightPart:"\\frac{1}{24}x",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["48x+4", "4+48x"],expRightList:["x"],transLeftList:["48x-x", "-x+48x"],transRightList:["-4"],arrLeftAns:"47x",arrRightAns:"-4",answer:"-4/47"},
+{leftPart:"2x",rightPart:"1+\\frac{5}{24}x",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["48x"],expRightList:["5x+24", "24+5x"],transLeftList:["48x-5x", "-5x+48x"],transRightList:["24"],arrLeftAns:"43x",arrRightAns:"24",answer:"24/43"},
+{leftPart:"x+\\frac{1}{5}",rightPart:"\\frac{1}{15}x+1",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["15x+3", "3+15x"],expRightList:["x+15", "15+x"],transLeftList:["15x-x", "-x+15x"],transRightList:["15-3", "-3+15"],arrLeftAns:"14x",arrRightAns:"12",answer:"6/7"},
+{leftPart:"2x+\\frac{1}{6}",rightPart:"2+\\frac{1}{24}x",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["48x+4", "4+48x"],expRightList:["x+48", "48+x"],transLeftList:["48x-x", "-x+48x"],transRightList:["48-4", "-4+48"],arrLeftAns:"47x",arrRightAns:"44",answer:"44/47"},
+{leftPart:"3+\\frac{1}{6}x",rightPart:"\\frac{1}{18}+2x",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["3x+54", "54+3x"],expRightList:["36x+1", "1+36x"],transLeftList:["3x-36x", "-36x+3x"],transRightList:["1-54", "-54+1"],arrLeftAns:"-33x",arrRightAns:"-53",answer:"53/33"},
+{leftPart:"3+\\frac{3}{4}x",rightPart:"\\frac{5}{8}x+8",clearDenomLeftAns:"×8",clearDenomRightAns:"×8",expLeftList:["6x+24", "24+6x"],expRightList:["5x+64", "64+5x"],transLeftList:["6x-5x", "-5x+6x"],transRightList:["64-24", "-24+64"],arrLeftAns:"x",arrRightAns:"40",answer:"40"},
+{leftPart:"\\frac{1}{6}x",rightPart:"\\frac{5}{24}+x",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["4x"],expRightList:["24x+5", "5+24x"],transLeftList:["4x-24x", "-24x+4x"],transRightList:["5"],arrLeftAns:"-20x",arrRightAns:"5",answer:"-1/4"},
+{leftPart:"\\frac{3}{2}+x",rightPart:"2x",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["20x+30", "30+20x"],expRightList:["40x"],transLeftList:["20x-40x", "-40x+20x"],transRightList:["-30"],arrLeftAns:"-20x",arrRightAns:"-30",answer:"3/2"},
+{leftPart:"x",rightPart:"2x+\\frac{3}{20}",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["20x"],expRightList:["40x+3", "3+40x"],transLeftList:["20x-40x", "-40x+20x"],transRightList:["3"],arrLeftAns:"-20x",arrRightAns:"3",answer:"-3/20"},
+{leftPart:"\\frac{5}{2}x",rightPart:"1+\\frac{5}{14}x",clearDenomLeftAns:"×14",clearDenomRightAns:"×14",expLeftList:["35x"],expRightList:["5x+14", "14+5x"],transLeftList:["35x-5x", "-5x+35x"],transRightList:["14"],arrLeftAns:"30x",arrRightAns:"14",answer:"7/15"},
+{leftPart:"\\frac{3}{2}+2x",rightPart:"\\frac{1}{20}+x",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["40x+30", "30+40x"],expRightList:["20x+1", "1+20x"],transLeftList:["40x-20x", "-20x+40x"],transRightList:["1-30", "-30+1"],arrLeftAns:"20x",arrRightAns:"-29",answer:"-29/20"},
+{leftPart:"\\frac{1}{5}x",rightPart:"\\frac{1}{15}x+1",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["3x"],expRightList:["x+15", "15+x"],transLeftList:["3x-x", "-x+3x"],transRightList:["15"],arrLeftAns:"2x",arrRightAns:"15",answer:"15/2"},
+{leftPart:"\\frac{5}{3}+4x",rightPart:"9+\\frac{1}{9}x",clearDenomLeftAns:"×9",clearDenomRightAns:"×9",expLeftList:["36x+15", "15+36x"],expRightList:["x+81", "81+x"],transLeftList:["36x-x", "-x+36x"],transRightList:["81-15", "-15+81"],arrLeftAns:"35x",arrRightAns:"66",answer:"66/35"},
+{leftPart:"\\frac{5}{3}x+8",rightPart:"\\frac{1}{9}x+9",clearDenomLeftAns:"×9",clearDenomRightAns:"×9",expLeftList:["15x+72", "72+15x"],expRightList:["x+81", "81+x"],transLeftList:["15x-x", "-x+15x"],transRightList:["81-72", "-72+81"],arrLeftAns:"14x",arrRightAns:"9",answer:"9/14"},
+{leftPart:"\\frac{1}{6}x+1",rightPart:"\\frac{5}{18}+x",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["3x+18", "18+3x"],expRightList:["18x+5", "5+18x"],transLeftList:["3x-18x", "-18x+3x"],transRightList:["5-18", "-18+5"],arrLeftAns:"-15x",arrRightAns:"-13",answer:"13/15"},
+{leftPart:"\\frac{1}{4}x+2",rightPart:"3+\\frac{5}{12}x",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["3x+24", "24+3x"],expRightList:["5x+36", "36+5x"],transLeftList:["3x-5x", "-5x+3x"],transRightList:["36-24", "-24+36"],arrLeftAns:"-2x",arrRightAns:"12",answer:"-6"},
+{leftPart:"x",rightPart:"\\frac{1}{12}+2x",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["12x"],expRightList:["24x+1", "1+24x"],transLeftList:["12x-24x", "-24x+12x"],transRightList:["1"],arrLeftAns:"-12x",arrRightAns:"1",answer:"-1/12"},
+{leftPart:"\\frac{5}{4}x+3",rightPart:"\\frac{5}{12}x",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["15x+36", "36+15x"],expRightList:["5x"],transLeftList:["15x-5x", "-5x+15x"],transRightList:["-36"],arrLeftAns:"10x",arrRightAns:"-36",answer:"-18/5"},
+{leftPart:"x+\\frac{2}{3}",rightPart:"2x+\\frac{4}{21}",clearDenomLeftAns:"×21",clearDenomRightAns:"×21",expLeftList:["21x+14", "14+21x"],expRightList:["42x+4", "4+42x"],transLeftList:["21x-42x", "-42x+21x"],transRightList:["4-14", "-14+4"],arrLeftAns:"-21x",arrRightAns:"-10",answer:"10/21"},
+{leftPart:"\\frac{1}{2}+2x",rightPart:"\\frac{3}{8}x+7",clearDenomLeftAns:"×8",clearDenomRightAns:"×8",expLeftList:["16x+4", "4+16x"],expRightList:["3x+56", "56+3x"],transLeftList:["16x-3x", "-3x+16x"],transRightList:["56-4", "-4+56"],arrLeftAns:"13x",arrRightAns:"52",answer:"4"},
+{leftPart:"\\frac{3}{2}x+2",rightPart:"x+\\frac{1}{10}",clearDenomLeftAns:"×10",clearDenomRightAns:"×10",expLeftList:["15x+20", "20+15x"],expRightList:["10x+1", "1+10x"],transLeftList:["15x-10x", "-10x+15x"],transRightList:["1-20", "-20+1"],arrLeftAns:"5x",arrRightAns:"-19",answer:"-19/5"},
+{leftPart:"x+\\frac{1}{5}",rightPart:"\\frac{2}{15}+2x",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["15x+3", "3+15x"],expRightList:["30x+2", "2+30x"],transLeftList:["15x-30x", "-30x+15x"],transRightList:["2-3", "-3+2"],arrLeftAns:"-15x",arrRightAns:"-1",answer:"1/15"},
+{leftPart:"2+\\frac{5}{4}x",rightPart:"x+\\frac{5}{12}",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["15x+24", "24+15x"],expRightList:["12x+5", "5+12x"],transLeftList:["15x-12x", "-12x+15x"],transRightList:["5-24", "-24+5"],arrLeftAns:"3x",arrRightAns:"-19",answer:"-19/3"},
+{leftPart:"\\frac{3}{2}+2x",rightPart:"\\frac{1}{20}x",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["40x+30", "30+40x"],expRightList:["x"],transLeftList:["40x-x", "-x+40x"],transRightList:["-30"],arrLeftAns:"39x",arrRightAns:"-30",answer:"-10/13"},
+{leftPart:"2+\\frac{1}{5}x",rightPart:"2+\\frac{1}{20}x",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["4x+40", "40+4x"],expRightList:["x+40", "40+x"],transLeftList:["4x-x", "-x+4x"],transRightList:["40-40", "-40+40"],arrLeftAns:"3x",arrRightAns:"0",answer:"0"},
+{leftPart:"2x+\\frac{1}{5}",rightPart:"x",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["40x+4", "4+40x"],expRightList:["20x"],transLeftList:["40x-20x", "-20x+40x"],transRightList:["-4"],arrLeftAns:"20x",arrRightAns:"-4",answer:"-1/5"},
+{leftPart:"\\frac{4}{5}x",rightPart:"x+\\frac{1}{10}",clearDenomLeftAns:"×10",clearDenomRightAns:"×10",expLeftList:["8x"],expRightList:["10x+1", "1+10x"],transLeftList:["8x-10x", "-10x+8x"],transRightList:["1"],arrLeftAns:"-2x",arrRightAns:"1",answer:"-1/2"},
+{leftPart:"x+\\frac{3}{4}",rightPart:"\\frac{3}{8}x",clearDenomLeftAns:"×8",clearDenomRightAns:"×8",expLeftList:["8x+6", "6+8x"],expRightList:["3x"],transLeftList:["8x-3x", "-3x+8x"],transRightList:["-6"],arrLeftAns:"5x",arrRightAns:"-6",answer:"-6/5"},
+{leftPart:"1+\\frac{5}{4}x",rightPart:"\\frac{3}{20}x",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["25x+20", "20+25x"],expRightList:["3x"],transLeftList:["25x-3x", "-3x+25x"],transRightList:["-20"],arrLeftAns:"22x",arrRightAns:"-20",answer:"-10/11"},
+{leftPart:"\\frac{3}{4}+2x",rightPart:"x+\\frac{1}{16}",clearDenomLeftAns:"×16",clearDenomRightAns:"×16",expLeftList:["32x+12", "12+32x"],expRightList:["16x+1", "1+16x"],transLeftList:["32x-16x", "-16x+32x"],transRightList:["1-12", "-12+1"],arrLeftAns:"16x",arrRightAns:"-11",answer:"-11/16"},
+{leftPart:"3x",rightPart:"\\frac{5}{8}x+7",clearDenomLeftAns:"×8",clearDenomRightAns:"×8",expLeftList:["24x"],expRightList:["5x+56", "56+5x"],transLeftList:["24x-5x", "-5x+24x"],transRightList:["56"],arrLeftAns:"19x",arrRightAns:"56",answer:"56/19"},
+{leftPart:"3+\\frac{5}{4}x",rightPart:"2x",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["30x+72", "72+30x"],expRightList:["48x"],transLeftList:["30x-48x", "-48x+30x"],transRightList:["-72"],arrLeftAns:"-18x",arrRightAns:"-72",answer:"4"},
+{leftPart:"\\frac{1}{4}x+2",rightPart:"x",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["3x+24", "24+3x"],expRightList:["12x"],transLeftList:["3x-12x", "-12x+3x"],transRightList:["-24"],arrLeftAns:"-9x",arrRightAns:"-24",answer:"8/3"},
+{leftPart:"x-\\frac{2}{5}",rightPart:"\\frac{1}{20}-2x",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["20x-8", "-8+20x"],expRightList:["-40x+1", "1-40x"],transLeftList:["20x+40x", "40x+20x"],transRightList:["1+8", "8+1"],arrLeftAns:"60x",arrRightAns:"9",answer:"3/20"},
+{leftPart:"\\frac{1}{3}x-4",rightPart:"-\\frac{1}{6}-2x",clearDenomLeftAns:"×6",clearDenomRightAns:"×6",expLeftList:["2x-24", "-24+2x"],expRightList:["-12x-1", "-1-12x"],transLeftList:["2x+12x", "12x+2x"],transRightList:["-1+24", "24-1"],arrLeftAns:"14x",arrRightAns:"23",answer:"23/14"},
+{leftPart:"1+\\frac{4}{3}x",rightPart:"-x",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["16x+12", "12+16x"],expRightList:["-12x"],transLeftList:["16x+12x", "12x+16x"],transRightList:["-12"],arrLeftAns:"28x",arrRightAns:"-12",answer:"-3/7"},
+{leftPart:"x",rightPart:"\\frac{1}{14}x-2",clearDenomLeftAns:"×14",clearDenomRightAns:"×14",expLeftList:["14x"],expRightList:["x-28", "-28+x"],transLeftList:["14x-x", "-x+14x"],transRightList:["-28"],arrLeftAns:"13x",arrRightAns:"-28",answer:"-28/13"},
+{leftPart:"-\\frac{3}{5}+2x",rightPart:"-\\frac{4}{15}x-2",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["30x-9", "-9+30x"],expRightList:["-4x-30", "-30-4x"],transLeftList:["30x+4x", "4x+30x"],transRightList:["-30+9", "9-30"],arrLeftAns:"34x",arrRightAns:"-21",answer:"-21/34"},
+{leftPart:"4x",rightPart:"-4x-\\frac{1}{6}",clearDenomLeftAns:"×6",clearDenomRightAns:"×6",expLeftList:["24x"],expRightList:["-24x-1", "-1-24x"],transLeftList:["24x+24x", "24x+24x"],transRightList:["-1"],arrLeftAns:"48x",arrRightAns:"-1",answer:"-1/48"},
+{leftPart:"1+\\frac{1}{2}x",rightPart:"\\frac{3}{8}x-3",clearDenomLeftAns:"×8",clearDenomRightAns:"×8",expLeftList:["4x+8", "8+4x"],expRightList:["3x-24", "-24+3x"],transLeftList:["4x-3x", "-3x+4x"],transRightList:["-24-8", "-8-24"],arrLeftAns:"x",arrRightAns:"-32",answer:"-32"},
+{leftPart:"\\frac{5}{2}+2x",rightPart:"x+\\frac{3}{10}",clearDenomLeftAns:"×10",clearDenomRightAns:"×10",expLeftList:["20x+25", "25+20x"],expRightList:["10x+3", "3+10x"],transLeftList:["20x-10x", "-10x+20x"],transRightList:["3-25", "-25+3"],arrLeftAns:"10x",arrRightAns:"-22",answer:"-11/5"},
+{leftPart:"-\\frac{1}{6}+x",rightPart:"\\frac{1}{24}x",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["24x-4", "-4+24x"],expRightList:["x"],transLeftList:["24x-x", "-x+24x"],transRightList:["4"],arrLeftAns:"23x",arrRightAns:"4",answer:"4/23"},
+{leftPart:"\\frac{1}{6}x-1",rightPart:"-\\frac{5}{24}x",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["4x-24", "-24+4x"],expRightList:["-5x"],transLeftList:["4x+5x", "5x+4x"],transRightList:["24"],arrLeftAns:"9x",arrRightAns:"24",answer:"8/3"},
+{leftPart:"2x-\\frac{5}{6}",rightPart:"\\frac{5}{12}x+2",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["24x-10", "-10+24x"],expRightList:["5x+24", "24+5x"],transLeftList:["24x-5x", "-5x+24x"],transRightList:["24+10", "10+24"],arrLeftAns:"19x",arrRightAns:"34",answer:"34/19"},
+{leftPart:"-1+\\frac{1}{3}x",rightPart:"-\\frac{4}{15}x",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["5x-15", "-15+5x"],expRightList:["-4x"],transLeftList:["5x+4x", "4x+5x"],transRightList:["15"],arrLeftAns:"9x",arrRightAns:"15",answer:"5/3"},
+{leftPart:"-1+\\frac{5}{4}x",rightPart:"-\\frac{5}{24}-2x",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["30x-24", "-24+30x"],expRightList:["-48x-5", "-5-48x"],transLeftList:["30x+48x", "48x+30x"],transRightList:["-5+24", "24-5"],arrLeftAns:"78x",arrRightAns:"19",answer:"19/78"},
+{leftPart:"x+\\frac{1}{5}",rightPart:"2+\\frac{3}{10}x",clearDenomLeftAns:"×10",clearDenomRightAns:"×10",expLeftList:["10x+2", "2+10x"],expRightList:["3x+20", "20+3x"],transLeftList:["10x-3x", "-3x+10x"],transRightList:["20-2", "-2+20"],arrLeftAns:"7x",arrRightAns:"18",answer:"18/7"},
+{leftPart:"\\frac{5}{6}x-1",rightPart:"-2x",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["10x-12", "-12+10x"],expRightList:["-24x"],transLeftList:["10x+24x", "24x+10x"],transRightList:["12"],arrLeftAns:"34x",arrRightAns:"12",answer:"6/17"},
+{leftPart:"\\frac{5}{6}x",rightPart:"-1+\\frac{5}{18}x",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["15x"],expRightList:["5x-18", "-18+5x"],transLeftList:["15x-5x", "-5x+15x"],transRightList:["-18"],arrLeftAns:"10x",arrRightAns:"-18",answer:"-9/5"},
+{leftPart:"2x-\\frac{5}{6}",rightPart:"-\\frac{1}{24}x",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["48x-20", "-20+48x"],expRightList:["-x"],transLeftList:["48x+x", "x+48x"],transRightList:["20"],arrLeftAns:"49x",arrRightAns:"20",answer:"20/49"},
+{leftPart:"\\frac{5}{6}x+3",rightPart:"-1-\\frac{1}{18}x",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["15x+54", "54+15x"],expRightList:["-x-18", "-18-x"],transLeftList:["15x+x", "x+15x"],transRightList:["-18-54", "-54-18"],arrLeftAns:"16x",arrRightAns:"-72",answer:"-9/2"},
+{leftPart:"\\frac{5}{6}x-2",rightPart:"-x+\\frac{5}{24}",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["20x-48", "-48+20x"],expRightList:["-24x+5", "5-24x"],transLeftList:["20x+24x", "24x+20x"],transRightList:["5+48", "48+5"],arrLeftAns:"44x",arrRightAns:"53",answer:"53/44"},
+{leftPart:"x+\\frac{1}{5}",rightPart:"-2x",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["15x+3", "3+15x"],expRightList:["-30x"],transLeftList:["15x+30x", "30x+15x"],transRightList:["-3"],arrLeftAns:"45x",arrRightAns:"-3",answer:"-1/15"},
+{leftPart:"\\frac{4}{5}x-3",rightPart:"-\\frac{4}{15}x-2",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["12x-45", "-45+12x"],expRightList:["-4x-30", "-30-4x"],transLeftList:["12x+4x", "4x+12x"],transRightList:["-30+45", "45-30"],arrLeftAns:"16x",arrRightAns:"15",answer:"15/16"},
+{leftPart:"x+\\frac{1}{2}",rightPart:"-2x+\\frac{5}{24}",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["24x+12", "12+24x"],expRightList:["-48x+5", "5-48x"],transLeftList:["24x+48x", "48x+24x"],transRightList:["5-12", "-12+5"],arrLeftAns:"72x",arrRightAns:"-7",answer:"-7/72"},
+{leftPart:"-\\frac{5}{3}+x",rightPart:"\\frac{1}{18}-x",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["18x-30", "-30+18x"],expRightList:["-18x+1", "1-18x"],transLeftList:["18x+18x", "18x+18x"],transRightList:["1+30", "30+1"],arrLeftAns:"36x",arrRightAns:"31",answer:"31/36"},
+{leftPart:"\\frac{5}{2}x",rightPart:"2x+\\frac{3}{20}",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["50x"],expRightList:["40x+3", "3+40x"],transLeftList:["50x-40x", "-40x+50x"],transRightList:["3"],arrLeftAns:"10x",arrRightAns:"3",answer:"3/10"},
+{leftPart:"2x",rightPart:"-1+\\frac{4}{15}x",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["30x"],expRightList:["4x-15", "-15+4x"],transLeftList:["30x-4x", "-4x+30x"],transRightList:["-15"],arrLeftAns:"26x",arrRightAns:"-15",answer:"-15/26"},
+{leftPart:"3+\\frac{3}{5}x",rightPart:"-1+\\frac{1}{10}x",clearDenomLeftAns:"×10",clearDenomRightAns:"×10",expLeftList:["6x+30", "30+6x"],expRightList:["x-10", "-10+x"],transLeftList:["6x-x", "-x+6x"],transRightList:["-10-30", "-30-10"],arrLeftAns:"5x",arrRightAns:"-40",answer:"-8"},
+{leftPart:"\\frac{5}{2}x",rightPart:"-\\frac{1}{12}-2x",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["30x"],expRightList:["-24x-1", "-1-24x"],transLeftList:["30x+24x", "24x+30x"],transRightList:["-1"],arrLeftAns:"54x",arrRightAns:"-1",answer:"-1/54"},
+{leftPart:"\\frac{5}{6}x",rightPart:"-\\frac{1}{24}x-3",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["20x"],expRightList:["-x-72", "-72-x"],transLeftList:["20x+x", "x+20x"],transRightList:["-72"],arrLeftAns:"21x",arrRightAns:"-72",answer:"-24/7"},
+{leftPart:"x",rightPart:"-\\frac{3}{16}-x",clearDenomLeftAns:"×16",clearDenomRightAns:"×16",expLeftList:["16x"],expRightList:["-16x-3", "-3-16x"],transLeftList:["16x+16x", "16x+16x"],transRightList:["-3"],arrLeftAns:"32x",arrRightAns:"-3",answer:"-3/32"},
+{leftPart:"-\\frac{1}{6}+2x",rightPart:"x",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["24x-2", "-2+24x"],expRightList:["12x"],transLeftList:["24x-12x", "-12x+24x"],transRightList:["2"],arrLeftAns:"12x",arrRightAns:"2",answer:"1/6"},
+{leftPart:"\\frac{5}{2}+x",rightPart:"-2+\\frac{3}{10}x",clearDenomLeftAns:"×10",clearDenomRightAns:"×10",expLeftList:["10x+25", "25+10x"],expRightList:["3x-20", "-20+3x"],transLeftList:["10x-3x", "-3x+10x"],transRightList:["-20-25", "-25-20"],arrLeftAns:"7x",arrRightAns:"-45",answer:"-45/7"},
+{leftPart:"-1+\\frac{1}{6}x",rightPart:"-2x+\\frac{1}{24}",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["4x-24", "-24+4x"],expRightList:["-48x+1", "1-48x"],transLeftList:["4x+48x", "48x+4x"],transRightList:["1+24", "24+1"],arrLeftAns:"52x",arrRightAns:"25",answer:"25/52"},
+{leftPart:"\\frac{3}{2}+x",rightPart:"-2+\\frac{5}{14}x",clearDenomLeftAns:"×14",clearDenomRightAns:"×14",expLeftList:["14x+21", "21+14x"],expRightList:["5x-28", "-28+5x"],transLeftList:["14x-5x", "-5x+14x"],transRightList:["-28-21", "-21-28"],arrLeftAns:"9x",arrRightAns:"-49",answer:"-49/9"},
+{leftPart:"3+\\frac{1}{2}x",rightPart:"\\frac{1}{18}x",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["9x+54", "54+9x"],expRightList:["x"],transLeftList:["9x-x", "-x+9x"],transRightList:["-54"],arrLeftAns:"8x",arrRightAns:"-54",answer:"-27/4"},
+{leftPart:"x",rightPart:"3+\\frac{4}{15}x",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["15x"],expRightList:["4x+45", "45+4x"],transLeftList:["15x-4x", "-4x+15x"],transRightList:["45"],arrLeftAns:"11x",arrRightAns:"45",answer:"45/11"},
+{leftPart:"-3+\\frac{1}{6}x",rightPart:"1-\\frac{5}{12}x",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["2x-36", "-36+2x"],expRightList:["-5x+12", "12-5x"],transLeftList:["2x+5x", "5x+2x"],transRightList:["12+36", "36+12"],arrLeftAns:"7x",arrRightAns:"48",answer:"48/7"},
+{leftPart:"3x-\\frac{5}{2}",rightPart:"\\frac{5}{8}-4x",clearDenomLeftAns:"×8",clearDenomRightAns:"×8",expLeftList:["24x-20", "-20+24x"],expRightList:["-32x+5", "5-32x"],transLeftList:["24x+32x", "32x+24x"],transRightList:["5+20", "20+5"],arrLeftAns:"56x",arrRightAns:"25",answer:"25/56"},
+{leftPart:"x-\\frac{1}{6}",rightPart:"-\\frac{1}{24}x",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["24x-4", "-4+24x"],expRightList:["-x"],transLeftList:["24x+x", "x+24x"],transRightList:["4"],arrLeftAns:"25x",arrRightAns:"4",answer:"4/25"},
+{leftPart:"2x-\\frac{1}{4}",rightPart:"x",clearDenomLeftAns:"×8",clearDenomRightAns:"×8",expLeftList:["16x-2", "-2+16x"],expRightList:["8x"],transLeftList:["16x-8x", "-8x+16x"],transRightList:["2"],arrLeftAns:"8x",arrRightAns:"2",answer:"1/4"},
+{leftPart:"2x",rightPart:"\\frac{1}{15}-x",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["30x"],expRightList:["-15x+1", "1-15x"],transLeftList:["30x+15x", "15x+30x"],transRightList:["1"],arrLeftAns:"45x",arrRightAns:"1",answer:"1/45"},
+{leftPart:"5+\\frac{5}{2}x",rightPart:"2x-\\frac{1}{8}",clearDenomLeftAns:"×8",clearDenomRightAns:"×8",expLeftList:["20x+40", "40+20x"],expRightList:["16x-1", "-1+16x"],transLeftList:["20x-16x", "-16x+20x"],transRightList:["-1-40", "-40-1"],arrLeftAns:"4x",arrRightAns:"-41",answer:"-41/4"},
+{leftPart:"\\frac{4}{5}x+3",rightPart:"-\\frac{2}{15}x",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["12x+45", "45+12x"],expRightList:["-2x"],transLeftList:["12x+2x", "2x+12x"],transRightList:["-45"],arrLeftAns:"14x",arrRightAns:"-45",answer:"-45/14"},
+{leftPart:"\\frac{1}{4}+x",rightPart:"-2x-\\frac{3}{8}",clearDenomLeftAns:"×8",clearDenomRightAns:"×8",expLeftList:["8x+2", "2+8x"],expRightList:["-16x-3", "-3-16x"],transLeftList:["8x+16x", "16x+8x"],transRightList:["-3-2", "-2-3"],arrLeftAns:"24x",arrRightAns:"-5",answer:"-5/24"},
+{leftPart:"-\\frac{3}{2}+x",rightPart:"\\frac{5}{4}-3x",clearDenomLeftAns:"×4",clearDenomRightAns:"×4",expLeftList:["4x-6", "-6+4x"],expRightList:["-12x+5", "5-12x"],transLeftList:["4x+12x", "12x+4x"],transRightList:["5+6", "6+5"],arrLeftAns:"16x",arrRightAns:"11",answer:"11/16"},
+{leftPart:"2x",rightPart:"-2x+\\frac{5}{24}",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["48x"],expRightList:["-48x+5", "5-48x"],transLeftList:["48x+48x", "48x+48x"],transRightList:["5"],arrLeftAns:"96x",arrRightAns:"5",answer:"5/96"},
+{leftPart:"\\frac{4}{5}x",rightPart:"-2-\\frac{3}{20}x",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["16x"],expRightList:["-3x-40", "-40-3x"],transLeftList:["16x+3x", "3x+16x"],transRightList:["-40"],arrLeftAns:"19x",arrRightAns:"-40",answer:"-40/19"},
+{leftPart:"2+\\frac{3}{4}x",rightPart:"-\\frac{5}{12}x-2",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["9x+24", "24+9x"],expRightList:["-5x-24", "-24-5x"],transLeftList:["9x+5x", "5x+9x"],transRightList:["-24-24", "-24-24"],arrLeftAns:"14x",arrRightAns:"-48",answer:"-24/7"},
+{leftPart:"\\frac{5}{3}x",rightPart:"-2x-\\frac{5}{18}",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["30x"],expRightList:["-36x-5", "-5-36x"],transLeftList:["30x+36x", "36x+30x"],transRightList:["-5"],arrLeftAns:"66x",arrRightAns:"-5",answer:"-5/66"},
+{leftPart:"x+\\frac{3}{4}",rightPart:"-\\frac{1}{20}x-1",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["20x+15", "15+20x"],expRightList:["-x-20", "-20-x"],transLeftList:["20x+x", "x+20x"],transRightList:["-20-15", "-15-20"],arrLeftAns:"21x",arrRightAns:"-35",answer:"-5/3"},
+{leftPart:"\\frac{2}{3}x-1",rightPart:"-x",clearDenomLeftAns:"×21",clearDenomRightAns:"×21",expLeftList:["14x-21", "-21+14x"],expRightList:["-21x"],transLeftList:["14x+21x", "21x+14x"],transRightList:["21"],arrLeftAns:"35x",arrRightAns:"21",answer:"3/5"},
+{leftPart:"-2+\\frac{2}{5}x",rightPart:"\\frac{1}{10}-2x",clearDenomLeftAns:"×10",clearDenomRightAns:"×10",expLeftList:["4x-20", "-20+4x"],expRightList:["-20x+1", "1-20x"],transLeftList:["4x+20x", "20x+4x"],transRightList:["1+20", "20+1"],arrLeftAns:"24x",arrRightAns:"21",answer:"7/8"},
+{leftPart:"-3+\\frac{5}{3}x",rightPart:"x",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["25x-45", "-45+25x"],expRightList:["15x"],transLeftList:["25x-15x", "-15x+25x"],transRightList:["45"],arrLeftAns:"10x",arrRightAns:"45",answer:"9/2"},
+{leftPart:"\\frac{3}{5}+x",rightPart:"\\frac{4}{15}x-1",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["15x+9", "9+15x"],expRightList:["4x-15", "-15+4x"],transLeftList:["15x-4x", "-4x+15x"],transRightList:["-15-9", "-9-15"],arrLeftAns:"11x",arrRightAns:"-24",answer:"-24/11"},
+{leftPart:"\\frac{4}{5}+2x",rightPart:"-\\frac{3}{10}x",clearDenomLeftAns:"×10",clearDenomRightAns:"×10",expLeftList:["20x+8", "8+20x"],expRightList:["-3x"],transLeftList:["20x+3x", "3x+20x"],transRightList:["-8"],arrLeftAns:"23x",arrRightAns:"-8",answer:"-8/23"},
+{leftPart:"\\frac{1}{3}x",rightPart:"\\frac{1}{9}x+7",clearDenomLeftAns:"×9",clearDenomRightAns:"×9",expLeftList:["3x"],expRightList:["x+63", "63+x"],transLeftList:["3x-x", "-x+3x"],transRightList:["63"],arrLeftAns:"2x",arrRightAns:"63",answer:"63/2"},
+{leftPart:"2x+\\frac{2}{5}",rightPart:"-2x-\\frac{1}{10}",clearDenomLeftAns:"×10",clearDenomRightAns:"×10",expLeftList:["20x+4", "4+20x"],expRightList:["-20x-1", "-1-20x"],transLeftList:["20x+20x", "20x+20x"],transRightList:["-1-4", "-4-1"],arrLeftAns:"40x",arrRightAns:"-5",answer:"-1/8"},
+{leftPart:"\\frac{5}{2}x+9",rightPart:"-4x-\\frac{1}{6}",clearDenomLeftAns:"×6",clearDenomRightAns:"×6",expLeftList:["15x+54", "54+15x"],expRightList:["-24x-1", "-1-24x"],transLeftList:["15x+24x", "24x+15x"],transRightList:["-1-54", "-54-1"],arrLeftAns:"39x",arrRightAns:"-55",answer:"-55/39"},
+{leftPart:"\\frac{5}{4}x-3",rightPart:"-\\frac{1}{12}+x",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["15x-36", "-36+15x"],expRightList:["12x-1", "-1+12x"],transLeftList:["15x-12x", "-12x+15x"],transRightList:["-1+36", "36-1"],arrLeftAns:"3x",arrRightAns:"35",answer:"35/3"},
+{leftPart:"\\frac{4}{3}x",rightPart:"-\\frac{5}{12}+x",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["16x"],expRightList:["12x-5", "-5+12x"],transLeftList:["16x-12x", "-12x+16x"],transRightList:["-5"],arrLeftAns:"4x",arrRightAns:"-5",answer:"-5/4"},
+{leftPart:"-\\frac{5}{4}+4x",rightPart:"-4x",clearDenomLeftAns:"×8",clearDenomRightAns:"×8",expLeftList:["32x-10", "-10+32x"],expRightList:["-32x"],transLeftList:["32x+32x", "32x+32x"],transRightList:["10"],arrLeftAns:"64x",arrRightAns:"10",answer:"5/32"},
+{leftPart:"\\frac{5}{6}x-3",rightPart:"-3-\\frac{5}{18}x",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["15x-54", "-54+15x"],expRightList:["-5x-54", "-54-5x"],transLeftList:["15x+5x", "5x+15x"],transRightList:["-54+54", "54-54"],arrLeftAns:"20x",arrRightAns:"0",answer:"0"},
+{leftPart:"2x",rightPart:"\\frac{1}{24}x+1",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["48x"],expRightList:["x+24", "24+x"],transLeftList:["48x-x", "-x+48x"],transRightList:["24"],arrLeftAns:"47x",arrRightAns:"24",answer:"24/47"},
+{leftPart:"\\frac{2}{3}x-1",rightPart:"-\\frac{5}{18}x-3",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["12x-18", "-18+12x"],expRightList:["-5x-54", "-54-5x"],transLeftList:["12x+5x", "5x+12x"],transRightList:["-54+18", "18-54"],arrLeftAns:"17x",arrRightAns:"-36",answer:"-36/17"},
+{leftPart:"x+\\frac{5}{4}",rightPart:"-1-\\frac{1}{24}x",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["24x+30", "30+24x"],expRightList:["-x-24", "-24-x"],transLeftList:["24x+x", "x+24x"],transRightList:["-24-30", "-30-24"],arrLeftAns:"25x",arrRightAns:"-54",answer:"-54/25"},
+{leftPart:"\\frac{3}{4}+x",rightPart:"-\\frac{5}{16}x",clearDenomLeftAns:"×16",clearDenomRightAns:"×16",expLeftList:["16x+12", "12+16x"],expRightList:["-5x"],transLeftList:["16x+5x", "5x+16x"],transRightList:["-12"],arrLeftAns:"21x",arrRightAns:"-12",answer:"-4/7"},
+{leftPart:"2x+\\frac{1}{3}",rightPart:"-x+\\frac{5}{12}",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["24x+4", "4+24x"],expRightList:["-12x+5", "5-12x"],transLeftList:["24x+12x", "12x+24x"],transRightList:["5-4", "-4+5"],arrLeftAns:"36x",arrRightAns:"1",answer:"1/36"},
+{leftPart:"x",rightPart:"2-\\frac{5}{8}x",clearDenomLeftAns:"×8",clearDenomRightAns:"×8",expLeftList:["8x"],expRightList:["-5x+16", "16-5x"],transLeftList:["8x+5x", "5x+8x"],transRightList:["16"],arrLeftAns:"13x",arrRightAns:"16",answer:"16/13"},
+{leftPart:"3+\\frac{5}{6}x",rightPart:"-\\frac{1}{18}x+3",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["15x+54", "54+15x"],expRightList:["-x+54", "54-x"],transLeftList:["15x+x", "x+15x"],transRightList:["54-54", "-54+54"],arrLeftAns:"16x",arrRightAns:"0",answer:"0"},
+{leftPart:"2x",rightPart:"\\frac{5}{16}+x",clearDenomLeftAns:"×16",clearDenomRightAns:"×16",expLeftList:["32x"],expRightList:["16x+5", "5+16x"],transLeftList:["32x-16x", "-16x+32x"],transRightList:["5"],arrLeftAns:"16x",arrRightAns:"5",answer:"5/16"},
+{leftPart:"\\frac{3}{4}+x",rightPart:"-x+\\frac{1}{20}",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["20x+15", "15+20x"],expRightList:["-20x+1", "1-20x"],transLeftList:["20x+20x", "20x+20x"],transRightList:["1-15", "-15+1"],arrLeftAns:"40x",arrRightAns:"-14",answer:"-7/20"},
+{leftPart:"\\frac{5}{4}x+2",rightPart:"-x-\\frac{1}{12}",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["15x+24", "24+15x"],expRightList:["-12x-1", "-1-12x"],transLeftList:["15x+12x", "12x+15x"],transRightList:["-1-24", "-24-1"],arrLeftAns:"27x",arrRightAns:"-25",answer:"-25/27"},
+{leftPart:"-6+\\frac{1}{3}x",rightPart:"-\\frac{5}{6}x",clearDenomLeftAns:"×6",clearDenomRightAns:"×6",expLeftList:["2x-36", "-36+2x"],expRightList:["-5x"],transLeftList:["2x+5x", "5x+2x"],transRightList:["36"],arrLeftAns:"7x",arrRightAns:"36",answer:"36/7"},
+{leftPart:"x+\\frac{1}{5}",rightPart:"\\frac{1}{10}x+2",clearDenomLeftAns:"×10",clearDenomRightAns:"×10",expLeftList:["10x+2", "2+10x"],expRightList:["x+20", "20+x"],transLeftList:["10x-x", "-x+10x"],transRightList:["20-2", "-2+20"],arrLeftAns:"9x",arrRightAns:"18",answer:"2"},
+{leftPart:"\\frac{5}{2}x+1",rightPart:"-\\frac{1}{18}-2x",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["45x+18", "18+45x"],expRightList:["-36x-1", "-1-36x"],transLeftList:["45x+36x", "36x+45x"],transRightList:["-1-18", "-18-1"],arrLeftAns:"81x",arrRightAns:"-19",answer:"-19/81"},
+{leftPart:"\\frac{2}{3}x+3",rightPart:"\\frac{5}{18}x",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["12x+54", "54+12x"],expRightList:["5x"],transLeftList:["12x-5x", "-5x+12x"],transRightList:["-54"],arrLeftAns:"7x",arrRightAns:"-54",answer:"-54/7"},
+{leftPart:"2x",rightPart:"x+\\frac{4}{15}",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["30x"],expRightList:["15x+4", "4+15x"],transLeftList:["30x-15x", "-15x+30x"],transRightList:["4"],arrLeftAns:"15x",arrRightAns:"4",answer:"4/15"},
+{leftPart:"\\frac{5}{3}x",rightPart:"1-\\frac{1}{6}x",clearDenomLeftAns:"×6",clearDenomRightAns:"×6",expLeftList:["10x"],expRightList:["-x+6", "6-x"],transLeftList:["10x+x", "x+10x"],transRightList:["6"],arrLeftAns:"11x",arrRightAns:"6",answer:"6/11"},
+{leftPart:"1+\\frac{1}{6}x",rightPart:"-2x",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["2x+12", "12+2x"],expRightList:["-24x"],transLeftList:["2x+24x", "24x+2x"],transRightList:["-12"],arrLeftAns:"26x",arrRightAns:"-12",answer:"-6/13"},
+{leftPart:"\\frac{2}{3}x",rightPart:"\\frac{1}{21}x+2",clearDenomLeftAns:"×21",clearDenomRightAns:"×21",expLeftList:["14x"],expRightList:["x+42", "42+x"],transLeftList:["14x-x", "-x+14x"],transRightList:["42"],arrLeftAns:"13x",arrRightAns:"42",answer:"42/13"},
+{leftPart:"\\frac{2}{5}+2x",rightPart:"-\\frac{1}{10}-2x",clearDenomLeftAns:"×10",clearDenomRightAns:"×10",expLeftList:["20x+4", "4+20x"],expRightList:["-20x-1", "-1-20x"],transLeftList:["20x+20x", "20x+20x"],transRightList:["-1-4", "-4-1"],arrLeftAns:"40x",arrRightAns:"-5",answer:"-1/8"},
+{leftPart:"\\frac{3}{2}x",rightPart:"\\frac{1}{18}+x",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["27x"],expRightList:["18x+1", "1+18x"],transLeftList:["27x-18x", "-18x+27x"],transRightList:["1"],arrLeftAns:"9x",arrRightAns:"1",answer:"1/9"},
+{leftPart:"2x-\\frac{1}{5}",rightPart:"-x",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["40x-4", "-4+40x"],expRightList:["-20x"],transLeftList:["40x+20x", "20x+40x"],transRightList:["4"],arrLeftAns:"60x",arrRightAns:"4",answer:"1/15"},
+{leftPart:"-\\frac{2}{3}+x",rightPart:"-2x",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["18x-12", "-12+18x"],expRightList:["-36x"],transLeftList:["18x+36x", "36x+18x"],transRightList:["12"],arrLeftAns:"54x",arrRightAns:"12",answer:"2/9"},
+{leftPart:"\\frac{3}{4}x+8",rightPart:"-x",clearDenomLeftAns:"×8",clearDenomRightAns:"×8",expLeftList:["6x+64", "64+6x"],expRightList:["-8x"],transLeftList:["6x+8x", "8x+6x"],transRightList:["-64"],arrLeftAns:"14x",arrRightAns:"-64",answer:"-32/7"},
+{leftPart:"-3+\\frac{3}{4}x",rightPart:"-x-\\frac{1}{20}",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["15x-60", "-60+15x"],expRightList:["-20x-1", "-1-20x"],transLeftList:["15x+20x", "20x+15x"],transRightList:["-1+60", "60-1"],arrLeftAns:"35x",arrRightAns:"59",answer:"59/35"},
+{leftPart:"-7+\\frac{1}{3}x",rightPart:"-9-\\frac{5}{6}x",clearDenomLeftAns:"×6",clearDenomRightAns:"×6",expLeftList:["2x-42", "-42+2x"],expRightList:["-5x-54", "-54-5x"],transLeftList:["2x+5x", "5x+2x"],transRightList:["-54+42", "42-54"],arrLeftAns:"7x",arrRightAns:"-12",answer:"-12/7"},
+{leftPart:"2x-\\frac{1}{2}",rightPart:"-\\frac{1}{4}x",clearDenomLeftAns:"×4",clearDenomRightAns:"×4",expLeftList:["8x-2", "-2+8x"],expRightList:["-x"],transLeftList:["8x+x", "x+8x"],transRightList:["2"],arrLeftAns:"9x",arrRightAns:"2",answer:"2/9"},
+{leftPart:"\\frac{3}{4}x",rightPart:"-2x+\\frac{1}{20}",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["15x"],expRightList:["-40x+1", "1-40x"],transLeftList:["15x+40x", "40x+15x"],transRightList:["1"],arrLeftAns:"55x",arrRightAns:"1",answer:"1/55"},
+{leftPart:"-1+\\frac{1}{6}x",rightPart:"\\frac{1}{12}-2x",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["2x-12", "-12+2x"],expRightList:["-24x+1", "1-24x"],transLeftList:["2x+24x", "24x+2x"],transRightList:["1+12", "12+1"],arrLeftAns:"26x",arrRightAns:"13",answer:"1/2"},
+{leftPart:"3x+\\frac{4}{3}",rightPart:"-7-\\frac{1}{6}x",clearDenomLeftAns:"×6",clearDenomRightAns:"×6",expLeftList:["18x+8", "8+18x"],expRightList:["-x-42", "-42-x"],transLeftList:["18x+x", "x+18x"],transRightList:["-42-8", "-8-42"],arrLeftAns:"19x",arrRightAns:"-50",answer:"-50/19"},
+{leftPart:"-\\frac{1}{6}+2x",rightPart:"1-\\frac{1}{24}x",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["48x-4", "-4+48x"],expRightList:["-x+24", "24-x"],transLeftList:["48x+x", "x+48x"],transRightList:["24+4", "4+24"],arrLeftAns:"49x",arrRightAns:"28",answer:"4/7"},
+{leftPart:"\\frac{1}{3}x-6",rightPart:"-1-\\frac{4}{9}x",clearDenomLeftAns:"×9",clearDenomRightAns:"×9",expLeftList:["3x-54", "-54+3x"],expRightList:["-4x-9", "-9-4x"],transLeftList:["3x+4x", "4x+3x"],transRightList:["-9+54", "54-9"],arrLeftAns:"7x",arrRightAns:"45",answer:"45/7"},
+{leftPart:"\\frac{1}{5}x+1",rightPart:"-\\frac{1}{20}x-2",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["4x+20", "20+4x"],expRightList:["-x-40", "-40-x"],transLeftList:["4x+x", "x+4x"],transRightList:["-40-20", "-20-40"],arrLeftAns:"5x",arrRightAns:"-60",answer:"-12"},
+{leftPart:"2x-\\frac{5}{6}",rightPart:"-\\frac{5}{18}+x",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["36x-15", "-15+36x"],expRightList:["18x-5", "-5+18x"],transLeftList:["36x-18x", "-18x+36x"],transRightList:["-5+15", "15-5"],arrLeftAns:"18x",arrRightAns:"10",answer:"5/9"},
+{leftPart:"\\frac{5}{4}+x",rightPart:"-\\frac{1}{12}x+1",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["12x+15", "15+12x"],expRightList:["-x+12", "12-x"],transLeftList:["12x+x", "x+12x"],transRightList:["12-15", "-15+12"],arrLeftAns:"13x",arrRightAns:"-3",answer:"-3/13"},
+{leftPart:"2x",rightPart:"-\\frac{5}{24}x+2",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["48x"],expRightList:["-5x+48", "48-5x"],transLeftList:["48x+5x", "5x+48x"],transRightList:["48"],arrLeftAns:"53x",arrRightAns:"48",answer:"48/53"},
+{leftPart:"2x-\\frac{1}{5}",rightPart:"-\\frac{3}{20}-2x",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["40x-4", "-4+40x"],expRightList:["-40x-3", "-3-40x"],transLeftList:["40x+40x", "40x+40x"],transRightList:["-3+4", "4-3"],arrLeftAns:"80x",arrRightAns:"1",answer:"1/80"},
+{leftPart:"\\frac{5}{6}x",rightPart:"-x+\\frac{5}{12}",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["10x"],expRightList:["-12x+5", "5-12x"],transLeftList:["10x+12x", "12x+10x"],transRightList:["5"],arrLeftAns:"22x",arrRightAns:"5",answer:"5/22"},
+{leftPart:"-1+\\frac{1}{6}x",rightPart:"-1-\\frac{1}{18}x",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["3x-18", "-18+3x"],expRightList:["-x-18", "-18-x"],transLeftList:["3x+x", "x+3x"],transRightList:["-18+18", "18-18"],arrLeftAns:"4x",arrRightAns:"0",answer:"0"},
+{leftPart:"\\frac{3}{5}x",rightPart:"\\frac{1}{20}x-1",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["12x"],expRightList:["x-20", "-20+x"],transLeftList:["12x-x", "-x+12x"],transRightList:["-20"],arrLeftAns:"11x",arrRightAns:"-20",answer:"-20/11"},
+{leftPart:"x+\\frac{1}{6}",rightPart:"\\frac{1}{24}x-2",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["24x+4", "4+24x"],expRightList:["x-48", "-48+x"],transLeftList:["24x-x", "-x+24x"],transRightList:["-48-4", "-4-48"],arrLeftAns:"23x",arrRightAns:"-52",answer:"-52/23"},
+{leftPart:"-6+\\frac{1}{2}x",rightPart:"-4x+\\frac{5}{6}",clearDenomLeftAns:"×6",clearDenomRightAns:"×6",expLeftList:["3x-36", "-36+3x"],expRightList:["-24x+5", "5-24x"],transLeftList:["3x+24x", "24x+3x"],transRightList:["5+36", "36+5"],arrLeftAns:"27x",arrRightAns:"41",answer:"41/27"},
+{leftPart:"-3+\\frac{5}{6}x",rightPart:"\\frac{1}{18}x-1",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["15x-54", "-54+15x"],expRightList:["x-18", "-18+x"],transLeftList:["15x-x", "-x+15x"],transRightList:["-18+54", "54-18"],arrLeftAns:"14x",arrRightAns:"36",answer:"18/7"},
+{leftPart:"4x",rightPart:"-6+\\frac{1}{6}x",clearDenomLeftAns:"×6",clearDenomRightAns:"×6",expLeftList:["24x"],expRightList:["x-36", "-36+x"],transLeftList:["24x-x", "-x+24x"],transRightList:["-36"],arrLeftAns:"23x",arrRightAns:"-36",answer:"-36/23"},
+{leftPart:"2x",rightPart:"\\frac{1}{24}-2x",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["48x"],expRightList:["-48x+1", "1-48x"],transLeftList:["48x+48x", "48x+48x"],transRightList:["1"],arrLeftAns:"96x",arrRightAns:"1",answer:"1/96"},
+{leftPart:"2x-\\frac{2}{3}",rightPart:"2-\\frac{5}{12}x",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["24x-8", "-8+24x"],expRightList:["-5x+24", "24-5x"],transLeftList:["24x+5x", "5x+24x"],transRightList:["24+8", "8+24"],arrLeftAns:"29x",arrRightAns:"32",answer:"32/29"},
+{leftPart:"-\\frac{3}{5}+x",rightPart:"\\frac{3}{10}x",clearDenomLeftAns:"×10",clearDenomRightAns:"×10",expLeftList:["10x-6", "-6+10x"],expRightList:["3x"],transLeftList:["10x-3x", "-3x+10x"],transRightList:["6"],arrLeftAns:"7x",arrRightAns:"6",answer:"6/7"},
+{leftPart:"2x+\\frac{5}{6}",rightPart:"-\\frac{1}{24}x",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["48x+20", "20+48x"],expRightList:["-x"],transLeftList:["48x+x", "x+48x"],transRightList:["-20"],arrLeftAns:"49x",arrRightAns:"-20",answer:"-20/49"},
+{leftPart:"-\\frac{1}{6}+2x",rightPart:"x-\\frac{5}{24}",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["48x-4", "-4+48x"],expRightList:["24x-5", "-5+24x"],transLeftList:["48x-24x", "-24x+48x"],transRightList:["-5+4", "4-5"],arrLeftAns:"24x",arrRightAns:"-1",answer:"-1/24"},
+{leftPart:"\\frac{4}{5}+x",rightPart:"-x",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["15x+12", "12+15x"],expRightList:["-15x"],transLeftList:["15x+15x", "15x+15x"],transRightList:["-12"],arrLeftAns:"30x",arrRightAns:"-12",answer:"-2/5"},
+{leftPart:"\\frac{1}{6}x+2",rightPart:"2-\\frac{1}{12}x",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["2x+24", "24+2x"],expRightList:["-x+24", "24-x"],transLeftList:["2x+x", "x+2x"],transRightList:["24-24", "-24+24"],arrLeftAns:"3x",arrRightAns:"0",answer:"0"},
+{leftPart:"\\frac{5}{3}x-1",rightPart:"-\\frac{4}{21}x",clearDenomLeftAns:"×21",clearDenomRightAns:"×21",expLeftList:["35x-21", "-21+35x"],expRightList:["-4x"],transLeftList:["35x+4x", "4x+35x"],transRightList:["21"],arrLeftAns:"39x",arrRightAns:"21",answer:"7/13"},
+{leftPart:"\\frac{3}{5}x",rightPart:"\\frac{1}{10}-x",clearDenomLeftAns:"×10",clearDenomRightAns:"×10",expLeftList:["6x"],expRightList:["-10x+1", "1-10x"],transLeftList:["6x+10x", "10x+6x"],transRightList:["1"],arrLeftAns:"16x",arrRightAns:"1",answer:"1/16"},
+{leftPart:"-\\frac{1}{5}+x",rightPart:"-\\frac{1}{10}-x",clearDenomLeftAns:"×10",clearDenomRightAns:"×10",expLeftList:["10x-2", "-2+10x"],expRightList:["-10x-1", "-1-10x"],transLeftList:["10x+10x", "10x+10x"],transRightList:["-1+2", "2-1"],arrLeftAns:"20x",arrRightAns:"1",answer:"1/20"},
+{leftPart:"-1+\\frac{2}{5}x",rightPart:"-2x",clearDenomLeftAns:"×10",clearDenomRightAns:"×10",expLeftList:["4x-10", "-10+4x"],expRightList:["-20x"],transLeftList:["4x+20x", "20x+4x"],transRightList:["10"],arrLeftAns:"24x",arrRightAns:"10",answer:"5/12"},
+{leftPart:"x",rightPart:"-x+\\frac{3}{8}",clearDenomLeftAns:"×8",clearDenomRightAns:"×8",expLeftList:["8x"],expRightList:["-8x+3", "3-8x"],transLeftList:["8x+8x", "8x+8x"],transRightList:["3"],arrLeftAns:"16x",arrRightAns:"3",answer:"3/16"},
+{leftPart:"\\frac{1}{4}x-1",rightPart:"-\\frac{3}{16}-x",clearDenomLeftAns:"×16",clearDenomRightAns:"×16",expLeftList:["4x-16", "-16+4x"],expRightList:["-16x-3", "-3-16x"],transLeftList:["4x+16x", "16x+4x"],transRightList:["-3+16", "16-3"],arrLeftAns:"20x",arrRightAns:"13",answer:"13/20"},
+{leftPart:"\\frac{2}{5}x-3",rightPart:"-\\frac{1}{10}x-3",clearDenomLeftAns:"×10",clearDenomRightAns:"×10",expLeftList:["4x-30", "-30+4x"],expRightList:["-x-30", "-30-x"],transLeftList:["4x+x", "x+4x"],transRightList:["-30+30", "30-30"],arrLeftAns:"5x",arrRightAns:"0",answer:"0"},
+{leftPart:"2x-\\frac{5}{6}",rightPart:"-x-\\frac{5}{18}",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["36x-15", "-15+36x"],expRightList:["-18x-5", "-5-18x"],transLeftList:["36x+18x", "18x+36x"],transRightList:["-5+15", "15-5"],arrLeftAns:"54x",arrRightAns:"10",answer:"5/27"},
+{leftPart:"x",rightPart:"\\frac{1}{15}x-3",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["15x"],expRightList:["x-45", "-45+x"],transLeftList:["15x-x", "-x+15x"],transRightList:["-45"],arrLeftAns:"14x",arrRightAns:"-45",answer:"-45/14"},
+{leftPart:"8+\\frac{1}{2}x",rightPart:"-\\frac{5}{6}x",clearDenomLeftAns:"×6",clearDenomRightAns:"×6",expLeftList:["3x+48", "48+3x"],expRightList:["-5x"],transLeftList:["3x+5x", "5x+3x"],transRightList:["-48"],arrLeftAns:"8x",arrRightAns:"-48",answer:"-6"},
+{leftPart:"-\\frac{5}{2}+x",rightPart:"-3-\\frac{1}{16}x",clearDenomLeftAns:"×16",clearDenomRightAns:"×16",expLeftList:["16x-40", "-40+16x"],expRightList:["-x-48", "-48-x"],transLeftList:["16x+x", "x+16x"],transRightList:["-48+40", "40-48"],arrLeftAns:"17x",arrRightAns:"-8",answer:"-8/17"},
+{leftPart:"3+\\frac{4}{3}x",rightPart:"-\\frac{1}{18}-x",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["24x+54", "54+24x"],expRightList:["-18x-1", "-1-18x"],transLeftList:["24x+18x", "18x+24x"],transRightList:["-1-54", "-54-1"],arrLeftAns:"42x",arrRightAns:"-55",answer:"-55/42"},
+{leftPart:"\\frac{2}{3}x",rightPart:"-2+\\frac{2}{15}x",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["10x"],expRightList:["2x-30", "-30+2x"],transLeftList:["10x-2x", "-2x+10x"],transRightList:["-30"],arrLeftAns:"8x",arrRightAns:"-30",answer:"-15/4"},
+{leftPart:"\\frac{5}{3}x+1",rightPart:"x-\\frac{5}{12}",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["20x+12", "12+20x"],expRightList:["12x-5", "-5+12x"],transLeftList:["20x-12x", "-12x+20x"],transRightList:["-5-12", "-12-5"],arrLeftAns:"8x",arrRightAns:"-17",answer:"-17/8"},
+{leftPart:"x-\\frac{1}{4}",rightPart:"-x",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["20x-5", "-5+20x"],expRightList:["-20x"],transLeftList:["20x+20x", "20x+20x"],transRightList:["5"],arrLeftAns:"40x",arrRightAns:"5",answer:"1/8"},
+{leftPart:"\\frac{3}{5}x+1",rightPart:"-x",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["12x+20", "20+12x"],expRightList:["-20x"],transLeftList:["12x+20x", "20x+12x"],transRightList:["-20"],arrLeftAns:"32x",arrRightAns:"-20",answer:"-5/8"},
+{leftPart:"\\frac{5}{4}+x",rightPart:"-\\frac{1}{12}x-1",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["12x+15", "15+12x"],expRightList:["-x-12", "-12-x"],transLeftList:["12x+x", "x+12x"],transRightList:["-12-15", "-15-12"],arrLeftAns:"13x",arrRightAns:"-27",answer:"-27/13"},
+{leftPart:"2x",rightPart:"-3x-\\frac{3}{8}",clearDenomLeftAns:"×8",clearDenomRightAns:"×8",expLeftList:["16x"],expRightList:["-24x-3", "-3-24x"],transLeftList:["16x+24x", "24x+16x"],transRightList:["-3"],arrLeftAns:"40x",arrRightAns:"-3",answer:"-3/40"},
+{leftPart:"2-\\frac{3}{4}x",rightPart:"x-\\frac{5}{12}",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["-9x+24", "24-9x"],expRightList:["12x-5", "-5+12x"],transLeftList:["-9x-12x", "-12x-9x"],transRightList:["-5-24", "-24-5"],arrLeftAns:"-21x",arrRightAns:"-29",answer:"29/21"},
+{leftPart:"-9+\\frac{5}{3}x",rightPart:"-x",clearDenomLeftAns:"×6",clearDenomRightAns:"×6",expLeftList:["10x-54", "-54+10x"],expRightList:["-6x"],transLeftList:["10x+6x", "6x+10x"],transRightList:["54"],arrLeftAns:"16x",arrRightAns:"54",answer:"27/8"},
+{leftPart:"\\frac{5}{6}x-2",rightPart:"\\frac{1}{18}x+1",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["15x-36", "-36+15x"],expRightList:["x+18", "18+x"],transLeftList:["15x-x", "-x+15x"],transRightList:["18+36", "36+18"],arrLeftAns:"14x",arrRightAns:"54",answer:"27/7"},
+{leftPart:"x",rightPart:"-\\frac{2}{15}x+2",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["15x"],expRightList:["-2x+30", "30-2x"],transLeftList:["15x+2x", "2x+15x"],transRightList:["30"],arrLeftAns:"17x",arrRightAns:"30",answer:"30/17"},
+{leftPart:"x",rightPart:"-\\frac{5}{24}+2x",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["24x"],expRightList:["48x-5", "-5+48x"],transLeftList:["24x-48x", "-48x+24x"],transRightList:["-5"],arrLeftAns:"-24x",arrRightAns:"-5",answer:"5/24"},
+{leftPart:"2x-\\frac{1}{6}",rightPart:"-3-\\frac{1}{12}x",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["24x-2", "-2+24x"],expRightList:["-x-36", "-36-x"],transLeftList:["24x+x", "x+24x"],transRightList:["-36+2", "2-36"],arrLeftAns:"25x",arrRightAns:"-34",answer:"-34/25"},
+{leftPart:"\\frac{5}{3}x+1",rightPart:"x",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["40x+24", "24+40x"],expRightList:["24x"],transLeftList:["40x-24x", "-24x+40x"],transRightList:["-24"],arrLeftAns:"16x",arrRightAns:"-24",answer:"-3/2"},
+{leftPart:"\\frac{3}{2}-3x",rightPart:"\\frac{5}{8}x",clearDenomLeftAns:"×8",clearDenomRightAns:"×8",expLeftList:["-24x+12", "12-24x"],expRightList:["5x"],transLeftList:["-24x-5x", "-5x-24x"],transRightList:["-12"],arrLeftAns:"-29x",arrRightAns:"-12",answer:"12/29"},
+{leftPart:"-\\frac{3}{2}+x",rightPart:"4x",clearDenomLeftAns:"×4",clearDenomRightAns:"×4",expLeftList:["4x-6", "-6+4x"],expRightList:["16x"],transLeftList:["4x-16x", "-16x+4x"],transRightList:["6"],arrLeftAns:"-12x",arrRightAns:"6",answer:"-1/2"},
+{leftPart:"-2-\\frac{4}{5}x",rightPart:"3+\\frac{1}{20}x",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["-16x-40", "-40-16x"],expRightList:["x+60", "60+x"],transLeftList:["-16x-x", "-x-16x"],transRightList:["60+40", "40+60"],arrLeftAns:"-17x",arrRightAns:"100",answer:"-100/17"},
+{leftPart:"\\frac{3}{4}x+1",rightPart:"\\frac{3}{16}+2x",clearDenomLeftAns:"×16",clearDenomRightAns:"×16",expLeftList:["12x+16", "16+12x"],expRightList:["32x+3", "3+32x"],transLeftList:["12x-32x", "-32x+12x"],transRightList:["3-16", "-16+3"],arrLeftAns:"-20x",arrRightAns:"-13",answer:"13/20"},
+{leftPart:"-\\frac{2}{5}-2x",rightPart:"2x+\\frac{1}{15}",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["-30x-6", "-6-30x"],expRightList:["30x+1", "1+30x"],transLeftList:["-30x-30x", "-30x-30x"],transRightList:["1+6", "6+1"],arrLeftAns:"-60x",arrRightAns:"7",answer:"-7/60"},
+{leftPart:"-1+\\frac{5}{6}x",rightPart:"-\\frac{5}{24}x-3",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["20x-24", "-24+20x"],expRightList:["-5x-72", "-72-5x"],transLeftList:["20x+5x", "5x+20x"],transRightList:["-72+24", "24-72"],arrLeftAns:"25x",arrRightAns:"-48",answer:"-48/25"},
+{leftPart:"\\frac{5}{4}x",rightPart:"\\frac{5}{16}+x",clearDenomLeftAns:"×16",clearDenomRightAns:"×16",expLeftList:["20x"],expRightList:["16x+5", "5+16x"],transLeftList:["20x-16x", "-16x+20x"],transRightList:["5"],arrLeftAns:"4x",arrRightAns:"5",answer:"5/4"},
+{leftPart:"-x+\\frac{5}{4}",rightPart:"-2x+\\frac{3}{20}",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["-20x+25", "25-20x"],expRightList:["-40x+3", "3-40x"],transLeftList:["-20x+40x", "40x-20x"],transRightList:["3-25", "-25+3"],arrLeftAns:"20x",arrRightAns:"-22",answer:"-11/10"},
+{leftPart:"-\\frac{5}{6}x-2",rightPart:"x+\\frac{1}{24}",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["-20x-48", "-48-20x"],expRightList:["24x+1", "1+24x"],transLeftList:["-20x-24x", "-24x-20x"],transRightList:["1+48", "48+1"],arrLeftAns:"-44x",arrRightAns:"49",answer:"-49/44"},
+{leftPart:"-\\frac{3}{4}x",rightPart:"-x-\\frac{1}{12}",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["-9x"],expRightList:["-12x-1", "-1-12x"],transLeftList:["-9x+12x", "12x-9x"],transRightList:["-1"],arrLeftAns:"3x",arrRightAns:"-1",answer:"-1/3"},
+{leftPart:"-\\frac{1}{6}x-1",rightPart:"-\\frac{1}{18}x",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["-3x-18", "-18-3x"],expRightList:["-x"],transLeftList:["-3x+x", "x-3x"],transRightList:["18"],arrLeftAns:"-2x",arrRightAns:"18",answer:"-9"},
+{leftPart:"-\\frac{3}{2}x",rightPart:"\\frac{5}{4}x-2",clearDenomLeftAns:"×4",clearDenomRightAns:"×4",expLeftList:["-6x"],expRightList:["5x-8", "-8+5x"],transLeftList:["-6x-5x", "-5x-6x"],transRightList:["-8"],arrLeftAns:"-11x",arrRightAns:"-8",answer:"8/11"},
+{leftPart:"2x+\\frac{1}{4}",rightPart:"x",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["40x+5", "5+40x"],expRightList:["20x"],transLeftList:["40x-20x", "-20x+40x"],transRightList:["-5"],arrLeftAns:"20x",arrRightAns:"-5",answer:"-1/4"},
+{leftPart:"-\\frac{4}{3}+x",rightPart:"\\frac{1}{12}+2x",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["12x-16", "-16+12x"],expRightList:["24x+1", "1+24x"],transLeftList:["12x-24x", "-24x+12x"],transRightList:["1+16", "16+1"],arrLeftAns:"-12x",arrRightAns:"17",answer:"-17/12"},
+{leftPart:"2x",rightPart:"-3+\\frac{5}{12}x",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["24x"],expRightList:["5x-36", "-36+5x"],transLeftList:["24x-5x", "-5x+24x"],transRightList:["-36"],arrLeftAns:"19x",arrRightAns:"-36",answer:"-36/19"},
+{leftPart:"-\\frac{1}{2}x",rightPart:"2+\\frac{1}{20}x",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["-10x"],expRightList:["x+40", "40+x"],transLeftList:["-10x-x", "-x-10x"],transRightList:["40"],arrLeftAns:"-11x",arrRightAns:"40",answer:"-40/11"},
+{leftPart:"-2x-\\frac{5}{4}",rightPart:"\\frac{1}{16}+x",clearDenomLeftAns:"×16",clearDenomRightAns:"×16",expLeftList:["-32x-20", "-20-32x"],expRightList:["16x+1", "1+16x"],transLeftList:["-32x-16x", "-16x-32x"],transRightList:["1+20", "20+1"],arrLeftAns:"-48x",arrRightAns:"21",answer:"-7/16"},
+{leftPart:"\\frac{2}{3}x+3",rightPart:"3+\\frac{1}{12}x",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["8x+36", "36+8x"],expRightList:["x+36", "36+x"],transLeftList:["8x-x", "-x+8x"],transRightList:["36-36", "-36+36"],arrLeftAns:"7x",arrRightAns:"0",answer:"0"},
+{leftPart:"-\\frac{5}{2}-2x",rightPart:"\\frac{3}{20}x-3",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["-40x-50", "-50-40x"],expRightList:["3x-60", "-60+3x"],transLeftList:["-40x-3x", "-3x-40x"],transRightList:["-60+50", "50-60"],arrLeftAns:"-43x",arrRightAns:"-10",answer:"10/43"},
+{leftPart:"-2+\\frac{1}{3}x",rightPart:"-\\frac{5}{24}x",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["8x-48", "-48+8x"],expRightList:["-5x"],transLeftList:["8x+5x", "5x+8x"],transRightList:["48"],arrLeftAns:"13x",arrRightAns:"48",answer:"48/13"},
+{leftPart:"1-\\frac{1}{6}x",rightPart:"-\\frac{1}{24}+2x",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["-4x+24", "24-4x"],expRightList:["48x-1", "-1+48x"],transLeftList:["-4x-48x", "-48x-4x"],transRightList:["-1-24", "-24-1"],arrLeftAns:"-52x",arrRightAns:"-25",answer:"25/52"},
+{leftPart:"-x-\\frac{5}{4}",rightPart:"\\frac{5}{24}x",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["-24x-30", "-30-24x"],expRightList:["5x"],transLeftList:["-24x-5x", "-5x-24x"],transRightList:["30"],arrLeftAns:"-29x",arrRightAns:"30",answer:"-30/29"},
+{leftPart:"\\frac{1}{3}-2x",rightPart:"3-\\frac{1}{18}x",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["-36x+6", "6-36x"],expRightList:["-x+54", "54-x"],transLeftList:["-36x+x", "x-36x"],transRightList:["54-6", "-6+54"],arrLeftAns:"-35x",arrRightAns:"48",answer:"-48/35"},
+{leftPart:"2x-\\frac{1}{6}",rightPart:"\\frac{5}{12}x+1",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["24x-2", "-2+24x"],expRightList:["5x+12", "12+5x"],transLeftList:["24x-5x", "-5x+24x"],transRightList:["12+2", "2+12"],arrLeftAns:"19x",arrRightAns:"14",answer:"14/19"},
+{leftPart:"\\frac{5}{6}+2x",rightPart:"x",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["24x+10", "10+24x"],expRightList:["12x"],transLeftList:["24x-12x", "-12x+24x"],transRightList:["-10"],arrLeftAns:"12x",arrRightAns:"-10",answer:"-5/6"},
+{leftPart:"\\frac{2}{3}-2x",rightPart:"\\frac{2}{21}x+1",clearDenomLeftAns:"×21",clearDenomRightAns:"×21",expLeftList:["-42x+14", "14-42x"],expRightList:["2x+21", "21+2x"],transLeftList:["-42x-2x", "-2x-42x"],transRightList:["21-14", "-14+21"],arrLeftAns:"-44x",arrRightAns:"7",answer:"-7/44"},
+{leftPart:"3+\\frac{5}{2}x",rightPart:"-\\frac{5}{18}x",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["45x+54", "54+45x"],expRightList:["-5x"],transLeftList:["45x+5x", "5x+45x"],transRightList:["-54"],arrLeftAns:"50x",arrRightAns:"-54",answer:"-27/25"},
+{leftPart:"\\frac{1}{5}x",rightPart:"2+\\frac{1}{10}x",clearDenomLeftAns:"×10",clearDenomRightAns:"×10",expLeftList:["2x"],expRightList:["x+20", "20+x"],transLeftList:["2x-x", "-x+2x"],transRightList:["20"],arrLeftAns:"x",arrRightAns:"20",answer:"20"},
+{leftPart:"-\\frac{5}{6}-2x",rightPart:"-\\frac{1}{24}x",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["-48x-20", "-20-48x"],expRightList:["-x"],transLeftList:["-48x+x", "x-48x"],transRightList:["20"],arrLeftAns:"-47x",arrRightAns:"20",answer:"-20/47"},
+{leftPart:"-\\frac{3}{5}x",rightPart:"\\frac{1}{20}+x",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["-12x"],expRightList:["20x+1", "1+20x"],transLeftList:["-12x-20x", "-20x-12x"],transRightList:["1"],arrLeftAns:"-32x",arrRightAns:"1",answer:"-1/32"},
+{leftPart:"2x+\\frac{5}{3}",rightPart:"\\frac{5}{21}+x",clearDenomLeftAns:"×21",clearDenomRightAns:"×21",expLeftList:["42x+35", "35+42x"],expRightList:["21x+5", "5+21x"],transLeftList:["42x-21x", "-21x+42x"],transRightList:["5-35", "-35+5"],arrLeftAns:"21x",arrRightAns:"-30",answer:"-10/7"},
+{leftPart:"1-\\frac{1}{6}x",rightPart:"\\frac{1}{24}x-2",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["-4x+24", "24-4x"],expRightList:["x-48", "-48+x"],transLeftList:["-4x-x", "-x-4x"],transRightList:["-48-24", "-24-48"],arrLeftAns:"-5x",arrRightAns:"-72",answer:"72/5"},
+{leftPart:"-x-\\frac{2}{5}",rightPart:"-2x-\\frac{4}{15}",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["-15x-6", "-6-15x"],expRightList:["-30x-4", "-4-30x"],transLeftList:["-15x+30x", "30x-15x"],transRightList:["-4+6", "6-4"],arrLeftAns:"15x",arrRightAns:"2",answer:"2/15"},
+{leftPart:"\\frac{3}{2}-x",rightPart:"-\\frac{3}{16}+2x",clearDenomLeftAns:"×16",clearDenomRightAns:"×16",expLeftList:["-16x+24", "24-16x"],expRightList:["32x-3", "-3+32x"],transLeftList:["-16x-32x", "-32x-16x"],transRightList:["-3-24", "-24-3"],arrLeftAns:"-48x",arrRightAns:"-27",answer:"9/16"},
+{leftPart:"\\frac{3}{2}x-2",rightPart:"2-\\frac{5}{22}x",clearDenomLeftAns:"×22",clearDenomRightAns:"×22",expLeftList:["33x-44", "-44+33x"],expRightList:["-5x+44", "44-5x"],transLeftList:["33x+5x", "5x+33x"],transRightList:["44+44", "44+44"],arrLeftAns:"38x",arrRightAns:"88",answer:"44/19"},
+{leftPart:"-x",rightPart:"-2x+\\frac{1}{20}",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["-20x"],expRightList:["-40x+1", "1-40x"],transLeftList:["-20x+40x", "40x-20x"],transRightList:["1"],arrLeftAns:"20x",arrRightAns:"1",answer:"1/20"},
+{leftPart:"-2x",rightPart:"\\frac{1}{24}+2x",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["-48x"],expRightList:["48x+1", "1+48x"],transLeftList:["-48x-48x", "-48x-48x"],transRightList:["1"],arrLeftAns:"-96x",arrRightAns:"1",answer:"-1/96"},
+{leftPart:"-\\frac{5}{2}x-9",rightPart:"-\\frac{3}{8}x+9",clearDenomLeftAns:"×8",clearDenomRightAns:"×8",expLeftList:["-20x-72", "-72-20x"],expRightList:["-3x+72", "72-3x"],transLeftList:["-20x+3x", "3x-20x"],transRightList:["72+72", "72+72"],arrLeftAns:"-17x",arrRightAns:"144",answer:"-144/17"},
+{leftPart:"3-\\frac{5}{6}x",rightPart:"\\frac{5}{12}+x",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["-10x+36", "36-10x"],expRightList:["12x+5", "5+12x"],transLeftList:["-10x-12x", "-12x-10x"],transRightList:["5-36", "-36+5"],arrLeftAns:"-22x",arrRightAns:"-31",answer:"31/22"},
+{leftPart:"\\frac{4}{5}+2x",rightPart:"-3+\\frac{3}{20}x",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["40x+16", "16+40x"],expRightList:["3x-60", "-60+3x"],transLeftList:["40x-3x", "-3x+40x"],transRightList:["-60-16", "-16-60"],arrLeftAns:"37x",arrRightAns:"-76",answer:"-76/37"},
+{leftPart:"3x",rightPart:"-\\frac{4}{9}x+2",clearDenomLeftAns:"×9",clearDenomRightAns:"×9",expLeftList:["27x"],expRightList:["-4x+18", "18-4x"],transLeftList:["27x+4x", "4x+27x"],transRightList:["18"],arrLeftAns:"31x",arrRightAns:"18",answer:"18/31"},
+{leftPart:"-2+\\frac{5}{6}x",rightPart:"2x-\\frac{1}{24}",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["20x-48", "-48+20x"],expRightList:["48x-1", "-1+48x"],transLeftList:["20x-48x", "-48x+20x"],transRightList:["-1+48", "48-1"],arrLeftAns:"-28x",arrRightAns:"47",answer:"-47/28"},
+{leftPart:"\\frac{5}{4}x",rightPart:"2x-\\frac{1}{20}",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["25x"],expRightList:["40x-1", "-1+40x"],transLeftList:["25x-40x", "-40x+25x"],transRightList:["-1"],arrLeftAns:"-15x",arrRightAns:"-1",answer:"1/15"},
+{leftPart:"2x",rightPart:"-2-\\frac{1}{12}x",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["24x"],expRightList:["-x-24", "-24-x"],transLeftList:["24x+x", "x+24x"],transRightList:["-24"],arrLeftAns:"25x",arrRightAns:"-24",answer:"-24/25"},
+{leftPart:"-\\frac{5}{6}x-2",rightPart:"-2x+\\frac{1}{18}",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["-15x-36", "-36-15x"],expRightList:["-36x+1", "1-36x"],transLeftList:["-15x+36x", "36x-15x"],transRightList:["1+36", "36+1"],arrLeftAns:"21x",arrRightAns:"37",answer:"37/21"},
+{leftPart:"2-\\frac{3}{2}x",rightPart:"-2+\\frac{1}{22}x",clearDenomLeftAns:"×22",clearDenomRightAns:"×22",expLeftList:["-33x+44", "44-33x"],expRightList:["x-44", "-44+x"],transLeftList:["-33x-x", "-x-33x"],transRightList:["-44-44", "-44-44"],arrLeftAns:"-34x",arrRightAns:"-88",answer:"44/17"},
+{leftPart:"-2x+\\frac{4}{5}",rightPart:"\\frac{1}{15}x-1",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["-30x+12", "12-30x"],expRightList:["x-15", "-15+x"],transLeftList:["-30x-x", "-x-30x"],transRightList:["-15-12", "-12-15"],arrLeftAns:"-31x",arrRightAns:"-27",answer:"27/31"},
+{leftPart:"-\\frac{1}{5}x-1",rightPart:"-\\frac{2}{15}-x",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["-3x-15", "-15-3x"],expRightList:["-15x-2", "-2-15x"],transLeftList:["-3x+15x", "15x-3x"],transRightList:["-2+15", "15-2"],arrLeftAns:"12x",arrRightAns:"13",answer:"13/12"},
+{leftPart:"1+\\frac{1}{2}x",rightPart:"x",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["6x+12", "12+6x"],expRightList:["12x"],transLeftList:["6x-12x", "-12x+6x"],transRightList:["-12"],arrLeftAns:"-6x",arrRightAns:"-12",answer:"2"},
+{leftPart:"\\frac{1}{2}+2x",rightPart:"x-\\frac{5}{16}",clearDenomLeftAns:"×16",clearDenomRightAns:"×16",expLeftList:["32x+8", "8+32x"],expRightList:["16x-5", "-5+16x"],transLeftList:["32x-16x", "-16x+32x"],transRightList:["-5-8", "-8-5"],arrLeftAns:"16x",arrRightAns:"-13",answer:"-13/16"},
+{leftPart:"2x-\\frac{1}{6}",rightPart:"-2x",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["36x-3", "-3+36x"],expRightList:["-36x"],transLeftList:["36x+36x", "36x+36x"],transRightList:["3"],arrLeftAns:"72x",arrRightAns:"3",answer:"1/24"},
+{leftPart:"-2x-\\frac{4}{3}",rightPart:"-1-\\frac{1}{24}x",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["-48x-32", "-32-48x"],expRightList:["-x-24", "-24-x"],transLeftList:["-48x+x", "x-48x"],transRightList:["-24+32", "32-24"],arrLeftAns:"-47x",arrRightAns:"8",answer:"-8/47"},
+{leftPart:"-x+\\frac{1}{4}",rightPart:"\\frac{1}{24}x",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["-24x+6", "6-24x"],expRightList:["x"],transLeftList:["-24x-x", "-x-24x"],transRightList:["-6"],arrLeftAns:"-25x",arrRightAns:"-6",answer:"6/25"},
+{leftPart:"\\frac{5}{4}x",rightPart:"\\frac{1}{16}x-2",clearDenomLeftAns:"×16",clearDenomRightAns:"×16",expLeftList:["20x"],expRightList:["x-32", "-32+x"],transLeftList:["20x-x", "-x+20x"],transRightList:["-32"],arrLeftAns:"19x",arrRightAns:"-32",answer:"-32/19"},
+{leftPart:"-\\frac{3}{2}x+8",rightPart:"-3x",clearDenomLeftAns:"×6",clearDenomRightAns:"×6",expLeftList:["-9x+48", "48-9x"],expRightList:["-18x"],transLeftList:["-9x+18x", "18x-9x"],transRightList:["-48"],arrLeftAns:"9x",arrRightAns:"-48",answer:"-16/3"},
+{leftPart:"-\\frac{5}{6}x+2",rightPart:"\\frac{1}{18}x",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["-15x+36", "36-15x"],expRightList:["x"],transLeftList:["-15x-x", "-x-15x"],transRightList:["-36"],arrLeftAns:"-16x",arrRightAns:"-36",answer:"9/4"},
+{leftPart:"\\frac{5}{3}x",rightPart:"\\frac{2}{15}-2x",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["25x"],expRightList:["-30x+2", "2-30x"],transLeftList:["25x+30x", "30x+25x"],transRightList:["2"],arrLeftAns:"55x",arrRightAns:"2",answer:"2/55"},
+{leftPart:"\\frac{2}{3}+x",rightPart:"\\frac{5}{12}-2x",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["12x+8", "8+12x"],expRightList:["-24x+5", "5-24x"],transLeftList:["12x+24x", "24x+12x"],transRightList:["5-8", "-8+5"],arrLeftAns:"36x",arrRightAns:"-3",answer:"-1/12"},
+{leftPart:"3+\\frac{1}{4}x",rightPart:"-\\frac{1}{12}x+3",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["3x+36", "36+3x"],expRightList:["-x+36", "36-x"],transLeftList:["3x+x", "x+3x"],transRightList:["36-36", "-36+36"],arrLeftAns:"4x",arrRightAns:"0",answer:"0"},
+{leftPart:"-\\frac{4}{5}x",rightPart:"\\frac{4}{15}x+1",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["-12x"],expRightList:["4x+15", "15+4x"],transLeftList:["-12x-4x", "-4x-12x"],transRightList:["15"],arrLeftAns:"-16x",arrRightAns:"15",answer:"-15/16"},
+{leftPart:"-\\frac{1}{4}x+3",rightPart:"2+\\frac{1}{12}x",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["-3x+36", "36-3x"],expRightList:["x+24", "24+x"],transLeftList:["-3x-x", "-x-3x"],transRightList:["24-36", "-36+24"],arrLeftAns:"-4x",arrRightAns:"-12",answer:"3"},
+{leftPart:"-2x-\\frac{3}{5}",rightPart:"-\\frac{1}{20}x+3",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["-40x-12", "-12-40x"],expRightList:["-x+60", "60-x"],transLeftList:["-40x+x", "x-40x"],transRightList:["60+12", "12+60"],arrLeftAns:"-39x",arrRightAns:"72",answer:"-24/13"},
+{leftPart:"-2x+\\frac{1}{6}",rightPart:"3-\\frac{1}{18}x",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["-36x+3", "3-36x"],expRightList:["-x+54", "54-x"],transLeftList:["-36x+x", "x-36x"],transRightList:["54-3", "-3+54"],arrLeftAns:"-35x",arrRightAns:"51",answer:"-51/35"},
+{leftPart:"-2x-\\frac{5}{3}",rightPart:"-x+\\frac{5}{12}",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["-24x-20", "-20-24x"],expRightList:["-12x+5", "5-12x"],transLeftList:["-24x+12x", "12x-24x"],transRightList:["5+20", "20+5"],arrLeftAns:"-12x",arrRightAns:"25",answer:"-25/12"},
+{leftPart:"\\frac{4}{5}+2x",rightPart:"\\frac{4}{15}x-2",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["30x+12", "12+30x"],expRightList:["4x-30", "-30+4x"],transLeftList:["30x-4x", "-4x+30x"],transRightList:["-30-12", "-12-30"],arrLeftAns:"26x",arrRightAns:"-42",answer:"-21/13"},
+{leftPart:"x-\\frac{2}{3}",rightPart:"\\frac{5}{12}x",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["12x-8", "-8+12x"],expRightList:["5x"],transLeftList:["12x-5x", "-5x+12x"],transRightList:["8"],arrLeftAns:"7x",arrRightAns:"8",answer:"8/7"},
+{leftPart:"1-\\frac{3}{5}x",rightPart:"-x",clearDenomLeftAns:"×10",clearDenomRightAns:"×10",expLeftList:["-6x+10", "10-6x"],expRightList:["-10x"],transLeftList:["-6x+10x", "10x-6x"],transRightList:["-10"],arrLeftAns:"4x",arrRightAns:"-10",answer:"-5/2"},
+{leftPart:"-3-\\frac{4}{5}x",rightPart:"\\frac{1}{15}x",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["-12x-45", "-45-12x"],expRightList:["x"],transLeftList:["-12x-x", "-x-12x"],transRightList:["45"],arrLeftAns:"-13x",arrRightAns:"45",answer:"-45/13"},
+{leftPart:"-\\frac{1}{4}+x",rightPart:"-x-\\frac{3}{20}",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["20x-5", "-5+20x"],expRightList:["-20x-3", "-3-20x"],transLeftList:["20x+20x", "20x+20x"],transRightList:["-3+5", "5-3"],arrLeftAns:"40x",arrRightAns:"2",answer:"1/20"},
+{leftPart:"\\frac{1}{5}x-3",rightPart:"-\\frac{3}{20}+2x",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["4x-60", "-60+4x"],expRightList:["40x-3", "-3+40x"],transLeftList:["4x-40x", "-40x+4x"],transRightList:["-3+60", "60-3"],arrLeftAns:"-36x",arrRightAns:"57",answer:"-19/12"},
+{leftPart:"\\frac{3}{4}x-1",rightPart:"x",clearDenomLeftAns:"×16",clearDenomRightAns:"×16",expLeftList:["12x-16", "-16+12x"],expRightList:["16x"],transLeftList:["12x-16x", "-16x+12x"],transRightList:["16"],arrLeftAns:"-4x",arrRightAns:"16",answer:"-4"},
+{leftPart:"-3-\\frac{3}{5}x",rightPart:"\\frac{1}{15}-2x",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["-9x-45", "-45-9x"],expRightList:["-30x+1", "1-30x"],transLeftList:["-9x+30x", "30x-9x"],transRightList:["1+45", "45+1"],arrLeftAns:"21x",arrRightAns:"46",answer:"46/21"},
+{leftPart:"2x",rightPart:"\\frac{1}{16}x+3",clearDenomLeftAns:"×16",clearDenomRightAns:"×16",expLeftList:["32x"],expRightList:["x+48", "48+x"],transLeftList:["32x-x", "-x+32x"],transRightList:["48"],arrLeftAns:"31x",arrRightAns:"48",answer:"48/31"},
+{leftPart:"\\frac{3}{4}x+2",rightPart:"-\\frac{3}{20}x",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["15x+40", "40+15x"],expRightList:["-3x"],transLeftList:["15x+3x", "3x+15x"],transRightList:["-40"],arrLeftAns:"18x",arrRightAns:"-40",answer:"-20/9"},
+{leftPart:"1+\\frac{3}{2}x",rightPart:"1+\\frac{1}{12}x",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["18x+12", "12+18x"],expRightList:["x+12", "12+x"],transLeftList:["18x-x", "-x+18x"],transRightList:["12-12", "-12+12"],arrLeftAns:"17x",arrRightAns:"0",answer:"0"},
+{leftPart:"\\frac{2}{3}x",rightPart:"-x-\\frac{1}{21}",clearDenomLeftAns:"×21",clearDenomRightAns:"×21",expLeftList:["14x"],expRightList:["-21x-1", "-1-21x"],transLeftList:["14x+21x", "21x+14x"],transRightList:["-1"],arrLeftAns:"35x",arrRightAns:"-1",answer:"-1/35"},
+{leftPart:"x",rightPart:"\\frac{1}{12}-2x",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["12x"],expRightList:["-24x+1", "1-24x"],transLeftList:["12x+24x", "24x+12x"],transRightList:["1"],arrLeftAns:"36x",arrRightAns:"1",answer:"1/36"},
+{leftPart:"2x",rightPart:"-x-\\frac{5}{18}",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["36x"],expRightList:["-18x-5", "-5-18x"],transLeftList:["36x+18x", "18x+36x"],transRightList:["-5"],arrLeftAns:"54x",arrRightAns:"-5",answer:"-5/54"},
+{leftPart:"-3-\\frac{2}{3}x",rightPart:"-x+\\frac{4}{21}",clearDenomLeftAns:"×21",clearDenomRightAns:"×21",expLeftList:["-14x-63", "-63-14x"],expRightList:["-21x+4", "4-21x"],transLeftList:["-14x+21x", "21x-14x"],transRightList:["4+63", "63+4"],arrLeftAns:"7x",arrRightAns:"67",answer:"67/7"},
+{leftPart:"2x-\\frac{3}{5}",rightPart:"-\\frac{3}{10}+x",clearDenomLeftAns:"×10",clearDenomRightAns:"×10",expLeftList:["20x-6", "-6+20x"],expRightList:["10x-3", "-3+10x"],transLeftList:["20x-10x", "-10x+20x"],transRightList:["-3+6", "6-3"],arrLeftAns:"10x",arrRightAns:"3",answer:"3/10"},
+{leftPart:"\\frac{5}{3}+3x",rightPart:"x",clearDenomLeftAns:"×9",clearDenomRightAns:"×9",expLeftList:["27x+15", "15+27x"],expRightList:["9x"],transLeftList:["27x-9x", "-9x+27x"],transRightList:["-15"],arrLeftAns:"18x",arrRightAns:"-15",answer:"-5/6"},
+{leftPart:"2x",rightPart:"-1-\\frac{3}{20}x",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["40x"],expRightList:["-3x-20", "-20-3x"],transLeftList:["40x+3x", "3x+40x"],transRightList:["-20"],arrLeftAns:"43x",arrRightAns:"-20",answer:"-20/43"},
+{leftPart:"\\frac{5}{4}+x",rightPart:"-\\frac{3}{16}x",clearDenomLeftAns:"×16",clearDenomRightAns:"×16",expLeftList:["16x+20", "20+16x"],expRightList:["-3x"],transLeftList:["16x+3x", "3x+16x"],transRightList:["-20"],arrLeftAns:"19x",arrRightAns:"-20",answer:"-20/19"},
+{leftPart:"x-\\frac{1}{5}",rightPart:"-2x",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["20x-4", "-4+20x"],expRightList:["-40x"],transLeftList:["20x+40x", "40x+20x"],transRightList:["4"],arrLeftAns:"60x",arrRightAns:"4",answer:"1/15"},
+{leftPart:"-\\frac{5}{6}x+2",rightPart:"\\frac{5}{24}x+2",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["-20x+48", "48-20x"],expRightList:["5x+48", "48+5x"],transLeftList:["-20x-5x", "-5x-20x"],transRightList:["48-48", "-48+48"],arrLeftAns:"-25x",arrRightAns:"0",answer:"0"},
+{leftPart:"\\frac{4}{3}x-5",rightPart:"-4x+\\frac{1}{6}",clearDenomLeftAns:"×6",clearDenomRightAns:"×6",expLeftList:["8x-30", "-30+8x"],expRightList:["-24x+1", "1-24x"],transLeftList:["8x+24x", "24x+8x"],transRightList:["1+30", "30+1"],arrLeftAns:"32x",arrRightAns:"31",answer:"31/32"},
+{leftPart:"\\frac{2}{3}x",rightPart:"3+\\frac{1}{18}x",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["12x"],expRightList:["x+54", "54+x"],transLeftList:["12x-x", "-x+12x"],transRightList:["54"],arrLeftAns:"11x",arrRightAns:"54",answer:"54/11"},
+{leftPart:"\\frac{5}{6}+2x",rightPart:"-3-\\frac{1}{24}x",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["48x+20", "20+48x"],expRightList:["-x-72", "-72-x"],transLeftList:["48x+x", "x+48x"],transRightList:["-72-20", "-20-72"],arrLeftAns:"49x",arrRightAns:"-92",answer:"-92/49"},
+{leftPart:"x",rightPart:"-1+\\frac{5}{16}x",clearDenomLeftAns:"×16",clearDenomRightAns:"×16",expLeftList:["16x"],expRightList:["5x-16", "-16+5x"],transLeftList:["16x-5x", "-5x+16x"],transRightList:["-16"],arrLeftAns:"11x",arrRightAns:"-16",answer:"-16/11"},
+{leftPart:"-\\frac{2}{3}+2x",rightPart:"-\\frac{1}{21}+x",clearDenomLeftAns:"×21",clearDenomRightAns:"×21",expLeftList:["42x-14", "-14+42x"],expRightList:["21x-1", "-1+21x"],transLeftList:["42x-21x", "-21x+42x"],transRightList:["-1+14", "14-1"],arrLeftAns:"21x",arrRightAns:"13",answer:"13/21"},
+{leftPart:"-2x",rightPart:"-\\frac{4}{15}+2x",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["-30x"],expRightList:["30x-4", "-4+30x"],transLeftList:["-30x-30x", "-30x-30x"],transRightList:["-4"],arrLeftAns:"-60x",arrRightAns:"-4",answer:"1/15"},
+{leftPart:"-\\frac{1}{5}x-3",rightPart:"-2x+\\frac{1}{15}",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["-3x-45", "-45-3x"],expRightList:["-30x+1", "1-30x"],transLeftList:["-3x+30x", "30x-3x"],transRightList:["1+45", "45+1"],arrLeftAns:"27x",arrRightAns:"46",answer:"46/27"},
+{leftPart:"2+\\frac{1}{4}x",rightPart:"2x",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["5x+40", "40+5x"],expRightList:["40x"],transLeftList:["5x-40x", "-40x+5x"],transRightList:["-40"],arrLeftAns:"-35x",arrRightAns:"-40",answer:"8/7"},
+{leftPart:"-4x-\\frac{5}{2}",rightPart:"-9+\\frac{5}{6}x",clearDenomLeftAns:"×6",clearDenomRightAns:"×6",expLeftList:["-24x-15", "-15-24x"],expRightList:["5x-54", "-54+5x"],transLeftList:["-24x-5x", "-5x-24x"],transRightList:["-54+15", "15-54"],arrLeftAns:"-29x",arrRightAns:"-39",answer:"39/29"},
+{leftPart:"1-\\frac{5}{2}x",rightPart:"2-\\frac{5}{18}x",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["-45x+18", "18-45x"],expRightList:["-5x+36", "36-5x"],transLeftList:["-45x+5x", "5x-45x"],transRightList:["36-18", "-18+36"],arrLeftAns:"-40x",arrRightAns:"18",answer:"-9/20"},
+{leftPart:"\\frac{3}{4}+2x",rightPart:"-x+\\frac{1}{20}",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["40x+15", "15+40x"],expRightList:["-20x+1", "1-20x"],transLeftList:["40x+20x", "20x+40x"],transRightList:["1-15", "-15+1"],arrLeftAns:"60x",arrRightAns:"-14",answer:"-7/30"},
+{leftPart:"-2+\\frac{1}{5}x",rightPart:"-\\frac{1}{10}x",clearDenomLeftAns:"×10",clearDenomRightAns:"×10",expLeftList:["2x-20", "-20+2x"],expRightList:["-x"],transLeftList:["2x+x", "x+2x"],transRightList:["20"],arrLeftAns:"3x",arrRightAns:"20",answer:"20/3"},
+{leftPart:"\\frac{4}{3}x",rightPart:"2x-\\frac{2}{9}",clearDenomLeftAns:"×9",clearDenomRightAns:"×9",expLeftList:["12x"],expRightList:["18x-2", "-2+18x"],transLeftList:["12x-18x", "-18x+12x"],transRightList:["-2"],arrLeftAns:"-6x",arrRightAns:"-2",answer:"1/3"},
+{leftPart:"-\\frac{3}{4}x+3",rightPart:"-\\frac{3}{20}x",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["-15x+60", "60-15x"],expRightList:["-3x"],transLeftList:["-15x+3x", "3x-15x"],transRightList:["-60"],arrLeftAns:"-12x",arrRightAns:"-60",answer:"5"},
+{leftPart:"2x+\\frac{1}{3}",rightPart:"-x-\\frac{1}{15}",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["30x+5", "5+30x"],expRightList:["-15x-1", "-1-15x"],transLeftList:["30x+15x", "15x+30x"],transRightList:["-1-5", "-5-1"],arrLeftAns:"45x",arrRightAns:"-6",answer:"-2/15"},
+{leftPart:"-\\frac{5}{6}+2x",rightPart:"-\\frac{5}{18}x",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["36x-15", "-15+36x"],expRightList:["-5x"],transLeftList:["36x+5x", "5x+36x"],transRightList:["15"],arrLeftAns:"41x",arrRightAns:"15",answer:"15/41"},
+{leftPart:"-\\frac{2}{3}x+1",rightPart:"\\frac{5}{24}x+3",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["-16x+24", "24-16x"],expRightList:["5x+72", "72+5x"],transLeftList:["-16x-5x", "-5x-16x"],transRightList:["72-24", "-24+72"],arrLeftAns:"-21x",arrRightAns:"48",answer:"-16/7"},
+{leftPart:"2+\\frac{3}{5}x",rightPart:"-2x+\\frac{1}{10}",clearDenomLeftAns:"×10",clearDenomRightAns:"×10",expLeftList:["6x+20", "20+6x"],expRightList:["-20x+1", "1-20x"],transLeftList:["6x+20x", "20x+6x"],transRightList:["1-20", "-20+1"],arrLeftAns:"26x",arrRightAns:"-19",answer:"-19/26"},
+{leftPart:"-\\frac{3}{5}x-3",rightPart:"-\\frac{3}{10}-2x",clearDenomLeftAns:"×10",clearDenomRightAns:"×10",expLeftList:["-6x-30", "-30-6x"],expRightList:["-20x-3", "-3-20x"],transLeftList:["-6x+20x", "20x-6x"],transRightList:["-3+30", "30-3"],arrLeftAns:"14x",arrRightAns:"27",answer:"27/14"},
+{leftPart:"-3-\\frac{1}{6}x",rightPart:"\\frac{5}{12}+x",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["-2x-36", "-36-2x"],expRightList:["12x+5", "5+12x"],transLeftList:["-2x-12x", "-12x-2x"],transRightList:["5+36", "36+5"],arrLeftAns:"-14x",arrRightAns:"41",answer:"-41/14"},
+{leftPart:"-3x-\\frac{5}{4}",rightPart:"-\\frac{1}{8}x",clearDenomLeftAns:"×8",clearDenomRightAns:"×8",expLeftList:["-24x-10", "-10-24x"],expRightList:["-x"],transLeftList:["-24x+x", "x-24x"],transRightList:["10"],arrLeftAns:"-23x",arrRightAns:"10",answer:"-10/23"},
+{leftPart:"-\\frac{5}{6}+x",rightPart:"\\frac{1}{12}x+3",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["12x-10", "-10+12x"],expRightList:["x+36", "36+x"],transLeftList:["12x-x", "-x+12x"],transRightList:["36+10", "10+36"],arrLeftAns:"11x",arrRightAns:"46",answer:"46/11"},
+{leftPart:"2x",rightPart:"-x+\\frac{3}{10}",clearDenomLeftAns:"×10",clearDenomRightAns:"×10",expLeftList:["20x"],expRightList:["-10x+3", "3-10x"],transLeftList:["20x+10x", "10x+20x"],transRightList:["3"],arrLeftAns:"30x",arrRightAns:"3",answer:"1/10"},
+{leftPart:"-2x",rightPart:"-\\frac{1}{21}x+2",clearDenomLeftAns:"×21",clearDenomRightAns:"×21",expLeftList:["-42x"],expRightList:["-x+42", "42-x"],transLeftList:["-42x+x", "x-42x"],transRightList:["42"],arrLeftAns:"-41x",arrRightAns:"42",answer:"-42/41"},
+{leftPart:"2x+\\frac{5}{4}",rightPart:"x",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["40x+25", "25+40x"],expRightList:["20x"],transLeftList:["40x-20x", "-20x+40x"],transRightList:["-25"],arrLeftAns:"20x",arrRightAns:"-25",answer:"-5/4"},
+{leftPart:"2-\\frac{4}{5}x",rightPart:"-\\frac{1}{10}x+1",clearDenomLeftAns:"×10",clearDenomRightAns:"×10",expLeftList:["-8x+20", "20-8x"],expRightList:["-x+10", "10-x"],transLeftList:["-8x+x", "x-8x"],transRightList:["10-20", "-20+10"],arrLeftAns:"-7x",arrRightAns:"-10",answer:"10/7"},
+{leftPart:"-\\frac{5}{3}x+3",rightPart:"-2x",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["-30x+54", "54-30x"],expRightList:["-36x"],transLeftList:["-30x+36x", "36x-30x"],transRightList:["-54"],arrLeftAns:"6x",arrRightAns:"-54",answer:"-9"},
+{leftPart:"-\\frac{3}{2}x-2",rightPart:"2-\\frac{1}{22}x",clearDenomLeftAns:"×22",clearDenomRightAns:"×22",expLeftList:["-33x-44", "-44-33x"],expRightList:["-x+44", "44-x"],transLeftList:["-33x+x", "x-33x"],transRightList:["44+44", "44+44"],arrLeftAns:"-32x",arrRightAns:"88",answer:"-11/4"},
+{leftPart:"\\frac{5}{6}-x",rightPart:"-2x",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["-18x+15", "15-18x"],expRightList:["-36x"],transLeftList:["-18x+36x", "36x-18x"],transRightList:["-15"],arrLeftAns:"18x",arrRightAns:"-15",answer:"-5/6"},
+{leftPart:"\\frac{5}{6}-2x",rightPart:"1-\\frac{1}{12}x",clearDenomLeftAns:"×12",clearDenomRightAns:"×12",expLeftList:["-24x+10", "10-24x"],expRightList:["-x+12", "12-x"],transLeftList:["-24x+x", "x-24x"],transRightList:["12-10", "-10+12"],arrLeftAns:"-23x",arrRightAns:"2",answer:"-2/23"},
+{leftPart:"-\\frac{1}{3}x",rightPart:"-\\frac{5}{18}+x",clearDenomLeftAns:"×18",clearDenomRightAns:"×18",expLeftList:["-6x"],expRightList:["18x-5", "-5+18x"],transLeftList:["-6x-18x", "-18x-6x"],transRightList:["-5"],arrLeftAns:"-24x",arrRightAns:"-5",answer:"5/24"},
+{leftPart:"\\frac{1}{5}x",rightPart:"-3-\\frac{1}{15}x",clearDenomLeftAns:"×15",clearDenomRightAns:"×15",expLeftList:["3x"],expRightList:["-x-45", "-45-x"],transLeftList:["3x+x", "x+3x"],transRightList:["-45"],arrLeftAns:"4x",arrRightAns:"-45",answer:"-45/4"},
+{leftPart:"\\frac{1}{5}x",rightPart:"-\\frac{3}{20}x-1",clearDenomLeftAns:"×20",clearDenomRightAns:"×20",expLeftList:["4x"],expRightList:["-3x-20", "-20-3x"],transLeftList:["4x+3x", "3x+4x"],transRightList:["-20"],arrLeftAns:"7x",arrRightAns:"-20",answer:"-20/7"},
+{leftPart:"-2x-\\frac{3}{2}",rightPart:"-\\frac{5}{24}x+1",clearDenomLeftAns:"×24",clearDenomRightAns:"×24",expLeftList:["-48x-36", "-36-48x"],expRightList:["-5x+24", "24-5x"],transLeftList:["-48x+5x", "5x-48x"],transRightList:["24+36", "36+24"],arrLeftAns:"-43x",arrRightAns:"60",answer:"-60/43"},
+{leftPart:"-2x+\\frac{1}{2}",rightPart:"-\\frac{3}{16}+2x",clearDenomLeftAns:"×16",clearDenomRightAns:"×16",expLeftList:["-32x+8", "8-32x"],expRightList:["32x-3", "-3+32x"],transLeftList:["-32x-32x", "-32x-32x"],transRightList:["-3-8", "-8-3"],arrLeftAns:"-64x",arrRightAns:"-11",answer:"11/64"},
+];
 
-                if (pattern === 1) {
-                    // タイプA: 王道の2倍関係
-                    const pairs = [[2, 4], [3, 6], [4, 8]];
-                    [b, f] = pairs[Math.floor(Math.random() * pairs.length)];
-                } else if (pattern === 2) {
-                    // タイプB: 3倍・4倍関係（倍率高め）
-                    const pairs = [[2, 6], [3, 9], [2, 8]];
-                    [b, f] = pairs[Math.floor(Math.random() * pairs.length)];
-                } else if (pattern === 3) {
-                    // タイプC: 大小の配置が逆（大 -> 小）
-                    const pairs = [[6, 2], [8, 4], [9, 3]];
-                    [b, f] = pairs[Math.floor(Math.random() * pairs.length)];
-                } else if (pattern === 4) {
-                    // タイプD: 「10（100）」が絡む倍数関係
-                    const pairs = [[2, 10], [5, 10], [25, 100]];
-                    [b, f] = pairs[Math.floor(Math.random() * pairs.length)];
-                } else if (pattern === 5) {
-                    // タイプE: 公倍数が大きめ（12や15）
-                    const pairs = [[4, 12], [6, 12], [5, 15]];
-                    [b, f] = pairs[Math.floor(Math.random() * pairs.length)];
-                } else if (pattern === 6) {
-                    // タイプF: 奇数分母どうし
-                    const pairs = [[3, 9], [5, 15]];
-                    [b, f] = pairs[Math.floor(Math.random() * pairs.length)];
-                }
+    /* ==========================================================================
+       検定(ランダム出題)用の32パターン生成ロジック
+       ========================================================================== */
+const GROUPS_DEF = {
+    1: {xL:'b', cL:'plain', xR:'nb', cR:'plain', a:'frac_b', c:'plainC', d:'frac_nb', e:'plainC'},
+    2: {xL:'b', cL:'plain', xR:'plain', cR:'nb',  a:'frac_b', c:'plainC', d:'plainX',  e:'frac_nb'},
+    3: {xL:'plain', cL:'b', xR:'plain', cR:'nb',  a:'plainX', c:'frac_b', d:'plainX',  e:'frac_nb'},
+    4: {xL:'plain', cL:'b', xR:'nb', cR:'plain',  a:'plainX', c:'frac_b', d:'frac_nb', e:'plainC'}
+};
 
-                M = lcm(b, f);
+function denomOf(kind, b, nb) {
+    if (kind === 'b') return b;
+    if (kind === 'nb') return nb;
+    return 1;
+}
 
-                let a, d;
-                do {
-                    a = getRandomInt(-5, 5, true);
-                } while (gcd(Math.abs(a), b) !== 1);
-                do {
-                    d = getRandomInt(-5, 5, true);
-                } while (gcd(Math.abs(d), f) !== 1);
+function calcLaLcRaRc(group, a, c, d, e, b, n, M) {
+    if (group === 1) return [a * n, c * M, d, e * M];
+    if (group === 2) return [a * n, c * M, d * M, e];
+    if (group === 3) return [a * M, c * n, d * M, e];
+    return [a * M, c * n, d, e * M];
+}
 
-                // Mが大きい場合(100など)は定数項を小さめにする
-                const maxConst = M >= 10 ? 3 : 9;
-                const c = getRandomInt(-maxConst, maxConst, true);
-                const e = getRandomInt(-maxConst, maxConst, true);
-                if (c === e) continue;
+function randNonZero(lo, hi) {
+    let v;
+    do { v = Math.floor(Math.random() * (hi - lo + 1)) + lo; } while (v === 0);
+    return v;
+}
 
-                L_a = a * (M / b);
-                L_c = c * M;
-                R_a = d * (M / f);
-                R_c = e * M;
+function randCoprime(lo, hi, denom) {
+    let v;
+    do { v = randNonZero(lo, hi); } while (gcd(Math.abs(v), denom) !== 1);
+    return v;
+}
 
-                if (L_a === R_a) continue;
+function genValue(role, denom, M) {
+    if (role === 'frac_b' || role === 'frac_nb') return randCoprime(-5, 5, denom);
+    if (role === 'plainX') { const lim = M >= 10 ? 2 : 4; return randNonZero(-lim, lim); }
+    return randNonZero(-(M >= 10 ? 3 : 9), (M >= 10 ? 3 : 9)); // plainC
+}
 
-                // ランダムで項の順序を変えるバリエーション
-                const formType = getRandomInt(1, 2);
-                if (formType === 1) {
-                    leftPart = formatTerm(a, b, true, true) + formatTerm(c, 1, false, false);
-                    rightPart = formatTerm(d, f, true, true) + formatTerm(e, 1, false, false);
-                } else {
-                    leftPart = formatTerm(c, 1, false, true) + formatTerm(a, b, true, false);
-                    rightPart = formatTerm(e, 1, false, true) + formatTerm(d, f, true, false);
-                }
+// group(1〜4) と variation(1〜8) を指定して1問生成する。
+// tier: 1=係数・定数項すべて正 / 2=L_a>0かつL_a-R_a>0 / 3=制約なし(完全ランダム)
+function generatePattern(group, variation, tier) {
+    const g = GROUPS_DEF[group];
+    const noLeftConst = (variation === 5 || variation === 6);
+    const noRightConst = (variation === 7 || variation === 8);
 
-                // 正答の自動算出・約分処理
-                const num = R_c - L_c;
-                const den = L_a - R_a;
-                let ansStr = "0";
+    while (true) {
+        const bOptions = [2, 3, 4, 5, 6];
+        const b = bOptions[Math.floor(Math.random() * bOptions.length)];
+        const nmax = Math.floor(24 / b);
+        if (nmax < 2) continue;
+        const n = Math.floor(Math.random() * (nmax - 2 + 1)) + 2;
+        const nb = n * b;
+        const M = nb;
 
-                if (num !== 0) {
-                    const sign = (num * den < 0) ? "-" : "";
-                    const absNum = Math.abs(num);
-                    const absDen = Math.abs(den);
-                    const g = gcd(absNum, absDen);
-                    const redNum = absNum / g;
-                    const redDen = absDen / g;
-                    
-                    if (redDen === 1) {
-                        ansStr = `${sign}${redNum}`;
-                    } else {
-                        ansStr = `${sign}${redNum}/${redDen}`;
-                    }
-                }
+        const a = genValue(g.a, denomOf(g.xL, b, nb), M);
+        const d = genValue(g.d, denomOf(g.xR, b, nb), M);
+        const c = noLeftConst ? 0 : genValue(g.c, denomOf(g.cL, b, nb), M);
+        const e = noRightConst ? 0 : genValue(g.e, denomOf(g.cR, b, nb), M);
 
-                return {
-                    leftPart: leftPart,
-                    rightPart: rightPart,
-                    clearDenomLeftAns: `×${M}`,
-                    clearDenomRightAns: `×${M}`,
-                    expLeftList: buildExp(L_a, L_c),
-                    expRightList: buildExp(R_a, R_c),
-                    transLeftList: buildTransL(L_a, R_a),
-                    transRightList: buildTransR(R_c, L_c),
-                    arrLeftAns: formatPoly(L_a - R_a, 0),
-                    arrRightAns: (R_c - L_c).toString(),
-                    answer: ansStr
-                };
-            }
-        };
+        const [L_a, L_c, R_a, R_c] = calcLaLcRaRc(group, a, c, d, e, b, n, M);
+        if (L_a === R_a) continue;
 
-        // 6つのパターンから重複なしでランダムに4つを選択して出題
-        const allPatterns = [1, 2, 3, 4, 5, 6];
-        const selectedPatterns = [];
-        while (selectedPatterns.length < 4) {
-            const idx = Math.floor(Math.random() * allPatterns.length);
-            selectedPatterns.push(allPatterns.splice(idx, 1)[0]);
+        if (tier === 1) {
+            if (!(L_a > 0 && R_a > 0)) continue;
+            if (!noLeftConst && L_c <= 0) continue;
+            if (!noRightConst && R_c <= 0) continue;
+        } else if (tier === 2) {
+            if (!(L_a > 0 && (L_a - R_a) > 0)) continue;
         }
 
-        return selectedPatterns.map(pattern => generatePatternQuiz(pattern));
+        const denomL_x = denomOf(g.xL, b, nb);
+        const denomL_c = denomOf(g.cL, b, nb);
+        const denomR_x = denomOf(g.xR, b, nb);
+        const denomR_c = denomOf(g.cR, b, nb);
+
+        const leftConstFirst = (variation === 2 || variation === 4 || variation === 8);
+        const rightConstFirst = (variation === 3 || variation === 4 || variation === 6);
+
+        let leftPart, rightPart;
+        if (noLeftConst) {
+            leftPart = formatTerm(a, denomL_x, true, true);
+        } else if (leftConstFirst) {
+            leftPart = formatTerm(c, denomL_c, false, true) + formatTerm(a, denomL_x, true, false);
+        } else {
+            leftPart = formatTerm(a, denomL_x, true, true) + formatTerm(c, denomL_c, false, false);
+        }
+        if (noRightConst) {
+            rightPart = formatTerm(d, denomR_x, true, true);
+        } else if (rightConstFirst) {
+            rightPart = formatTerm(e, denomR_c, false, true) + formatTerm(d, denomR_x, true, false);
+        } else {
+            rightPart = formatTerm(d, denomR_x, true, true) + formatTerm(e, denomR_c, false, false);
+        }
+
+        const num = R_c - L_c;
+        const den = L_a - R_a;
+        let ansStr = "0";
+        if (num !== 0) {
+            const sign = (num * den < 0) ? "-" : "";
+            const absNum = Math.abs(num), absDen = Math.abs(den);
+            const gg = gcd(absNum, absDen);
+            const redNum = absNum / gg, redDen = absDen / gg;
+            ansStr = (redDen === 1) ? `${sign}${redNum}` : `${sign}${redNum}/${redDen}`;
+        }
+
+        return {
+            leftPart: leftPart,
+            rightPart: rightPart,
+            clearDenomLeftAns: `×${M}`,
+            clearDenomRightAns: `×${M}`,
+            expLeftList: buildExp(L_a, L_c),
+            expRightList: buildExp(R_a, R_c),
+            transLeftList: buildTransL(L_a, R_a),
+            transRightList: buildTransR(R_c, L_c),
+            arrLeftAns: formatPoly(L_a - R_a, 0),
+            arrRightAns: (R_c - L_c).toString(),
+            answer: ansStr
+        };
     }
+}
+
+function generateQuizData() {
+    // グループ1〜4からそれぞれ1パターンをランダムに選び、1問ずつ計4問(制約なし=完全ランダム)出題
+    const results = [];
+    for (let group = 1; group <= 4; group++) {
+        const variation = Math.floor(Math.random() * 8) + 1;
+        results.push(generatePattern(group, variation, 3));
+    }
+    return results;
+}
+
+    /* ==========================================================================
+       画面遷移・問題選択(練習モード)・記録(localStorage)関連
+       ========================================================================== */
+    let practiceMode = false;
+    let practiceCurrentIndex = null;
+    let practiceProgress = [];
+    let savedQuizData = null;
+    let savedCurrentQuestionIndex = 0;
+    let savedTimerDisplayText = null;
+    let savedBestDisplayText = null;
+
+    const PRACTICE_PROGRESS_KEY = 'ibunbo1_practice_progress_v1';
+    let correctStreakCount = 0;
+    let maxStreakCount = 0;
+    const KENTEI_RECORDS_KEY = 'ibunbo1_kentei_records_v1';
+
+    function formatMs(ms) {
+        const totalMs = Math.max(0, Math.round(ms));
+        const min = Math.floor(totalMs / 60000);
+        const sec = Math.floor((totalMs % 60000) / 1000);
+        const msec = Math.floor((totalMs % 1000) / 100);
+        return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}.${msec}`;
+    }
+
+    function loadKenteiRecords() {
+        try {
+            const raw = localStorage.getItem(KENTEI_RECORDS_KEY);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                bestNormalTimeMs = (typeof parsed.bestTimeMs === 'number') ? parsed.bestTimeMs : null;
+                correctStreakCount = (typeof parsed.streak === 'number') ? parsed.streak : 0;
+                maxStreakCount = (typeof parsed.maxStreak === 'number') ? parsed.maxStreak : 0;
+                return;
+            }
+        } catch (e) { /* 読み込み失敗時は初期化 */ }
+        bestNormalTimeMs = null;
+        correctStreakCount = 0;
+        maxStreakCount = 0;
+    }
+
+    function saveKenteiRecords() {
+        try {
+            localStorage.setItem(KENTEI_RECORDS_KEY, JSON.stringify({ bestTimeMs: bestNormalTimeMs, streak: correctStreakCount, maxStreak: maxStreakCount }));
+        } catch (e) { /* 保存失敗時は何もしない */ }
+    }
+
+    function renderKirokuScreen() {
+        const perfectCount = practiceProgress.filter(s => s === 2).length;
+        const mistakeCount = practiceProgress.filter(s => s === 1).length;
+        const mondaiCountEl = document.getElementById('kiroku-mondai-count');
+        if (mondaiCountEl) mondaiCountEl.textContent = `★：${perfectCount}問／☆：${mistakeCount}問`;
+
+        const bestTimeEl = document.getElementById('kiroku-best-time');
+        if (bestTimeEl) bestTimeEl.textContent = (bestNormalTimeMs !== null) ? formatMs(bestNormalTimeMs) : '--:--.-';
+
+        const streakEl = document.getElementById('kiroku-streak');
+        if (streakEl) streakEl.textContent = `現在：${correctStreakCount}問／最高：${maxStreakCount}問`;
+    }
+
+    function loadPracticeProgress() {
+        try {
+            const raw = localStorage.getItem(PRACTICE_PROGRESS_KEY);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed) && parsed.length === FIXED_PROBLEMS.length) {
+                    practiceProgress = parsed;
+                    return;
+                }
+            }
+        } catch (e) { /* 読み込み失敗時は初期化 */ }
+        practiceProgress = new Array(FIXED_PROBLEMS.length).fill(0);
+    }
+
+    function savePracticeProgress() {
+        try {
+            localStorage.setItem(PRACTICE_PROGRESS_KEY, JSON.stringify(practiceProgress));
+        } catch (e) { /* 保存失敗時は何もしない */ }
+    }
+
+    function resetPracticeProgress() {
+        practiceProgress = new Array(FIXED_PROBLEMS.length).fill(0);
+        savePracticeProgress();
+    }
+
+    function renderMondaiGrid() {
+        const wrap = document.getElementById('mondai-grid-wrap');
+        if (!wrap) return;
+
+        let html = '';
+        for (let i = 0; i < FIXED_PROBLEMS.length; i++) {
+            const status = practiceProgress[i] || 0;
+            const unlocked = (i === 0) || (practiceProgress[i - 1] >= 1);
+
+            let cellClass = 'grid-cell';
+            let starHtml = '';
+            if (!unlocked) {
+                cellClass += ' locked';
+            } else if (status === 2) {
+                cellClass += ' star-perfect';
+                starHtml = '<span class="grid-cell-star star-perfect-mark">★</span>';
+            } else if (status === 1) {
+                cellClass += ' star-mistake';
+                starHtml = '<span class="grid-cell-star star-mistake-mark">☆</span>';
+            } else {
+                cellClass += ' available';
+            }
+
+            const disabledAttr = unlocked ? '' : 'disabled';
+            const onclickAttr = unlocked ? `onclick="startPractice(${i})"` : '';
+
+            html += `<button type="button" class="${cellClass}" ${onclickAttr} ${disabledAttr}>`
+                  +   `${starHtml}<span class="grid-cell-num">${i + 1}</span>`
+                  +   `<span class="grid-cell-formula">$${FIXED_PROBLEMS[i].leftPart}=${FIXED_PROBLEMS[i].rightPart}$</span>`
+                  + `</button>`;
+        }
+        wrap.innerHTML = html;
+        wrap.scrollTop = 0;
+        updateMathJax([wrap]);
+    }
+
+    function startPractice(index) {
+        if (!practiceMode) {
+            savedQuizData = quizData;
+            savedCurrentQuestionIndex = currentQuestionIndex;
+
+            const timerDisplayEl = document.getElementById('timer-display');
+            const bestDisplayEl = document.getElementById('best-normal-display');
+            savedTimerDisplayText = timerDisplayEl ? timerDisplayEl.innerText : null;
+            savedBestDisplayText = bestDisplayEl ? bestDisplayEl.innerText : null;
+            if (timerDisplayEl) timerDisplayEl.innerText = '⏱️ --:--.-';
+            if (bestDisplayEl) bestDisplayEl.innerText = 'ベストタイム(4問): --:--.-';
+        }
+        practiceMode = true;
+        practiceCurrentIndex = index;
+        quizData = [FIXED_PROBLEMS[index]];
+        currentQuestionIndex = 0;
+
+        const timerArea = document.getElementById('timer-container-area');
+        if (timerArea) timerArea.classList.add('practice-disabled');
+
+        showScreen('screen-kentei');
+        startQuizGame();
+    }
+
+    function exitPracticeMode() {
+        practiceMode = false;
+        practiceCurrentIndex = null;
+        quizData = savedQuizData || generateQuizData();
+        currentQuestionIndex = savedCurrentQuestionIndex || 0;
+        gameStarted = false;
+        isCompleted = false;
+
+        const timerDisplayEl = document.getElementById('timer-display');
+        const bestDisplayEl = document.getElementById('best-normal-display');
+        if (timerDisplayEl && savedTimerDisplayText !== null) timerDisplayEl.innerText = savedTimerDisplayText;
+        if (bestDisplayEl && savedBestDisplayText !== null) bestDisplayEl.innerText = savedBestDisplayText;
+
+        const timerArea = document.getElementById('timer-container-area');
+        if (timerArea) timerArea.classList.remove('practice-disabled');
+
+        showStartLayout();
+    }
+
+    function goBackFromKentei() {
+        if (practiceMode) {
+            exitPracticeMode();
+            showScreen('screen-mondai');
+            renderMondaiGrid();
+        } else {
+            showScreen('screen-start');
+        }
+    }
+
+    function saveCurrentPracticeResult() {
+        const idx = practiceCurrentIndex;
+        if (idx === null || idx === undefined) return;
+        const star = (currentQuestionWrongCount > 0) ? 1 : 2;
+        const prev = practiceProgress[idx] || 0;
+        practiceProgress[idx] = Math.max(prev, star);
+        savePracticeProgress();
+    }
+
+    function recordPracticeResult() {
+        saveCurrentPracticeResult();
+        exitPracticeMode();
+        showScreen('screen-mondai');
+        renderMondaiGrid();
+    }
+
+    function advancePracticeToNext() {
+        saveCurrentPracticeResult();
+        const nextIndex = practiceCurrentIndex + 1;
+        if (nextIndex < FIXED_PROBLEMS.length) {
+            startPractice(nextIndex);
+        } else {
+            exitPracticeMode();
+            showScreen('screen-mondai');
+            renderMondaiGrid();
+        }
+    }
+
+    function showScreen(screenId) {
+        document.querySelectorAll('.app-screen').forEach(el => {
+            el.style.display = 'none';
+        });
+        const target = document.getElementById(screenId);
+        if (target) {
+            target.style.display = 'flex';
+        }
+    }
+
+    function enterKenteiScreen() {
+        restartQuiz();
+        showScreen('screen-kentei');
+    }
+
+    let pendingResetType = null;
+
+    function openResetConfirm(type) {
+        pendingResetType = type;
+        const msgEl = document.getElementById('reset-confirm-message');
+        if (msgEl) {
+            msgEl.textContent = (type === 'mondai')
+                ? '問題選択の取り組み（★/☆の記録）がすべてリセットされます。よろしいですか？'
+                : '検定のベストタイム・連続正解記録がリセットされます。よろしいですか？';
+        }
+        const modal = document.getElementById('reset-confirm-modal');
+        if (modal) modal.style.display = 'flex';
+    }
+
+    function closeResetConfirm() {
+        pendingResetType = null;
+        const modal = document.getElementById('reset-confirm-modal');
+        if (modal) modal.style.display = 'none';
+    }
+
+    function confirmReset() {
+        if (pendingResetType === 'mondai') {
+            resetPracticeProgress();
+        } else if (pendingResetType === 'kiroku') {
+            bestNormalTimeMs = null;
+            correctStreakCount = 0;
+            maxStreakCount = 0;
+            saveKenteiRecords();
+            if (!practiceMode) {
+                const bestDisplayEl = document.getElementById('best-normal-display');
+                if (bestDisplayEl) bestDisplayEl.innerText = 'ベストタイム(4問): --:--.-';
+            }
+        }
+        closeResetConfirm();
+    }
+
+
     /* ==========================================================================
        6. ヒントデータ
        ========================================================================== */
@@ -2319,6 +3328,12 @@
         resizeApp();
         initValidationControls();
         quizData = generateQuizData();
+        loadPracticeProgress();
+        loadKenteiRecords();
+        if (bestNormalTimeMs !== null) {
+            const bestDisplayEl = document.getElementById('best-normal-display');
+            if (bestDisplayEl) bestDisplayEl.innerText = `ベストタイム(4問): ${formatMs(bestNormalTimeMs)}`;
+        }
         showStartLayout();
     });
 </script>
