@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> 方程式（Step13：異分母をふくむ方程式②）</title>
+    <title> 132413 異分母②</title>
     <script>
         /* ==========================================================================
            1. MathJaxの基本設定
@@ -362,7 +362,7 @@
             border: 2px solid #ced4da;
             border-radius: 8px;
             padding: 4px 10px;
-            height: 64px;
+            height: auto;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -747,11 +747,373 @@
     border-radius: 0 0 10px 10px;
     padding-bottom: 4px;
     }
+
+        /* ==========================================================================
+           9. 開始画面・問題選択/記録/設定 画面（新規追加分）
+           ========================================================================== */
+        .app-screen {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+            background-color: #eceff1;
+        }
+
+        #screen-kentei {
+            background-color: #ffffff;
+        }
+
+        .start-screen {
+            justify-content: center;
+            align-items: center;
+            gap: 28px;
+        }
+
+        .start-title-main {
+            font-size: 18px;
+            font-weight: normal;
+            color: #333;
+        }
+
+        .start-title-sub {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+            margin-top: 4px;
+        }
+
+        .start-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 320px;
+        }
+
+        .start-menu-btn {
+            height: 64px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #fff;
+            background-color: #1a73e8;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .start-menu-btn:active {
+            transform: scale(0.97);
+        }
+
+        .sub-screen-header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .sub-screen-header h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 0;
+        }
+
+        .btn-tutorial-hud-secondary {
+            padding: 10px 18px;
+            font-size: 15px;
+            font-weight: bold;
+            background-color: #e3f2fd;
+            color: #1565c0;
+            border: 1px solid #90caf9;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-tutorial-hud-secondary:active {
+            background-color: #bbdefb;
+        }
+
+        .placeholder-screen {
+            justify-content: center;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .placeholder-message {
+            font-size: 18px;
+            color: #888;
+        }
+
+        .practice-disabled {
+            opacity: 0.4;
+            pointer-events: none;
+            filter: grayscale(60%);
+        }
+
+        .mondai-progress-count {
+            font-size: 14px;
+            color: #555;
+            margin-top: 2px;
+        }
+
+        .mondai-grid {
+            flex: 1;
+            min-height: 0;
+            max-height: 495px;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 3px;
+            padding: 4px;
+            background-color: #ffffff;
+            border-radius: 8px;
+        }
+
+        .grid-cell {
+            position: relative;
+            height: 40px;
+            font-size: 11px;
+            background-color: #e7f5ff;
+            border: 1px solid #a5d8ff;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            padding: 1px;
+        }
+
+        .grid-cell.locked {
+            background-color: #e9ecef;
+            border-color: #ced4da;
+            color: #adb5bd;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .grid-cell.available:active {
+            transform: scale(0.95);
+        }
+
+        .grid-cell.star-perfect {
+            background-color: #fff9db;
+            border-color: #ffe066;
+        }
+
+        .grid-cell.star-mistake {
+            background-color: #f1f3f5;
+            border-color: #ced4da;
+        }
+
+        .grid-cell-star {
+            position: absolute;
+            top: 1px;
+            right: 3px;
+            font-size: 12px;
+        }
+
+        .star-perfect-mark { color: #f5a623; }
+        .star-mistake-mark { color: #999; }
+
+        .grid-cell-formula {
+            font-size: 12px;
+            line-height: 1.1;
+        }
+
+        .grid-cell-num {
+            font-size: 9px;
+            color: #999;
+            margin-top: 1px;
+        }
+
+        .key.action-btn-back {
+            background-color: #fb8c00;
+            color: #fff;
+            border: none;
+            font-size: 18px;
+            height: 46px;
+            width: 100%;
+        }
+
+        .key.action-btn-back:disabled {
+            background-color: #ffcc80;
+            color: #fff;
+            cursor: not-allowed;
+        }
+
+        .kiroku-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            width: 360px;
+            margin: 0 auto;
+        }
+
+        .kiroku-card {
+            background-color: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 14px 18px;
+            text-align: center;
+        }
+
+        .kiroku-card-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 6px;
+        }
+
+        .kiroku-card-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1a73e8;
+        }
+
+        .settei-reset-buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .settei-reset-btn {
+            width: 280px;
+            height: 52px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #c0392b;
+            background-color: #fdecea;
+            border: 1px solid #f1a9a0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .settei-reset-btn:active {
+            background-color: #f8d3ce;
+        }
+
+        .reset-confirm-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            border-radius: 12px;
+        }
+
+        .reset-confirm-box {
+            width: 340px;
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 24px 20px;
+            text-align: center;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+        }
+
+        .reset-confirm-message {
+            font-size: 15px;
+            color: #333;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .reset-confirm-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .reset-confirm-cancel, .reset-confirm-ok {
+            flex: 1;
+            height: 44px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            border: none;
+        }
+
+        .reset-confirm-cancel {
+            background-color: #e9ecef;
+            color: #333;
+        }
+
+        .reset-confirm-ok {
+            background-color: #e74c3c;
+            color: #fff;
+        }
+
     </style>
 </head>
 
 <body>
     <div id="app-container">
+        <div id="screen-start" class="app-screen start-screen">
+            <div class="start-title" style="text-align:center;">
+                <div class="start-title-main">方程式</div>
+                <div class="start-title-sub">Step13：異分母をふくむ方程式②</div>
+            </div>
+            <div class="start-menu">
+                <button class="start-menu-btn" onclick="showScreen('screen-mondai'); renderMondaiGrid();">📚 問題選択</button>
+                <button class="start-menu-btn" onclick="enterKenteiScreen()">📝 検定</button>
+                <button class="start-menu-btn" onclick="showScreen('screen-kiroku'); renderKirokuScreen();">🏆 記録</button>
+                <button class="start-menu-btn" onclick="showScreen('screen-settei')">⚙️ 設定</button>
+            </div>
+        </div>
+
+        <div id="screen-mondai" class="app-screen" style="display:none;">
+            <div class="sub-screen-header">
+                <h1>📚 問題選択</h1>
+            </div>
+            <div id="mondai-grid-wrap" class="mondai-grid"></div>
+            <div style="text-align:center; margin-top:8px;">
+                <button class="btn-tutorial-hud-secondary" onclick="showScreen('screen-start')">←開始画面へ</button>
+            </div>
+        </div>
+
+        <div id="screen-kiroku" class="app-screen" style="display:none; align-items:center; justify-content:center; gap:20px;">
+            <div class="sub-screen-header"><h1>🏆 記録</h1></div>
+            <div class="kiroku-cards">
+                <div class="kiroku-card">
+                    <div class="kiroku-card-label">問題選択：クリア問題数</div>
+                    <div class="kiroku-card-value" id="kiroku-mondai-count">★：0問／☆：0問</div>
+                </div>
+                <div class="kiroku-card">
+                    <div class="kiroku-card-label">検定：ベストタイム</div>
+                    <div class="kiroku-card-value" id="kiroku-best-time">--:--.-</div>
+                </div>
+                <div class="kiroku-card">
+                    <div class="kiroku-card-label">検定：連続正解記録</div>
+                    <div class="kiroku-card-value" id="kiroku-streak">現在：0問／最高：0問</div>
+                </div>
+            </div>
+            <button class="btn-tutorial-hud-secondary" onclick="showScreen('screen-start')">←開始画面へ</button>
+        </div>
+
+        <div id="screen-settei" class="app-screen placeholder-screen" style="display:none;">
+            <div class="sub-screen-header"><h1>⚙️ 設定</h1></div>
+            <div class="settei-reset-buttons">
+                <button class="settei-reset-btn" onclick="openResetConfirm('mondai')">🗑️ 問題選択をリセットする</button>
+                <button class="settei-reset-btn" onclick="openResetConfirm('kiroku')">🗑️ 記録をリセットする</button>
+            </div>
+            <button class="btn-tutorial-hud-secondary" onclick="showScreen('screen-start')">←開始画面へ</button>
+        </div>
+
+        <div id="reset-confirm-modal" class="reset-confirm-overlay" style="display:none;">
+            <div class="reset-confirm-box">
+                <div class="reset-confirm-message" id="reset-confirm-message"></div>
+                <div class="reset-confirm-buttons">
+                    <button class="reset-confirm-cancel" onclick="closeResetConfirm()">キャンセル</button>
+                    <button class="reset-confirm-ok" onclick="confirmReset()">リセットする</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-kentei" class="app-screen" style="display:none;">
         <header>
             <div class="title-bar">
                 <button class="title-hand-btn" id="hand-left-btn" onclick="changeHandedness('left')">👈 左利き</button>
@@ -760,13 +1122,13 @@
             </div>
         </header>
 
-        <div class="timer-container">
+        <div class="timer-container" id="timer-container-area">
             <div style="display: flex; align-items: center; gap: 15px;">
                 <div id="timer-display">⏱️ 00:00.0</div>
                 <div class="record-box">
                     <div id="best-update-message"></div>
                     <div class="best-label-container">
-                        <div id="best-normal-display">ベストタイム(4問): --:--.-</div>
+                        <div id="best-normal-display">ベストタイム(5問): --:--.-</div>
                     </div>
                 </div>
             </div>
@@ -910,6 +1272,7 @@
                 </div>
             </div>
         </div>
+        </div>
 
         <footer>
             © 中原先生の数学部屋
@@ -964,6 +1327,22 @@
     const errorDisplay = document.getElementById('error-display');
     let isConfirmed = false;
 
+    /* --- 問題選択(固定問題)・記録用のグローバル変数 --- */
+    let practiceMode              = false;
+    let practiceCurrentIndex      = null;
+    let practiceProgress          = [];   // 0=未挑戦, 1=ミスありクリア, 2=ノーミスクリア（★）
+    let savedQuizData              = null;
+    let savedCurrentQuestionIndex  = 0;
+    let savedTimerDisplayText      = null;
+    let savedBestDisplayText       = null;
+
+    const PRACTICE_PROGRESS_KEY = 'ibunbo2_practice_progress_v1';
+
+    /* --- 検定の記録(ベストタイム・連続正解記録) --- */
+    let correctStreakCount = 0;
+    let maxStreakCount = 0;
+    const KENTEI_RECORDS_KEY = 'ibunbo2_kentei_records_v1';
+
     /* ==========================================================================
        2. タイマーや生徒番号、記録送信などの関数
        ========================================================================== */
@@ -973,6 +1352,7 @@
     }
 
     function startTimerClock() {
+        if (practiceMode) return;
         isCorrectState = false;
         lastClearTimeText = "";
         elapsedBeforeResume = 0;
@@ -1011,8 +1391,9 @@
         elapsedBeforeResume = totalElapsedTimeMs;
         if (bestNormalTimeMs === null || totalElapsedTimeMs < bestNormalTimeMs) {
             bestNormalTimeMs = totalElapsedTimeMs;
-            document.getElementById('best-normal-display').innerText = `ベストタイム(4問): ${finalTimeStr}`;
+            document.getElementById('best-normal-display').innerText = `ベストタイム(5問): ${finalTimeStr}`;
             document.getElementById('best-update-message').innerText = "🎉 ベスト更新！";
+            saveKenteiRecords();
         }
         
         const numInput = numberField ? numberField.value.trim() : "";
@@ -1554,7 +1935,7 @@
             return;
         }
         if (isCompleted) {
-            if (currentQuestionIndex === 3) {
+            if (currentQuestionIndex === 4) {
                 restartQuiz();
                 return;
             }
@@ -1565,6 +1946,14 @@
     }
 
     function handleRightBtn() {
+        if (currentControlState === 'start') {
+            goBackFromKentei();
+            return;
+        }
+        if (practiceMode && currentControlState === 'cleared') {
+            recordPracticeResult();
+            return;
+        }
         if (currentControlState === 'finished') {
             restartQuiz();
         } else {
@@ -1573,6 +1962,10 @@
     }
 
     function handleCenterBtn() {
+        if (practiceMode && currentControlState === 'cleared') {
+            advancePracticeToNext();
+            return;
+        }
         if (currentControlState === 'finished') {
             manualSendToGoogleForm();
         } else {
@@ -1589,7 +1982,7 @@
         if (state === 'start') {
             actionBtn.textContent = "スタート"; actionBtn.disabled = false;
             clearBtn.textContent = "消す"; clearBtn.disabled = true;
-            clearAllBtn.textContent = "全消去"; clearAllBtn.disabled = true;
+            clearAllBtn.textContent = "戻る"; clearAllBtn.className = "key action-btn-back"; clearAllBtn.disabled = false;
         } else if (state === 'playing') {
             actionBtn.textContent = "判定する";
             actionBtn.className = "key action-btn judge-mode";
@@ -1597,9 +1990,15 @@
             clearBtn.textContent = "消す"; clearBtn.className = "key clear-btn"; clearBtn.disabled = false;
             clearAllBtn.textContent = "全消去"; clearAllBtn.disabled = false;
         } else if (state === 'cleared') {
-            actionBtn.textContent = "次の問題"; actionBtn.className = "key action-btn judge-mode"; actionBtn.disabled = false;
-            clearBtn.textContent = "消す"; clearBtn.disabled = true;
-            clearAllBtn.textContent = "全消去"; clearAllBtn.disabled = true;
+            if (practiceMode) {
+                actionBtn.textContent = "終了"; actionBtn.className = "key clear-btn"; actionBtn.disabled = true;
+                clearBtn.textContent = "次へ"; clearBtn.className = "key action-btn judge-mode"; clearBtn.disabled = false;
+                clearAllBtn.textContent = "戻る"; clearAllBtn.className = "key action-btn-back"; clearAllBtn.disabled = false;
+            } else {
+                actionBtn.textContent = "次の問題"; actionBtn.className = "key action-btn judge-mode"; actionBtn.disabled = false;
+                clearBtn.textContent = "消す"; clearBtn.disabled = true;
+                clearAllBtn.textContent = "全消去"; clearAllBtn.disabled = true;
+            }
         } else if (state === 'finished') {
             actionBtn.textContent = "全問終了"; actionBtn.className = "key clear-btn"; actionBtn.disabled = true;
             clearBtn.textContent = "送信"; clearBtn.className = "key action-btn judge-mode"; clearBtn.disabled = false;
@@ -1665,8 +2064,15 @@
         gameStarted = false;
         isCompleted = false;
         progressEl.textContent = "スタートボタンを押してください";
-        formulaBox.innerHTML = `<span style="color:#aaa; font-size:24px;">生徒番号を入力→【スタート】</span>`;
+        formulaBox.innerHTML = practiceMode
+            ? `<span style="color:#aaa; font-size:24px;">【スタート】を押して挑戦しよう</span>`
+            : `<span style="color:#aaa; font-size:24px;">生徒番号を入力→【スタート】</span>`;
         document.getElementById('hint-text').innerHTML = HINT_DATA.start;
+
+        if (!practiceMode) {
+            const timerDisplayEl = document.getElementById('timer-display');
+            if (timerDisplayEl) timerDisplayEl.innerText = '⏱️ 00:00.0';
+        }
 
         document.getElementById('badge-clear-denom').textContent = "ロック中";
         document.getElementById('badge-expansion').textContent = "ロック中";
@@ -1746,7 +2152,9 @@
         updateControlKeysState('playing');
 
         const q = quizData[currentQuestionIndex];
-        progressEl.textContent = `第 ${currentQuestionIndex + 1} 問 / 全 4 問`;
+        progressEl.textContent = practiceMode
+            ? `問題 ${practiceCurrentIndex + 1} / ${FIXED_PROBLEMS.length}`
+            : `第 ${currentQuestionIndex + 1} 問 / 全 5 問`;
         
         formulaBox.innerHTML = `
             <div class="equation-grid">
@@ -1886,15 +2294,22 @@
                 document.getElementById('group-answer').className = "input-box-group locked-correct";
                 document.getElementById('badge-answer').textContent = "正解！";
 
-                if (currentQuestionWrongCount === 0) score++;
+                if (currentQuestionWrongCount === 0) {
+                    score++;
+                    if (!practiceMode) {
+                        correctStreakCount++;
+                        if (correctStreakCount > maxStreakCount) maxStreakCount = correctStreakCount;
+                        saveKenteiRecords();
+                    }
+                }
                 if (document.activeElement) document.activeElement.blur();
                 refreshMathJaxPreview();
 
-                if (currentQuestionIndex === 3) {
+                if (currentQuestionIndex === 4) {
                     stopTimerClockAndEvaluate();
-                    resultMsgEl.textContent = `全 4 問中 ${score} 問ノーミス正解！`;
+                    resultMsgEl.textContent = `全 5 問中 ${score} 問ノーミス正解！`;
                     resultMsgEl.className = "result-message correct";
-                    progressEl.textContent = (score === 4) ? "全問ノーミスパーフェクト！" : "全問終了！";
+                    progressEl.textContent = (score === 5) ? "全問ノーミスパーフェクト！" : "全問終了！";
                     document.getElementById('hint-text').innerHTML = HINT_DATA.allFinished;
                     updateControlKeysState('finished'); updateSendButtonState();
                 } else {
@@ -1911,6 +2326,10 @@
 
     function showStepError(groupEl) {
         currentQuestionWrongCount++;
+        if (!practiceMode && correctStreakCount !== 0) {
+            correctStreakCount = 0;
+            saveKenteiRecords();
+        }
         startQuestionTimer();
         if (groupEl) {
             groupEl.classList.remove('error-shake');
@@ -1976,7 +2395,7 @@
                                 const top = n.querySelector('.frac-top') ? n.querySelector('.frac-top').value : "";
                                 const bottom = n.querySelector('.frac-bottom') ? n.querySelector('.frac-bottom').value : "";
                                 if (top !== "" || bottom !== "") {
-                                    val += `\\frac{${top}}{${bottom}}`;
+                                    val += `\\\dfrac{${top}}{${bottom}}`;
                                 }
                             } else if (n.value) {
                                 val += n.value; 
@@ -2105,7 +2524,7 @@
             if (isX && n === 1) valStr = "";
             else valStr = n;
         } else {
-            valStr = `\\frac{${n}}{${d}}`;
+            valStr = `\\\dfrac{${n}}{${d}}`;
         }
         return `${sign}${valStr}${xStr}`;
     };
@@ -2274,21 +2693,15 @@
                 }
             };
 
-            // 6×4＝24パターンから重複なしでランダムに4つを選択して出題
-            const allCombinations = [];
-            for (let p = 1; p <= 6; p++) {
-                for (let o = 0; o <= 3; o++) {
-                    allCombinations.push({ pos: p, order: o });
-                }
-            }
+            // 検定は5グループ(posPattern2「定数×定数」は廃止のため対象外)から
+            // 各グループ1問ずつ、順序パターンはランダムに選んで計5問構成にする
+            const kenteiGroups = [1, 5, 6, 3, 4]; // ①係数×係数 ⑤混合対角A ⑥混合対角B ③左辺集中 ④右辺集中
+            const shuffledGroups = [...kenteiGroups].sort(() => Math.random() - 0.5);
 
-            const selected = [];
-            while (selected.length < 4) {
-                const idx = Math.floor(Math.random() * allCombinations.length);
-                selected.push(allCombinations.splice(idx, 1)[0]);
-            }
-
-            return selected.map(item => generatePatternQuiz(item.pos, item.order));
+            return shuffledGroups.map(pos => {
+                const order = Math.floor(Math.random() * 4); // 0〜3からランダム
+                return generatePatternQuiz(pos, order);
+            });
         }
 
     /* ==========================================================================
@@ -2316,13 +2729,277 @@
         };
 
     /* ==========================================================================
-       7. イベントリスナー・初期化
+       7. 画面切り替え（開始画面／問題選択／検定／記録／設定）
+       ========================================================================== */
+    function showScreen(screenId) {
+        document.querySelectorAll('.app-screen').forEach(el => {
+            el.style.display = 'none';
+        });
+        const target = document.getElementById(screenId);
+        if (target) target.style.display = 'flex';
+    }
+
+    /* --- 開始画面から検定へ入る際、常に新しい5問・初期状態にリセットする --- */
+    function enterKenteiScreen() {
+        restartQuiz();
+        showScreen('screen-kentei');
+    }
+
+    /* --- 検定画面下部の「戻る」ボタンの処理を振り分ける関数 --- */
+    function goBackFromKentei() {
+        if (practiceMode) {
+            exitPracticeMode();
+            showScreen('screen-mondai');
+            renderMondaiGrid();
+        } else {
+            showScreen('screen-start');
+        }
+    }
+
+    /* ==========================================================================
+       8. 問題選択（固定問題）データ・進捗・グリッド表示
+       ========================================================================== */
+    // ※固定問題(FIXED_PROBLEMS)は次のステップで320問生成して差し替える予定のプレースホルダー
+    const FIXED_PROBLEMS = [];
+
+    function loadPracticeProgress() {
+        try {
+            const raw = localStorage.getItem(PRACTICE_PROGRESS_KEY);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed) && parsed.length === FIXED_PROBLEMS.length) {
+                    practiceProgress = parsed;
+                    return;
+                }
+            }
+        } catch (e) { /* 読み込み失敗時は初期化 */ }
+        practiceProgress = new Array(FIXED_PROBLEMS.length).fill(0);
+    }
+
+    function savePracticeProgress() {
+        try {
+            localStorage.setItem(PRACTICE_PROGRESS_KEY, JSON.stringify(practiceProgress));
+        } catch (e) { /* 保存失敗時は何もしない */ }
+    }
+
+    function resetPracticeProgress() {
+        practiceProgress = new Array(FIXED_PROBLEMS.length).fill(0);
+        savePracticeProgress();
+    }
+
+    /* --- 問題選択画面のグリッドを描画する関数 --- */
+    function renderMondaiGrid() {
+        const wrap = document.getElementById('mondai-grid-wrap');
+        if (!wrap) return;
+
+        let html = '';
+        for (let i = 0; i < FIXED_PROBLEMS.length; i++) {
+            const status = practiceProgress[i] || 0;
+            const unlocked = (i === 0) || (practiceProgress[i - 1] >= 1);
+
+            let cellClass = 'grid-cell';
+            let starHtml = '';
+            if (!unlocked) {
+                cellClass += ' locked';
+            } else if (status === 2) {
+                cellClass += ' star-perfect';
+                starHtml = '<span class="grid-cell-star star-perfect-mark">★</span>';
+            } else if (status === 1) {
+                cellClass += ' star-mistake';
+                starHtml = '<span class="grid-cell-star star-mistake-mark">☆</span>';
+            } else {
+                cellClass += ' available';
+            }
+
+            const disabledAttr = unlocked ? '' : 'disabled';
+            const onclickAttr = unlocked ? `onclick="startPractice(${i})"` : '';
+
+            html += `<button type="button" class="${cellClass}" ${onclickAttr} ${disabledAttr}>`
+                  +   `${starHtml}<span class="grid-cell-num">${i + 1}</span>`
+                  +   `<span class="grid-cell-formula">$${FIXED_PROBLEMS[i].leftPart}=${FIXED_PROBLEMS[i].rightPart}$</span>`
+                  + `</button>`;
+        }
+        wrap.innerHTML = html;
+        wrap.scrollTop = 0;
+        updateMathJax([wrap]);
+    }
+
+    /* --- 固定問題の演習を開始する関数 --- */
+    function startPractice(index) {
+        if (!practiceMode) {
+            savedQuizData = quizData;
+            savedCurrentQuestionIndex = currentQuestionIndex;
+
+            const timerDisplayEl = document.getElementById('timer-display');
+            const bestDisplayEl = document.getElementById('best-normal-display');
+            savedTimerDisplayText = timerDisplayEl ? timerDisplayEl.innerText : null;
+            savedBestDisplayText = bestDisplayEl ? bestDisplayEl.innerText : null;
+            if (timerDisplayEl) timerDisplayEl.innerText = '⏱️ --:--.-';
+            if (bestDisplayEl) bestDisplayEl.innerText = 'ベストタイム(5問): --:--.-';
+        }
+        practiceMode = true;
+        practiceCurrentIndex = index;
+        quizData = [FIXED_PROBLEMS[index]];
+        currentQuestionIndex = 0;
+
+        const timerArea = document.getElementById('timer-container-area');
+        if (timerArea) timerArea.classList.add('practice-disabled');
+
+        showScreen('screen-kentei');
+        startQuizGame();
+    }
+
+    /* --- 問題選択モードを終了し、検定用の状態に戻す関数 --- */
+    function exitPracticeMode() {
+        practiceMode = false;
+        practiceCurrentIndex = null;
+        quizData = savedQuizData || generateQuizData();
+        currentQuestionIndex = savedCurrentQuestionIndex || 0;
+        gameStarted = false;
+        isCompleted = false;
+
+        const timerDisplayEl = document.getElementById('timer-display');
+        const bestDisplayEl = document.getElementById('best-normal-display');
+        if (timerDisplayEl && savedTimerDisplayText !== null) timerDisplayEl.innerText = savedTimerDisplayText;
+        if (bestDisplayEl && savedBestDisplayText !== null) bestDisplayEl.innerText = savedBestDisplayText;
+
+        const timerArea = document.getElementById('timer-container-area');
+        if (timerArea) timerArea.classList.remove('practice-disabled');
+
+        showStartLayout();
+    }
+
+    /* --- 現在の問題の結果(★/☆)を保存する共通処理 --- */
+    function saveCurrentPracticeResult() {
+        const idx = practiceCurrentIndex;
+        if (idx === null || idx === undefined) return;
+        const star = (currentQuestionWrongCount > 0) ? 1 : 2;
+        const prev = practiceProgress[idx] || 0;
+        practiceProgress[idx] = Math.max(prev, star);
+        savePracticeProgress();
+    }
+
+    /* --- 「戻る」：結果を保存して問題選択画面へ戻る --- */
+    function recordPracticeResult() {
+        saveCurrentPracticeResult();
+        exitPracticeMode();
+        showScreen('screen-mondai');
+        renderMondaiGrid();
+    }
+
+    /* --- 「次へ」：結果を保存して次の固定問題へ進む --- */
+    function advancePracticeToNext() {
+        saveCurrentPracticeResult();
+        const nextIndex = practiceCurrentIndex + 1;
+        if (nextIndex < FIXED_PROBLEMS.length) {
+            startPractice(nextIndex);
+        } else {
+            exitPracticeMode();
+            showScreen('screen-mondai');
+            renderMondaiGrid();
+        }
+    }
+
+    /* ==========================================================================
+       9. 検定の記録(ベストタイム・連続正解記録)
+       ========================================================================== */
+    function formatMs(ms) {
+        const totalMs = Math.max(0, Math.round(ms));
+        const min = Math.floor(totalMs / 60000);
+        const sec = Math.floor((totalMs % 60000) / 1000);
+        const msec = Math.floor((totalMs % 1000) / 100);
+        return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}.${msec}`;
+    }
+
+    function loadKenteiRecords() {
+        try {
+            const raw = localStorage.getItem(KENTEI_RECORDS_KEY);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                bestNormalTimeMs = (typeof parsed.bestTimeMs === 'number') ? parsed.bestTimeMs : null;
+                correctStreakCount = (typeof parsed.streak === 'number') ? parsed.streak : 0;
+                maxStreakCount = (typeof parsed.maxStreak === 'number') ? parsed.maxStreak : 0;
+                return;
+            }
+        } catch (e) { /* 読み込み失敗時は初期化 */ }
+        bestNormalTimeMs = null;
+        correctStreakCount = 0;
+        maxStreakCount = 0;
+    }
+
+    function saveKenteiRecords() {
+        try {
+            localStorage.setItem(KENTEI_RECORDS_KEY, JSON.stringify({ bestTimeMs: bestNormalTimeMs, streak: correctStreakCount, maxStreak: maxStreakCount }));
+        } catch (e) { /* 保存失敗時は何もしない */ }
+    }
+
+    /* --- 記録画面を描画する関数 --- */
+    function renderKirokuScreen() {
+        const perfectCount = practiceProgress.filter(s => s === 2).length;
+        const mistakeCount = practiceProgress.filter(s => s === 1).length;
+        const mondaiCountEl = document.getElementById('kiroku-mondai-count');
+        if (mondaiCountEl) mondaiCountEl.textContent = `★：${perfectCount}問／☆：${mistakeCount}問`;
+
+        const bestTimeEl = document.getElementById('kiroku-best-time');
+        if (bestTimeEl) bestTimeEl.textContent = (bestNormalTimeMs !== null) ? formatMs(bestNormalTimeMs) : '--:--.-';
+
+        const streakEl = document.getElementById('kiroku-streak');
+        if (streakEl) streakEl.textContent = `現在：${correctStreakCount}問／最高：${maxStreakCount}問`;
+    }
+
+    /* ==========================================================================
+       10. 設定画面：リセット確認モーダルの制御
+       ========================================================================== */
+    let pendingResetType = null;
+
+    function openResetConfirm(type) {
+        pendingResetType = type;
+        const msgEl = document.getElementById('reset-confirm-message');
+        if (msgEl) {
+            msgEl.textContent = (type === 'mondai')
+                ? '問題選択の取り組み（★/☆の記録）がすべてリセットされます。よろしいですか？'
+                : '検定のベストタイム・連続正解記録がリセットされます。よろしいですか？';
+        }
+        const modal = document.getElementById('reset-confirm-modal');
+        if (modal) modal.style.display = 'flex';
+    }
+
+    function closeResetConfirm() {
+        pendingResetType = null;
+        const modal = document.getElementById('reset-confirm-modal');
+        if (modal) modal.style.display = 'none';
+    }
+
+    function confirmReset() {
+        if (pendingResetType === 'mondai') {
+            resetPracticeProgress();
+        } else if (pendingResetType === 'kiroku') {
+            bestNormalTimeMs = null;
+            correctStreakCount = 0;
+            maxStreakCount = 0;
+            saveKenteiRecords();
+            if (!practiceMode) {
+                const bestDisplayEl = document.getElementById('best-normal-display');
+                if (bestDisplayEl) bestDisplayEl.innerText = 'ベストタイム(5問): --:--.-';
+            }
+        }
+        closeResetConfirm();
+    }
+
+    /* ==========================================================================
+       11. イベントリスナー・初期化
        ========================================================================== */
     window.addEventListener('resize', resizeApp);
     window.addEventListener('DOMContentLoaded', () => {
         resizeApp();
         initValidationControls();
         quizData = generateQuizData();
+        loadPracticeProgress();
+        loadKenteiRecords();
+        if (bestNormalTimeMs !== null) {
+            const bestDisplayEl = document.getElementById('best-normal-display');
+            if (bestDisplayEl) bestDisplayEl.innerText = `ベストタイム(5問): ${formatMs(bestNormalTimeMs)}`;
+        }
         showStartLayout();
     });
 </script>
