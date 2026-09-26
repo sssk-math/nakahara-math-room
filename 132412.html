@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> 方程式（Step12：異分母をふくむ方程式①）</title>
+    <title> 132412.異分母①</title>
     <script>
         /* ==========================================================================
            1. MathJaxの基本設定
@@ -362,7 +362,7 @@
             border: 2px solid #ced4da;
             border-radius: 8px;
             padding: 4px 10px;
-            height: 64px;
+            height: auto;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -1417,6 +1417,10 @@
 
     function startQuestionTimer() {
         clearInterval(questionTimerId);
+        if (practiceMode) {
+            document.getElementById('countdown-timer').style.display = 'none';
+            return;
+        }
         if (!gameStarted || isCompleted) {
             document.getElementById('countdown-timer').style.display = 'none';
             return;
@@ -2386,7 +2390,7 @@
                                 const top = n.querySelector('.frac-top') ? n.querySelector('.frac-top').value : "";
                                 const bottom = n.querySelector('.frac-bottom') ? n.querySelector('.frac-bottom').value : "";
                                 if (top !== "" || bottom !== "") {
-                                    val += `\\frac{${top}}{${bottom}}`;
+                                    val += `\\dfrac{${top}}{${bottom}}`;
                                 }
                             } else if (n.value) {
                                 val += n.value; 
@@ -2515,7 +2519,7 @@
             if (isX && n === 1) valStr = "";
             else valStr = n;
         } else {
-            valStr = `\\frac{${n}}{${d}}`;
+            valStr = `\\dfrac{${n}}{${d}}`;
         }
         return `${sign}${valStr}${xStr}`;
     };
@@ -2884,19 +2888,7 @@ const GROUPS_DEF = {
     1: {xL:'b', cL:'plain', xR:'nb', cR:'plain', a:'frac_b', c:'plainC', d:'frac_nb', e:'plainC'},
     2: {xL:'b', cL:'plain', xR:'plain', cR:'nb',  a:'frac_b', c:'plainC', d:'plainX',  e:'frac_nb'},
     3: {xL:'plain', cL:'b', xR:'plain', cR:'nb',  a:'plainX', c:'frac_b', d:'plainX',  e:'frac_nb'},
-    4: {xL:'plain', cL:'b', xR:'nb', cR:'plain',  a:'plainX', c:'frac_b', d:'frac_nb', e:'plainC'},
-    5: {xL:'b', cL:'nb', xR:'plain', cR:'plain',  a:'frac_b', c:'frac_nb', d:'plainX',  e:'plainC'},
-    6: {xL:'plain', cL:'plain', xR:'nb', cR:'b',  a:'plainX', c:'plainC', d:'frac_nb',  e:'frac_b'}
-};
-
-// 各グループで使用可能なバリエーション番号(分数が1つに減る組み合わせは除外済み)
-const GROUP_VARIATIONS = {
-    1: [1,2,3,4,5,6,7,8],
-    2: [1,2,3,4,5,6],
-    3: [1,2,3,4],
-    4: [1,2,3,4,7,8],
-    5: [1,2,3,4,7,8],
-    6: [1,2,3,4,5,6]
+    4: {xL:'plain', cL:'b', xR:'nb', cR:'plain',  a:'plainX', c:'frac_b', d:'frac_nb', e:'plainC'}
 };
 
 function denomOf(kind, b, nb) {
@@ -2909,9 +2901,7 @@ function calcLaLcRaRc(group, a, c, d, e, b, n, M) {
     if (group === 1) return [a * n, c * M, d, e * M];
     if (group === 2) return [a * n, c * M, d * M, e];
     if (group === 3) return [a * M, c * n, d * M, e];
-    if (group === 4) return [a * M, c * n, d, e * M];
-    if (group === 5) return [a * n, c, d * M, e * M];
-    return [a * M, c * M, d, e * n];
+    return [a * M, c * n, d, e * M];
 }
 
 function randNonZero(lo, hi) {
@@ -2960,8 +2950,6 @@ function generatePattern(group, variation, tier) {
             if (!(L_a > 0 && R_a > 0)) continue;
             if (!noLeftConst && L_c <= 0) continue;
             if (!noRightConst && R_c <= 0) continue;
-            const finalA = Math.abs(L_a - R_a);
-            if (!(finalA > 1 && finalA <= 9)) continue;
         } else if (tier === 2) {
             if (!(L_a > 0 && (L_a - R_a) > 0)) continue;
         }
@@ -3021,8 +3009,7 @@ function generateQuizData() {
     // グループ1〜4からそれぞれ1パターンをランダムに選び、1問ずつ計4問(制約なし=完全ランダム)出題
     const results = [];
     for (let group = 1; group <= 4; group++) {
-        const options = GROUP_VARIATIONS[group];
-        const variation = options[Math.floor(Math.random() * options.length)];
+        const variation = Math.floor(Math.random() * 8) + 1;
         results.push(generatePattern(group, variation, 3));
     }
     return results;
