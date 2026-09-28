@@ -1660,7 +1660,7 @@
                 }
             });
             let s = result.replace(/\s+/g, "");
-            if (s.startsWith("+")) s = s.substring(1);
+            if (stage !== 'answer' && s.startsWith("+")) s = s.substring(1);
             return s;
         }
 
