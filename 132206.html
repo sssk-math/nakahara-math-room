@@ -416,7 +416,7 @@
             flex-direction: column;
             justify-content: center;
             position: relative;
-            cursor: pointer;
+            cursor: default;
             transition: all 0.2s;
             margin-bottom: 4px;
         }
@@ -1283,7 +1283,7 @@
 
                     <div class="input-block-container" id="dynamic-input-container">
                         <!-- ① 移項 -->
-                        <div class="input-box-group locked-disabled" id="group-transposition" onclick="focusDefaultNode('math-editor-transposition-left')">
+                        <div class="input-box-group locked-disabled" id="group-transposition">
                             <div class="input-label">
                                 <span>① 移項</span>
                                 <span class="step-badge" id="badge-transposition">ロック中</span>
@@ -1294,7 +1294,7 @@
                         </div>
 
                         <!-- ② 整理 -->
-                        <div class="input-box-group locked-disabled" id="group-arrangement" onclick="focusDefaultNode('math-editor-arrangement-left')">
+                        <div class="input-box-group locked-disabled" id="group-arrangement">
                             <div class="input-label">
                                 <span>② 整理</span>
                                 <span class="step-badge" id="badge-arrangement">ロック中</span>
@@ -1305,7 +1305,7 @@
                         </div>
 
                         <!-- ③ 解 -->
-                        <div class="input-box-group locked-disabled" id="group-answer" onclick="focusDefaultNode('math-editor-answer-right')">
+                        <div class="input-box-group locked-disabled" id="group-answer">
                             <div class="input-label">
                                 <span>③ 解</span>
                                 <span class="step-badge" id="badge-answer">ロック中</span>
