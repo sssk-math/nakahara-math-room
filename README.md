@@ -39,8 +39,8 @@
 　　　14.<a href= "/nakahara-math-room/132414.html" >分数式を含む方程式</a><br>
   <br>
 　　5.比と比例式<br>
-　　　15.<a href= "/nakahara-math-room/132515.html" >分数式を含む方程式</a><br>
-　　　16.<a href= "/nakahara-math-room/132516.html" >分数式を含む方程式</a><br>
-　　　17.<a href= "/nakahara-math-room/132517.html" >分数式を含む方程式</a><br>
+　　　15.<a href= "/nakahara-math-room/132515.html" >比例式①</a><br>
+　　　16.<a href= "/nakahara-math-room/132516.html" >比例式②</a><br>
+　　　17.<a href= "/nakahara-math-room/132517.html" >比例式③</a><br>
    </pre>
    
