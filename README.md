@@ -1,5 +1,6 @@
 # nakahara-math-room
 
+<pre>
 2章　文字の式<br>
 　2節 文字式の計算<br>
 　　1.加法・減法<br>
@@ -13,4 +14,33 @@
 　　　08.<a href= "/nakahara-math-room/122108.html" >文字式の和差</a><br>
 <br>
 3章　方程式<br>
-2 計算<br>
+　2節 方程式を解く<br>
+　　1.等式の性質<br>
+　　　00.<a href= "/nakahara-math-room/131000.html" >上皿天秤・方程式シミュレーター</a><br>
+　　　01.<a href= "/nakahara-math-room/132101.html" >等式の性質</a><br>
+　　　02.<a href= "/nakahara-math-room/132102.html" >準備中</a><br>
+　　　03.<a href= "/nakahara-math-room/132103.html" >準備中</a><br>
+　　　04.<a href= "/nakahara-math-room/132104.html" >準備中</a><br>
+　　　05.<a href= "/nakahara-math-room/132105.html" >準備中</a><br>
+  <br>
+　　2.基本の一次方程式<br>
+　　　06.<a href= "/nakahara-math-room/132206.html" >基本の一次方程式</a><br>
+  <br>
+　　3.いろいろな方程式<br>
+　　　07.<a href= "/nakahara-math-room/132307.html" >かっこがある方程式</a><br>
+　　　08.<a href= "/nakahara-math-room/132308.html" >小数を含む方程式</a><br>
+　　　09.<a href= "/nakahara-math-room/132309.html" >大きな数を含む方程式</a><br>
+  <br>
+　　4.分数を含む方程式<br>
+　　　10.<a href= "/nakahara-math-room/132410.html" >分数を1つ含む方程式</a><br>
+　　　11.<a href= "/nakahara-math-room/132411.html" >同分母を含む方程式</a><br>
+　　　12.<a href= "/nakahara-math-room/132412.html" >異分母を含む方程式①</a><br>
+　　　13.<a href= "/nakahara-math-room/132413.html" >異分母を含む方程式②</a><br>
+　　　14.<a href= "/nakahara-math-room/132414.html" >分数式を含む方程式</a><br>
+  <br>
+　　5.比と比例式<br>
+　　　15.<a href= "/nakahara-math-room/132515.html" >分数式を含む方程式</a><br>
+　　　16.<a href= "/nakahara-math-room/132516.html" >分数式を含む方程式</a><br>
+　　　17.<a href= "/nakahara-math-room/132517.html" >分数式を含む方程式</a><br>
+   </pre>
+   
