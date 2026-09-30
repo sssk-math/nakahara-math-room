@@ -1,4 +1,4 @@
-# nakahara-math-room
+m# nakahara-math-room
 
 <pre>
 2章　文字の式<br>
