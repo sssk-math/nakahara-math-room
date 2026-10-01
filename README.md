@@ -29,10 +29,10 @@
 　　1.等式の性質<br>
 　　　00.<a href= "https://sssk-math.github.io/nakahara-math-room/131000.html" >上皿天秤・方程式シミュレーター</a><br>
 　　　01.<a href= "https://sssk-math.github.io/nakahara-math-room/132101.html" >等式の性質</a><br>
-　　　02.<a href= "https://sssk-math.github.io/nakahara-math-room/132102.html" >準備中</a><br>
-　　　03.<a href= "https://sssk-math.github.io/nakahara-math-room/132103.html" >準備中</a><br>
-　　　04.<a href= "https://sssk-math.github.io/nakahara-math-room/132104.html" >準備中</a><br>
-　　　05.<a href= "https://sssk-math.github.io/nakahara-math-room/132105.html" >準備中</a><br>
+　　　02.移項
+　　　03.ax=b/x/a=b
+　　　04.ax+b=c
+　　　05.ax=bx+c
   <br>
 　　2.基本の一次方程式<br>
 　　　06.<a href= "https://sssk-math.github.io/nakahara-math-room/132206.html" >基本の一次方程式</a><br>
