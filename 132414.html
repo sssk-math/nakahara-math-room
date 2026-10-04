@@ -1116,7 +1116,7 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
-            width: 400px;
+            width: 470px;
             margin: 0 auto;
         }
 
@@ -1151,6 +1151,10 @@
             font-size: 12px;
             font-weight: normal;
         }
+
+       .group-select-btn > span:first-child {
+           white-space: nowrap;
+       }
 </style>
 </head>
 
@@ -3028,7 +3032,7 @@
         const prevInfo = GROUP_INFO[prevGroup];
         const prevProgress = practiceProgress[prevGroup] || [];
         for (let i = 0; i < prevInfo.patternsPerSet; i++) {
-            if (!(prevProgress[i] >= 1)) return false;
+            if (prevProgress[i] !== 2) return false;
         }
         return true;
     }
@@ -3039,17 +3043,20 @@
         let html = '';
         GROUP_ORDER.forEach(g => {
             const info = GROUP_INFO[g];
-            const progress = practiceProgress[g] || [];
-            const starCount = progress.filter(v => v === 2).length;
+            const nextGroup = GROUP_ORDER[GROUP_ORDER.indexOf(g) + 1];
+            const subText = nextGroup ? `★${info.patternsPerSet}つでグループ${nextGroup}解除` : '';
+            const firstQ = (FIXED_PROBLEMS_BY_GROUP[g] || [])[0];
+            const firstFormula = firstQ ? `$${firstQ.leftPart}=${firstQ.rightPart}$` : '';
             const unlocked = isGroupUnlocked(g);
             const disabledAttr = unlocked ? '' : 'disabled';
             const onclickAttr = unlocked ? `onclick="enterMondaiGrid('${g}')"` : '';
             html += `<button type="button" class="group-select-btn" ${onclickAttr} ${disabledAttr}>`
-                  +   `<span>${unlocked ? '🔓' : '🔒'} ${info.label}（${info.desc}）</span>`
-                  +   `<span class="group-select-sub">★${starCount} / 全${info.total}問</span>`
+                  +   `<span>${unlocked ? '🔓' : '🔒'} ${info.label}　${firstFormula}</span>`
+                  +   `<span class="group-select-sub">${subText}</span>`
                   + `</button>`;
         });
         wrap.innerHTML = html;
+        updateMathJax([wrap]);
     }
 
     function enterMondaiGrid(group) {
