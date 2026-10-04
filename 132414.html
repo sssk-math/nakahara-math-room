@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> 132414.分数式</title>
+    <title>132414.分数式</title>
     <script>
         /* ==========================================================================
            1. MathJaxの基本設定
@@ -24,6 +24,7 @@
         /* ==========================================================================
            2. 画面全体の基本デザイン
            ========================================================================== */
+        /* --- 全称要素の基本設定 --- */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -32,16 +33,23 @@
             -webkit-tap-highlight-color: transparent;
         }
 
+        /* --- ボディの基本スタイル --- */
         body {
             background-color: #ffffff;
             font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
             display: flex;
             justify-content: center;
             align-items: flex-start;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
             min-height: 100vh;
             overflow: hidden;
         }
 
+        /* --- アプリコンテナのレイアウト設定 --- */
         #app-container {
             width: 960px;
             height: 640px;
@@ -62,10 +70,19 @@
         /* ==========================================================================
            3. ヘッダー・タイトル・利き手切り替えボタン
            ========================================================================== */
-        header { text-align: center; }
+        /* --- ヘッダー領域のレイアウト設定 --- */
+        header { 
+            text-align: center; 
+        }
 
-        h1 { font-size: 24px; color: #333; margin-bottom: 5px; }
+        /* --- タイトル見出しのスタイル --- */
+        h1 { 
+            font-size: 24px; 
+            color: #333; 
+            margin-bottom: 5px; 
+        }
 
+        /* --- タイトルバーのグリッドレイアウト --- */
         .title-bar {
             display: grid;
             grid-template-columns: auto 1fr auto;
@@ -74,6 +91,7 @@
             margin-bottom: 0px;
         }
 
+        /* --- 利き手設定ボタンの共通スタイル --- */
         .title-hand-btn {
             padding: 6px 14px;
             font-size: 0.85rem;
@@ -86,11 +104,13 @@
             white-space: nowrap;
         }
 
+        /* --- 利き手設定ボタンの活性状態スタイル --- */
         .title-hand-btn.active { 
             background-color: #1a73e8;
             color: white;
         }
 
+        /* --- 左利きレイアウト（反転配置）のスタイル --- */
         .game-layout.left-handed {
             flex-direction: row-reverse;
         }
@@ -98,6 +118,7 @@
         /* ==========================================================================
            4. タイマー・自己ベスト・生徒番号入力エリア
            ========================================================================== */
+        /* --- タイマーコンテナのレイアウト設定 --- */
         .timer-container {
             display: flex;
             justify-content: space-between;
@@ -112,6 +133,7 @@
             height: 52px;
         }
 
+        /* --- タイマー表示のスタイル --- */
         #timer-display {
             font-size: 20px;
             color: #1a73e8;
@@ -119,6 +141,7 @@
             min-width: 110px;
         }
         
+        /* --- 記録表示ボックスのスタイル --- */
         .record-box {
             display: flex;
             flex-direction: column;
@@ -129,6 +152,7 @@
             height: 100%;
         }
 
+        /* --- ベスト記録更新メッセージのスタイル --- */
         #best-update-message {
             font-size: 12px;
             font-weight: bold;
@@ -138,6 +162,7 @@
             margin-bottom: 1px;
         }
 
+        /* --- ベスト記録ラベルのコンテナスタイル --- */
         .best-label-container {
             display: flex;
             gap: 15px;
@@ -146,11 +171,13 @@
             white-space: nowrap;
         }
 
+        /* --- 生徒番号入力エリアのスタイル --- */
         .number-field-wrapper {
             position: relative;
             display: inline-block;
         }
 
+        /* --- ログイン入力フィールドの共通スタイル --- */
         .login-input {
             font-size: 15px;
             padding: 4px 8px;
@@ -162,10 +189,12 @@
             width: 80px;
         }
 
+        /* --- 入力フィールドのフォーカス時スタイル --- */
         .login-input:focus {
             border-color: #1a73e8;
         }
 
+        /* --- 専用テンキー付き吹き出しのスタイル --- */
         .input-tooltip {
             display: none;
             position: absolute;
@@ -182,6 +211,7 @@
             width: 210px;
         }
 
+        /* --- input-tooltipのツールチップ表示用スタイル --- */
         .input-tooltip::before {
             content: "";
             position: absolute;
@@ -193,10 +223,12 @@
             border-color: transparent transparent #333333 transparent;
         }
 
+        /* --- ツールチップを表示状態にするスタイル --- */
         .input-tooltip.show {
             display: block;
         }
 
+        /* --- ヒント表示用のツールチップスタイル --- */
         .tooltip-hint {
             font-size: 11px;
             font-weight: bold;
@@ -207,6 +239,7 @@
             white-space: nowrap;
         }
 
+        /* --- ミニテンキーのグリッド配置 --- */
         .keypad-mini {
             display: grid;
             grid-template-columns: repeat(3, 56px);
@@ -214,6 +247,7 @@
             justify-content: center;
         }
 
+        /* --- 小さなボタンやキーのスタイル --- */
         .key-mini {
             height: 40px;
             font-size: 18px;
@@ -228,10 +262,12 @@
             user-select: none;
         }
 
+        /* --- 小さなボタンが押下された時のスタイル --- */
         .key-mini:active {
             background-color: #dee2e6;
         }
 
+        /* --- クリアボタン(小)のスタイル --- */
         .key-mini.btn-clear {
             grid-column: span 2;
             background-color: #ffebee;
@@ -240,10 +276,12 @@
             font-size: 14px;
         }
 
+        /* --- クリアボタン(小)が押下された時のスタイル --- */
         .key-mini.btn-clear:active {
             background-color: #ffcdd2;
         }
 
+        /* --- エラーメッセージ表示用のスタイル --- */
         .error-msg {
             color: #d32f2f;
             font-size: 12px;
@@ -254,6 +292,7 @@
             white-space: nowrap;
         }
 
+        /* --- 送信ボタンのスタイル --- */
         #send-btn {
             padding: 6px 12px;
             font-size: 15px;
@@ -268,6 +307,7 @@
             font-weight: bold;
         }
 
+        /* --- 送信ボタンが無効化された時のスタイル --- */
         #send-btn:disabled {
             background-color: #ccc;
             color: #888;
@@ -277,6 +317,7 @@
         /* ==========================================================================
            5. メインゲーム画面・左右パネル
            ========================================================================== */
+        /* --- ゲームメインレイアウトの構造設定 --- */
         .game-layout {
             display: flex;
             flex-grow: 1;
@@ -287,6 +328,7 @@
             margin-top: 8px;
         }
 
+        /* --- 左パネル（問題表示エリア）のレイアウト --- */
         .left-panel {
             flex: 1;
             display: flex;
@@ -296,6 +338,7 @@
             height: 100%;
         }
 
+        /* --- 右パネル（操作・キーパッドエリア）のレイアウト --- */
         .right-panel {
             width: 285px;
             display: flex;
@@ -307,23 +350,27 @@
         /* ==========================================================================
            6. 問題文・出題数式表示エリア
            ========================================================================== */
+        /* ---問題表示のレイアウト --- */
         .question-wrapper {
             display: flex;
             justify-content: space-between;
             width: 100%;
         }
 
+        /* --- 問題文のテキスト表示スタイル --- */
         .question-text { 
             font-size: 20px; 
             color: #333; 
             font-weight: bold; 
         }
 
+        /* --- 進捗表示のスタイル --- */
         .progress { 
             font-size: 16px; 
             color: #666; 
         }
-        
+
+        /* --- 数式表示エリアのスタイル設定 --- */
         .formula-display {
             font-size: 26px;
             line-height: 1.4;
@@ -334,13 +381,14 @@
             padding: 5px 10px;
             border-radius: 8px;
             border: 2px solid #ccc;
-            height: 75px;
+            height: auto;
             width: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
+        /* --- 数式表示コンテナのレイアウト設定 --- */
         .formula-display mjx-container { 
             display: inline !important; 
             white-space: normal; 
@@ -349,14 +397,16 @@
         /* ==========================================================================
            7. 入力枠のスタイル・「＝」の縦揃えCSS Gridレイアウト
            ========================================================================== */
+        /* --- 入力ブロックコンテナのレイアウト設定 --- */
         .input-block-container { 
             display: flex; 
             flex-direction: column; 
-            gap: 2px; 
+            gap: 0px; 
             width: 100%; 
             margin-bottom: 4px; 
         }
 
+        /* --- 入力グループの基本レイアウト設定 --- */
         .input-box-group {
             background: #ffffff;
             border: 2px solid #ced4da;
@@ -369,21 +419,24 @@
             position: relative;
             cursor: pointer;
             transition: all 0.2s;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
 
+        /* --- 入力グループのフォーカス状態スタイル --- */
         .input-box-group.active-focus { 
             border-color: #007bff; 
             background-color: #f0f7ff; 
             box-shadow: 0 0 0 3px rgba(0,123,255,0.15); 
         }
 
+        /* --- 入力グループの正解確定時スタイル --- */
         .input-box-group.locked-correct { 
             border-color: #81c784; 
             background-color: #e8f5e9; 
             cursor: default; 
         }
 
+        /* --- 入力グループの無効化状態スタイル --- */
         .input-box-group.locked-disabled { 
             border-color: #e9ecef; 
             background-color: #f8f9fa; 
@@ -391,11 +444,13 @@
             cursor: not-allowed; 
         }
 
+        /* --- 入力グループの入力エラー時スタイル --- */
         .input-box-group.error-shake { 
             border-color: #e57373; 
             background-color: #ffebee; 
         }
 
+        /* --- 入力ラベルのスタイル --- */
         .input-label { 
             font-size: 13px; 
             color: #495057; 
@@ -406,6 +461,7 @@
             align-items: center; 
         }
 
+        /* --- ステップバッジのスタイル --- */
         .step-badge { 
             font-size: 11px; 
             padding: 1px 6px; 
@@ -414,11 +470,13 @@
             color: #495057; 
         }
 
+        /* --- 正解確定時のステップバッジスタイル --- */
         .locked-correct .step-badge { 
             background-color: #28a745; 
             color: white; 
         }
 
+        /* --- 数式レンダリング領域のスタイル --- */
         .mathjax-render-zone {
             min-height: 34px;
             font-size: 22px; 
@@ -438,6 +496,7 @@
             width: 100%;
         }
 
+        /* --- 数式の左寄せスタイル --- */
         .eq-left {
             text-align: right;
             display: flex;
@@ -446,6 +505,7 @@
             white-space: nowrap;
         }
 
+        /* --- 数式の中央寄せスタイル --- */
         .eq-equal {
             text-align: center;
             display: flex;
@@ -454,6 +514,7 @@
             white-space: nowrap;
         }
 
+        /* --- 数式の右寄せスタイル --- */
         .eq-right {
             text-align: left;
             display: flex;
@@ -462,6 +523,7 @@
             white-space: nowrap;
         }
 
+        /* --- 数式エディタのコンテナスタイル --- */
         .math-editor-container {
             position: absolute;
             opacity: 0;
@@ -472,6 +534,7 @@
             overflow: hidden;
         }
 
+        /* --- ワイド分数モード時のコンテナスタイル --- */
         .math-editor-container.wide-fraction-mode {
             height: 60px;
             padding: 4px 14px;
@@ -481,11 +544,13 @@
             background-color: transparent !important; 
         }
 
+        /* --- プレースホルダーのスタイル --- */
         .placeholder-text {
             font-size: 16px;
             color: #adb5bd;
         }
 
+        /* --- エディタのテキストノードスタイル --- */
         .editor-text-node {
             border: none;
             outline: none;
@@ -503,6 +568,7 @@
             color: #adb5bd; 
         }
 
+        /* --- 小さなステップボックスのスタイル --- */
         .step-box-small {
             display: inline-flex;
             align-items: center;
@@ -519,12 +585,14 @@
             padding: 0 8px;
         }
 
+        /* --- アクティブな小さなステップボックスのスタイル --- */
         .step-box-small.active-side {
             border-color: #007bff;
             background-color: #f8f9fa;
             box-shadow: 0 0 0 3px rgba(0,123,255,0.15);
         }
 
+        /* --- 正解確定時の小さなステップボックスのスタイル --- */
         .locked-correct .step-box-small {
             border: none !important;
             background-color: transparent !important;
@@ -533,6 +601,7 @@
             margin: 0;
         }
 
+        /* --- エディタの分数ノードスタイル --- */
         .editor-fraction-node {
             display: inline-flex;
             flex-direction: column;
@@ -542,6 +611,7 @@
             margin: 0 4px;
         }
 
+        /* --- @エディタの分数線スタイル --- */
         .editor-fraction-line {
             width: 100%;
             height: 2px;
@@ -1089,7 +1159,7 @@
                 <div id="screen-start" class="app-screen start-screen">
             <div class="start-title" style="text-align:center;">
                 <div class="start-title-main">方程式</div>
-                <div class="start-title-sub">Step14：異分母をふくむ方程式③</div>
+                <div class="start-title-sub">Step14：分数式をふくむ方程式</div>
             </div>
             <div class="start-menu">
                 <button class="start-menu-btn" onclick="showScreen('screen-mondai-groups'); renderGroupSelectScreen();">📚 問題選択</button>
@@ -1181,7 +1251,7 @@
         <header>
             <div class="title-bar">
                 <button class="title-hand-btn" id="hand-left-btn" onclick="changeHandedness('left')">👈 左利き</button>
-                <h1> 方程式（Step14：分数式を含む方程式）</h1>
+                <h1> 方程式（Step14：分数式をふくむ方程式）</h1>
                 <button class="title-hand-btn active" id="hand-right-btn" onclick="changeHandedness('right')">右利き 👉</button>
             </div>
         </header>
@@ -1578,6 +1648,7 @@
 
                         hintBody.innerHTML = HINT_DATA.expansionInit;
                         focusDefaultNode(); refreshMathJaxPreview();
+                        updateControlKeysState('playing');
                         startQuestionTimer();
                         return;
                     }
@@ -1837,38 +1908,21 @@
                 
                 if (isFrac) {
                     const fracNode = active.closest('.editor-fraction-node');
-                    const fields = fracNode.querySelectorAll('.editor-fraction-field');
-                    
-                    if (fields[0].value.length === 0 && fields[1].value.length === 0) {
-                        let prev = fracNode.previousSibling;
-                        fracNode.remove();
-                        
-                        if (prev) {
-                            if (prev.classList.contains('editor-fraction-node')) {
-                                prev.querySelectorAll('.editor-fraction-field')[1].focus();
-                            } else {
-                                prev.focus();
-                            }
+                    let prev = fracNode.previousSibling;
+                    fracNode.remove();
+
+                    if (prev) {
+                        if (prev.classList.contains('editor-fraction-node')) {
+                            prev.querySelectorAll('.editor-fraction-field')[1].focus();
                         } else {
-                            createTextBlock(currentEd, "").focus();
-                        }
-                        
-                        if (currentEd.querySelectorAll('.editor-fraction-node').length === 0) {
-                            currentEd.classList.remove('wide-fraction-mode');
+                            prev.focus();
                         }
                     } else {
-                        if (active.value.length > 0) {
-                            const start = active.selectionStart;
-                            const end = active.selectionEnd;
-                            const val = active.value;
-                            if (start !== end) {
-                                active.value = val.substring(0, start) + val.substring(end);
-                                active.selectionStart = active.selectionEnd = start;
-                            } else if (start > 0) {
-                                active.value = val.substring(0, start - 1) + val.substring(start);
-                                active.selectionStart = active.selectionEnd = start - 1;
-                            }
-                        }
+                        createTextBlock(currentEd, "").focus();
+                    }
+
+                    if (currentEd.querySelectorAll('.editor-fraction-node').length === 0) {
+                        currentEd.classList.remove('wide-fraction-mode');
                     }
                 } else {
                     if (active.value.length > 0) {
@@ -2098,9 +2152,15 @@
             actionBtn.disabled = false;
             clearBtn.textContent = "消す"; clearBtn.className = "key clear-btn"; clearBtn.disabled = false;
             if (practiceMode) {
-                clearAllBtn.textContent = "戻る";
-                clearAllBtn.className = "key action-btn-back";
-                clearAllBtn.disabled = false;
+                if (isCurrentStageEmpty()) {
+                    actionBtn.disabled = true;
+                    clearBtn.disabled = true;
+                    clearAllBtn.textContent = "戻る";
+                    clearAllBtn.className = "key action-btn-back";
+                    clearAllBtn.disabled = false;
+                } else {
+                    clearAllBtn.textContent = "全消去"; clearAllBtn.disabled = false;
+                }
             } else {
                 clearAllBtn.textContent = "全消去"; clearAllBtn.disabled = false;
             }
@@ -2322,6 +2382,7 @@
 
                 document.getElementById('hint-text').innerHTML = HINT_DATA.expansionInit;
                 focusDefaultNode(); refreshMathJaxPreview();
+                updateControlKeysState('playing');
                 startQuestionTimer(); // 正解時：タイマーをリセットして再開
             } else {
                 showStepError(document.getElementById('group-clear-denom'));
@@ -2345,6 +2406,7 @@
 
                 document.getElementById('hint-text').innerHTML = HINT_DATA.transpositionInit;
                 focusDefaultNode(); refreshMathJaxPreview();
+                updateControlKeysState('playing');
                 startQuestionTimer(); // 正解時：タイマーをリセットして再開
             } else {
                 showStepError(document.getElementById('group-expansion'));
@@ -2367,6 +2429,7 @@
 
                 document.getElementById('hint-text').innerHTML = HINT_DATA.arrangementInit;
                 focusDefaultNode(); refreshMathJaxPreview();
+                updateControlKeysState('playing');
                 startQuestionTimer(); // 正解時：タイマーをリセットして再開
             } else {
                 showStepError(document.getElementById('group-transposition'));
@@ -2388,6 +2451,7 @@
 
                 document.getElementById('hint-text').innerHTML = HINT_DATA.answerInit;
                 focusDefaultNode(); refreshMathJaxPreview();
+                updateControlKeysState('playing');
             } else {
                 showStepError(document.getElementById('group-arrangement'));
                 document.getElementById('hint-text').innerHTML = HINT_DATA.arrangementError;
@@ -2505,7 +2569,7 @@
                                 const top = n.querySelector('.frac-top') ? n.querySelector('.frac-top').value : "";
                                 const bottom = n.querySelector('.frac-bottom') ? n.querySelector('.frac-bottom').value : "";
                                 if (top !== "" || bottom !== "") {
-                                    val += `\\dfrac{${top}}{${bottom}}`;
+                                    val += `\\frac{${top}}{${bottom}}`;
                                 }
                             } else if (n.value) {
                                 val += n.value; 
@@ -2721,7 +2785,7 @@
     };
 
     function generateQuizData() {
-        const makeFrac = (a, b, m) => `\\dfrac{${formatPoly(a, b)}}{${m}}`;
+        const makeFrac = (a, b, m) => `\\frac{${formatPoly(a, b)}}{${m}}`;
 
         const generatePatternQuiz = (patternType) => {
             while (true) {
