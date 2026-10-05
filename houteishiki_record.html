@@ -98,7 +98,7 @@
             { name: "同分母",                   url: "132411.html", practiceKey: "onaji_bunbo_practice_progress_v1",     kenteiKey: "onaji_bunbo_kentei_records_v1" },
             { name: "異分母①",                  url: "132412.html", practiceKey: "ibunbo1_practice_progress_v1",         kenteiKey: "ibunbo1_kentei_records_v1" },
             { name: "異分母②",                  url: "132413.html", practiceKey: "ibunbo2_practice_progress_v1",         kenteiKey: "ibunbo2_kentei_records_v1" },
-            { name: "分数式",          url: "132414.html", practiceKey: "bunsushiki_practice_progress_v1",      kenteiKey: "bunsushiki_kentei_records_v1" }
+            { name: "分数式",                   url: "132414.html", practiceKey: "bunsushiki_practice_progress_v1",      kenteiKey: "bunsushiki_kentei_records_v1", grouped: true }
         ];
 
         function formatMs(ms) {
@@ -109,14 +109,23 @@
             return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}.${msec}`;
         }
 
-        function readPracticeSummary(key) {
+        function readPracticeSummary(key, grouped) {
             try {
                 const raw = localStorage.getItem(key);
                 if (!raw) return null;
                 const parsed = JSON.parse(raw);
-                if (!Array.isArray(parsed) || parsed.length === 0) return null;
-                const perfectCount = parsed.filter(s => s === 2).length;
-                const mistakeCount = parsed.filter(s => s === 1).length;
+
+                // grouped=true の場合、{ A:[...], B:[...], C:[...], D:[...], E:[...] } 形式
+                const arrays = grouped
+                    ? Object.values(parsed || {}).filter(v => Array.isArray(v))
+                    : (Array.isArray(parsed) ? [parsed] : []);
+
+                if (arrays.length === 0) return null;
+                const all = arrays.flat();
+                if (all.length === 0) return null;
+
+                const perfectCount = all.filter(s => s === 2).length;
+                const mistakeCount = all.filter(s => s === 1).length;
                 return { perfectCount, mistakeCount };
             } catch (e) {
                 return null;
@@ -143,7 +152,7 @@
             let html = '';
 
             APPS.forEach(app => {
-                const practice = readPracticeSummary(app.practiceKey);
+                const practice = readPracticeSummary(app.practiceKey, app.grouped);
                 const kentei = readKenteiSummary(app.kenteiKey);
 
                 const mondaiText = practice
