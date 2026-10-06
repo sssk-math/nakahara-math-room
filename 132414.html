@@ -1228,6 +1228,12 @@
                     <div class="kiroku-card-label">検定：連続正解記録</div>
                     <div class="kiroku-card-value" id="kiroku-streak">現在：0問／最高：0問</div>
                 </div>
+
+                <div class="kiroku-card">
+                    <div class="kiroku-card-label">検定：受検回数</div>
+                    <div class="kiroku-card-value" id="kiroku-attempts">0回</div>
+                </div>
+
             </div>
             <button class="btn-tutorial-hud-secondary" onclick="showScreen('screen-start')">←開始画面へ</button>
         </div>
@@ -1433,6 +1439,7 @@
     let startTime              = 0;
     let timerInterval          = null;
     let bestNormalTimeMs       = null;
+    let kenteiAttemptCount     = 0;
     let lastClearTimeText      = "";
     let elapsedBeforeResume    = 0;
 
@@ -1574,14 +1581,20 @@ function handleKenteiTimeUp() {
         const finalTimeStr = document.getElementById('timer-display').innerText.replace('⏱️ ', '');
         lastClearTimeText = finalTimeStr;
         
-        const totalElapsedTimeMs = (Date.now() - startTime) + elapsedBeforeResume;
-        elapsedBeforeResume = totalElapsedTimeMs;
-        if (!isTimeUp && (bestNormalTimeMs === null || totalElapsedTimeMs < bestNormalTimeMs)) {
-            bestNormalTimeMs = totalElapsedTimeMs;
-            document.getElementById('best-normal-display').innerText = `ベストタイム(4問): ${finalTimeStr}`;
-            document.getElementById('best-update-message').innerText = "🎉 ベスト更新！";
-            saveKenteiRecords();
-        }
+const totalElapsedTimeMs = isTimeUp ? KENTEI_TIME_LIMIT_MS : ((Date.now() - startTime) + elapsedBeforeResume);
+elapsedBeforeResume = totalElapsedTimeMs;
+
+if (!practiceMode) {
+    kenteiAttemptCount++;
+    saveKenteiRecords();
+}
+
+if (bestNormalTimeMs === null || totalElapsedTimeMs < bestNormalTimeMs) {
+    bestNormalTimeMs = totalElapsedTimeMs;
+    document.getElementById('best-normal-display').innerText = `ベストタイム(4問): ${finalTimeStr}`;
+    document.getElementById('best-update-message').innerText = isTimeUp ? "" : "🎉 ベスト更新！";
+    saveKenteiRecords();
+}
         
         const numInput = numberField ? numberField.value.trim() : "";
         const isValidNum = (isConfirmed && /^\d{4}$/.test(numInput));
@@ -3252,17 +3265,19 @@ function isCurrentStageEmpty() {
                 bestNormalTimeMs = (typeof parsed.bestTimeMs === 'number') ? parsed.bestTimeMs : null;
                 correctStreakCount = (typeof parsed.streak === 'number') ? parsed.streak : 0;
                 maxStreakCount = (typeof parsed.maxStreak === 'number') ? parsed.maxStreak : 0;
+                kenteiAttemptCount = (typeof parsed.attempts === 'number') ? parsed.attempts : 0;
                 return;
             }
         } catch (e) { /* 読み込み失敗時は初期化 */ }
         bestNormalTimeMs = null;
         correctStreakCount = 0;
         maxStreakCount = 0;
+        kenteiAttemptCount = 0;
     }
 
     function saveKenteiRecords() {
         try {
-            localStorage.setItem(KENTEI_RECORDS_KEY, JSON.stringify({ bestTimeMs: bestNormalTimeMs, streak: correctStreakCount, maxStreak: maxStreakCount }));
+            localStorage.setItem(KENTEI_RECORDS_KEY, JSON.stringify({ bestTimeMs: bestNormalTimeMs, streak: correctStreakCount, maxStreak: maxStreakCount, attempts: kenteiAttemptCount }));
         } catch (e) { /* 保存失敗時は何もしない */ }
     }
 
@@ -3319,6 +3334,8 @@ function isCurrentStageEmpty() {
 
         const streakEl = document.getElementById('kiroku-streak');
         if (streakEl) streakEl.textContent = `現在：${correctStreakCount}問／最高：${maxStreakCount}問`;
+        const attemptsEl = document.getElementById('kiroku-attempts');
+        if (attemptsEl) attemptsEl.textContent = `${kenteiAttemptCount}回`;
     }
 
     /* ==========================================================================
@@ -3330,7 +3347,7 @@ function isCurrentStageEmpty() {
         if (msgEl) {
             msgEl.textContent = (type === 'mondai')
                 ? '問題選択の取り組み（★/☆の記録）がすべてリセットされます。よろしいですか？'
-                : '検定のベストタイム・連続正解記録がリセットされます。よろしいですか？';
+                : '検定のベストタイム・連続正解記録・受検回数がリセットされます。よろしいですか？';
         }
         const modal = document.getElementById('reset-confirm-modal');
         if (modal) modal.style.display = 'flex';
@@ -3349,6 +3366,7 @@ function isCurrentStageEmpty() {
             bestNormalTimeMs = null;
             correctStreakCount = 0;
             maxStreakCount = 0;
+            kenteiAttemptCount = 0;
             saveKenteiRecords();
             if (!practiceMode) {
                 const bestDisplayEl = document.getElementById('best-normal-display');
