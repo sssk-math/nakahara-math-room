@@ -1445,7 +1445,7 @@
     let gameStarted            = false;
     let isCompleted            = false;
     let isCorrectState         = false;
-    const KENTEI_TIME_LIMIT_MS = 6 * 60 * 1000; // 検定の制限時間（6分）
+    const KENTEI_TIME_LIMIT_MS = 5 * 60 * 1000; // 検定の制限時間（6分）
     let quizData               = [];
     let currentQuestionIndex   = 0;
     let score                  = 0;
@@ -1557,7 +1557,7 @@ function handleKenteiTimeUp() {
     clearInterval(timerInterval);
     clearInterval(questionTimerId);
     isCompleted = true;
-    document.getElementById('timer-display').innerText = '⏱️ 06:00.0';
+    document.getElementById('timer-display').innerText = '⏱️ 05:00.0';
 
     // 時間切れは連続正解記録をリセット
     correctStreakCount = 0;
