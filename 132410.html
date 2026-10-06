@@ -1187,6 +1187,10 @@
                     <div class="kiroku-card-value" id="kiroku-mondai-count">★：0問／☆：0問</div>
                 </div>
                 <div class="kiroku-card">
+                    <div class="kiroku-card-label">検定：受検回数</div>
+                    <div class="kiroku-card-value" id="kiroku-attempts">0回</div>
+                </div>
+                <div class="kiroku-card">
                     <div class="kiroku-card-label">検定：ベストタイム</div>
                     <div class="kiroku-card-value" id="kiroku-best-time">--:--.-</div>
                 </div>
@@ -1366,8 +1370,8 @@
                         <button class="key frac-btn" onmousedown="event.preventDefault()" onclick="convertDenominatorToFraction()">分の</button>
 
                         <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('0')">$0$</button>
-                        <button class="key paren-btn" onmousedown="event.preventDefault()" onclick="pressKey('(')">$($</button>
-                        <button class="key paren-btn" onmousedown="event.preventDefault()" onclick="pressKey(')')">$)$</button>
+                        <button class="key paren-btn" onmousedown="event.preventDefault()" onclick="pressKey('(')" disabled>$($</button>
+                        <button class="key paren-btn" onmousedown="event.preventDefault()" onclick="pressKey(')')" disabled>$)$</button>
                         <button class="key var-btn" onmousedown="event.preventDefault()" onclick="pressKey('x')">$x$</button>
                         <button class="key op-btn" onmousedown="event.preventDefault()" onclick="pressKey('=')">$=$</button>
                     </div>
@@ -1402,12 +1406,14 @@
         let startTime              = 0;
         let timerInterval          = null;
         let bestNormalTimeMs       = null;
+        let kenteiAttemptCount     = 0;
         let lastClearTimeText      = "";
         let elapsedBeforeResume    = 0;
 
         let gameStarted            = false;
         let isCompleted            = false;
         let isCorrectState         = false;
+        const KENTEI_TIME_LIMIT_MS = 6 * 60 * 1000; // 検定の制限時間（6分）
         let quizData               = [];
         let currentQuestionIndex   = 0;
         let score                  = 0;
@@ -2654,6 +2660,7 @@
         /* --- タイマーを更新する関数 --- */
         function updateTimer() {
             const diff = (Date.now() - startTime) + elapsedBeforeResume;
+            if (diff >= KENTEI_TIME_LIMIT_MS) { handleKenteiTimeUp(); return; }
             const min = Math.floor(diff / 60000);
             const sec = Math.floor((diff % 60000) / 1000);
             const msec = Math.floor((diff % 1000) / 100);
@@ -2679,8 +2686,29 @@
             }
             if (numberField) numberField.disabled = false;
         }
+
+function handleKenteiTimeUp() {
+    if (!gameStarted || isCompleted || practiceMode) return;
+    clearInterval(timerInterval);
+    clearInterval(questionTimerId);
+    isCompleted = true;
+    document.getElementById('timer-display').innerText = '⏱️ 06:00.0';
+
+    // 時間切れは連続正解記録をリセット
+    correctStreakCount = 0;
+    saveKenteiRecords();
+
+    if (document.activeElement) document.activeElement.blur();
+    stopTimerClockAndEvaluate(true);   // 送信処理は全問終了時と共通
+    resultMsgEl.textContent = `時間切れ！全 ${quizData.length} 問中 ${score} 問ノーミス正解`;
+    resultMsgEl.className = "result-message incorrect";
+    progressEl.textContent = "時間切れ！";
+    document.getElementById('hint-text').innerHTML = HINT_DATA.allFinished;
+    updateControlKeysState('finished'); updateSendButtonState();
+}
+
         /* --- タイマークロックを停止し、結果を評価する関数 --- */
-        function stopTimerClockAndEvaluate() {
+        function stopTimerClockAndEvaluate(isTimeUp = false) {
             clearInterval(timerInterval);
             isCorrectState = true; 
             clearInterval(questionTimerId);
@@ -2688,15 +2716,21 @@
             const finalTimeStr = document.getElementById('timer-display').innerText.replace('⏱️ ', '');
             lastClearTimeText = finalTimeStr;
             
-            const totalElapsedTimeMs = (Date.now() - startTime) + elapsedBeforeResume;
-            elapsedBeforeResume = totalElapsedTimeMs;
-            if (bestNormalTimeMs === null || totalElapsedTimeMs < bestNormalTimeMs) {
-                bestNormalTimeMs = totalElapsedTimeMs;
-                document.getElementById('best-normal-display').innerText = `ベストタイム(6問): ${finalTimeStr}`;
-                document.getElementById('best-update-message').innerText = "🎉 ベスト更新！";
-                saveKenteiRecords();
-            }
-            
+            const totalElapsedTimeMs = isTimeUp ? KENTEI_TIME_LIMIT_MS : ((Date.now() - startTime) + elapsedBeforeResume);
+elapsedBeforeResume = totalElapsedTimeMs;
+
+if (!practiceMode) {
+    kenteiAttemptCount++;
+    saveKenteiRecords();
+}
+
+if (bestNormalTimeMs === null || totalElapsedTimeMs < bestNormalTimeMs) {
+    bestNormalTimeMs = totalElapsedTimeMs;
+    document.getElementById('best-normal-display').innerText = `ベストタイム(4問): ${finalTimeStr}`;
+    document.getElementById('best-update-message').innerText = isTimeUp ? "" : "🎉 ベスト更新！";
+    saveKenteiRecords();
+}
+
             const numInput = numberField ? numberField.value.trim() : "";
             const isValidNum = (isConfirmed && /^\d{4}$/.test(numInput));
             
@@ -3080,7 +3114,7 @@ const FIXED_PROBLEMS = [
             if (msgEl) {
                 msgEl.textContent = (type === 'mondai')
                     ? '問題選択の取り組み（★/☆の記録）がすべてリセットされます。よろしいですか？'
-                    : '検定のベストタイム・連続正解記録がリセットされます。よろしいですか？';
+                    : '検定のベストタイム・連続正解記録・受検回数がリセットされます。よろしいですか？';
             }
             const modal = document.getElementById('reset-confirm-modal');
             if (modal) modal.style.display = 'flex';
@@ -3099,6 +3133,7 @@ const FIXED_PROBLEMS = [
                 bestNormalTimeMs = null;
                 correctStreakCount = 0;
                 maxStreakCount = 0;
+                kenteiAttemptCount = 0;
                 saveKenteiRecords();
                 if (!practiceMode) {
                     const bestDisplayEl = document.getElementById('best-normal-display');
@@ -3140,19 +3175,21 @@ const FIXED_PROBLEMS = [
                     bestNormalTimeMs = (typeof parsed.bestTimeMs === 'number') ? parsed.bestTimeMs : null;
                     correctStreakCount = (typeof parsed.streak === 'number') ? parsed.streak : 0;
                     maxStreakCount = (typeof parsed.maxStreak === 'number') ? parsed.maxStreak : 0;
+                    kenteiAttemptCount = (typeof parsed.attempts === 'number') ? parsed.attempts : 0;
                     return;
                 }
             } catch (e) { /* 読み込み失敗時は初期化 */ }
             bestNormalTimeMs = null;
             correctStreakCount = 0;
             maxStreakCount = 0;
+            kenteiAttemptCount = 0;
         }
 
-        function saveKenteiRecords() {
-            try {
-                localStorage.setItem(KENTEI_RECORDS_KEY, JSON.stringify({ bestTimeMs: bestNormalTimeMs, streak: correctStreakCount, maxStreak: maxStreakCount }));
-            } catch (e) { /* 保存失敗時は何もしない */ }
-        }
+    function saveKenteiRecords() {
+        try {
+            localStorage.setItem(KENTEI_RECORDS_KEY, JSON.stringify({ bestTimeMs: bestNormalTimeMs, streak: correctStreakCount, maxStreak: maxStreakCount, attempts: kenteiAttemptCount }));
+        } catch (e) { /* 保存失敗時は何もしない */ }
+    }
 
         /* --- 記録画面を描画する関数 --- */
         function renderKirokuScreen() {
@@ -3166,6 +3203,8 @@ const FIXED_PROBLEMS = [
 
             const streakEl = document.getElementById('kiroku-streak');
             if (streakEl) streakEl.textContent = `現在：${correctStreakCount}問／最高：${maxStreakCount}問`;
+            const attemptsEl = document.getElementById('kiroku-attempts');
+            if (attemptsEl) attemptsEl.textContent = `${kenteiAttemptCount}回`;
         }
 
 
