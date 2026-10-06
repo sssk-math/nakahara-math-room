@@ -2268,14 +2268,20 @@
     }
 
     /* --- 現在のステージが未入力(左右とも空)かどうかを判定する関数 --- */
-    function isCurrentStageEmpty() {
-        if (currentStage === 'answer') {
-            return getUserAnswerBySide('answer', 'right').length === 0;
-        }
-        return getUserAnswerBySide(currentStage, 'left').length === 0
-            && getUserAnswerBySide(currentStage, 'right').length === 0;
+function isCurrentStageEmpty() {
+    // 「+」だけの入力も「入力あり」として扱う
+    // （getUserAnswerBySide は先頭の+を除去するため、ここでは使わない）
+    const hasInput = (stage, side) => {
+        const ed = document.getElementById(`math-editor-${stage}-${side}`);
+        if (!ed) return false;
+        return Array.from(ed.querySelectorAll('.editor-text-node, .editor-fraction-field'))
+            .some(el => el.value.replace(/\s+/g, '') !== '');
+    };
+    if (currentStage === 'answer') {
+        return !hasInput('answer', 'right');
     }
-
+    return !hasInput(currentStage, 'left') && !hasInput(currentStage, 'right');
+}
     function getUserAnswerBySide(stage, side) {
         const ed = document.getElementById(`math-editor-${stage}-${side}`);
         if (!ed) return "";
