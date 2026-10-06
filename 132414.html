@@ -1439,6 +1439,7 @@
     let gameStarted            = false;
     let isCompleted            = false;
     let isCorrectState         = false;
+    const KENTEI_TIME_LIMIT_MS = 1 * 60 * 1000; // 検定の制限時間（6分）
     let quizData               = [];
     let currentQuestionIndex   = 0;
     let score                  = 0;
@@ -1536,6 +1537,7 @@
 
     function updateTimer() {
         const diff = (Date.now() - startTime) + elapsedBeforeResume;
+        if (diff >= KENTEI_TIME_LIMIT_MS) { handleKenteiTimeUp(); return; }
         const min = Math.floor(diff / 60000);
         const sec = Math.floor((diff % 60000) / 1000);
         const msec = Math.floor((diff % 1000) / 100);
@@ -1544,7 +1546,27 @@
         document.getElementById('timer-display').innerText = `⏱️ ${minStr}:${secStr}.${msec}`;
     }
 
-    function stopTimerClockAndEvaluate() {
+function handleKenteiTimeUp() {
+    if (!gameStarted || isCompleted || practiceMode) return;
+    clearInterval(timerInterval);
+    clearInterval(questionTimerId);
+    isCompleted = true;
+    document.getElementById('timer-display').innerText = '⏱️ 06:00.0';
+
+    // 時間切れは連続正解記録をリセット
+    correctStreakCount = 0;
+    saveKenteiRecords();
+
+    if (document.activeElement) document.activeElement.blur();
+    stopTimerClockAndEvaluate(true);   // 送信処理は全問終了時と共通
+    resultMsgEl.textContent = `時間切れ！全 ${quizData.length} 問中 ${score} 問ノーミス正解`;
+    resultMsgEl.className = "result-message incorrect";
+    progressEl.textContent = "時間切れ！";
+    document.getElementById('hint-text').innerHTML = HINT_DATA.allFinished;
+    updateControlKeysState('finished'); updateSendButtonState();
+}
+
+    function stopTimerClockAndEvaluate(isTimeUp = false) {
         clearInterval(timerInterval);
         isCorrectState = true; 
         clearInterval(questionTimerId);
@@ -1554,7 +1576,7 @@
         
         const totalElapsedTimeMs = (Date.now() - startTime) + elapsedBeforeResume;
         elapsedBeforeResume = totalElapsedTimeMs;
-        if (bestNormalTimeMs === null || totalElapsedTimeMs < bestNormalTimeMs) {
+        if (!isTimeUp && (bestNormalTimeMs === null || totalElapsedTimeMs < bestNormalTimeMs)) {
             bestNormalTimeMs = totalElapsedTimeMs;
             document.getElementById('best-normal-display').innerText = `ベストタイム(4問): ${finalTimeStr}`;
             document.getElementById('best-update-message').innerText = "🎉 ベスト更新！";
