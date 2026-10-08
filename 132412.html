@@ -22,7 +22,7 @@
     
     <style>
         /* ==========================================================================
-           2. 画面全体の基本デザイン
+           1. 全体の基本設定【共通】
            ========================================================================== */
         /* --- 全称要素の基本設定 --- */
         * {
@@ -32,7 +32,6 @@
             user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
-
         /* --- ボディの基本スタイル --- */
         body {
             background-color: #ffffff;
@@ -48,7 +47,6 @@
             min-height: 100vh;
             overflow: hidden;
         }
-
         /* --- アプリコンテナのレイアウト設定 --- */
         #app-container {
             width: 960px;
@@ -68,20 +66,18 @@
         }
 
         /* ==========================================================================
-           3. ヘッダー・タイトル・利き手切り替えボタン
+           2. ヘッダー・タイトル・利き手切り替えボタン【共通】
            ========================================================================== */
         /* --- ヘッダー領域のレイアウト設定 --- */
         header { 
             text-align: center; 
         }
-
         /* --- タイトル見出しのスタイル --- */
         h1 { 
             font-size: 24px; 
             color: #333; 
             margin-bottom: 5px; 
         }
-
         /* --- タイトルバーのグリッドレイアウト --- */
         .title-bar {
             display: grid;
@@ -90,7 +86,6 @@
             gap: 15px;
             margin-bottom: 0px;
         }
-
         /* --- 利き手設定ボタンの共通スタイル --- */
         .title-hand-btn {
             padding: 6px 14px;
@@ -103,20 +98,574 @@
             transition: all 0.2s;
             white-space: nowrap;
         }
-
         /* --- 利き手設定ボタンの活性状態スタイル --- */
         .title-hand-btn.active { 
             background-color: #1a73e8;
             color: white;
         }
-
         /* --- 左利きレイアウト（反転配置）のスタイル --- */
         .game-layout.left-handed {
             flex-direction: row-reverse;
         }
 
         /* ==========================================================================
-           4. タイマー・自己ベスト・生徒番号入力エリア
+           3. キー・ボタン類（キーパッド・ミニキー・送信ボタン）【共通】
+           ========================================================================== */
+        /* --- キーパッドのグリッド配置 --- */
+        .keypad { 
+            display: grid; 
+            grid-template-columns: repeat(5, 56px); 
+            gap: 1px; 
+            margin-bottom: 8px; 
+        }
+        /* --- キー（ボタン）の共通スタイル --- */
+        .key {
+            height: 46px;
+            font-size: 24px;
+            font-weight: bold;
+            background-color: #f1f3f5;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.1s;
+        }
+        /* --- キーが押下された時のスタイル --- */
+        .key:active:not(:disabled) { 
+            background-color: #dee2e6; 
+            transform: scale(0.95); 
+        }
+        /* --- 数字キーのスタイル --- */
+        .key.num-btn { 
+            font-family: 'MathJax_Main', 'Times New Roman', Times, serif; 
+        }
+        /* --- 演算子キーのスタイル --- */
+        .key.op-btn { 
+            background-color: #e7f5ff; 
+            border-color: #a5d8ff; 
+            color: #007bff; 
+            font-size: 20px; 
+        }
+        /* --- 文字キーのスタイル --- */
+        .key.var-btn { 
+            background-color: #f3f0ff; 
+            border-color: #d0bfff; 
+            color: #6f42c1; 
+            font-family: 'MathJax_Math', 'Times New Roman', Times, serif; 
+            font-style: italic; 
+            font-weight: normal; 
+            font-size: 26px; 
+        }
+        /* --- 単位キーのスタイル --- */
+        .key.unit-btn { 
+            background-color: #fff0f6; 
+            border-color: #ffdeeb; 
+            color: #d6336c; 
+            font-size: 18px; 
+            font-weight: bold; 
+        }
+        /* --- 分数キーのスタイル --- */
+        .key.frac-btn { 
+            background-color: #fff9db; 
+            border-color: #fff3bf; 
+            color: #f59f00; 
+            font-size: 18px; 
+        }
+        /* --- かっこキーのスタイル --- */
+        .key.paren-btn { 
+            background-color: #ebfbee; 
+            border-color: #b2f2bb; 
+            color: #2b8a3e; 
+            font-size: 20px; 
+        }
+        /* --- 矢印キーのスタイル --- */
+        .key.arrow-btn { 
+            background-color: #fff3e0; 
+            border-color: #ffe0b2; 
+            color: #e65100; 
+            font-weight: bold; 
+        }
+        /* --- キーパッド内ボタンの無効化状態スタイル --- */
+        .keypad button:disabled { 
+            background-color: #d1d5db !important; 
+            color: #9ca3af !important; 
+            border-color: #cbd5e1 !important; 
+            cursor: not-allowed; 
+            opacity: 0.6; 
+            box-shadow: none !important; 
+            transform: none !important; 
+        }
+        /* --- コントロールキー群のレイアウト --- */
+        .control-keys { 
+            display: grid; 
+            grid-template-columns: repeat(3, 92px); 
+            gap: 4px; 
+            width: 100%; 
+            justify-content: center; 
+        }
+        /* --- アクションボタンのスタイル --- */
+        .key.action-btn { 
+            background-color: #28a745; 
+            color: #fff; 
+            font-size: 18px; 
+            height: 46px; 
+            border-color: #1e7e34; 
+            width: 100%; 
+        }
+        /* --- アクションボタンの判定モード時スタイル --- */
+        .key.action-btn.judge-mode { 
+            background-color: #007bff; 
+            border-color: #0069d9; 
+        }
+        /* --- クリアキーのスタイル --- */
+        .key.clear-btn { 
+            background-color: #e9ecef; 
+            font-size: 16px; 
+            height: 46px; 
+            width: 100%; 
+            color: #333; 
+        }
+        /* --- 戻るボタンのスタイル --- */
+        .key.action-btn-back {
+            background-color: #fb8c00;
+            color: #fff;
+            border: none;
+            font-size: 18px;
+            height: 46px;
+            width: 100%;
+        }
+        /* --- 戻るボタンの無効化状態スタイル --- */
+        .key.action-btn-back:disabled {
+            background-color: #ffcc80;
+            color: #fff;
+            cursor: not-allowed;
+        }
+        /* --- 小さなボタンやキーのスタイル --- */
+        .key-mini {
+            height: 40px;
+            font-size: 18px;
+            font-weight: bold;
+            background-color: #f1f3f5;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+        /* --- 小さなボタンが押下された時のスタイル --- */
+        .key-mini:active {
+            background-color: #dee2e6;
+        }
+        /* --- クリアボタン(小)のスタイル --- */
+        .key-mini.btn-clear {
+            grid-column: span 2;
+            background-color: #ffebee;
+            border-color: #ffcdd2;
+            color: #c62828;
+            font-size: 14px;
+        }
+        /* --- クリアボタン(小)が押下された時のスタイル --- */
+        .key-mini.btn-clear:active {
+            background-color: #ffcdd2;
+        }
+        /* --- 送信ボタンのスタイル --- */
+        #send-btn {
+            padding: 6px 12px;
+            font-size: 15px;
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            height: 34px;
+            min-width: 76px;
+            text-align: center;
+            font-weight: bold;
+        }
+        /* --- 送信ボタンが無効化された時のスタイル --- */
+        #send-btn:disabled {
+            background-color: #ccc;
+            color: #888;
+            cursor: not-allowed;
+        }
+
+        /* ==========================================================================
+           4. 画面の共通設定・開始画面【共通】
+           ========================================================================== */
+        /* --- 画面（app-screen）の共通レイアウト --- */
+        .app-screen {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+            background-color: #eceff1;
+        }
+        /* --- 検定画面の背景色 --- */
+        #screen-kentei {
+            background-color: #ffffff;
+        }
+        /* --- グループ選択画面のレイアウト --- */
+        #screen-mondai-groups {
+            justify-content: center;
+            align-items: center;
+        }
+        /* --- 開始画面のレイアウト --- */
+        .start-screen {
+            justify-content: center;
+            align-items: center;
+            gap: 28px;
+        }
+        /* --- 開始画面のメインタイトル --- */
+        .start-title-main {
+            font-size: 18px;
+            font-weight: normal;
+            color: #333;
+        }
+        /* --- 開始画面のサブタイトル --- */
+        .start-title-sub {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+            margin-top: 4px;
+        }
+        /* --- 開始メニューのレイアウト --- */
+        .start-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 320px;
+        }
+        /* --- 開始メニューボタンのスタイル --- */
+        .start-menu-btn {
+            height: 64px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #fff;
+            background-color: #1a73e8;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        /* --- 開始メニューボタンが押下された時のスタイル --- */
+        .start-menu-btn:active {
+            transform: scale(0.97);
+        }
+
+        /* ==========================================================================
+           5. サブ画面・問題選択画面【共通】
+           ========================================================================== */
+        /* --- サブ画面ヘッダーのレイアウト --- */
+        .sub-screen-header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        /* --- サブ画面ヘッダーの見出しスタイル --- */
+        .sub-screen-header h1 {
+            font-size: 22px;
+            color: #333;
+            margin-bottom: 0;
+        }
+        /* --- チュートリアル風サブボタンのスタイル --- */
+        .btn-tutorial-hud-secondary {
+            padding: 10px 18px;
+            font-size: 15px;
+            font-weight: bold;
+            background-color: #e3f2fd;
+            color: #1565c0;
+            border: 1px solid #90caf9;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        /* --- チュートリアル風サブボタンが押下された時のスタイル --- */
+        .btn-tutorial-hud-secondary:active {
+            background-color: #bbdefb;
+        }
+        /* --- 準備中画面のレイアウト --- */
+        .placeholder-screen {
+            justify-content: center;
+            align-items: center;
+            gap: 24px;
+        }
+        /* --- 練習モード無効化時のスタイル --- */
+        .practice-disabled {
+            opacity: 0.4;
+            pointer-events: none;
+            filter: grayscale(60%);
+        }
+        /* --- 問題選択グリッドのレイアウト --- */
+        .mondai-grid {
+            flex: 1;
+            min-height: 0;
+            max-height: 495px;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 3px;
+            padding: 4px;
+            background-color: #ffffff;
+            border-radius: 8px;
+        }
+        /* --- 問題選択セルの基本スタイル --- */
+        .grid-cell {
+            position: relative;
+            height: 50px;
+            font-size: 11px;
+            background-color: #e7f5ff;
+            border: 1px solid #a5d8ff;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            padding: 1px;
+        }
+        /* --- 問題選択セル（ロック中）のスタイル --- */
+        .grid-cell.locked {
+            background-color: #e9ecef;
+            border-color: #ced4da;
+            color: #adb5bd;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        /* --- 問題選択セル（選択可能）が押下された時のスタイル --- */
+        .grid-cell.available:active {
+            transform: scale(0.95);
+        }
+        /* --- 問題選択セル（満点）のスタイル --- */
+        .grid-cell.star-perfect {
+            background-color: #fff9db;
+            border-color: #ffe066;
+        }
+        /* --- 問題選択セル（ミスあり）のスタイル --- */
+        .grid-cell.star-mistake {
+            background-color: #f1f3f5;
+            border-color: #ced4da;
+        }
+        /* --- 問題選択セルの星マーク配置 --- */
+        .grid-cell-star {
+            position: absolute;
+            top: 1px;
+            right: 3px;
+            font-size: 12px;
+        }
+        /* --- 満点マークの色 --- */
+        .star-perfect-mark { color: #f5a623; }
+        /* --- ミスありマークの色 --- */
+        .star-mistake-mark { color: #999; }
+        /* --- 問題選択セルの式表示スタイル --- */
+        .grid-cell-formula {
+            font-size: 12px;
+            line-height: 1.1;
+        }
+        /* --- 問題選択セルの番号表示スタイル --- */
+        .grid-cell-num {
+            font-size: 9px;
+            color: #999;
+            margin-top: 1px;
+        }
+
+        /* ==========================================================================
+           6. 記録画面【共通】
+           ========================================================================== */
+        /* --- 記録カード群のレイアウト --- */
+        .kiroku-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            width: 560px;
+            margin: 0 auto;
+        }
+        /* --- 記録カードのスタイル --- */
+        .kiroku-card {
+            background-color: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 10px 18px;
+            text-align: center;
+        }
+        /* --- 記録カードのラベルスタイル --- */
+        .kiroku-card-label {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        /* --- 記録カードの値スタイル --- */
+        .kiroku-card-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1a73e8;
+        }
+
+        /* ==========================================================================
+           7. 設定画面・リセット確認ダイアログ【共通】
+           ========================================================================== */
+        /* --- 設定画面のリセットボタン群のレイアウト --- */
+        .settei-reset-buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+        /* --- リセットボタンのスタイル --- */
+        .settei-reset-btn {
+            width: 280px;
+            height: 52px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #c0392b;
+            background-color: #fdecea;
+            border: 1px solid #f1a9a0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        /* --- リセットボタンが押下された時のスタイル --- */
+        .settei-reset-btn:active {
+            background-color: #f8d3ce;
+        }
+        /* --- リセット確認ダイアログのオーバーレイ --- */
+        .reset-confirm-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            border-radius: 12px;
+        }
+        /* --- リセット確認ダイアログのボックス --- */
+        .reset-confirm-box {
+            width: 340px;
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 24px 20px;
+            text-align: center;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+        }
+        /* --- リセット確認ダイアログのメッセージ --- */
+        .reset-confirm-message {
+            font-size: 15px;
+            color: #333;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        /* --- リセット確認ダイアログのボタン群のレイアウト --- */
+        .reset-confirm-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        /* --- リセット確認ボタン（キャンセル・OK）の共通スタイル --- */
+        .reset-confirm-cancel, .reset-confirm-ok {
+            flex: 1;
+            height: 44px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            border: none;
+        }
+        /* --- リセット確認キャンセルボタンの色 --- */
+        .reset-confirm-cancel {
+            background-color: #e9ecef;
+            color: #333;
+        }
+        /* --- リセット確認OKボタンの色 --- */
+        .reset-confirm-ok {
+            background-color: #e74c3c;
+            color: #fff;
+        }
+
+        /* ==========================================================================
+           8. グループ選択画面【共通】
+           ========================================================================== */
+        /* --- グループ選択リストのレイアウト --- */
+        .group-select-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 470px;
+            margin: 0 auto;
+        }
+        /* --- グループ選択ボタンのスタイル --- */
+        .group-select-btn {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 60px;
+            padding: 0 20px;
+            font-size: 15px;
+            font-weight: bold;
+            color: #fff;
+            background-color: #1a73e8;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+            width: 100%;
+        }
+        /* --- グループ選択ボタンが押下された時のスタイル --- */
+        .group-select-btn:active:not(:disabled) {
+            transform: scale(0.97);
+        }
+        /* --- グループ選択ボタンの無効化状態スタイル --- */
+        .group-select-btn:disabled {
+            background-color: #cfd8dc;
+            color: #90a4ae;
+            cursor: not-allowed;
+        }
+        /* --- グループ選択ボタンのサブテキストスタイル --- */
+        .group-select-btn .group-select-sub {
+            font-size: 12px;
+            font-weight: normal;
+        }
+        /* --- グループ選択ボタンの1行目テキストスタイル --- */
+        .group-select-btn > span:first-child {
+           white-space: nowrap;
+       }
+
+        /* ==========================================================================
+           9. メインゲーム画面・左右パネル【共通】
+           ========================================================================== */
+        /* --- ゲームメインレイアウトの構造設定 --- */
+        .game-layout {
+            display: flex;
+            flex-grow: 1;
+            width: 100%;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 20px;
+            margin-top: 8px;
+        }
+        /* --- 左パネル（問題表示エリア）のレイアウト --- */
+        .left-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            height: 100%;
+        }
+        /* --- 右パネル（操作・キーパッドエリア）のレイアウト --- */
+        .right-panel {
+            width: 285px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ==========================================================================
+           10. タイマー・自己ベスト・記録表示【共通】
            ========================================================================== */
         /* --- タイマーコンテナのレイアウト設定 --- */
         .timer-container {
@@ -132,7 +681,6 @@
             box-sizing: border-box;
             height: 52px;
         }
-
         /* --- タイマー表示のスタイル --- */
         #timer-display {
             font-size: 20px;
@@ -140,7 +688,6 @@
             font-variant-numeric: tabular-nums;
             min-width: 110px;
         }
-        
         /* --- 記録表示ボックスのスタイル --- */
         .record-box {
             display: flex;
@@ -151,7 +698,6 @@
             padding-left: 12px;
             height: 100%;
         }
-
         /* --- ベスト記録更新メッセージのスタイル --- */
         #best-update-message {
             font-size: 12px;
@@ -161,7 +707,6 @@
             height: 1.2em;
             margin-bottom: 1px;
         }
-
         /* --- ベスト記録ラベルのコンテナスタイル --- */
         .best-label-container {
             display: flex;
@@ -171,12 +716,14 @@
             white-space: nowrap;
         }
 
+        /* ==========================================================================
+           11. 生徒番号入力・ツールチップ【共通】
+           ========================================================================== */
         /* --- 生徒番号入力エリアのスタイル --- */
         .number-field-wrapper {
             position: relative;
             display: inline-block;
         }
-
         /* --- ログイン入力フィールドの共通スタイル --- */
         .login-input {
             font-size: 15px;
@@ -188,12 +735,10 @@
             font-weight: normal;
             width: 80px;
         }
-
         /* --- 入力フィールドのフォーカス時スタイル --- */
         .login-input:focus {
             border-color: #1a73e8;
         }
-
         /* --- 専用テンキー付き吹き出しのスタイル --- */
         .input-tooltip {
             display: none;
@@ -210,7 +755,6 @@
             z-index: 100;
             width: 210px;
         }
-
         /* --- input-tooltipのツールチップ表示用スタイル --- */
         .input-tooltip::before {
             content: "";
@@ -222,12 +766,10 @@
             border-style: solid;
             border-color: transparent transparent #333333 transparent;
         }
-
         /* --- ツールチップを表示状態にするスタイル --- */
         .input-tooltip.show {
             display: block;
         }
-
         /* --- ヒント表示用のツールチップスタイル --- */
         .tooltip-hint {
             font-size: 11px;
@@ -238,7 +780,6 @@
             line-height: 1.4;
             white-space: nowrap;
         }
-
         /* --- ミニテンキーのグリッド配置 --- */
         .keypad-mini {
             display: grid;
@@ -246,41 +787,6 @@
             gap: 6px;
             justify-content: center;
         }
-
-        /* --- 小さなボタンやキーのスタイル --- */
-        .key-mini {
-            height: 40px;
-            font-size: 18px;
-            font-weight: bold;
-            background-color: #f1f3f5;
-            border: 1px solid #ced4da;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            user-select: none;
-        }
-
-        /* --- 小さなボタンが押下された時のスタイル --- */
-        .key-mini:active {
-            background-color: #dee2e6;
-        }
-
-        /* --- クリアボタン(小)のスタイル --- */
-        .key-mini.btn-clear {
-            grid-column: span 2;
-            background-color: #ffebee;
-            border-color: #ffcdd2;
-            color: #c62828;
-            font-size: 14px;
-        }
-
-        /* --- クリアボタン(小)が押下された時のスタイル --- */
-        .key-mini.btn-clear:active {
-            background-color: #ffcdd2;
-        }
-
         /* --- エラーメッセージ表示用のスタイル --- */
         .error-msg {
             color: #d32f2f;
@@ -292,84 +798,26 @@
             white-space: nowrap;
         }
 
-        /* --- 送信ボタンのスタイル --- */
-        #send-btn {
-            padding: 6px 12px;
-            font-size: 15px;
-            background-color: #1a73e8;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            height: 34px;
-            min-width: 76px;
-            text-align: center;
-            font-weight: bold;
-        }
-
-        /* --- 送信ボタンが無効化された時のスタイル --- */
-        #send-btn:disabled {
-            background-color: #ccc;
-            color: #888;
-            cursor: not-allowed;
-        }
-
         /* ==========================================================================
-           5. メインゲーム画面・左右パネル
+           12. 問題文・出題数式表示エリア【共通】
            ========================================================================== */
-        /* --- ゲームメインレイアウトの構造設定 --- */
-        .game-layout {
-            display: flex;
-            flex-grow: 1;
-            width: 100%;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 20px;
-            margin-top: 8px;
-        }
-
-        /* --- 左パネル（問題表示エリア）のレイアウト --- */
-        .left-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            align-items: center;
-            height: 100%;
-        }
-
-        /* --- 右パネル（操作・キーパッドエリア）のレイアウト --- */
-        .right-panel {
-            width: 285px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* ==========================================================================
-           6. 問題文・出題数式表示エリア
-           ========================================================================== */
-        /* ---問題表示のレイアウト --- */
+        /* --- 問題表示のレイアウト --- */
         .question-wrapper {
             display: flex;
             justify-content: space-between;
             width: 100%;
         }
-
         /* --- 問題文のテキスト表示スタイル --- */
         .question-text { 
             font-size: 20px; 
             color: #333; 
             font-weight: bold; 
         }
-
         /* --- 進捗表示のスタイル --- */
         .progress { 
             font-size: 16px; 
             color: #666; 
         }
-
         /* --- 数式表示エリアのスタイル設定 --- */
         .formula-display {
             font-size: 26px;
@@ -382,12 +830,12 @@
             border-radius: 8px;
             border: 2px solid #ccc;
             height: auto;
+            min-height: 75px;
             width: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
         }
-
         /* --- 数式表示コンテナのレイアウト設定 --- */
         .formula-display mjx-container { 
             display: inline !important; 
@@ -395,7 +843,7 @@
         }
 
         /* ==========================================================================
-           7. 入力枠のスタイル・「＝」の縦揃えCSS Gridレイアウト
+           13. 入力枠・ステップバッジ【共通】
            ========================================================================== */
         /* --- 入力ブロックコンテナのレイアウト設定 --- */
         .input-block-container { 
@@ -405,7 +853,6 @@
             width: 100%; 
             margin-bottom: 4px; 
         }
-
         /* --- 入力グループの基本レイアウト設定 --- */
         .input-box-group {
             background: #ffffff;
@@ -421,21 +868,18 @@
             transition: all 0.2s;
             margin-bottom: 2px;
         }
-
         /* --- 入力グループのフォーカス状態スタイル --- */
         .input-box-group.active-focus { 
             border-color: #007bff; 
             background-color: #f0f7ff; 
             box-shadow: 0 0 0 3px rgba(0,123,255,0.15); 
         }
-
         /* --- 入力グループの正解確定時スタイル --- */
         .input-box-group.locked-correct { 
             border-color: #81c784; 
             background-color: #e8f5e9; 
             cursor: default; 
         }
-
         /* --- 入力グループの無効化状態スタイル --- */
         .input-box-group.locked-disabled { 
             border-color: #e9ecef; 
@@ -443,13 +887,11 @@
             opacity: 0.6; 
             cursor: not-allowed; 
         }
-
         /* --- 入力グループの入力エラー時スタイル --- */
         .input-box-group.error-shake { 
             border-color: #e57373; 
             background-color: #ffebee; 
         }
-
         /* --- 入力ラベルのスタイル --- */
         .input-label { 
             font-size: 13px; 
@@ -460,7 +902,6 @@
             justify-content: space-between; 
             align-items: center; 
         }
-
         /* --- ステップバッジのスタイル --- */
         .step-badge { 
             font-size: 11px; 
@@ -469,13 +910,15 @@
             background-color: #dee2e6; 
             color: #495057; 
         }
-
         /* --- 正解確定時のステップバッジスタイル --- */
         .locked-correct .step-badge { 
             background-color: #28a745; 
             color: white; 
         }
 
+        /* ==========================================================================
+           14. 数式エディタ・「＝」の縦揃えCSS Gridレイアウト【共通】
+           ========================================================================== */
         /* --- 数式レンダリング領域のスタイル --- */
         .mathjax-render-zone {
             min-height: 34px;
@@ -487,15 +930,13 @@
             overflow: hidden; 
             width: 100%;
         }
-
-        /* 💡 「＝」を揃えるための3列のCSS Grid設定 */
+        /* --- 💡 「＝」を揃えるための3列のCSS Grid設定 --- */
         .equation-grid {
             display: grid;
             grid-template-columns: 1fr 40px 1fr;
             align-items: center;
             width: 100%;
         }
-
         /* --- 数式の左寄せスタイル --- */
         .eq-left {
             text-align: right;
@@ -504,7 +945,6 @@
             justify-content: flex-end;
             white-space: nowrap;
         }
-
         /* --- 数式の中央寄せスタイル --- */
         .eq-equal {
             text-align: center;
@@ -513,7 +953,6 @@
             justify-content: center;
             white-space: nowrap;
         }
-
         /* --- 数式の右寄せスタイル --- */
         .eq-right {
             text-align: left;
@@ -522,7 +961,6 @@
             justify-content: flex-start;
             white-space: nowrap;
         }
-
         /* --- 数式エディタのコンテナスタイル --- */
         .math-editor-container {
             position: absolute;
@@ -533,7 +971,6 @@
             height: 0;
             overflow: hidden;
         }
-
         /* --- ワイド分数モード時のコンテナスタイル --- */
         .math-editor-container.wide-fraction-mode {
             height: 60px;
@@ -543,13 +980,11 @@
             border: none !important; 
             background-color: transparent !important; 
         }
-
         /* --- プレースホルダーのスタイル --- */
         .placeholder-text {
             font-size: 16px;
             color: #adb5bd;
         }
-
         /* --- エディタのテキストノードスタイル --- */
         .editor-text-node {
             border: none;
@@ -562,12 +997,11 @@
             color: #000000;
             pointer-events: none; 
         }
-
+        /* --- エディタのテキストノードのプレースホルダー --- */
         .editor-text-node::placeholder {
             font-size: 16px;
             color: #adb5bd; 
         }
-
         /* --- 小さなステップボックスのスタイル --- */
         .step-box-small {
             display: inline-flex;
@@ -584,14 +1018,12 @@
             margin: 0 0px;
             padding: 0 8px;
         }
-
         /* --- アクティブな小さなステップボックスのスタイル --- */
         .step-box-small.active-side {
             border-color: #007bff;
             background-color: #f8f9fa;
             box-shadow: 0 0 0 3px rgba(0,123,255,0.15);
         }
-
         /* --- 正解確定時の小さなステップボックスのスタイル --- */
         .locked-correct .step-box-small {
             border: none !important;
@@ -600,7 +1032,6 @@
             padding: 0;
             margin: 0;
         }
-
         /* --- エディタの分数ノードスタイル --- */
         .editor-fraction-node {
             display: inline-flex;
@@ -610,7 +1041,6 @@
             min-width: 40px;
             margin: 0 4px;
         }
-
         /* --- @エディタの分数線スタイル --- */
         .editor-fraction-line {
             width: 100%;
@@ -618,7 +1048,7 @@
             background-color: #333;
             margin: 2px 0;
         }
-
+        /* --- エディタの分数入力欄のスタイル --- */
         .editor-fraction-field {
             width: 40px;
             height: 24px;
@@ -634,127 +1064,9 @@
         }
 
         /* ==========================================================================
-           8. ソフトキーパッドおよび各種ボタン
+           15. 正解・不正解メッセージ・ヒント・フッター【共通】
            ========================================================================== */
-        .keypad { 
-            display: grid; 
-            grid-template-columns: repeat(5, 56px); 
-            gap: 1px; 
-            margin-bottom: 8px; 
-        }
-
-        .key {
-            height: 46px;
-            font-size: 24px;
-            font-weight: bold;
-            background-color: #f1f3f5;
-            border: 1px solid #ced4da;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.1s;
-        }
-
-        .key:active:not(:disabled) { 
-            background-color: #dee2e6; 
-            transform: scale(0.95); 
-        }
-        
-        .key.num-btn { 
-            font-family: 'MathJax_Main', 'Times New Roman', Times, serif; 
-        }
-
-        .key.op-btn { 
-            background-color: #e7f5ff; 
-            border-color: #a5d8ff; 
-            color: #007bff; 
-            font-size: 20px; 
-        }
-
-        .key.var-btn { 
-            background-color: #f3f0ff; 
-            border-color: #d0bfff; 
-            color: #6f42c1; 
-            font-family: 'MathJax_Math', 'Times New Roman', Times, serif; 
-            font-style: italic; 
-            font-weight: normal; 
-            font-size: 26px; 
-        }
-
-        .key.unit-btn { 
-            background-color: #fff0f6; 
-            border-color: #ffdeeb; 
-            color: #d6336c; 
-            font-size: 18px; 
-            font-weight: bold; 
-        }
-
-        .key.frac-btn { 
-            background-color: #fff9db; 
-            border-color: #fff3bf; 
-            color: #f59f00; 
-            font-size: 18px; 
-        }
-
-        .key.paren-btn { 
-            background-color: #ebfbee; 
-            border-color: #b2f2bb; 
-            color: #2b8a3e; 
-            font-size: 20px; 
-        }
-
-        .key.arrow-btn { 
-            background-color: #fff3e0; 
-            border-color: #ffe0b2; 
-            color: #e65100; 
-            font-weight: bold; 
-        }
-
-        .keypad button:disabled { 
-            background-color: #d1d5db !important; 
-            color: #9ca3af !important; 
-            border-color: #cbd5e1 !important; 
-            cursor: not-allowed; 
-            opacity: 0.6; 
-            box-shadow: none !important; 
-            transform: none !important; 
-        }
-
-        .control-keys { 
-            display: grid; 
-            grid-template-columns: repeat(3, 92px); 
-            gap: 4px; 
-            width: 100%; 
-            justify-content: center; 
-        }
-
-        .key.action-btn { 
-            background-color: #28a745; 
-            color: #fff; 
-            font-size: 18px; 
-            height: 46px; 
-            border-color: #1e7e34; 
-            width: 100%; 
-        }
-
-        .key.action-btn.judge-mode { 
-            background-color: #007bff; 
-            border-color: #0069d9; 
-        }
-
-        .key.clear-btn { 
-            background-color: #e9ecef; 
-            font-size: 16px; 
-            height: 46px; 
-            width: 100%; 
-            color: #333; 
-        }
-
-        /* ==========================================================================
-           9. 正解・不正解メッセージ・フッター・ヒント
-           ========================================================================== */
+        /* --- 結果メッセージの共通スタイル --- */
         .result-message { 
             font-size: 17px; 
             font-weight: bold; 
@@ -768,10 +1080,11 @@
             white-space: pre-wrap; 
             width: 100%; 
         }
-
+        /* --- 正解メッセージの文字色 --- */
         .correct { color: #28a745; }
+        /* --- 不正解メッセージの文字色 --- */
         .incorrect { color: #e67e22; }
-
+        /* --- ヒント表示エリアのスタイル --- */
         .hint-container { 
             width: 100%; 
             height: 205px; 
@@ -785,7 +1098,7 @@
             overflow-y: auto; 
             margin-bottom: 8px; 
         }
-
+        /* --- ヒントのタイトルのスタイル --- */
         .hint-title { 
             font-size: 13px; 
             font-weight: bold; 
@@ -793,7 +1106,7 @@
             margin-bottom: 4px; 
             text-align: left; 
         }
-
+        /* --- ヒント本文のスタイル --- */
         .hint-body { 
             font-size: 16px; 
             font-weight: bold;
@@ -801,330 +1114,23 @@
             line-height: 1.4; 
             text-align: left; 
         }
-
-    footer {
-    width: 100%;
-    text-align: center;
-    font-size: 12px;
-    color: #000000;
-    font-weight: bold;
-    padding-top: 4px;
-    border-top: 1px solid #cfd8dc;
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    background-color: #ffffff;
-    border-radius: 0 0 10px 10px;
-    padding-bottom: 4px;
-    }
-
-        /* ==========================================================================
-           9. 開始画面・問題選択/記録/設定 画面（新規追加分）
-           ========================================================================== */
-        /* --- 各画面の共通コンテナ --- */
-        .app-screen {
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-            min-height: 0;
-            background-color: #eceff1;
-        }
-
-        /* --- 検定画面は従来通り白背景のまま --- */
-        #screen-kentei {
-            background-color: #ffffff;
-        }
-
-        /* --- 開始画面 --- */
-        .start-screen {
-            justify-content: center;
-            align-items: center;
-            gap: 28px;
-        }
-
-        .start-title-main {
-            font-size: 18px;
-            font-weight: normal;
-            color: #333;
-        }
-
-        .start-title-sub {
-            font-size: 28px;
-            font-weight: bold;
-            color: #333;
-            margin-top: 4px;
-        }
-
-        .start-menu {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            width: 320px;
-        }
-
-        .start-menu-btn {
-            height: 64px;
-            font-size: 20px;
-            font-weight: bold;
-            color: #fff;
-            background-color: #1a73e8;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-
-        .start-menu-btn:active {
-            transform: scale(0.97);
-        }
-
-        /* --- 各サブ画面共通のヘッダー行 --- */
-        .sub-screen-header {
-            text-align: center;
-            margin-bottom: 10px;
-        }
-
-        .sub-screen-header h1 {
-            font-size: 24px;
-            color: #333;
-            margin-bottom: 0;
-        }
-
-        /* --- 戻るボタン（水色ベース、方程式シミュレーターと同系統） --- */
-        .btn-tutorial-hud-secondary {
-            padding: 10px 18px;
-            font-size: 15px;
-            font-weight: bold;
-            background-color: #e3f2fd;
-            color: #1565c0;
-            border: 1px solid #90caf9;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-
-        .btn-tutorial-hud-secondary:active {
-            background-color: #bbdefb;
-        }
-
-        /* --- 問題選択・記録・設定：仮のプレースホルダー画面 --- */
-        .placeholder-screen {
-            justify-content: center;
-            align-items: center;
-            gap: 24px;
-        }
-
-        .placeholder-message {
-            font-size: 18px;
-            color: #888;
-        }
-        /* --- 検定画面：問題選択モード中はタイマー等を見た目だけ残してグレーアウト --- */
-        .practice-disabled {
-            opacity: 0.4;
-            pointer-events: none;
-            filter: grayscale(60%);
-        }
-
-        /* --- 問題選択：進捗カウント表示 --- */
-        .mondai-progress-count {
-            font-size: 14px;
-            color: #555;
-            margin-top: 2px;
-        }
-
-        /* --- 問題選択：300問グリッド --- */
-        .mondai-grid {
-            flex: 1;
-            min-height: 0;
-            max-height: 495px;
-            overflow-y: auto;
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 3px;
-            padding: 4px;
-            background-color: #ffffff;
-            border-radius: 8px;
-        }
-
-        .grid-cell {
-            position: relative;
-            height: 50px;
-            font-size: 11px;
-            background-color: #e7f5ff;
-            border: 1px solid #a5d8ff;
-            border-radius: 5px;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            padding: 1px;
-        }
-
-        .grid-cell.locked {
-            background-color: #e9ecef;
-            border-color: #ced4da;
-            color: #adb5bd;
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-
-        .grid-cell.available:active {
-            transform: scale(0.95);
-        }
-
-        .grid-cell.star-perfect {
-            background-color: #fff9db;
-            border-color: #ffe066;
-        }
-
-        .grid-cell.star-mistake {
-            background-color: #f1f3f5;
-            border-color: #ced4da;
-        }
-
-        .grid-cell-star {
-            position: absolute;
-            top: 1px;
-            right: 3px;
-            font-size: 12px;
-        }
-
-        .star-perfect-mark { color: #f5a623; }
-        .star-mistake-mark { color: #999; }
-
-        .grid-cell-formula {
-            font-size: 12px;
-            line-height: 1.1;
-        }
-
-        .grid-cell-num {
-            font-size: 9px;
-            color: #999;
-            margin-top: 1px;
-        }
-        /* --- 戻るボタン専用の配色（もう一回等と区別するオレンジ） --- */
-        .key.action-btn-back {
-            background-color: #fb8c00;
-            color: #fff;
-            border: none;
-            font-size: 18px;
-            height: 46px;
+        /* --- フッターのスタイル --- */
+        footer {
             width: 100%;
-        }
-
-        .key.action-btn-back:disabled {
-            background-color: #ffcc80;
-            color: #fff;
-            cursor: not-allowed;
-        }
-        /* --- 記録画面：カード表示 --- */
-        .kiroku-cards {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            width: 360px;
-            margin: 0 auto;
-        }
-
-        .kiroku-card {
-            background-color: #ffffff;
-            border: 1px solid #dee2e6;
-            border-radius: 10px;
-            padding: 14px 18px;
             text-align: center;
-        }
-
-        .kiroku-card-label {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 6px;
-        }
-
-        .kiroku-card-value {
-            font-size: 20px;
+            font-size: 12px;
+            color: #000000;
             font-weight: bold;
-            color: #1a73e8;
-        }
-        /* --- 設定画面：リセットボタン(中央寄せ) --- */
-        .settei-reset-buttons {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .settei-reset-btn {
-            width: 280px;
-            height: 52px;
-            font-size: 16px;
-            font-weight: bold;
-            color: #c0392b;
-            background-color: #fdecea;
-            border: 1px solid #f1a9a0;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-
-        .settei-reset-btn:active {
-            background-color: #f8d3ce;
-        }
-
-        /* --- リセット確認モーダル --- */
-        .reset-confirm-overlay {
+            padding-top: 4px;
+            border-top: 1px solid #cfd8dc;
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: rgba(0, 0, 0, 0.45);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            border-radius: 12px;
+            bottom: 0;
+            left: 0;
+            background-color: #ffffff;
+            border-radius: 0 0 10px 10px;
+            padding-bottom: 4px;
         }
 
-        .reset-confirm-box {
-            width: 340px;
-            background-color: #fff;
-            border-radius: 12px;
-            padding: 24px 20px;
-            text-align: center;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-        }
-
-        .reset-confirm-message {
-            font-size: 15px;
-            color: #333;
-            line-height: 1.6;
-            margin-bottom: 20px;
-        }
-
-        .reset-confirm-buttons {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-        }
-
-        .reset-confirm-cancel, .reset-confirm-ok {
-            flex: 1;
-            height: 44px;
-            font-size: 15px;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            border: none;
-        }
-
-        .reset-confirm-cancel {
-            background-color: #e9ecef;
-            color: #333;
-        }
-
-        .reset-confirm-ok {
-            background-color: #e74c3c;
-            color: #fff;
-        }
     </style>
 </head>
 
