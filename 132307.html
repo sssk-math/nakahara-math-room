@@ -21,13 +21,18 @@
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     
     <style>
+        /* ==========================================================================
+           1. 全体の基本設定【共通】
+           ========================================================================== */
+        /* --- 全称要素の基本設定 --- */
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
             user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
-
+        /* --- ボディの基本スタイル --- */
         body {
             background-color: #ffffff;
             font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
@@ -42,7 +47,7 @@
             min-height: 100vh;
             overflow: hidden;
         }
-
+        /* --- アプリコンテナのレイアウト設定 --- */
         #app-container {
             width: 960px;
             height: 640px;
@@ -60,16 +65,20 @@
             padding: 10px 20px;
         }
 
+        /* ==========================================================================
+           2. ヘッダー・タイトル・利き手切り替えボタン【共通】
+           ========================================================================== */
+        /* --- ヘッダー領域のレイアウト設定 --- */
         header { 
             text-align: center; 
         }
-
+        /* --- タイトル見出しのスタイル --- */
         h1 { 
             font-size: 24px; 
             color: #333; 
             margin-bottom: 5px; 
         }
-
+        /* --- タイトルバーのグリッドレイアウト --- */
         .title-bar {
             display: grid;
             grid-template-columns: auto 1fr auto;
@@ -77,7 +86,7 @@
             gap: 15px;
             margin-bottom: 0px;
         }
-
+        /* --- 利き手設定ボタンの共通スタイル --- */
         .title-hand-btn {
             padding: 6px 14px;
             font-size: 0.85rem;
@@ -89,16 +98,576 @@
             transition: all 0.2s;
             white-space: nowrap;
         }
-
+        /* --- 利き手設定ボタンの活性状態スタイル --- */
         .title-hand-btn.active { 
             background-color: #1a73e8;
             color: white;
         }
-
+        /* --- 左利きレイアウト（反転配置）のスタイル --- */
         .game-layout.left-handed {
             flex-direction: row-reverse;
         }
 
+        /* ==========================================================================
+           3. キー・ボタン類（キーパッド・ミニキー・送信ボタン）【共通】
+           ========================================================================== */
+        /* --- キーパッドのグリッド配置 --- */
+        .keypad { 
+            display: grid; 
+            grid-template-columns: repeat(5, 56px); 
+            gap: 1px; 
+            margin-bottom: 8px; 
+        }
+        /* --- キー（ボタン）の共通スタイル --- */
+        .key {
+            height: 46px;
+            font-size: 24px;
+            font-weight: bold;
+            background-color: #f1f3f5;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.1s;
+        }
+        /* --- キーが押下された時のスタイル --- */
+        .key:active:not(:disabled) { 
+            background-color: #dee2e6; 
+            transform: scale(0.95); 
+        }
+        /* --- 数字キーのスタイル --- */
+        .key.num-btn { 
+            font-family: 'MathJax_Main', 'Times New Roman', Times, serif; 
+        }
+        /* --- 演算子キーのスタイル --- */
+        .key.op-btn { 
+            background-color: #e7f5ff; 
+            border-color: #a5d8ff; 
+            color: #007bff; 
+            font-size: 20px; 
+        }
+        /* --- 文字キーのスタイル --- */
+        .key.var-btn { 
+            background-color: #f3f0ff; 
+            border-color: #d0bfff; 
+            color: #6f42c1; 
+            font-family: 'MathJax_Math', 'Times New Roman', Times, serif; 
+            font-style: italic; 
+            font-weight: normal; 
+            font-size: 26px; 
+        }
+        /* --- 単位キーのスタイル --- */
+        .key.unit-btn { 
+            background-color: #fff0f6; 
+            border-color: #ffdeeb; 
+            color: #d6336c; 
+            font-size: 18px; 
+            font-weight: bold; 
+        }
+        /* --- 分数キーのスタイル --- */
+        .key.frac-btn { 
+            background-color: #fff9db; 
+            border-color: #fff3bf; 
+            color: #f59f00; 
+            font-size: 18px; 
+        }
+        /* --- かっこキーのスタイル --- */
+        .key.paren-btn { 
+            background-color: #ebfbee; 
+            border-color: #b2f2bb; 
+            color: #2b8a3e; 
+            font-size: 20px; 
+        }
+        /* --- 矢印キーのスタイル --- */
+        .key.arrow-btn { 
+            background-color: #fff3e0; 
+            border-color: #ffe0b2; 
+            color: #e65100; 
+            font-weight: bold; 
+        }
+        /* --- キーパッド内ボタンの無効化状態スタイル --- */
+        .keypad button:disabled { 
+            background-color: #d1d5db !important; 
+            color: #9ca3af !important; 
+            border-color: #cbd5e1 !important; 
+            cursor: not-allowed; 
+            opacity: 0.6; 
+            box-shadow: none !important; 
+            transform: none !important; 
+        }
+        /* --- コントロールキー群のレイアウト --- */
+        .control-keys { 
+            display: grid; 
+            grid-template-columns: repeat(3, 92px); 
+            gap: 4px; 
+            width: 100%; 
+            justify-content: center; 
+        }
+        /* --- アクションボタンのスタイル --- */
+        .key.action-btn { 
+            background-color: #28a745; 
+            color: #fff; 
+            font-size: 18px; 
+            height: 46px; 
+            border-color: #1e7e34; 
+            width: 100%; 
+        }
+        /* --- アクションボタンの判定モード時スタイル --- */
+        .key.action-btn.judge-mode { 
+            background-color: #007bff; 
+            border-color: #0069d9; 
+        }
+        /* --- クリアキーのスタイル --- */
+        .key.clear-btn { 
+            background-color: #e9ecef; 
+            font-size: 16px; 
+            height: 46px; 
+            width: 100%; 
+            color: #333; 
+        }
+        /* --- 戻るボタンのスタイル --- */
+        .key.action-btn-back {
+            background-color: #fb8c00;
+            color: #fff;
+            border: none;
+            font-size: 18px;
+            height: 46px;
+            width: 100%;
+        }
+        /* --- 戻るボタンの無効化状態スタイル --- */
+        .key.action-btn-back:disabled {
+            background-color: #ffcc80;
+            color: #fff;
+            cursor: not-allowed;
+        }
+        /* --- 小さなボタンやキーのスタイル --- */
+        .key-mini {
+            height: 40px;
+            font-size: 18px;
+            font-weight: bold;
+            background-color: #f1f3f5;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+        /* --- 小さなボタンが押下された時のスタイル --- */
+        .key-mini:active {
+            background-color: #dee2e6;
+        }
+        /* --- クリアボタン(小)のスタイル --- */
+        .key-mini.btn-clear {
+            grid-column: span 2;
+            background-color: #ffebee;
+            border-color: #ffcdd2;
+            color: #c62828;
+            font-size: 14px;
+        }
+        /* --- クリアボタン(小)が押下された時のスタイル --- */
+        .key-mini.btn-clear:active {
+            background-color: #ffcdd2;
+        }
+        /* --- 送信ボタンのスタイル --- */
+        #send-btn {
+            padding: 6px 12px;
+            font-size: 15px;
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            height: 34px;
+            min-width: 76px;
+            text-align: center;
+            font-weight: bold;
+        }
+        /* --- 送信ボタンが無効化された時のスタイル --- */
+        #send-btn:disabled {
+            background-color: #ccc;
+            color: #888;
+            cursor: not-allowed;
+        }
+
+        /* ==========================================================================
+           4. 画面の共通設定・開始画面【共通】
+           ========================================================================== */
+        /* --- 画面（app-screen）の共通レイアウト --- */
+        .app-screen {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+            background-color: #eceff1;
+        }
+        /* --- 検定画面の背景色 --- */
+        #screen-kentei {
+            background-color: #ffffff;
+        }
+        /* --- グループ選択画面のレイアウト --- */
+        #screen-mondai-groups {
+            justify-content: center;
+            align-items: center;
+        }
+        /* --- 開始画面のレイアウト --- */
+        .start-screen {
+            justify-content: center;
+            align-items: center;
+            gap: 28px;
+        }
+        /* --- 開始画面のメインタイトル --- */
+        .start-title-main {
+            font-size: 18px;
+            font-weight: normal;
+            color: #333;
+        }
+        /* --- 開始画面のサブタイトル --- */
+        .start-title-sub {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+            margin-top: 4px;
+        }
+        /* --- 開始メニューのレイアウト --- */
+        .start-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 320px;
+        }
+        /* --- 開始メニューボタンのスタイル --- */
+        .start-menu-btn {
+            height: 64px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #fff;
+            background-color: #1a73e8;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        /* --- 開始メニューボタンが押下された時のスタイル --- */
+        .start-menu-btn:active {
+            transform: scale(0.97);
+        }
+
+        /* ==========================================================================
+           5. サブ画面・問題選択画面【共通】
+           ========================================================================== */
+        /* --- サブ画面ヘッダーのレイアウト --- */
+        .sub-screen-header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        /* --- サブ画面ヘッダーの見出しスタイル --- */
+        .sub-screen-header h1 {
+            font-size: 22px;
+            color: #333;
+            margin-bottom: 0;
+        }
+        /* --- チュートリアル風サブボタンのスタイル --- */
+        .btn-tutorial-hud-secondary {
+            padding: 10px 18px;
+            font-size: 15px;
+            font-weight: bold;
+            background-color: #e3f2fd;
+            color: #1565c0;
+            border: 1px solid #90caf9;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        /* --- チュートリアル風サブボタンが押下された時のスタイル --- */
+        .btn-tutorial-hud-secondary:active {
+            background-color: #bbdefb;
+        }
+        /* --- 準備中画面のレイアウト --- */
+        .placeholder-screen {
+            justify-content: center;
+            align-items: center;
+            gap: 24px;
+        }
+        /* --- 練習モード無効化時のスタイル --- */
+        .practice-disabled {
+            opacity: 0.4;
+            pointer-events: none;
+            filter: grayscale(60%);
+        }
+        /* --- 問題選択グリッドのレイアウト --- */
+        .mondai-grid {
+            flex: 1;
+            min-height: 0;
+            max-height: 495px;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 3px;
+            padding: 4px;
+            background-color: #ffffff;
+            border-radius: 8px;
+        }
+        /* --- 問題選択セルの基本スタイル --- */
+        .grid-cell {
+            position: relative;
+            height: 50px;
+            font-size: 11px;
+            background-color: #e7f5ff;
+            border: 1px solid #a5d8ff;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            padding: 1px;
+        }
+        /* --- 問題選択セル（ロック中）のスタイル --- */
+        .grid-cell.locked {
+            background-color: #e9ecef;
+            border-color: #ced4da;
+            color: #adb5bd;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        /* --- 問題選択セル（選択可能）が押下された時のスタイル --- */
+        .grid-cell.available:active {
+            transform: scale(0.95);
+        }
+        /* --- 問題選択セル（満点）のスタイル --- */
+        .grid-cell.star-perfect {
+            background-color: #fff9db;
+            border-color: #ffe066;
+        }
+        /* --- 問題選択セル（ミスあり）のスタイル --- */
+        .grid-cell.star-mistake {
+            background-color: #f1f3f5;
+            border-color: #ced4da;
+        }
+        /* --- 問題選択セルの星マーク配置 --- */
+        .grid-cell-star {
+            position: absolute;
+            top: 1px;
+            right: 3px;
+            font-size: 12px;
+        }
+        /* --- 満点マークの色 --- */
+        .star-perfect-mark { color: #f5a623; }
+        /* --- ミスありマークの色 --- */
+        .star-mistake-mark { color: #999; }
+        /* --- 問題選択セルの式表示スタイル --- */
+        .grid-cell-formula {
+            font-size: 12px;
+            line-height: 1.1;
+        }
+        /* --- 問題選択セルの番号表示スタイル --- */
+        .grid-cell-num {
+            font-size: 9px;
+            color: #999;
+            margin-top: 1px;
+        }
+
+        /* ==========================================================================
+           6. 記録画面【共通】
+           ========================================================================== */
+        /* --- 記録カード群のレイアウト --- */
+        .kiroku-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            width: 560px;
+            margin: 0 auto;
+        }
+        /* --- 記録カードのスタイル --- */
+        .kiroku-card {
+            background-color: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 10px 18px;
+            text-align: center;
+        }
+        /* --- 記録カードのラベルスタイル --- */
+        .kiroku-card-label {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        /* --- 記録カードの値スタイル --- */
+        .kiroku-card-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1a73e8;
+        }
+
+        /* ==========================================================================
+           7. 設定画面・リセット確認ダイアログ【共通】
+           ========================================================================== */
+        /* --- 設定画面のリセットボタン群のレイアウト --- */
+        .settei-reset-buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+        /* --- リセットボタンのスタイル --- */
+        .settei-reset-btn {
+            width: 280px;
+            height: 52px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #c0392b;
+            background-color: #fdecea;
+            border: 1px solid #f1a9a0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        /* --- リセットボタンが押下された時のスタイル --- */
+        .settei-reset-btn:active {
+            background-color: #f8d3ce;
+        }
+        /* --- リセット確認ダイアログのオーバーレイ --- */
+        .reset-confirm-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            border-radius: 12px;
+        }
+        /* --- リセット確認ダイアログのボックス --- */
+        .reset-confirm-box {
+            width: 340px;
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 24px 20px;
+            text-align: center;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+        }
+        /* --- リセット確認ダイアログのメッセージ --- */
+        .reset-confirm-message {
+            font-size: 15px;
+            color: #333;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        /* --- リセット確認ダイアログのボタン群のレイアウト --- */
+        .reset-confirm-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        /* --- リセット確認ボタン（キャンセル・OK）の共通スタイル --- */
+        .reset-confirm-cancel, .reset-confirm-ok {
+            flex: 1;
+            height: 44px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            border: none;
+        }
+        /* --- リセット確認キャンセルボタンの色 --- */
+        .reset-confirm-cancel {
+            background-color: #e9ecef;
+            color: #333;
+        }
+        /* --- リセット確認OKボタンの色 --- */
+        .reset-confirm-ok {
+            background-color: #e74c3c;
+            color: #fff;
+        }
+
+        /* ==========================================================================
+           8. グループ選択画面【共通】
+           ========================================================================== */
+        /* --- グループ選択リストのレイアウト --- */
+        .group-select-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 470px;
+            margin: 0 auto;
+        }
+        /* --- グループ選択ボタンのスタイル --- */
+        .group-select-btn {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 60px;
+            padding: 0 20px;
+            font-size: 15px;
+            font-weight: bold;
+            color: #fff;
+            background-color: #1a73e8;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+            width: 100%;
+        }
+        /* --- グループ選択ボタンが押下された時のスタイル --- */
+        .group-select-btn:active:not(:disabled) {
+            transform: scale(0.97);
+        }
+        /* --- グループ選択ボタンの無効化状態スタイル --- */
+        .group-select-btn:disabled {
+            background-color: #cfd8dc;
+            color: #90a4ae;
+            cursor: not-allowed;
+        }
+        /* --- グループ選択ボタンのサブテキストスタイル --- */
+        .group-select-btn .group-select-sub {
+            font-size: 12px;
+            font-weight: normal;
+        }
+        /* --- グループ選択ボタンの1行目テキストスタイル --- */
+        .group-select-btn > span:first-child {
+           white-space: nowrap;
+       }
+
+        /* ==========================================================================
+           9. メインゲーム画面・左右パネル【共通】
+           ========================================================================== */
+        /* --- ゲームメインレイアウトの構造設定 --- */
+        .game-layout {
+            display: flex;
+            flex-grow: 1;
+            width: 100%;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 20px;
+            margin-top: 8px;
+        }
+        /* --- 左パネル（問題表示エリア）のレイアウト --- */
+        .left-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            height: 100%;
+        }
+        /* --- 右パネル（操作・キーパッドエリア）のレイアウト --- */
+        .right-panel {
+            width: 285px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ==========================================================================
+           10. タイマー・自己ベスト・記録表示【共通】
+           ========================================================================== */
+        /* --- タイマーコンテナのレイアウト設定 --- */
         .timer-container {
             display: flex;
             justify-content: space-between;
@@ -112,14 +681,14 @@
             box-sizing: border-box;
             height: 52px;
         }
-
+        /* --- タイマー表示のスタイル --- */
         #timer-display {
             font-size: 20px;
             color: #1a73e8;
             font-variant-numeric: tabular-nums;
             min-width: 110px;
         }
-        
+        /* --- 記録表示ボックスのスタイル --- */
         .record-box {
             display: flex;
             flex-direction: column;
@@ -129,7 +698,7 @@
             padding-left: 12px;
             height: 100%;
         }
-
+        /* --- ベスト記録更新メッセージのスタイル --- */
         #best-update-message {
             font-size: 12px;
             font-weight: bold;
@@ -138,7 +707,7 @@
             height: 1.2em;
             margin-bottom: 1px;
         }
-
+        /* --- ベスト記録ラベルのコンテナスタイル --- */
         .best-label-container {
             display: flex;
             gap: 15px;
@@ -147,11 +716,15 @@
             white-space: nowrap;
         }
 
+        /* ==========================================================================
+           11. 生徒番号入力・ツールチップ【共通】
+           ========================================================================== */
+        /* --- 生徒番号入力エリアのスタイル --- */
         .number-field-wrapper {
             position: relative;
             display: inline-block;
         }
-
+        /* --- ログイン入力フィールドの共通スタイル --- */
         .login-input {
             font-size: 15px;
             padding: 4px 8px;
@@ -162,11 +735,11 @@
             font-weight: normal;
             width: 80px;
         }
-
+        /* --- 入力フィールドのフォーカス時スタイル --- */
         .login-input:focus {
             border-color: #1a73e8;
         }
-
+        /* --- 専用テンキー付き吹き出しのスタイル --- */
         .input-tooltip {
             display: none;
             position: absolute;
@@ -182,7 +755,7 @@
             z-index: 100;
             width: 210px;
         }
-
+        /* --- input-tooltipのツールチップ表示用スタイル --- */
         .input-tooltip::before {
             content: "";
             position: absolute;
@@ -193,11 +766,11 @@
             border-style: solid;
             border-color: transparent transparent #333333 transparent;
         }
-
+        /* --- ツールチップを表示状態にするスタイル --- */
         .input-tooltip.show {
             display: block;
         }
-
+        /* --- ヒント表示用のツールチップスタイル --- */
         .tooltip-hint {
             font-size: 11px;
             font-weight: bold;
@@ -207,44 +780,14 @@
             line-height: 1.4;
             white-space: nowrap;
         }
-
+        /* --- ミニテンキーのグリッド配置 --- */
         .keypad-mini {
             display: grid;
             grid-template-columns: repeat(3, 56px);
             gap: 6px;
             justify-content: center;
         }
-
-        .key-mini {
-            height: 40px;
-            font-size: 18px;
-            font-weight: bold;
-            background-color: #f1f3f5;
-            border: 1px solid #ced4da;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            user-select: none;
-        }
-
-        .key-mini:active {
-            background-color: #dee2e6;
-        }
-
-        .key-mini.btn-clear {
-            grid-column: span 2;
-            background-color: #ffebee;
-            border-color: #ffcdd2;
-            color: #c62828;
-            font-size: 14px;
-        }
-
-        .key-mini.btn-clear:active {
-            background-color: #ffcdd2;
-        }
-
+        /* --- エラーメッセージ表示用のスタイル --- */
         .error-msg {
             color: #d32f2f;
             font-size: 12px;
@@ -255,70 +798,27 @@
             white-space: nowrap;
         }
 
-        #send-btn {
-            padding: 6px 12px;
-            font-size: 15px;
-            background-color: #1a73e8;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            height: 34px;
-            min-width: 76px;
-            text-align: center;
-            font-weight: bold;
-        }
-
-        #send-btn:disabled {
-            background-color: #ccc;
-            color: #888;
-            cursor: not-allowed;
-        }
-
-        .game-layout {
-            display: flex;
-            flex-grow: 1;
-            width: 100%;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 20px;
-            margin-top: 8px;
-        }
-
-        .left-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            align-items: center;
-            height: 100%;
-        }
-
-        .right-panel {
-            width: 285px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
+        /* ==========================================================================
+           12. 問題文・出題数式表示エリア【共通】
+           ========================================================================== */
+        /* --- 問題表示のレイアウト --- */
         .question-wrapper {
             display: flex;
             justify-content: space-between;
             width: 100%;
         }
-
+        /* --- 問題文のテキスト表示スタイル --- */
         .question-text { 
             font-size: 20px; 
             color: #333; 
             font-weight: bold; 
         }
-
+        /* --- 進捗表示のスタイル --- */
         .progress { 
             font-size: 16px; 
             color: #666; 
         }
-        
+        /* --- 数式表示エリアのスタイル設定 --- */
         .formula-display {
             font-size: 26px;
             line-height: 1.4;
@@ -329,65 +829,70 @@
             padding: 5px 10px;
             border-radius: 8px;
             border: 2px solid #ccc;
-            height: 75px;
+            height: auto;
+            min-height: 75px;
             width: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
         }
-
+        /* --- 数式表示コンテナのレイアウト設定 --- */
         .formula-display mjx-container { 
             display: inline !important; 
             white-space: normal; 
         }
 
+        /* ==========================================================================
+           13. 入力枠・ステップバッジ【共通】
+           ========================================================================== */
+        /* --- 入力ブロックコンテナのレイアウト設定 --- */
         .input-block-container { 
             display: flex; 
             flex-direction: column; 
-            gap: 2px; 
+            gap: 0px; 
             width: 100%; 
             margin-bottom: 4px; 
         }
-
+        /* --- 入力グループの基本レイアウト設定 --- */
         .input-box-group {
             background: #ffffff;
             border: 2px solid #ced4da;
             border-radius: 8px;
             padding: 4px 10px;
-            height: 64px;
+            height: auto;
             display: flex;
             flex-direction: column;
             justify-content: center;
             position: relative;
-            cursor: default;
+            cursor: pointer;
             transition: all 0.2s;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
-
+        /* --- 入力グループのフォーカス状態スタイル --- */
         .input-box-group.active-focus { 
             border-color: #007bff; 
             background-color: #f0f7ff; 
             box-shadow: 0 0 0 3px rgba(0,123,255,0.15); 
         }
-
+        /* --- 入力グループの正解確定時スタイル --- */
         .input-box-group.locked-correct { 
             border-color: #81c784; 
             background-color: #e8f5e9; 
             cursor: default; 
         }
-
+        /* --- 入力グループの無効化状態スタイル --- */
         .input-box-group.locked-disabled { 
             border-color: #e9ecef; 
             background-color: #f8f9fa; 
             opacity: 0.6; 
             cursor: not-allowed; 
         }
-
+        /* --- 入力グループの入力エラー時スタイル --- */
         .input-box-group.error-shake { 
             border-color: #e57373; 
             background-color: #ffebee; 
         }
-
+        /* --- 入力ラベルのスタイル --- */
         .input-label { 
             font-size: 13px; 
             color: #495057; 
@@ -397,7 +902,7 @@
             justify-content: space-between; 
             align-items: center; 
         }
-
+        /* --- ステップバッジのスタイル --- */
         .step-badge { 
             font-size: 11px; 
             padding: 1px 6px; 
@@ -405,12 +910,16 @@
             background-color: #dee2e6; 
             color: #495057; 
         }
-
+        /* --- 正解確定時のステップバッジスタイル --- */
         .locked-correct .step-badge { 
             background-color: #28a745; 
             color: white; 
         }
 
+        /* ==========================================================================
+           14. 数式エディタ・「＝」の縦揃えCSS Gridレイアウト【共通】
+           ========================================================================== */
+        /* --- 数式レンダリング領域のスタイル --- */
         .mathjax-render-zone {
             min-height: 34px;
             font-size: 22px; 
@@ -421,14 +930,14 @@
             overflow: hidden; 
             width: 100%;
         }
-
+        /* --- 💡 「＝」を揃えるための3列のCSS Grid設定 --- */
         .equation-grid {
             display: grid;
             grid-template-columns: 1fr 40px 1fr;
             align-items: center;
             width: 100%;
         }
-
+        /* --- 数式の左寄せスタイル --- */
         .eq-left {
             text-align: right;
             display: flex;
@@ -436,7 +945,7 @@
             justify-content: flex-end;
             white-space: nowrap;
         }
-
+        /* --- 数式の中央寄せスタイル --- */
         .eq-equal {
             text-align: center;
             display: flex;
@@ -444,7 +953,7 @@
             justify-content: center;
             white-space: nowrap;
         }
-
+        /* --- 数式の右寄せスタイル --- */
         .eq-right {
             text-align: left;
             display: flex;
@@ -452,193 +961,7 @@
             justify-content: flex-start;
             white-space: nowrap;
         }
-
-        .step-box-small {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 50px;
-            height: 34px;
-            border: 2px solid #ced4da;
-            border-radius: 6px;
-            background-color: #f0f7ff;
-            color: #000;
-            font-weight: bold;
-            font-size: 20px;
-            margin: 0 0px;
-            padding: 0 8px;
-        }
-
-        .step-box-small.active-side {
-            border-color: #007bff;
-            background-color: #f8f9fa;
-            box-shadow: 0 0 0 3px rgba(0,123,255,0.15);
-        }
-
-        .locked-correct .step-box-small {
-            border: none !important;
-            background-color: transparent !important;
-            box-shadow: none !important;
-            padding: 0;
-            margin: 0;
-        }
-
-        .placeholder-text {
-            font-size: 16px;
-            color: #adb5bd;
-        }
-
-        .editor-text-node::placeholder {
-            font-size: 16px;
-            color: #adb5bd; 
-        }
-
-        .hint-container { 
-            width: 100%; 
-            height: 205px; 
-            background-color: #fff9db; 
-            border: 1px dashed #f59f00; 
-            border-radius: 8px; 
-            padding: 10px 12px; 
-            box-sizing: border-box; 
-            display: flex; 
-            flex-direction: column; 
-            overflow-y: auto; 
-            margin-bottom: 8px; 
-        }
-
-        .hint-title { 
-            font-size: 13px; 
-            font-weight: bold; 
-            color: #f59f00; 
-            margin-bottom: 4px; 
-            text-align: left; 
-        }
-
-        .hint-body { 
-            font-size: 16px; 
-            font-weight: bold;
-            color: #495057; 
-            line-height: 1.4; 
-            text-align: left; 
-        }
-
-        .keypad { 
-            display: grid; 
-            grid-template-columns: repeat(5, 56px); 
-            gap: 1px; 
-            margin-bottom: 8px; 
-        }
-
-        .key {
-            height: 46px;
-            font-size: 24px;
-            font-weight: bold;
-            background-color: #f1f3f5;
-            border: 1px solid #ced4da;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.1s;
-        }
-
-        .key:active:not(:disabled) { 
-            background-color: #dee2e6; 
-            transform: scale(0.95); 
-        }
-        
-        .key.num-btn { 
-            font-family: 'MathJax_Main', 'Times New Roman', Times, serif; 
-        }
-
-        .key.op-btn { 
-            background-color: #e7f5ff; 
-            border-color: #a5d8ff; 
-            color: #007bff; 
-            font-size: 20px; 
-        }
-
-        .key.var-btn { 
-            background-color: #f3f0ff; 
-            border-color: #d0bfff; 
-            color: #6f42c1; 
-            font-family: 'MathJax_Math', 'Times New Roman', Times, serif; 
-            font-style: italic; 
-            font-weight: normal; 
-            font-size: 26px; 
-        }
-
-        .key.unit-btn { 
-            background-color: #fff0f6; 
-            border-color: #ffdeeb; 
-            color: #d6336c; 
-            font-size: 18px; 
-            font-weight: bold; 
-        }
-
-        .key.frac-btn { 
-            background-color: #fff9db; 
-            border-color: #fff3bf; 
-            color: #f59f00; 
-            font-size: 18px; 
-        }
-
-        .key.paren-btn { 
-            background-color: #ebfbee; 
-            border-color: #b2f2bb; 
-            color: #2b8a3e; 
-            font-size: 20px; 
-        }
-
-        .key.arrow-btn { 
-            background-color: #fff3e0; 
-            border-color: #ffe0b2; 
-            color: #e65100; 
-            font-weight: bold; 
-        }
-
-        .keypad button:disabled { 
-            background-color: #d1d5db !important; 
-            color: #9ca3af !important; 
-            border-color: #cbd5e1 !important; 
-            cursor: not-allowed; 
-            opacity: 0.6; 
-            box-shadow: none !important; 
-            transform: none !important; 
-        }
-
-        .control-keys { 
-            display: grid; 
-            grid-template-columns: repeat(3, 92px); 
-            gap: 4px; 
-            width: 100%; 
-            justify-content: center; 
-        }
-
-        .key.action-btn { 
-            background-color: #28a745; 
-            color: #fff; 
-            font-size: 18px; 
-            height: 46px; 
-            border-color: #1e7e34; 
-            width: 100%; 
-        }
-
-        .key.action-btn.judge-mode { 
-            background-color: #007bff; 
-            border-color: #0069d9; 
-        }
-
-        .key.clear-btn { 
-            background-color: #e9ecef; 
-            font-size: 16px; 
-            height: 46px; 
-            width: 100%; 
-            color: #333; 
-        }
-
+        /* --- 数式エディタのコンテナスタイル --- */
         .math-editor-container {
             position: absolute;
             opacity: 0;
@@ -648,16 +971,21 @@
             height: 0;
             overflow: hidden;
         }
-
+        /* --- ワイド分数モード時のコンテナスタイル --- */
         .math-editor-container.wide-fraction-mode {
-            height: 86px;
+            height: 60px;
             padding: 4px 14px;
             flex-wrap: wrap;
             overflow: visible;
             border: none !important; 
             background-color: transparent !important; 
         }
-
+        /* --- プレースホルダーのスタイル --- */
+        .placeholder-text {
+            font-size: 16px;
+            color: #adb5bd;
+        }
+        /* --- エディタのテキストノードスタイル --- */
         .editor-text-node {
             border: none;
             outline: none;
@@ -669,7 +997,42 @@
             color: #000000;
             pointer-events: none; 
         }
-
+        /* --- エディタのテキストノードのプレースホルダー --- */
+        .editor-text-node::placeholder {
+            font-size: 16px;
+            color: #adb5bd; 
+        }
+        /* --- 小さなステップボックスのスタイル --- */
+        .step-box-small {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 50px;
+            height: 34px;
+            border: 2px solid #ced4da;
+             border-radius: 6px;
+            background-color: #f0f7ff;
+            color: #000;
+            font-weight: bold;
+            font-size: 20px;
+            margin: 0 0px;
+            padding: 0 8px;
+        }
+        /* --- アクティブな小さなステップボックスのスタイル --- */
+        .step-box-small.active-side {
+            border-color: #007bff;
+            background-color: #f8f9fa;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.15);
+        }
+        /* --- 正解確定時の小さなステップボックスのスタイル --- */
+        .locked-correct .step-box-small {
+            border: none !important;
+            background-color: transparent !important;
+            box-shadow: none !important;
+            padding: 0;
+            margin: 0;
+        }
+        /* --- エディタの分数ノードスタイル --- */
         .editor-fraction-node {
             display: inline-flex;
             flex-direction: column;
@@ -678,14 +1041,14 @@
             min-width: 40px;
             margin: 0 4px;
         }
-
+        /* --- @エディタの分数線スタイル --- */
         .editor-fraction-line {
             width: 100%;
             height: 2px;
             background-color: #333;
-            margin: 3px 0;
+            margin: 2px 0;
         }
-
+        /* --- エディタの分数入力欄のスタイル --- */
         .editor-fraction-field {
             width: 40px;
             height: 24px;
@@ -700,29 +1063,58 @@
             font-style: italic !important; 
         }
 
+        /* ==========================================================================
+           15. 正解・不正解メッセージ・ヒント・フッター【共通】
+           ========================================================================== */
+        /* --- 結果メッセージの共通スタイル --- */
         .result-message { 
             font-size: 17px; 
             font-weight: bold; 
-            min-height: 48px; 
+            min-height: 40px; 
             text-align: center; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
             margin-left: auto; 
             margin-right: auto; 
-            margin-top: 0px; 
             white-space: pre-wrap; 
             width: 100%; 
         }
-
-        .correct { 
-            color: #28a745; 
+        /* --- 正解メッセージの文字色 --- */
+        .correct { color: #28a745; }
+        /* --- 不正解メッセージの文字色 --- */
+        .incorrect { color: #e67e22; }
+        /* --- ヒント表示エリアのスタイル --- */
+        .hint-container { 
+            width: 100%; 
+            height: 205px; 
+            background-color: #fff9db; 
+            border: 1px dashed #f59f00; 
+            border-radius: 8px; 
+            padding: 10px 12px; 
+            box-sizing: border-box; 
+            display: flex; 
+            flex-direction: column; 
+            overflow-y: auto; 
+            margin-bottom: 8px; 
         }
-
-        .incorrect { 
-            color: #e67e22; 
+        /* --- ヒントのタイトルのスタイル --- */
+        .hint-title { 
+            font-size: 13px; 
+            font-weight: bold; 
+            color: #f59f00; 
+            margin-bottom: 4px; 
+            text-align: left; 
         }
-
+        /* --- ヒント本文のスタイル --- */
+        .hint-body { 
+            font-size: 16px; 
+            font-weight: bold;
+            color: #495057; 
+            line-height: 1.4; 
+            text-align: left; 
+        }
+        /* --- フッターのスタイル --- */
         footer {
             width: 100%;
             text-align: center;
@@ -739,297 +1131,6 @@
             padding-bottom: 4px;
         }
 
-        .app-screen {
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-            min-height: 0;
-            background-color: #eceff1;
-        }
-
-        #screen-kentei {
-            background-color: #ffffff;
-        }
-
-        .start-screen {
-            justify-content: center;
-            align-items: center;
-            gap: 28px;
-        }
-
-        .start-title-main {
-            font-size: 18px;
-            font-weight: normal;
-            color: #333;
-        }
-
-        .start-title-sub {
-            font-size: 28px;
-            font-weight: bold;
-            color: #333;
-            margin-top: 4px;
-        }
-
-        .start-menu {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            width: 320px;
-        }
-
-        .start-menu-btn {
-            height: 64px;
-            font-size: 20px;
-            font-weight: bold;
-            color: #fff;
-            background-color: #1a73e8;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-
-        .start-menu-btn:active {
-            transform: scale(0.97);
-        }
-
-        .sub-screen-header {
-            text-align: center;
-            margin-bottom: 10px;
-        }
-
-        .sub-screen-header h1 {
-            font-size: 24px;
-            color: #333;
-            margin-bottom: 0;
-        }
-
-        .btn-tutorial-hud-secondary {
-            padding: 10px 18px;
-            font-size: 15px;
-            font-weight: bold;
-            background-color: #e3f2fd;
-            color: #1565c0;
-            border: 1px solid #90caf9;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-
-        .btn-tutorial-hud-secondary:active {
-            background-color: #bbdefb;
-        }
-
-        .placeholder-screen {
-            justify-content: center;
-            align-items: center;
-            gap: 24px;
-        }
-
-        .placeholder-message {
-            font-size: 18px;
-            color: #888;
-        }
-        .practice-disabled {
-            opacity: 0.4;
-            pointer-events: none;
-            filter: grayscale(60%);
-        }
-
-        .mondai-progress-count {
-            font-size: 14px;
-            color: #555;
-            margin-top: 2px;
-        }
-
-        .mondai-grid {
-            flex: 1;
-            min-height: 0;
-            max-height: 495px;
-            overflow-y: auto;
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 3px;
-            padding: 4px;
-            background-color: #ffffff;
-            border-radius: 8px;
-        }
-
-        .grid-cell {
-            position: relative;
-            height: 40px;
-            font-size: 11px;
-            background-color: #e7f5ff;
-            border: 1px solid #a5d8ff;
-            border-radius: 5px;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            padding: 1px;
-        }
-
-        .grid-cell.locked {
-            background-color: #e9ecef;
-            border-color: #ced4da;
-            color: #adb5bd;
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-
-        .grid-cell.available:active {
-            transform: scale(0.95);
-        }
-
-        .grid-cell.star-perfect {
-            background-color: #fff9db;
-            border-color: #ffe066;
-        }
-
-        .grid-cell.star-mistake {
-            background-color: #f1f3f5;
-            border-color: #ced4da;
-        }
-
-        .grid-cell-star {
-            position: absolute;
-            top: 1px;
-            right: 3px;
-            font-size: 12px;
-        }
-
-        .star-perfect-mark { color: #f5a623; }
-        .star-mistake-mark { color: #999; }
-
-        .grid-cell-formula {
-            font-size: 12px;
-            line-height: 1.1;
-        }
-
-        .grid-cell-num {
-            font-size: 9px;
-            color: #999;
-            margin-top: 1px;
-        }
-        .key.action-btn-back {
-            background-color: #fb8c00;
-            color: #fff;
-            border: none;
-            font-size: 18px;
-            height: 46px;
-            width: 100%;
-        }
-
-        .key.action-btn-back:disabled {
-            background-color: #ffcc80;
-            color: #fff;
-            cursor: not-allowed;
-        }
-        .kiroku-cards {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            width: 360px;
-            margin: 0 auto;
-        }
-
-        .kiroku-card {
-            background-color: #ffffff;
-            border: 1px solid #dee2e6;
-            border-radius: 10px;
-            padding: 14px 18px;
-            text-align: center;
-        }
-
-        .kiroku-card-label {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 6px;
-        }
-
-        .kiroku-card-value {
-            font-size: 20px;
-            font-weight: bold;
-            color: #1a73e8;
-        }
-        .settei-reset-buttons {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .settei-reset-btn {
-            width: 280px;
-            height: 52px;
-            font-size: 16px;
-            font-weight: bold;
-            color: #c0392b;
-            background-color: #fdecea;
-            border: 1px solid #f1a9a0;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-
-        .settei-reset-btn:active {
-            background-color: #f8d3ce;
-        }
-
-        .reset-confirm-overlay {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: rgba(0, 0, 0, 0.45);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            border-radius: 12px;
-        }
-
-        .reset-confirm-box {
-            width: 340px;
-            background-color: #fff;
-            border-radius: 12px;
-            padding: 24px 20px;
-            text-align: center;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-        }
-
-        .reset-confirm-message {
-            font-size: 15px;
-            color: #333;
-            line-height: 1.6;
-            margin-bottom: 20px;
-        }
-
-        .reset-confirm-buttons {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-        }
-
-        .reset-confirm-cancel, .reset-confirm-ok {
-            flex: 1;
-            height: 44px;
-            font-size: 15px;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            border: none;
-        }
-
-        .reset-confirm-cancel {
-            background-color: #e9ecef;
-            color: #333;
-        }
-
-        .reset-confirm-ok {
-            background-color: #e74c3c;
-            color: #fff;
-        }
     </style>
 </head>
 
@@ -2427,297 +2528,297 @@ if (bestNormalTimeMs === null || totalElapsedTimeMs < bestNormalTimeMs) {
 {leftPart:"5(-x+2)",rightPart:"2(2x-4)",expLeftAns:"-5x+10",expRightAns:"4x-8",transLeftList:["-4x-5x","-5x-4x"],transRightList:["-10-8","-8-10"],arrLeftAns:"-9x",arrRightAns:"-18",answer:"2",qtype:3},
 {leftPart:"-4(-3x+3)",rightPart:"-4(-2x-4)",expLeftAns:"12x-12",expRightAns:"8x+16",transLeftList:["-8x+12x","12x-8x"],transRightList:["12+16","16+12"],arrLeftAns:"4x",arrRightAns:"28",answer:"7",qtype:4},
 {leftPart:"7x",rightPart:"-3(-3x-2)",expLeftAns:"7x",expRightAns:"9x+6",transLeftList:["-9x+7x","7x-9x"],transRightList:["6"],arrLeftAns:"-2x",arrRightAns:"6",answer:"-3",qtype:5},
-{leftPart:"6-4(-x+2)",rightPart:"26",expLeftAns:"6+4x-8",expRightAns:"26",transLeftList:["4x"],transRightList:["-6+26+8","-6+8+26","26+8-6","26-6+8","8+26-6","8-6+26","26+2","2+26"],arrLeftAns:"4x",arrRightAns:"28",answer:"7",qtype:6},
+{leftPart:"6-4(-x+2)",rightPart:"26",expLeftAns:"6+4x-8",expRightAns:"26",transLeftList:["4x"],transRightList:["-6+26+8","-6+8+26","26+8-6","26-6+8","8+26-6","8-6+26"],arrLeftAns:"4x",arrRightAns:"28",answer:"7",qtype:6},
 {leftPart:"-2(-x-2)",rightPart:"4x",expLeftAns:"2x+4",expRightAns:"4x",transLeftList:["-4x+2x","2x-4x"],transRightList:["-4"],arrLeftAns:"-2x",arrRightAns:"-4",answer:"2",qtype:7},
-{leftPart:"23",rightPart:"3-2(-x-5)",expLeftAns:"23",expRightAns:"3+2x+10",transLeftList:["-2x"],transRightList:["-23+10+3","-23+3+10","10+3-23","10-23+3","3+10-23","3-23+10","13-23","-23+13"],arrLeftAns:"-2x",arrRightAns:"-10",answer:"5",qtype:8},
+{leftPart:"23",rightPart:"3-2(-x-5)",expLeftAns:"23",expRightAns:"3+2x+10",transLeftList:["-2x"],transRightList:["-23+10+3","-23+3+10","10+3-23","10-23+3","3+10-23","3-23+10"],arrLeftAns:"-2x",arrRightAns:"-10",answer:"5",qtype:8},
 {leftPart:"3(-x-2)",rightPart:"-5x+8",expLeftAns:"-3x-6",expRightAns:"-5x+8",transLeftList:["-3x+5x","5x-3x"],transRightList:["6+8","8+6"],arrLeftAns:"2x",arrRightAns:"14",answer:"7",qtype:1},
 {leftPart:"-5x+9",rightPart:"4(-x+3)",expLeftAns:"-5x+9",expRightAns:"-4x+12",transLeftList:["-5x+4x","4x-5x"],transRightList:["-9+12","12-9"],arrLeftAns:"-x",arrRightAns:"3",answer:"-3",qtype:2},
 {leftPart:"5(-3x+3)",rightPart:"5(-2x+4)",expLeftAns:"-15x+15",expRightAns:"-10x+20",transLeftList:["-15x+10x","10x-15x"],transRightList:["-15+20","20-15"],arrLeftAns:"-5x",arrRightAns:"5",answer:"-1",qtype:3},
 {leftPart:"-3(-x+5)",rightPart:"-2(3x+21)",expLeftAns:"3x-15",expRightAns:"-6x-42",transLeftList:["3x+6x","6x+3x"],transRightList:["-42+15","15-42"],arrLeftAns:"9x",arrRightAns:"-27",answer:"-3",qtype:4},
 {leftPart:"-9x",rightPart:"-3(-x-4)",expLeftAns:"-9x",expRightAns:"3x+12",transLeftList:["-3x-9x","-9x-3x"],transRightList:["12"],arrLeftAns:"-12x",arrRightAns:"12",answer:"-1",qtype:5},
-{leftPart:"6-3(x+1)",rightPart:"-6",expLeftAns:"6-3x-3",expRightAns:"-6",transLeftList:["-3x"],transRightList:["-6+3-6","-6-6+3","3-6-6","-6-3","-3-6"],arrLeftAns:"-3x",arrRightAns:"-9",answer:"3",qtype:6},
+{leftPart:"6-3(x+1)",rightPart:"-6",expLeftAns:"6-3x-3",expRightAns:"-6",transLeftList:["-3x"],transRightList:["-6+3-6","-6-6+3","3-6-6"],arrLeftAns:"-3x",arrRightAns:"-9",answer:"3",qtype:6},
 {leftPart:"2(2x-5)",rightPart:"-x",expLeftAns:"4x-10",expRightAns:"-x",transLeftList:["4x+x","x+4x"],transRightList:["10"],arrLeftAns:"5x",arrRightAns:"10",answer:"2",qtype:7},
-{leftPart:"-3",rightPart:"1-4(x-2)",expLeftAns:"-3",expRightAns:"1-4x+8",transLeftList:["4x"],transRightList:["1+3+8","1+8+3","3+1+8","3+8+1","8+1+3","8+3+1","9+3","3+9"],arrLeftAns:"4x",arrRightAns:"12",answer:"3",qtype:8},
+{leftPart:"-3",rightPart:"1-4(x-2)",expLeftAns:"-3",expRightAns:"1-4x+8",transLeftList:["4x"],transRightList:["1+3+8","1+8+3","3+1+8","3+8+1","8+1+3","8+3+1"],arrLeftAns:"4x",arrRightAns:"12",answer:"3",qtype:8},
 {leftPart:"-2(2x-2)",rightPart:"-x+10",expLeftAns:"-4x+4",expRightAns:"-x+10",transLeftList:["-4x+x","x-4x"],transRightList:["-4+10","10-4"],arrLeftAns:"-3x",arrRightAns:"6",answer:"-2",qtype:1},
 {leftPart:"-2x+30",rightPart:"4(-x+3)",expLeftAns:"-2x+30",expRightAns:"-4x+12",transLeftList:["-2x+4x","4x-2x"],transRightList:["-30+12","12-30"],arrLeftAns:"2x",arrRightAns:"-18",answer:"-9",qtype:2},
 {leftPart:"5(-x-5)",rightPart:"4(-x-5)",expLeftAns:"-5x-25",expRightAns:"-4x-20",transLeftList:["-5x+4x","4x-5x"],transRightList:["-20+25","25-20"],arrLeftAns:"-x",arrRightAns:"5",answer:"-5",qtype:3},
 {leftPart:"5(-3x+3)",rightPart:"-5(-x-11)",expLeftAns:"-15x+15",expRightAns:"5x+55",transLeftList:["-15x-5x","-5x-15x"],transRightList:["-15+55","55-15"],arrLeftAns:"-20x",arrRightAns:"40",answer:"-2",qtype:4},
 {leftPart:"-2x",rightPart:"5(-x+3)",expLeftAns:"-2x",expRightAns:"-5x+15",transLeftList:["-2x+5x","5x-2x"],transRightList:["15"],arrLeftAns:"3x",arrRightAns:"15",answer:"5",qtype:5},
-{leftPart:"6+2(-x+2)",rightPart:"24",expLeftAns:"6-2x+4",expRightAns:"24",transLeftList:["-2x"],transRightList:["-4+24-6","-4-6+24","-6+24-4","-6-4+24","24-4-6","24-6-4","24-10","-10+24"],arrLeftAns:"-2x",arrRightAns:"14",answer:"-7",qtype:6},
+{leftPart:"6+2(-x+2)",rightPart:"24",expLeftAns:"6-2x+4",expRightAns:"24",transLeftList:["-2x"],transRightList:["-4+24-6","-4-6+24","-6+24-4","-6-4+24","24-4-6","24-6-4"],arrLeftAns:"-2x",arrRightAns:"14",answer:"-7",qtype:6},
 {leftPart:"5(x-4)",rightPart:"25x",expLeftAns:"5x-20",expRightAns:"25x",transLeftList:["-25x+5x","5x-25x"],transRightList:["20"],arrLeftAns:"-20x",arrRightAns:"20",answer:"-1",qtype:7},
-{leftPart:"-33",rightPart:"7-4(-x+5)",expLeftAns:"-33",expRightAns:"7+4x-20",transLeftList:["-4x"],transRightList:["-20+33+7","-20+7+33","33+7-20","33-20+7","7+33-20","7-20+33","-13+33","33-13"],arrLeftAns:"-4x",arrRightAns:"20",answer:"-5",qtype:8},
+{leftPart:"-33",rightPart:"7-4(-x+5)",expLeftAns:"-33",expRightAns:"7+4x-20",transLeftList:["-4x"],transRightList:["-20+33+7","-20+7+33","33+7-20","33-20+7","7+33-20","7-20+33"],arrLeftAns:"-4x",arrRightAns:"20",answer:"-5",qtype:8},
 {leftPart:"2(-2x+1)",rightPart:"-x-7",expLeftAns:"-4x+2",expRightAns:"-x-7",transLeftList:["-4x+x","x-4x"],transRightList:["-2-7","-7-2"],arrLeftAns:"-3x",arrRightAns:"-9",answer:"3",qtype:1},
 {leftPart:"-4x+20",rightPart:"4(-2x+4)",expLeftAns:"-4x+20",expRightAns:"-8x+16",transLeftList:["-4x+8x","8x-4x"],transRightList:["-20+16","16-20"],arrLeftAns:"4x",arrRightAns:"-4",answer:"-1",qtype:2},
 {leftPart:"3(-2x-2)",rightPart:"4(-2x-4)",expLeftAns:"-6x-6",expRightAns:"-8x-16",transLeftList:["-6x+8x","8x-6x"],transRightList:["-16+6","6-16"],arrLeftAns:"2x",arrRightAns:"-10",answer:"-5",qtype:3},
 {leftPart:"4(3x+5)",rightPart:"-4(x-21)",expLeftAns:"12x+20",expRightAns:"-4x+84",transLeftList:["12x+4x","4x+12x"],transRightList:["-20+84","84-20"],arrLeftAns:"16x",arrRightAns:"64",answer:"4",qtype:4},
 {leftPart:"-2x",rightPart:"-2(2x+3)",expLeftAns:"-2x",expRightAns:"-4x-6",transLeftList:["-2x+4x","4x-2x"],transRightList:["-6"],arrLeftAns:"2x",arrRightAns:"-6",answer:"-3",qtype:5},
-{leftPart:"3+4(x+4)",rightPart:"7",expLeftAns:"3+4x+16",expRightAns:"7",transLeftList:["4x"],transRightList:["-16+7-3","-16-3+7","-3+7-16","-3-16+7","7-16-3","7-3-16","7-19","-19+7"],arrLeftAns:"4x",arrRightAns:"-12",answer:"-3",qtype:6},
+{leftPart:"3+4(x+4)",rightPart:"7",expLeftAns:"3+4x+16",expRightAns:"7",transLeftList:["4x"],transRightList:["-16+7-3","-16-3+7","-3+7-16","-3-16+7","7-16-3","7-3-16"],arrLeftAns:"4x",arrRightAns:"-12",answer:"-3",qtype:6},
 {leftPart:"-3(-3x-2)",rightPart:"12x",expLeftAns:"9x+6",expRightAns:"12x",transLeftList:["-12x+9x","9x-12x"],transRightList:["-6"],arrLeftAns:"-3x",arrRightAns:"-6",answer:"2",qtype:7},
-{leftPart:"35",rightPart:"-5+2(-2x+2)",expLeftAns:"35",expRightAns:"-5-4x+4",transLeftList:["4x"],transRightList:["-35+4-5","-35-5+4","-5+4-35","-5-35+4","4-35-5","4-5-35","-1-35","-35-1"],arrLeftAns:"4x",arrRightAns:"-36",answer:"-9",qtype:8},
+{leftPart:"35",rightPart:"-5+2(-2x+2)",expLeftAns:"35",expRightAns:"-5-4x+4",transLeftList:["4x"],transRightList:["-35+4-5","-35-5+4","-5+4-35","-5-35+4","4-35-5","4-5-35"],arrLeftAns:"4x",arrRightAns:"-36",answer:"-9",qtype:8},
 {leftPart:"3(-x-5)",rightPart:"-5x+3",expLeftAns:"-3x-15",expRightAns:"-5x+3",transLeftList:["-3x+5x","5x-3x"],transRightList:["15+3","3+15"],arrLeftAns:"2x",arrRightAns:"18",answer:"9",qtype:1},
 {leftPart:"-x+9",rightPart:"-3(-x+5)",expLeftAns:"-x+9",expRightAns:"3x-15",transLeftList:["-3x-x","-x-3x"],transRightList:["-15-9","-9-15"],arrLeftAns:"-4x",arrRightAns:"-24",answer:"6",qtype:2},
 {leftPart:"2(-2x+5)",rightPart:"3(2x+30)",expLeftAns:"-4x+10",expRightAns:"6x+90",transLeftList:["-4x-6x","-6x-4x"],transRightList:["-10+90","90-10"],arrLeftAns:"-10x",arrRightAns:"80",answer:"-8",qtype:3},
 {leftPart:"-2(x-2)",rightPart:"2(x+8)",expLeftAns:"-2x+4",expRightAns:"2x+16",transLeftList:["-2x-2x"],transRightList:["-4+16","16-4"],arrLeftAns:"-4x",arrRightAns:"12",answer:"-3",qtype:4},
 {leftPart:"24x",rightPart:"4(3x-3)",expLeftAns:"24x",expRightAns:"12x-12",transLeftList:["-12x+24x","24x-12x"],transRightList:["-12"],arrLeftAns:"12x",arrRightAns:"-12",answer:"-1",qtype:5},
-{leftPart:"6-5(-x-3)",rightPart:"11",expLeftAns:"6+5x+15",expRightAns:"11",transLeftList:["5x"],transRightList:["-15+11-6","-15-6+11","-6+11-15","-6-15+11","11-15-6","11-6-15","11-21","-21+11"],arrLeftAns:"5x",arrRightAns:"-10",answer:"-2",qtype:6},
+{leftPart:"6-5(-x-3)",rightPart:"11",expLeftAns:"6+5x+15",expRightAns:"11",transLeftList:["5x"],transRightList:["-15+11-6","-15-6+11","-6+11-15","-6-15+11","11-15-6","11-6-15"],arrLeftAns:"5x",arrRightAns:"-10",answer:"-2",qtype:6},
 {leftPart:"5(x-4)",rightPart:"-15x",expLeftAns:"5x-20",expRightAns:"-15x",transLeftList:["15x+5x","5x+15x"],transRightList:["20"],arrLeftAns:"20x",arrRightAns:"20",answer:"1",qtype:7},
-{leftPart:"2",rightPart:"4-2(x-1)",expLeftAns:"2",expRightAns:"4-2x+2",transLeftList:["2x"],transRightList:["-2+2+4","-2+4+2","2+4-2","2-2+4","4+2-2","4-2+2","6-2","-2+6"],arrLeftAns:"2x",arrRightAns:"4",answer:"2",qtype:8},
+{leftPart:"2",rightPart:"4-2(x-1)",expLeftAns:"2",expRightAns:"4-2x+2",transLeftList:["2x"],transRightList:["-2+2+4","-2+4+2","2+4-2","2-2+4","4+2-2","4-2+2"],arrLeftAns:"2x",arrRightAns:"4",answer:"2",qtype:8},
 {leftPart:"2(2x+3)",rightPart:"2x+14",expLeftAns:"4x+6",expRightAns:"2x+14",transLeftList:["-2x+4x","4x-2x"],transRightList:["-6+14","14-6"],arrLeftAns:"2x",arrRightAns:"8",answer:"4",qtype:1},
 {leftPart:"-2x-26",rightPart:"4(2x+1)",expLeftAns:"-2x-26",expRightAns:"8x+4",transLeftList:["-2x-8x","-8x-2x"],transRightList:["26+4","4+26"],arrLeftAns:"-10x",arrRightAns:"30",answer:"-3",qtype:2},
 {leftPart:"4(2x+4)",rightPart:"4(x-3)",expLeftAns:"8x+16",expRightAns:"4x-12",transLeftList:["-4x+8x","8x-4x"],transRightList:["-12-16","-16-12"],arrLeftAns:"4x",arrRightAns:"-28",answer:"-7",qtype:3},
 {leftPart:"5(-2x-2)",rightPart:"-2(2x+8)",expLeftAns:"-10x-10",expRightAns:"-4x-16",transLeftList:["-10x+4x","4x-10x"],transRightList:["-16+10","10-16"],arrLeftAns:"-6x",arrRightAns:"-6",answer:"1",qtype:4},
 {leftPart:"16x",rightPart:"4(2x-2)",expLeftAns:"16x",expRightAns:"8x-8",transLeftList:["-8x+16x","16x-8x"],transRightList:["-8"],arrLeftAns:"8x",arrRightAns:"-8",answer:"-1",qtype:5},
-{leftPart:"-1-3(-x-4)",rightPart:"20",expLeftAns:"-1+3x+12",expRightAns:"20",transLeftList:["3x"],transRightList:["-12+1+20","-12+20+1","1+20-12","1-12+20","20+1-12","20-12+1","20-11","-11+20"],arrLeftAns:"3x",arrRightAns:"9",answer:"3",qtype:6},
+{leftPart:"-1-3(-x-4)",rightPart:"20",expLeftAns:"-1+3x+12",expRightAns:"20",transLeftList:["3x"],transRightList:["-12+1+20","-12+20+1","1+20-12","1-12+20","20+1-12","20-12+1"],arrLeftAns:"3x",arrRightAns:"9",answer:"3",qtype:6},
 {leftPart:"4(2x-5)",rightPart:"4x",expLeftAns:"8x-20",expRightAns:"4x",transLeftList:["-4x+8x","8x-4x"],transRightList:["20"],arrLeftAns:"4x",arrRightAns:"20",answer:"5",qtype:7},
-{leftPart:"-24",rightPart:"-8+4(x-1)",expLeftAns:"-24",expRightAns:"-8+4x-4",transLeftList:["-4x"],transRightList:["-4+24-8","-4-8+24","-8+24-4","-8-4+24","24-4-8","24-8-4","-12+24","24-12"],arrLeftAns:"-4x",arrRightAns:"12",answer:"-3",qtype:8},
+{leftPart:"-24",rightPart:"-8+4(x-1)",expLeftAns:"-24",expRightAns:"-8+4x-4",transLeftList:["-4x"],transRightList:["-4+24-8","-4-8+24","-8+24-4","-8-4+24","24-4-8","24-8-4"],arrLeftAns:"-4x",arrRightAns:"12",answer:"-3",qtype:8},
 {leftPart:"2(-3x+1)",rightPart:"x-26",expLeftAns:"-6x+2",expRightAns:"x-26",transLeftList:["-6x-x","-x-6x"],transRightList:["-2-26","-26-2"],arrLeftAns:"-7x",arrRightAns:"-28",answer:"4",qtype:1},
 {leftPart:"x-5",rightPart:"3(-x+5)",expLeftAns:"x-5",expRightAns:"-3x+15",transLeftList:["3x+x","x+3x"],transRightList:["15+5","5+15"],arrLeftAns:"4x",arrRightAns:"20",answer:"5",qtype:2},
 {leftPart:"2(-3x-4)",rightPart:"2(-2x-1)",expLeftAns:"-6x-8",expRightAns:"-4x-2",transLeftList:["-6x+4x","4x-6x"],transRightList:["-2+8","8-2"],arrLeftAns:"-2x",arrRightAns:"6",answer:"-3",qtype:3},
 {leftPart:"5(2x+2)",rightPart:"-2(-3x-15)",expLeftAns:"10x+10",expRightAns:"6x+30",transLeftList:["-6x+10x","10x-6x"],transRightList:["-10+30","30-10"],arrLeftAns:"4x",arrRightAns:"20",answer:"5",qtype:4},
 {leftPart:"-9x",rightPart:"-3(2x-3)",expLeftAns:"-9x",expRightAns:"-6x+9",transLeftList:["-9x+6x","6x-9x"],transRightList:["9"],arrLeftAns:"-3x",arrRightAns:"9",answer:"-3",qtype:5},
-{leftPart:"-7-4(2x+4)",rightPart:"-7",expLeftAns:"-7-8x-16",expRightAns:"-7",transLeftList:["-8x"],transRightList:["-7+16+7","-7+7+16","16+7-7","16-7+7","7+16-7","7-7+16","-7+23","23-7"],arrLeftAns:"-8x",arrRightAns:"16",answer:"-2",qtype:6},
+{leftPart:"-7-4(2x+4)",rightPart:"-7",expLeftAns:"-7-8x-16",expRightAns:"-7",transLeftList:["-8x"],transRightList:["-7+16+7","-7+7+16","16+7-7","16-7+7","7+16-7","7-7+16"],arrLeftAns:"-8x",arrRightAns:"16",answer:"-2",qtype:6},
 {leftPart:"5(-3x+2)",rightPart:"-25x",expLeftAns:"-15x+10",expRightAns:"-25x",transLeftList:["-15x+25x","25x-15x"],transRightList:["-10"],arrLeftAns:"10x",arrRightAns:"-10",answer:"-1",qtype:7},
-{leftPart:"31",rightPart:"-4+5(-2x+1)",expLeftAns:"31",expRightAns:"-4-10x+5",transLeftList:["10x"],transRightList:["-31+5-4","-31-4+5","-4+5-31","-4-31+5","5-31-4","5-4-31","1-31","-31+1"],arrLeftAns:"10x",arrRightAns:"-30",answer:"-3",qtype:8},
+{leftPart:"31",rightPart:"-4+5(-2x+1)",expLeftAns:"31",expRightAns:"-4-10x+5",transLeftList:["10x"],transRightList:["-31+5-4","-31-4+5","-4+5-31","-4-31+5","5-31-4","5-4-31"],arrLeftAns:"10x",arrRightAns:"-30",answer:"-3",qtype:8},
 {leftPart:"-3(2x-1)",rightPart:"-5x+10",expLeftAns:"-6x+3",expRightAns:"-5x+10",transLeftList:["-6x+5x","5x-6x"],transRightList:["-3+10","10-3"],arrLeftAns:"-x",arrRightAns:"7",answer:"-7",qtype:1},
 {leftPart:"x+23",rightPart:"-3(x-5)",expLeftAns:"x+23",expRightAns:"-3x+15",transLeftList:["3x+x","x+3x"],transRightList:["-23+15","15-23"],arrLeftAns:"4x",arrRightAns:"-8",answer:"-2",qtype:2},
 {leftPart:"2(-3x+1)",rightPart:"4(-3x-1)",expLeftAns:"-6x+2",expRightAns:"-12x-4",transLeftList:["-6x+12x","12x-6x"],transRightList:["-2-4","-4-2"],arrLeftAns:"6x",arrRightAns:"-6",answer:"-1",qtype:3},
 {leftPart:"5(-2x-2)",rightPart:"-2(-3x-19)",expLeftAns:"-10x-10",expRightAns:"6x+38",transLeftList:["-10x-6x","-6x-10x"],transRightList:["10+38","38+10"],arrLeftAns:"-16x",arrRightAns:"48",answer:"-3",qtype:4},
 {leftPart:"-24x",rightPart:"4(-2x+4)",expLeftAns:"-24x",expRightAns:"-8x+16",transLeftList:["-24x+8x","8x-24x"],transRightList:["16"],arrLeftAns:"-16x",arrRightAns:"16",answer:"-1",qtype:5},
-{leftPart:"7+2(3x+4)",rightPart:"39",expLeftAns:"7+6x+8",expRightAns:"39",transLeftList:["6x"],transRightList:["-7+39-8","-7-8+39","-8+39-7","-8-7+39","39-7-8","39-8-7","39-15","-15+39"],arrLeftAns:"6x",arrRightAns:"24",answer:"4",qtype:6},
+{leftPart:"7+2(3x+4)",rightPart:"39",expLeftAns:"7+6x+8",expRightAns:"39",transLeftList:["6x"],transRightList:["-7+39-8","-7-8+39","-8+39-7","-8-7+39","39-7-8","39-8-7"],arrLeftAns:"6x",arrRightAns:"24",answer:"4",qtype:6},
 {leftPart:"5(-3x+2)",rightPart:"-20x",expLeftAns:"-15x+10",expRightAns:"-20x",transLeftList:["-15x+20x","20x-15x"],transRightList:["-10"],arrLeftAns:"5x",arrRightAns:"-10",answer:"-2",qtype:7},
-{leftPart:"35",rightPart:"-9+4(2x+3)",expLeftAns:"35",expRightAns:"-9+8x+12",transLeftList:["-8x"],transRightList:["-35+12-9","-35-9+12","-9+12-35","-9-35+12","12-35-9","12-9-35","3-35","-35+3"],arrLeftAns:"-8x",arrRightAns:"-32",answer:"4",qtype:8},
+{leftPart:"35",rightPart:"-9+4(2x+3)",expLeftAns:"35",expRightAns:"-9+8x+12",transLeftList:["-8x"],transRightList:["-35+12-9","-35-9+12","-9+12-35","-9-35+12","12-35-9","12-9-35"],arrLeftAns:"-8x",arrRightAns:"-32",answer:"4",qtype:8},
 {leftPart:"3(-3x-2)",rightPart:"3x+18",expLeftAns:"-9x-6",expRightAns:"3x+18",transLeftList:["-3x-9x","-9x-3x"],transRightList:["18+6","6+18"],arrLeftAns:"-12x",arrRightAns:"24",answer:"-2",qtype:1},
 {leftPart:"5x-23",rightPart:"3(-3x-3)",expLeftAns:"5x-23",expRightAns:"-9x-9",transLeftList:["5x+9x","9x+5x"],transRightList:["-9+23","23-9"],arrLeftAns:"14x",arrRightAns:"14",answer:"1",qtype:2},
 {leftPart:"3(-x-1)",rightPart:"5(3x+21)",expLeftAns:"-3x-3",expRightAns:"15x+105",transLeftList:["-15x-3x","-3x-15x"],transRightList:["105+3","3+105"],arrLeftAns:"-18x",arrRightAns:"108",answer:"-6",qtype:3},
 {leftPart:"-5(x+1)",rightPart:"4(-x-1)",expLeftAns:"-5x-5",expRightAns:"-4x-4",transLeftList:["-5x+4x","4x-5x"],transRightList:["-4+5","5-4"],arrLeftAns:"-x",arrRightAns:"1",answer:"-1",qtype:4},
 {leftPart:"12x",rightPart:"-4(-x-2)",expLeftAns:"12x",expRightAns:"4x+8",transLeftList:["-4x+12x","12x-4x"],transRightList:["8"],arrLeftAns:"8x",arrRightAns:"8",answer:"1",qtype:5},
-{leftPart:"7-3(-2x+1)",rightPart:"28",expLeftAns:"7+6x-3",expRightAns:"28",transLeftList:["6x"],transRightList:["-7+28+3","-7+3+28","28+3-7","28-7+3","3+28-7","3-7+28","28-4","-4+28"],arrLeftAns:"6x",arrRightAns:"24",answer:"4",qtype:6},
+{leftPart:"7-3(-2x+1)",rightPart:"28",expLeftAns:"7+6x-3",expRightAns:"28",transLeftList:["6x"],transRightList:["-7+28+3","-7+3+28","28+3-7","28-7+3","3+28-7","3-7+28"],arrLeftAns:"6x",arrRightAns:"24",answer:"4",qtype:6},
 {leftPart:"5(x-4)",rightPart:"15x",expLeftAns:"5x-20",expRightAns:"15x",transLeftList:["-15x+5x","5x-15x"],transRightList:["20"],arrLeftAns:"-10x",arrRightAns:"20",answer:"-2",qtype:7},
-{leftPart:"-30",rightPart:"-2-4(3x+1)",expLeftAns:"-30",expRightAns:"-2-12x-4",transLeftList:["12x"],transRightList:["-2+30-4","-2-4+30","-4+30-2","-4-2+30","30-2-4","30-4-2","-6+30","30-6"],arrLeftAns:"12x",arrRightAns:"24",answer:"2",qtype:8},
+{leftPart:"-30",rightPart:"-2-4(3x+1)",expLeftAns:"-30",expRightAns:"-2-12x-4",transLeftList:["12x"],transRightList:["-2+30-4","-2-4+30","-4+30-2","-4-2+30","30-2-4","30-4-2"],arrLeftAns:"12x",arrRightAns:"24",answer:"2",qtype:8},
 {leftPart:"4(2x+5)",rightPart:"-4x-4",expLeftAns:"8x+20",expRightAns:"-4x-4",transLeftList:["4x+8x","8x+4x"],transRightList:["-20-4","-4-20"],arrLeftAns:"12x",arrRightAns:"-24",answer:"-2",qtype:1},
 {leftPart:"-4x+13",rightPart:"-3(3x+4)",expLeftAns:"-4x+13",expRightAns:"-9x-12",transLeftList:["-4x+9x","9x-4x"],transRightList:["-12-13","-13-12"],arrLeftAns:"5x",arrRightAns:"-25",answer:"-5",qtype:2},
 {leftPart:"5(-x-2)",rightPart:"5(2x+22)",expLeftAns:"-5x-10",expRightAns:"10x+110",transLeftList:["-10x-5x","-5x-10x"],transRightList:["10+110","110+10"],arrLeftAns:"-15x",arrRightAns:"120",answer:"-8",qtype:3},
 {leftPart:"-3(-2x+2)",rightPart:"-5(2x+30)",expLeftAns:"6x-6",expRightAns:"-10x-150",transLeftList:["10x+6x","6x+10x"],transRightList:["-150+6","6-150"],arrLeftAns:"16x",arrRightAns:"-144",answer:"-9",qtype:4},
 {leftPart:"11x",rightPart:"4(3x-1)",expLeftAns:"11x",expRightAns:"12x-4",transLeftList:["-12x+11x","11x-12x"],transRightList:["-4"],arrLeftAns:"-x",arrRightAns:"-4",answer:"4",qtype:5},
-{leftPart:"6+2(-2x-3)",rightPart:"12",expLeftAns:"6-4x-6",expRightAns:"12",transLeftList:["-4x"],transRightList:["-6+12+6","-6+6+12","12+6-6","12-6+6","6+12-6","6-6+12","12"],arrLeftAns:"-4x",arrRightAns:"12",answer:"-3",qtype:6},
+{leftPart:"6+2(-2x-3)",rightPart:"12",expLeftAns:"6-4x-6",expRightAns:"12",transLeftList:["-4x"],transRightList:["-6+12+6","-6+6+12","12+6-6","12-6+6","6+12-6","6-6+12"],arrLeftAns:"-4x",arrRightAns:"12",answer:"-3",qtype:6},
 {leftPart:"2(-3x+5)",rightPart:"-8x",expLeftAns:"-6x+10",expRightAns:"-8x",transLeftList:["-6x+8x","8x-6x"],transRightList:["-10"],arrLeftAns:"2x",arrRightAns:"-10",answer:"-5",qtype:7},
-{leftPart:"28",rightPart:"4+2(-2x+4)",expLeftAns:"28",expRightAns:"4-4x+8",transLeftList:["4x"],transRightList:["-28+4+8","-28+8+4","4+8-28","4-28+8","8+4-28","8-28+4","12-28","-28+12"],arrLeftAns:"4x",arrRightAns:"-16",answer:"-4",qtype:8},
+{leftPart:"28",rightPart:"4+2(-2x+4)",expLeftAns:"28",expRightAns:"4-4x+8",transLeftList:["4x"],transRightList:["-28+4+8","-28+8+4","4+8-28","4-28+8","8+4-28","8-28+4"],arrLeftAns:"4x",arrRightAns:"-16",answer:"-4",qtype:8},
 {leftPart:"-3(2x+5)",rightPart:"5x+18",expLeftAns:"-6x-15",expRightAns:"5x+18",transLeftList:["-5x-6x","-6x-5x"],transRightList:["15+18","18+15"],arrLeftAns:"-11x",arrRightAns:"33",answer:"-3",qtype:1},
 {leftPart:"-x-28",rightPart:"2(x-5)",expLeftAns:"-x-28",expRightAns:"2x-10",transLeftList:["-2x-x","-x-2x"],transRightList:["-10+28","28-10"],arrLeftAns:"-3x",arrRightAns:"18",answer:"-6",qtype:2},
 {leftPart:"2(x+5)",rightPart:"2(-3x+1)",expLeftAns:"2x+10",expRightAns:"-6x+2",transLeftList:["2x+6x","6x+2x"],transRightList:["-10+2","2-10"],arrLeftAns:"8x",arrRightAns:"-8",answer:"-1",qtype:3},
 {leftPart:"-3(x+5)",rightPart:"-4(-2x-21)",expLeftAns:"-3x-15",expRightAns:"8x+84",transLeftList:["-3x-8x","-8x-3x"],transRightList:["15+84","84+15"],arrLeftAns:"-11x",arrRightAns:"99",answer:"-9",qtype:4},
 {leftPart:"6x",rightPart:"-2(-2x-2)",expLeftAns:"6x",expRightAns:"4x+4",transLeftList:["-4x+6x","6x-4x"],transRightList:["4"],arrLeftAns:"2x",arrRightAns:"4",answer:"2",qtype:5},
-{leftPart:"5-2(-2x-2)",rightPart:"21",expLeftAns:"5+4x+4",expRightAns:"21",transLeftList:["4x"],transRightList:["-4+21-5","-4-5+21","-5+21-4","-5-4+21","21-4-5","21-5-4","21-9","-9+21"],arrLeftAns:"4x",arrRightAns:"12",answer:"3",qtype:6},
+{leftPart:"5-2(-2x-2)",rightPart:"21",expLeftAns:"5+4x+4",expRightAns:"21",transLeftList:["4x"],transRightList:["-4+21-5","-4-5+21","-5+21-4","-5-4+21","21-4-5","21-5-4"],arrLeftAns:"4x",arrRightAns:"12",answer:"3",qtype:6},
 {leftPart:"-4(3x+3)",rightPart:"-16x",expLeftAns:"-12x-12",expRightAns:"-16x",transLeftList:["-12x+16x","16x-12x"],transRightList:["12"],arrLeftAns:"4x",arrRightAns:"12",answer:"3",qtype:7},
-{leftPart:"21",rightPart:"-3+3(x-1)",expLeftAns:"21",expRightAns:"-3+3x-3",transLeftList:["-3x"],transRightList:["-21-3-3","-3-21-3","-3-3-21","-6-21","-21-6"],arrLeftAns:"-3x",arrRightAns:"-27",answer:"9",qtype:8},
+{leftPart:"21",rightPart:"-3+3(x-1)",expLeftAns:"21",expRightAns:"-3+3x-3",transLeftList:["-3x"],transRightList:["-21-3-3","-3-21-3","-3-3-21"],arrLeftAns:"-3x",arrRightAns:"-27",answer:"9",qtype:8},
 {leftPart:"4(-3x-2)",rightPart:"-5x-22",expLeftAns:"-12x-8",expRightAns:"-5x-22",transLeftList:["-12x+5x","5x-12x"],transRightList:["-22+8","8-22"],arrLeftAns:"-7x",arrRightAns:"-14",answer:"2",qtype:1},
 {leftPart:"x+23",rightPart:"-5(x-1)",expLeftAns:"x+23",expRightAns:"-5x+5",transLeftList:["5x+x","x+5x"],transRightList:["-23+5","5-23"],arrLeftAns:"6x",arrRightAns:"-18",answer:"-3",qtype:2},
 {leftPart:"4(-3x-5)",rightPart:"2(-2x-6)",expLeftAns:"-12x-20",expRightAns:"-4x-12",transLeftList:["-12x+4x","4x-12x"],transRightList:["-12+20","20-12"],arrLeftAns:"-8x",arrRightAns:"8",answer:"-1",qtype:3},
 {leftPart:"-4(2x-2)",rightPart:"5(3x-3)",expLeftAns:"-8x+8",expRightAns:"15x-15",transLeftList:["-15x-8x","-8x-15x"],transRightList:["-15-8","-8-15"],arrLeftAns:"-23x",arrRightAns:"-23",answer:"1",qtype:4},
 {leftPart:"6x",rightPart:"4(2x+2)",expLeftAns:"6x",expRightAns:"8x+8",transLeftList:["-8x+6x","6x-8x"],transRightList:["8"],arrLeftAns:"-2x",arrRightAns:"8",answer:"-4",qtype:5},
-{leftPart:"-1-3(-2x-2)",rightPart:"-31",expLeftAns:"-1+6x+6",expRightAns:"-31",transLeftList:["6x"],transRightList:["-31+1-6","-31-6+1","-6+1-31","-6-31+1","1-31-6","1-6-31","-31-5","-5-31"],arrLeftAns:"6x",arrRightAns:"-36",answer:"-6",qtype:6},
+{leftPart:"-1-3(-2x-2)",rightPart:"-31",expLeftAns:"-1+6x+6",expRightAns:"-31",transLeftList:["6x"],transRightList:["-31+1-6","-31-6+1","-6+1-31","-6-31+1","1-31-6","1-6-31"],arrLeftAns:"6x",arrRightAns:"-36",answer:"-6",qtype:6},
 {leftPart:"2(-2x-5)",rightPart:"x",expLeftAns:"-4x-10",expRightAns:"x",transLeftList:["-4x-x","-x-4x"],transRightList:["10"],arrLeftAns:"-5x",arrRightAns:"10",answer:"-2",qtype:7},
-{leftPart:"2",rightPart:"-1+3(-x-2)",expLeftAns:"2",expRightAns:"-1-3x-6",transLeftList:["3x"],transRightList:["-1-2-6","-1-6-2","-2-1-6","-2-6-1","-6-1-2","-6-2-1","-7-2","-2-7"],arrLeftAns:"3x",arrRightAns:"-9",answer:"-3",qtype:8},
+{leftPart:"2",rightPart:"-1+3(-x-2)",expLeftAns:"2",expRightAns:"-1-3x-6",transLeftList:["3x"],transRightList:["-1-2-6","-1-6-2","-2-1-6","-2-6-1","-6-1-2","-6-2-1"],arrLeftAns:"3x",arrRightAns:"-9",answer:"-3",qtype:8},
 {leftPart:"-3(-x+2)",rightPart:"-x-22",expLeftAns:"3x-6",expRightAns:"-x-22",transLeftList:["3x+x","x+3x"],transRightList:["-22+6","6-22"],arrLeftAns:"4x",arrRightAns:"-16",answer:"-4",qtype:1},
 {leftPart:"3x+17",rightPart:"2(-3x-5)",expLeftAns:"3x+17",expRightAns:"-6x-10",transLeftList:["3x+6x","6x+3x"],transRightList:["-10-17","-17-10"],arrLeftAns:"9x",arrRightAns:"-27",answer:"-3",qtype:2},
 {leftPart:"4(-3x+2)",rightPart:"4(x-6)",expLeftAns:"-12x+8",expRightAns:"4x-24",transLeftList:["-12x-4x","-4x-12x"],transRightList:["-24-8","-8-24"],arrLeftAns:"-16x",arrRightAns:"-32",answer:"2",qtype:3},
 {leftPart:"-3(-2x-4)",rightPart:"2(x-10)",expLeftAns:"6x+12",expRightAns:"2x-20",transLeftList:["-2x+6x","6x-2x"],transRightList:["-12-20","-20-12"],arrLeftAns:"4x",arrRightAns:"-32",answer:"-8",qtype:4},
 {leftPart:"-2x",rightPart:"-4(-2x-5)",expLeftAns:"-2x",expRightAns:"8x+20",transLeftList:["-2x-8x","-8x-2x"],transRightList:["20"],arrLeftAns:"-10x",arrRightAns:"20",answer:"-2",qtype:5},
-{leftPart:"-2+2(x-1)",rightPart:"-22",expLeftAns:"-2+2x-2",expRightAns:"-22",transLeftList:["2x"],transRightList:["-22+2+2","2+2-22","2-22+2","-22+4","4-22"],arrLeftAns:"2x",arrRightAns:"-18",answer:"-9",qtype:6},
+{leftPart:"-2+2(x-1)",rightPart:"-22",expLeftAns:"-2+2x-2",expRightAns:"-22",transLeftList:["2x"],transRightList:["-22+2+2","2+2-22","2-22+2"],arrLeftAns:"2x",arrRightAns:"-18",answer:"-9",qtype:6},
 {leftPart:"2(-3x-1)",rightPart:"-4x",expLeftAns:"-6x-2",expRightAns:"-4x",transLeftList:["-6x+4x","4x-6x"],transRightList:["2"],arrLeftAns:"-2x",arrRightAns:"2",answer:"-1",qtype:7},
-{leftPart:"-22",rightPart:"-4+2(2x+3)",expLeftAns:"-22",expRightAns:"-4+4x+6",transLeftList:["-4x"],transRightList:["-4+22+6","-4+6+22","22+6-4","22-4+6","6+22-4","6-4+22","2+22","22+2"],arrLeftAns:"-4x",arrRightAns:"24",answer:"-6",qtype:8},
+{leftPart:"-22",rightPart:"-4+2(2x+3)",expLeftAns:"-22",expRightAns:"-4+4x+6",transLeftList:["-4x"],transRightList:["-4+22+6","-4+6+22","22+6-4","22-4+6","6+22-4","6-4+22"],arrLeftAns:"-4x",arrRightAns:"24",answer:"-6",qtype:8},
 {leftPart:"2(-2x+3)",rightPart:"4x+14",expLeftAns:"-4x+6",expRightAns:"4x+14",transLeftList:["-4x-4x"],transRightList:["-6+14","14-6"],arrLeftAns:"-8x",arrRightAns:"8",answer:"-1",qtype:1},
 {leftPart:"-3x-21",rightPart:"3(3x+1)",expLeftAns:"-3x-21",expRightAns:"9x+3",transLeftList:["-3x-9x","-9x-3x"],transRightList:["21+3","3+21"],arrLeftAns:"-12x",arrRightAns:"24",answer:"-2",qtype:2},
 {leftPart:"4(3x+3)",rightPart:"5(-x+16)",expLeftAns:"12x+12",expRightAns:"-5x+80",transLeftList:["12x+5x","5x+12x"],transRightList:["-12+80","80-12"],arrLeftAns:"17x",arrRightAns:"68",answer:"4",qtype:3},
 {leftPart:"-4(3x+3)",rightPart:"4(-2x+2)",expLeftAns:"-12x-12",expRightAns:"-8x+8",transLeftList:["-12x+8x","8x-12x"],transRightList:["12+8","8+12"],arrLeftAns:"-4x",arrRightAns:"20",answer:"-5",qtype:4},
 {leftPart:"12x",rightPart:"-4(-2x-5)",expLeftAns:"12x",expRightAns:"8x+20",transLeftList:["-8x+12x","12x-8x"],transRightList:["20"],arrLeftAns:"4x",arrRightAns:"20",answer:"5",qtype:5},
-{leftPart:"1+3(3x+4)",rightPart:"-5",expLeftAns:"1+9x+12",expRightAns:"-5",transLeftList:["9x"],transRightList:["-1-12-5","-1-5-12","-12-1-5","-12-5-1","-5-1-12","-5-12-1","-5-13","-13-5"],arrLeftAns:"9x",arrRightAns:"-18",answer:"-2",qtype:6},
+{leftPart:"1+3(3x+4)",rightPart:"-5",expLeftAns:"1+9x+12",expRightAns:"-5",transLeftList:["9x"],transRightList:["-1-12-5","-1-5-12","-12-1-5","-12-5-1","-5-1-12","-5-12-1"],arrLeftAns:"9x",arrRightAns:"-18",answer:"-2",qtype:6},
 {leftPart:"4(-2x-2)",rightPart:"-16x",expLeftAns:"-8x-8",expRightAns:"-16x",transLeftList:["-8x+16x","16x-8x"],transRightList:["8"],arrLeftAns:"8x",arrRightAns:"8",answer:"1",qtype:7},
-{leftPart:"-23",rightPart:"-1-2(-3x+2)",expLeftAns:"-23",expRightAns:"-1+6x-4",transLeftList:["-6x"],transRightList:["-1+23-4","-1-4+23","-4+23-1","-4-1+23","23-1-4","23-4-1","-5+23","23-5"],arrLeftAns:"-6x",arrRightAns:"18",answer:"-3",qtype:8},
+{leftPart:"-23",rightPart:"-1-2(-3x+2)",expLeftAns:"-23",expRightAns:"-1+6x-4",transLeftList:["-6x"],transRightList:["-1+23-4","-1-4+23","-4+23-1","-4-1+23","23-1-4","23-4-1"],arrLeftAns:"-6x",arrRightAns:"18",answer:"-3",qtype:8},
 {leftPart:"3(x+3)",rightPart:"4x+10",expLeftAns:"3x+9",expRightAns:"4x+10",transLeftList:["-4x+3x","3x-4x"],transRightList:["-9+10","10-9"],arrLeftAns:"-x",arrRightAns:"1",answer:"-1",qtype:1},
 {leftPart:"-5x+23",rightPart:"-3(-x-5)",expLeftAns:"-5x+23",expRightAns:"3x+15",transLeftList:["-3x-5x","-5x-3x"],transRightList:["-23+15","15-23"],arrLeftAns:"-8x",arrRightAns:"-8",answer:"1",qtype:2},
 {leftPart:"4(-2x-1)",rightPart:"5(-3x-12)",expLeftAns:"-8x-4",expRightAns:"-15x-60",transLeftList:["-8x+15x","15x-8x"],transRightList:["-60+4","4-60"],arrLeftAns:"7x",arrRightAns:"-56",answer:"-8",qtype:3},
 {leftPart:"4(3x+1)",rightPart:"-2(-2x-18)",expLeftAns:"12x+4",expRightAns:"4x+36",transLeftList:["-4x+12x","12x-4x"],transRightList:["-4+36","36-4"],arrLeftAns:"8x",arrRightAns:"32",answer:"4",qtype:4},
 {leftPart:"2x",rightPart:"4(-x+3)",expLeftAns:"2x",expRightAns:"-4x+12",transLeftList:["2x+4x","4x+2x"],transRightList:["12"],arrLeftAns:"6x",arrRightAns:"12",answer:"2",qtype:5},
-{leftPart:"7-4(-x-2)",rightPart:"-1",expLeftAns:"7+4x+8",expRightAns:"-1",transLeftList:["4x"],transRightList:["-1-7-8","-1-8-7","-7-1-8","-7-8-1","-8-1-7","-8-7-1","-1-15","-15-1"],arrLeftAns:"4x",arrRightAns:"-16",answer:"-4",qtype:6},
+{leftPart:"7-4(-x-2)",rightPart:"-1",expLeftAns:"7+4x+8",expRightAns:"-1",transLeftList:["4x"],transRightList:["-1-7-8","-1-8-7","-7-1-8","-7-8-1","-8-1-7","-8-7-1"],arrLeftAns:"4x",arrRightAns:"-16",answer:"-4",qtype:6},
 {leftPart:"-2(-2x+4)",rightPart:"3x",expLeftAns:"4x-8",expRightAns:"3x",transLeftList:["-3x+4x","4x-3x"],transRightList:["8"],arrLeftAns:"x",arrRightAns:"8",answer:"8",qtype:7},
-{leftPart:"5",rightPart:"7+2(x+3)",expLeftAns:"5",expRightAns:"7+2x+6",transLeftList:["-2x"],transRightList:["-5+6+7","-5+7+6","6+7-5","6-5+7","7+6-5","7-5+6","13-5","-5+13"],arrLeftAns:"-2x",arrRightAns:"8",answer:"-4",qtype:8},
+{leftPart:"5",rightPart:"7+2(x+3)",expLeftAns:"5",expRightAns:"7+2x+6",transLeftList:["-2x"],transRightList:["-5+6+7","-5+7+6","6+7-5","6-5+7","7+6-5","7-5+6"],arrLeftAns:"-2x",arrRightAns:"8",answer:"-4",qtype:8},
 {leftPart:"-3(2x-5)",rightPart:"-x+10",expLeftAns:"-6x+15",expRightAns:"-x+10",transLeftList:["-6x+x","x-6x"],transRightList:["-15+10","10-15"],arrLeftAns:"-5x",arrRightAns:"-5",answer:"1",qtype:1},
 {leftPart:"-5x-16",rightPart:"2(-2x-5)",expLeftAns:"-5x-16",expRightAns:"-4x-10",transLeftList:["-5x+4x","4x-5x"],transRightList:["-10+16","16-10"],arrLeftAns:"-x",arrRightAns:"6",answer:"-6",qtype:2},
 {leftPart:"5(2x-2)",rightPart:"2(x-13)",expLeftAns:"10x-10",expRightAns:"2x-26",transLeftList:["-2x+10x","10x-2x"],transRightList:["-26+10","10-26"],arrLeftAns:"8x",arrRightAns:"-16",answer:"-2",qtype:3},
 {leftPart:"-2(-2x+1)",rightPart:"-5(x+4)",expLeftAns:"4x-2",expRightAns:"-5x-20",transLeftList:["4x+5x","5x+4x"],transRightList:["-20+2","2-20"],arrLeftAns:"9x",arrRightAns:"-18",answer:"-2",qtype:4},
 {leftPart:"-4x",rightPart:"-2(x-3)",expLeftAns:"-4x",expRightAns:"-2x+6",transLeftList:["-4x+2x","2x-4x"],transRightList:["6"],arrLeftAns:"-2x",arrRightAns:"6",answer:"-3",qtype:5},
-{leftPart:"-4+2(-3x+1)",rightPart:"4",expLeftAns:"-4-6x+2",expRightAns:"4",transLeftList:["-6x"],transRightList:["-2+4+4","4+4-2","4-2+4","4+2","2+4"],arrLeftAns:"-6x",arrRightAns:"6",answer:"-1",qtype:6},
+{leftPart:"-4+2(-3x+1)",rightPart:"4",expLeftAns:"-4-6x+2",expRightAns:"4",transLeftList:["-6x"],transRightList:["-2+4+4","4+4-2","4-2+4"],arrLeftAns:"-6x",arrRightAns:"6",answer:"-1",qtype:6},
 {leftPart:"-5(3x+5)",rightPart:"-10x",expLeftAns:"-15x-25",expRightAns:"-10x",transLeftList:["-15x+10x","10x-15x"],transRightList:["25"],arrLeftAns:"-5x",arrRightAns:"25",answer:"-5",qtype:7},
-{leftPart:"-30",rightPart:"9-3(-3x+1)",expLeftAns:"-30",expRightAns:"9+9x-3",transLeftList:["-9x"],transRightList:["-3+30+9","-3+9+30","30+9-3","30-3+9","9+30-3","9-3+30","6+30","30+6"],arrLeftAns:"-9x",arrRightAns:"36",answer:"-4",qtype:8},
+{leftPart:"-30",rightPart:"9-3(-3x+1)",expLeftAns:"-30",expRightAns:"9+9x-3",transLeftList:["-9x"],transRightList:["-3+30+9","-3+9+30","30+9-3","30-3+9","9+30-3","9-3+30"],arrLeftAns:"-9x",arrRightAns:"36",answer:"-4",qtype:8},
 {leftPart:"-4(-x+5)",rightPart:"-x+25",expLeftAns:"4x-20",expRightAns:"-x+25",transLeftList:["4x+x","x+4x"],transRightList:["20+25","25+20"],arrLeftAns:"5x",arrRightAns:"45",answer:"9",qtype:1},
 {leftPart:"4x+20",rightPart:"-4(x+1)",expLeftAns:"4x+20",expRightAns:"-4x-4",transLeftList:["4x+4x"],transRightList:["-20-4","-4-20"],arrLeftAns:"8x",arrRightAns:"-24",answer:"-3",qtype:2},
 {leftPart:"4(-2x+1)",rightPart:"2(-2x+6)",expLeftAns:"-8x+4",expRightAns:"-4x+12",transLeftList:["-8x+4x","4x-8x"],transRightList:["-4+12","12-4"],arrLeftAns:"-4x",arrRightAns:"8",answer:"-2",qtype:3},
 {leftPart:"-4(-x-2)",rightPart:"-3(-2x-6)",expLeftAns:"4x+8",expRightAns:"6x+18",transLeftList:["-6x+4x","4x-6x"],transRightList:["-8+18","18-8"],arrLeftAns:"-2x",arrRightAns:"10",answer:"-5",qtype:4},
 {leftPart:"10x",rightPart:"-5(-x-5)",expLeftAns:"10x",expRightAns:"5x+25",transLeftList:["-5x+10x","10x-5x"],transRightList:["25"],arrLeftAns:"5x",arrRightAns:"25",answer:"5",qtype:5},
-{leftPart:"6+3(2x-4)",rightPart:"6",expLeftAns:"6+6x-12",expRightAns:"6",transLeftList:["6x"],transRightList:["-6+12+6","-6+6+12","12+6-6","12-6+6","6+12-6","6-6+12","6+6","6+6"],arrLeftAns:"6x",arrRightAns:"12",answer:"2",qtype:6},
+{leftPart:"6+3(2x-4)",rightPart:"6",expLeftAns:"6+6x-12",expRightAns:"6",transLeftList:["6x"],transRightList:["-6+12+6","-6+6+12","12+6-6","12-6+6","6+12-6","6-6+12"],arrLeftAns:"6x",arrRightAns:"12",answer:"2",qtype:6},
 {leftPart:"2(-2x+2)",rightPart:"-5x",expLeftAns:"-4x+4",expRightAns:"-5x",transLeftList:["-4x+5x","5x-4x"],transRightList:["-4"],arrLeftAns:"x",arrRightAns:"-4",answer:"-4",qtype:7},
-{leftPart:"40",rightPart:"8+4(-x+5)",expLeftAns:"40",expRightAns:"8-4x+20",transLeftList:["4x"],transRightList:["-40+20+8","-40+8+20","20+8-40","20-40+8","8+20-40","8-40+20","28-40","-40+28"],arrLeftAns:"4x",arrRightAns:"-12",answer:"-3",qtype:8},
+{leftPart:"40",rightPart:"8+4(-x+5)",expLeftAns:"40",expRightAns:"8-4x+20",transLeftList:["4x"],transRightList:["-40+20+8","-40+8+20","20+8-40","20-40+8","8+20-40","8-40+20"],arrLeftAns:"4x",arrRightAns:"-12",answer:"-3",qtype:8},
 {leftPart:"3(3x+1)",rightPart:"-3x-9",expLeftAns:"9x+3",expRightAns:"-3x-9",transLeftList:["3x+9x","9x+3x"],transRightList:["-3-9","-9-3"],arrLeftAns:"12x",arrRightAns:"-12",answer:"-1",qtype:1},
 {leftPart:"-3x+9",rightPart:"-3(-3x+5)",expLeftAns:"-3x+9",expRightAns:"9x-15",transLeftList:["-3x-9x","-9x-3x"],transRightList:["-15-9","-9-15"],arrLeftAns:"-12x",arrRightAns:"-24",answer:"2",qtype:2},
 {leftPart:"3(x+5)",rightPart:"2(3x+9)",expLeftAns:"3x+15",expRightAns:"6x+18",transLeftList:["-6x+3x","3x-6x"],transRightList:["-15+18","18-15"],arrLeftAns:"-3x",arrRightAns:"3",answer:"-1",qtype:3},
 {leftPart:"5(x-5)",rightPart:"-3(-2x+6)",expLeftAns:"5x-25",expRightAns:"6x-18",transLeftList:["-6x+5x","5x-6x"],transRightList:["-18+25","25-18"],arrLeftAns:"-x",arrRightAns:"7",answer:"-7",qtype:4},
 {leftPart:"12x",rightPart:"3(3x+2)",expLeftAns:"12x",expRightAns:"9x+6",transLeftList:["-9x+12x","12x-9x"],transRightList:["6"],arrLeftAns:"3x",arrRightAns:"6",answer:"2",qtype:5},
-{leftPart:"7-2(-x+2)",rightPart:"5",expLeftAns:"7+2x-4",expRightAns:"5",transLeftList:["2x"],transRightList:["-7+4+5","-7+5+4","4+5-7","4-7+5","5+4-7","5-7+4","5-3","-3+5"],arrLeftAns:"2x",arrRightAns:"2",answer:"1",qtype:6},
+{leftPart:"7-2(-x+2)",rightPart:"5",expLeftAns:"7+2x-4",expRightAns:"5",transLeftList:["2x"],transRightList:["-7+4+5","-7+5+4","4+5-7","4-7+5","5+4-7","5-7+4"],arrLeftAns:"2x",arrRightAns:"2",answer:"1",qtype:6},
 {leftPart:"-3(2x-2)",rightPart:"-3x",expLeftAns:"-6x+6",expRightAns:"-3x",transLeftList:["-6x+3x","3x-6x"],transRightList:["-6"],arrLeftAns:"-3x",arrRightAns:"-6",answer:"2",qtype:7},
-{leftPart:"9",rightPart:"-3+2(-2x-2)",expLeftAns:"9",expRightAns:"-3-4x-4",transLeftList:["4x"],transRightList:["-3-4-9","-3-9-4","-4-3-9","-4-9-3","-9-3-4","-9-4-3","-7-9","-9-7"],arrLeftAns:"4x",arrRightAns:"-16",answer:"-4",qtype:8},
+{leftPart:"9",rightPart:"-3+2(-2x-2)",expLeftAns:"9",expRightAns:"-3-4x-4",transLeftList:["4x"],transRightList:["-3-4-9","-3-9-4","-4-3-9","-4-9-3","-9-3-4","-9-4-3"],arrLeftAns:"4x",arrRightAns:"-16",answer:"-4",qtype:8},
 {leftPart:"3(x+4)",rightPart:"-2x+27",expLeftAns:"3x+12",expRightAns:"-2x+27",transLeftList:["2x+3x","3x+2x"],transRightList:["-12+27","27-12"],arrLeftAns:"5x",arrRightAns:"15",answer:"3",qtype:1},
 {leftPart:"2x+15",rightPart:"-3(-2x-1)",expLeftAns:"2x+15",expRightAns:"6x+3",transLeftList:["-6x+2x","2x-6x"],transRightList:["-15+3","3-15"],arrLeftAns:"-4x",arrRightAns:"-12",answer:"3",qtype:2},
 {leftPart:"3(-3x-4)",rightPart:"2(-x-13)",expLeftAns:"-9x-12",expRightAns:"-2x-26",transLeftList:["-9x+2x","2x-9x"],transRightList:["-26+12","12-26"],arrLeftAns:"-7x",arrRightAns:"-14",answer:"2",qtype:3},
 {leftPart:"2(-x-3)",rightPart:"-4(3x-21)",expLeftAns:"-2x-6",expRightAns:"-12x+84",transLeftList:["-2x+12x","12x-2x"],transRightList:["6+84","84+6"],arrLeftAns:"10x",arrRightAns:"90",answer:"9",qtype:4},
 {leftPart:"-24x",rightPart:"-4(3x+3)",expLeftAns:"-24x",expRightAns:"-12x-12",transLeftList:["-24x+12x","12x-24x"],transRightList:["-12"],arrLeftAns:"-12x",arrRightAns:"-12",answer:"1",qtype:5},
-{leftPart:"1-2(3x+2)",rightPart:"-21",expLeftAns:"1-6x-4",expRightAns:"-21",transLeftList:["-6x"],transRightList:["-1+4-21","-1-21+4","-21+4-1","-21-1+4","4-1-21","4-21-1","-21+3","3-21"],arrLeftAns:"-6x",arrRightAns:"-18",answer:"3",qtype:6},
+{leftPart:"1-2(3x+2)",rightPart:"-21",expLeftAns:"1-6x-4",expRightAns:"-21",transLeftList:["-6x"],transRightList:["-1+4-21","-1-21+4","-21+4-1","-21-1+4","4-1-21","4-21-1"],arrLeftAns:"-6x",arrRightAns:"-18",answer:"3",qtype:6},
 {leftPart:"4(-x-4)",rightPart:"12x",expLeftAns:"-4x-16",expRightAns:"12x",transLeftList:["-12x-4x","-4x-12x"],transRightList:["16"],arrLeftAns:"-16x",arrRightAns:"16",answer:"-1",qtype:7},
-{leftPart:"-36",rightPart:"-4+4(x+1)",expLeftAns:"-36",expRightAns:"-4+4x+4",transLeftList:["-4x"],transRightList:["-4+36+4","-4+4+36","36+4-4","36-4+4","4+36-4","4-4+36","36"],arrLeftAns:"-4x",arrRightAns:"36",answer:"-9",qtype:8},
+{leftPart:"-36",rightPart:"-4+4(x+1)",expLeftAns:"-36",expRightAns:"-4+4x+4",transLeftList:["-4x"],transRightList:["-4+36+4","-4+4+36","36+4-4","36-4+4","4+36-4","4-4+36"],arrLeftAns:"-4x",arrRightAns:"36",answer:"-9",qtype:8},
 {leftPart:"-3(-x-4)",rightPart:"-4x-9",expLeftAns:"3x+12",expRightAns:"-4x-9",transLeftList:["3x+4x","4x+3x"],transRightList:["-12-9","-9-12"],arrLeftAns:"7x",arrRightAns:"-21",answer:"-3",qtype:1},
 {leftPart:"-3x-9",rightPart:"5(-3x+3)",expLeftAns:"-3x-9",expRightAns:"-15x+15",transLeftList:["-3x+15x","15x-3x"],transRightList:["15+9","9+15"],arrLeftAns:"12x",arrRightAns:"24",answer:"2",qtype:2},
 {leftPart:"3(3x-2)",rightPart:"3(-2x-27)",expLeftAns:"9x-6",expRightAns:"-6x-81",transLeftList:["6x+9x","9x+6x"],transRightList:["-81+6","6-81"],arrLeftAns:"15x",arrRightAns:"-75",answer:"-5",qtype:3},
 {leftPart:"-2(-3x+5)",rightPart:"2(2x-14)",expLeftAns:"6x-10",expRightAns:"4x-28",transLeftList:["-4x+6x","6x-4x"],transRightList:["-28+10","10-28"],arrLeftAns:"2x",arrRightAns:"-18",answer:"-9",qtype:4},
 {leftPart:"-2x",rightPart:"2(-2x-2)",expLeftAns:"-2x",expRightAns:"-4x-4",transLeftList:["-2x+4x","4x-2x"],transRightList:["-4"],arrLeftAns:"2x",arrRightAns:"-4",answer:"-2",qtype:5},
-{leftPart:"2+3(-2x-1)",rightPart:"11",expLeftAns:"2-6x-3",expRightAns:"11",transLeftList:["-6x"],transRightList:["-2+11+3","-2+3+11","11+3-2","11-2+3","3+11-2","3-2+11","11+1","1+11"],arrLeftAns:"-6x",arrRightAns:"12",answer:"-2",qtype:6},
+{leftPart:"2+3(-2x-1)",rightPart:"11",expLeftAns:"2-6x-3",expRightAns:"11",transLeftList:["-6x"],transRightList:["-2+11+3","-2+3+11","11+3-2","11-2+3","3+11-2","3-2+11"],arrLeftAns:"-6x",arrRightAns:"12",answer:"-2",qtype:6},
 {leftPart:"-4(-3x-2)",rightPart:"10x",expLeftAns:"12x+8",expRightAns:"10x",transLeftList:["-10x+12x","12x-10x"],transRightList:["-8"],arrLeftAns:"2x",arrRightAns:"-8",answer:"-4",qtype:7},
-{leftPart:"-8",rightPart:"4-3(-2x-4)",expLeftAns:"-8",expRightAns:"4+6x+12",transLeftList:["-6x"],transRightList:["12+4+8","12+8+4","4+12+8","4+8+12","8+12+4","8+4+12","16+8","8+16"],arrLeftAns:"-6x",arrRightAns:"24",answer:"-4",qtype:8},
+{leftPart:"-8",rightPart:"4-3(-2x-4)",expLeftAns:"-8",expRightAns:"4+6x+12",transLeftList:["-6x"],transRightList:["12+4+8","12+8+4","4+12+8","4+8+12","8+12+4","8+4+12"],arrLeftAns:"-6x",arrRightAns:"24",answer:"-4",qtype:8},
 {leftPart:"-4(-x-2)",rightPart:"5x+5",expLeftAns:"4x+8",expRightAns:"5x+5",transLeftList:["-5x+4x","4x-5x"],transRightList:["-8+5","5-8"],arrLeftAns:"-x",arrRightAns:"-3",answer:"3",qtype:1},
 {leftPart:"-x-6",rightPart:"-3(-2x-5)",expLeftAns:"-x-6",expRightAns:"6x+15",transLeftList:["-6x-x","-x-6x"],transRightList:["15+6","6+15"],arrLeftAns:"-7x",arrRightAns:"21",answer:"-3",qtype:2},
 {leftPart:"2(-x+1)",rightPart:"2(-3x-1)",expLeftAns:"-2x+2",expRightAns:"-6x-2",transLeftList:["-2x+6x","6x-2x"],transRightList:["-2-2"],arrLeftAns:"4x",arrRightAns:"-4",answer:"-1",qtype:3},
 {leftPart:"4(-2x+1)",rightPart:"-4(-2x+15)",expLeftAns:"-8x+4",expRightAns:"8x-60",transLeftList:["-8x-8x"],transRightList:["-4-60","-60-4"],arrLeftAns:"-16x",arrRightAns:"-64",answer:"4",qtype:4},
 {leftPart:"-13x",rightPart:"-3(3x+4)",expLeftAns:"-13x",expRightAns:"-9x-12",transLeftList:["-13x+9x","9x-13x"],transRightList:["-12"],arrLeftAns:"-4x",arrRightAns:"-12",answer:"3",qtype:5},
-{leftPart:"2+2(3x+5)",rightPart:"30",expLeftAns:"2+6x+10",expRightAns:"30",transLeftList:["6x"],transRightList:["-10+30-2","-10-2+30","-2+30-10","-2-10+30","30-10-2","30-2-10","30-12","-12+30"],arrLeftAns:"6x",arrRightAns:"18",answer:"3",qtype:6},
+{leftPart:"2+2(3x+5)",rightPart:"30",expLeftAns:"2+6x+10",expRightAns:"30",transLeftList:["6x"],transRightList:["-10+30-2","-10-2+30","-2+30-10","-2-10+30","30-10-2","30-2-10"],arrLeftAns:"6x",arrRightAns:"18",answer:"3",qtype:6},
 {leftPart:"-2(-3x+4)",rightPart:"-2x",expLeftAns:"6x-8",expRightAns:"-2x",transLeftList:["2x+6x","6x+2x"],transRightList:["8"],arrLeftAns:"8x",arrRightAns:"8",answer:"1",qtype:7},
-{leftPart:"-21",rightPart:"-1-5(-2x+2)",expLeftAns:"-21",expRightAns:"-1+10x-10",transLeftList:["-10x"],transRightList:["-1+21-10","-1-10+21","-10+21-1","-10-1+21","21-1-10","21-10-1","-11+21","21-11"],arrLeftAns:"-10x",arrRightAns:"10",answer:"-1",qtype:8},
+{leftPart:"-21",rightPart:"-1-5(-2x+2)",expLeftAns:"-21",expRightAns:"-1+10x-10",transLeftList:["-10x"],transRightList:["-1+21-10","-1-10+21","-10+21-1","-10-1+21","21-1-10","21-10-1"],arrLeftAns:"-10x",arrRightAns:"10",answer:"-1",qtype:8},
 {leftPart:"-3(2x-3)",rightPart:"-3x-12",expLeftAns:"-6x+9",expRightAns:"-3x-12",transLeftList:["-6x+3x","3x-6x"],transRightList:["-12-9","-9-12"],arrLeftAns:"-3x",arrRightAns:"-21",answer:"7",qtype:1},
 {leftPart:"-x-9",rightPart:"-4(2x-3)",expLeftAns:"-x-9",expRightAns:"-8x+12",transLeftList:["-x+8x","8x-x"],transRightList:["12+9","9+12"],arrLeftAns:"7x",arrRightAns:"21",answer:"3",qtype:2},
 {leftPart:"4(-2x-4)",rightPart:"5(-2x-6)",expLeftAns:"-8x-16",expRightAns:"-10x-30",transLeftList:["-8x+10x","10x-8x"],transRightList:["-30+16","16-30"],arrLeftAns:"2x",arrRightAns:"-14",answer:"-7",qtype:3},
 {leftPart:"-4(2x+1)",rightPart:"-2(-2x-16)",expLeftAns:"-8x-4",expRightAns:"4x+32",transLeftList:["-4x-8x","-8x-4x"],transRightList:["32+4","4+32"],arrLeftAns:"-12x",arrRightAns:"36",answer:"-3",qtype:4},
 {leftPart:"6x",rightPart:"-4(-2x-4)",expLeftAns:"6x",expRightAns:"8x+16",transLeftList:["-8x+6x","6x-8x"],transRightList:["16"],arrLeftAns:"-2x",arrRightAns:"16",answer:"-8",qtype:5},
-{leftPart:"-2-2(x-4)",rightPart:"20",expLeftAns:"-2-2x+8",expRightAns:"20",transLeftList:["-2x"],transRightList:["-8+2+20","-8+20+2","2+20-8","2-8+20","20+2-8","20-8+2","20-6","-6+20"],arrLeftAns:"-2x",arrRightAns:"14",answer:"-7",qtype:6},
+{leftPart:"-2-2(x-4)",rightPart:"20",expLeftAns:"-2-2x+8",expRightAns:"20",transLeftList:["-2x"],transRightList:["-8+2+20","-8+20+2","2+20-8","2-8+20","20+2-8","20-8+2"],arrLeftAns:"-2x",arrRightAns:"14",answer:"-7",qtype:6},
 {leftPart:"4(x+3)",rightPart:"7x",expLeftAns:"4x+12",expRightAns:"7x",transLeftList:["-7x+4x","4x-7x"],transRightList:["-12"],arrLeftAns:"-3x",arrRightAns:"-12",answer:"4",qtype:7},
-{leftPart:"-3",rightPart:"5-2(-x+1)",expLeftAns:"-3",expRightAns:"5+2x-2",transLeftList:["-2x"],transRightList:["-2+3+5","-2+5+3","3+5-2","3-2+5","5+3-2","5-2+3","3+3","3+3"],arrLeftAns:"-2x",arrRightAns:"6",answer:"-3",qtype:8},
+{leftPart:"-3",rightPart:"5-2(-x+1)",expLeftAns:"-3",expRightAns:"5+2x-2",transLeftList:["-2x"],transRightList:["-2+3+5","-2+5+3","3+5-2","3-2+5","5+3-2","5-2+3"],arrLeftAns:"-2x",arrRightAns:"6",answer:"-3",qtype:8},
 {leftPart:"4(-x-1)",rightPart:"-2x-22",expLeftAns:"-4x-4",expRightAns:"-2x-22",transLeftList:["-4x+2x","2x-4x"],transRightList:["-22+4","4-22"],arrLeftAns:"-2x",arrRightAns:"-18",answer:"9",qtype:1},
 {leftPart:"-2x-16",rightPart:"-4(-3x-3)",expLeftAns:"-2x-16",expRightAns:"12x+12",transLeftList:["-12x-2x","-2x-12x"],transRightList:["12+16","16+12"],arrLeftAns:"-14x",arrRightAns:"28",answer:"-2",qtype:2},
 {leftPart:"5(-x-3)",rightPart:"5(x-1)",expLeftAns:"-5x-15",expRightAns:"5x-5",transLeftList:["-5x-5x"],transRightList:["-5+15","15-5"],arrLeftAns:"-10x",arrRightAns:"10",answer:"-1",qtype:3},
 {leftPart:"-4(3x-1)",rightPart:"-4(-2x+24)",expLeftAns:"-12x+4",expRightAns:"8x-96",transLeftList:["-12x-8x","-8x-12x"],transRightList:["-4-96","-96-4"],arrLeftAns:"-20x",arrRightAns:"-100",answer:"5",qtype:4},
 {leftPart:"-x",rightPart:"4(x+5)",expLeftAns:"-x",expRightAns:"4x+20",transLeftList:["-4x-x","-x-4x"],transRightList:["20"],arrLeftAns:"-5x",arrRightAns:"20",answer:"-4",qtype:5},
-{leftPart:"-1+2(x+2)",rightPart:"-7",expLeftAns:"-1+2x+4",expRightAns:"-7",transLeftList:["2x"],transRightList:["-4+1-7","-4-7+1","-7+1-4","-7-4+1","1-4-7","1-7-4","-7-3","-3-7"],arrLeftAns:"2x",arrRightAns:"-10",answer:"-5",qtype:6},
+{leftPart:"-1+2(x+2)",rightPart:"-7",expLeftAns:"-1+2x+4",expRightAns:"-7",transLeftList:["2x"],transRightList:["-4+1-7","-4-7+1","-7+1-4","-7-4+1","1-4-7","1-7-4"],arrLeftAns:"2x",arrRightAns:"-10",answer:"-5",qtype:6},
 {leftPart:"2(x+3)",rightPart:"-4x",expLeftAns:"2x+6",expRightAns:"-4x",transLeftList:["2x+4x","4x+2x"],transRightList:["-6"],arrLeftAns:"6x",arrRightAns:"-6",answer:"-1",qtype:7},
-{leftPart:"-13",rightPart:"7+4(x+3)",expLeftAns:"-13",expRightAns:"7+4x+12",transLeftList:["-4x"],transRightList:["12+13+7","12+7+13","13+12+7","13+7+12","7+12+13","7+13+12","19+13","13+19"],arrLeftAns:"-4x",arrRightAns:"32",answer:"-8",qtype:8},
+{leftPart:"-13",rightPart:"7+4(x+3)",expLeftAns:"-13",expRightAns:"7+4x+12",transLeftList:["-4x"],transRightList:["12+13+7","12+7+13","13+12+7","13+7+12","7+12+13","7+13+12"],arrLeftAns:"-4x",arrRightAns:"32",answer:"-8",qtype:8},
 {leftPart:"2(x+4)",rightPart:"-2x-16",expLeftAns:"2x+8",expRightAns:"-2x-16",transLeftList:["2x+2x"],transRightList:["-16-8","-8-16"],arrLeftAns:"4x",arrRightAns:"-24",answer:"-6",qtype:1},
 {leftPart:"x+8",rightPart:"-2(-x-5)",expLeftAns:"x+8",expRightAns:"2x+10",transLeftList:["-2x+x","x-2x"],transRightList:["-8+10","10-8"],arrLeftAns:"-x",arrRightAns:"2",answer:"-2",qtype:2},
 {leftPart:"2(-3x-3)",rightPart:"3(2x+22)",expLeftAns:"-6x-6",expRightAns:"6x+66",transLeftList:["-6x-6x"],transRightList:["6+66","66+6"],arrLeftAns:"-12x",arrRightAns:"72",answer:"-6",qtype:3},
 {leftPart:"-3(-x-4)",rightPart:"3(-x-4)",expLeftAns:"3x+12",expRightAns:"-3x-12",transLeftList:["3x+3x"],transRightList:["-12-12"],arrLeftAns:"6x",arrRightAns:"-24",answer:"-4",qtype:4},
 {leftPart:"-6x",rightPart:"-3(3x+2)",expLeftAns:"-6x",expRightAns:"-9x-6",transLeftList:["-6x+9x","9x-6x"],transRightList:["-6"],arrLeftAns:"3x",arrRightAns:"-6",answer:"-2",qtype:5},
-{leftPart:"-5-4(x+2)",rightPart:"-33",expLeftAns:"-5-4x-8",expRightAns:"-33",transLeftList:["-4x"],transRightList:["-33+5+8","-33+8+5","5+8-33","5-33+8","8+5-33","8-33+5","-33+13","13-33"],arrLeftAns:"-4x",arrRightAns:"-20",answer:"5",qtype:6},
+{leftPart:"-5-4(x+2)",rightPart:"-33",expLeftAns:"-5-4x-8",expRightAns:"-33",transLeftList:["-4x"],transRightList:["-33+5+8","-33+8+5","5+8-33","5-33+8","8+5-33","8-33+5"],arrLeftAns:"-4x",arrRightAns:"-20",answer:"5",qtype:6},
 {leftPart:"4(2x+2)",rightPart:"7x",expLeftAns:"8x+8",expRightAns:"7x",transLeftList:["-7x+8x","8x-7x"],transRightList:["-8"],arrLeftAns:"x",arrRightAns:"-8",answer:"-8",qtype:7},
-{leftPart:"-25",rightPart:"8+3(-3x+1)",expLeftAns:"-25",expRightAns:"8-9x+3",transLeftList:["9x"],transRightList:["25+3+8","25+8+3","3+25+8","3+8+25","8+25+3","8+3+25","11+25","25+11"],arrLeftAns:"9x",arrRightAns:"36",answer:"4",qtype:8},
+{leftPart:"-25",rightPart:"8+3(-3x+1)",expLeftAns:"-25",expRightAns:"8-9x+3",transLeftList:["9x"],transRightList:["25+3+8","25+8+3","3+25+8","3+8+25","8+25+3","8+3+25"],arrLeftAns:"9x",arrRightAns:"36",answer:"4",qtype:8},
 {leftPart:"4(-3x+4)",rightPart:"-2x-14",expLeftAns:"-12x+16",expRightAns:"-2x-14",transLeftList:["-12x+2x","2x-12x"],transRightList:["-14-16","-16-14"],arrLeftAns:"-10x",arrRightAns:"-30",answer:"3",qtype:1},
 {leftPart:"-2x-8",rightPart:"-5(-x-4)",expLeftAns:"-2x-8",expRightAns:"5x+20",transLeftList:["-2x-5x","-5x-2x"],transRightList:["20+8","8+20"],arrLeftAns:"-7x",arrRightAns:"28",answer:"-4",qtype:2},
 {leftPart:"5(-2x-4)",rightPart:"3(-3x-9)",expLeftAns:"-10x-20",expRightAns:"-9x-27",transLeftList:["-10x+9x","9x-10x"],transRightList:["-27+20","20-27"],arrLeftAns:"-x",arrRightAns:"-7",answer:"7",qtype:3},
 {leftPart:"-4(-3x+1)",rightPart:"4(-3x+29)",expLeftAns:"12x-4",expRightAns:"-12x+116",transLeftList:["12x+12x"],transRightList:["116+4","4+116"],arrLeftAns:"24x",arrRightAns:"120",answer:"5",qtype:4},
 {leftPart:"-x",rightPart:"-4(x+3)",expLeftAns:"-x",expRightAns:"-4x-12",transLeftList:["-x+4x","4x-x"],transRightList:["-12"],arrLeftAns:"3x",arrRightAns:"-12",answer:"-4",qtype:5},
-{leftPart:"-1+4(3x-5)",rightPart:"3",expLeftAns:"-1+12x-20",expRightAns:"3",transLeftList:["12x"],transRightList:["1+20+3","1+3+20","20+1+3","20+3+1","3+1+20","3+20+1","3+21","21+3"],arrLeftAns:"12x",arrRightAns:"24",answer:"2",qtype:6},
+{leftPart:"-1+4(3x-5)",rightPart:"3",expLeftAns:"-1+12x-20",expRightAns:"3",transLeftList:["12x"],transRightList:["1+20+3","1+3+20","20+1+3","20+3+1","3+1+20","3+20+1"],arrLeftAns:"12x",arrRightAns:"24",answer:"2",qtype:6},
 {leftPart:"-4(-x-5)",rightPart:"-x",expLeftAns:"4x+20",expRightAns:"-x",transLeftList:["4x+x","x+4x"],transRightList:["-20"],arrLeftAns:"5x",arrRightAns:"-20",answer:"-4",qtype:7},
-{leftPart:"-19",rightPart:"3-2(2x+1)",expLeftAns:"-19",expRightAns:"3-4x-2",transLeftList:["4x"],transRightList:["-2+19+3","-2+3+19","19+3-2","19-2+3","3+19-2","3-2+19","1+19","19+1"],arrLeftAns:"4x",arrRightAns:"20",answer:"5",qtype:8},
+{leftPart:"-19",rightPart:"3-2(2x+1)",expLeftAns:"-19",expRightAns:"3-4x-2",transLeftList:["4x"],transRightList:["-2+19+3","-2+3+19","19+3-2","19-2+3","3+19-2","3-2+19"],arrLeftAns:"4x",arrRightAns:"20",answer:"5",qtype:8},
 {leftPart:"4(x+4)",rightPart:"-x-14",expLeftAns:"4x+16",expRightAns:"-x-14",transLeftList:["4x+x","x+4x"],transRightList:["-14-16","-16-14"],arrLeftAns:"5x",arrRightAns:"-30",answer:"-6",qtype:1},
 {leftPart:"-4x+14",rightPart:"-2(-x+5)",expLeftAns:"-4x+14",expRightAns:"2x-10",transLeftList:["-2x-4x","-4x-2x"],transRightList:["-10-14","-14-10"],arrLeftAns:"-6x",arrRightAns:"-24",answer:"4",qtype:2},
 {leftPart:"3(-3x-2)",rightPart:"3(3x+28)",expLeftAns:"-9x-6",expRightAns:"9x+84",transLeftList:["-9x-9x"],transRightList:["6+84","84+6"],arrLeftAns:"-18x",arrRightAns:"90",answer:"-5",qtype:3},
 {leftPart:"-4(-2x-4)",rightPart:"3(2x+10)",expLeftAns:"8x+16",expRightAns:"6x+30",transLeftList:["-6x+8x","8x-6x"],transRightList:["-16+30","30-16"],arrLeftAns:"2x",arrRightAns:"14",answer:"7",qtype:4},
 {leftPart:"-9x",rightPart:"5(-x+4)",expLeftAns:"-9x",expRightAns:"-5x+20",transLeftList:["-9x+5x","5x-9x"],transRightList:["20"],arrLeftAns:"-4x",arrRightAns:"20",answer:"-5",qtype:5},
-{leftPart:"-8-2(2x-2)",rightPart:"-36",expLeftAns:"-8-4x+4",expRightAns:"-36",transLeftList:["-4x"],transRightList:["-36+8-4","-36-4+8","-4+8-36","-4-36+8","8-36-4","8-4-36","-36+4","4-36"],arrLeftAns:"-4x",arrRightAns:"-32",answer:"8",qtype:6},
+{leftPart:"-8-2(2x-2)",rightPart:"-36",expLeftAns:"-8-4x+4",expRightAns:"-36",transLeftList:["-4x"],transRightList:["-36+8-4","-36-4+8","-4+8-36","-4-36+8","8-36-4","8-4-36"],arrLeftAns:"-4x",arrRightAns:"-32",answer:"8",qtype:6},
 {leftPart:"-4(x-2)",rightPart:"4x",expLeftAns:"-4x+8",expRightAns:"4x",transLeftList:["-4x-4x"],transRightList:["-8"],arrLeftAns:"-8x",arrRightAns:"-8",answer:"1",qtype:7},
-{leftPart:"32",rightPart:"8+2(x+3)",expLeftAns:"32",expRightAns:"8+2x+6",transLeftList:["-2x"],transRightList:["-32+6+8","-32+8+6","6+8-32","6-32+8","8+6-32","8-32+6","14-32","-32+14"],arrLeftAns:"-2x",arrRightAns:"-18",answer:"9",qtype:8},
+{leftPart:"32",rightPart:"8+2(x+3)",expLeftAns:"32",expRightAns:"8+2x+6",transLeftList:["-2x"],transRightList:["-32+6+8","-32+8+6","6+8-32","6-32+8","8+6-32","8-32+6"],arrLeftAns:"-2x",arrRightAns:"-18",answer:"9",qtype:8},
 {leftPart:"-4(x-1)",rightPart:"-2x+10",expLeftAns:"-4x+4",expRightAns:"-2x+10",transLeftList:["-4x+2x","2x-4x"],transRightList:["-4+10","10-4"],arrLeftAns:"-2x",arrRightAns:"6",answer:"-3",qtype:1},
 {leftPart:"4x-14",rightPart:"-5(-x+3)",expLeftAns:"4x-14",expRightAns:"5x-15",transLeftList:["-5x+4x","4x-5x"],transRightList:["-15+14","14-15"],arrLeftAns:"-x",arrRightAns:"-1",answer:"1",qtype:2},
 {leftPart:"5(-x+1)",rightPart:"5(x-13)",expLeftAns:"-5x+5",expRightAns:"5x-65",transLeftList:["-5x-5x"],transRightList:["-5-65","-65-5"],arrLeftAns:"-10x",arrRightAns:"-70",answer:"7",qtype:3},
 {leftPart:"-2(x+2)",rightPart:"5(-x-2)",expLeftAns:"-2x-4",expRightAns:"-5x-10",transLeftList:["-2x+5x","5x-2x"],transRightList:["-10+4","4-10"],arrLeftAns:"3x",arrRightAns:"-6",answer:"-2",qtype:4},
 {leftPart:"14x",rightPart:"-2(-2x-5)",expLeftAns:"14x",expRightAns:"4x+10",transLeftList:["-4x+14x","14x-4x"],transRightList:["10"],arrLeftAns:"10x",arrRightAns:"10",answer:"1",qtype:5},
-{leftPart:"-6-2(-2x-4)",rightPart:"18",expLeftAns:"-6+4x+8",expRightAns:"18",transLeftList:["4x"],transRightList:["-8+18+6","-8+6+18","18+6-8","18-8+6","6+18-8","6-8+18","18-2","-2+18"],arrLeftAns:"4x",arrRightAns:"16",answer:"4",qtype:6},
+{leftPart:"-6-2(-2x-4)",rightPart:"18",expLeftAns:"-6+4x+8",expRightAns:"18",transLeftList:["4x"],transRightList:["-8+18+6","-8+6+18","18+6-8","18-8+6","6+18-8","6-8+18"],arrLeftAns:"4x",arrRightAns:"16",answer:"4",qtype:6},
 {leftPart:"-5(-2x-5)",rightPart:"5x",expLeftAns:"10x+25",expRightAns:"5x",transLeftList:["-5x+10x","10x-5x"],transRightList:["-25"],arrLeftAns:"5x",arrRightAns:"-25",answer:"-5",qtype:7},
-{leftPart:"31",rightPart:"-7+2(-3x-2)",expLeftAns:"31",expRightAns:"-7-6x-4",transLeftList:["6x"],transRightList:["-31-4-7","-31-7-4","-4-31-7","-4-7-31","-7-31-4","-7-4-31","-11-31","-31-11"],arrLeftAns:"6x",arrRightAns:"-42",answer:"-7",qtype:8},
+{leftPart:"31",rightPart:"-7+2(-3x-2)",expLeftAns:"31",expRightAns:"-7-6x-4",transLeftList:["6x"],transRightList:["-31-4-7","-31-7-4","-4-31-7","-4-7-31","-7-31-4","-7-4-31"],arrLeftAns:"6x",arrRightAns:"-42",answer:"-7",qtype:8},
 {leftPart:"-2(-x-5)",rightPart:"5x+19",expLeftAns:"2x+10",expRightAns:"5x+19",transLeftList:["-5x+2x","2x-5x"],transRightList:["-10+19","19-10"],arrLeftAns:"-3x",arrRightAns:"9",answer:"-3",qtype:1},
 {leftPart:"5x-11",rightPart:"2(-x+5)",expLeftAns:"5x-11",expRightAns:"-2x+10",transLeftList:["2x+5x","5x+2x"],transRightList:["10+11","11+10"],arrLeftAns:"7x",arrRightAns:"21",answer:"3",qtype:2},
 {leftPart:"4(-x-2)",rightPart:"4(-2x+6)",expLeftAns:"-4x-8",expRightAns:"-8x+24",transLeftList:["-4x+8x","8x-4x"],transRightList:["24+8","8+24"],arrLeftAns:"4x",arrRightAns:"32",answer:"8",qtype:3},
 {leftPart:"4(x-5)",rightPart:"-2(-3x+18)",expLeftAns:"4x-20",expRightAns:"6x-36",transLeftList:["-6x+4x","4x-6x"],transRightList:["-36+20","20-36"],arrLeftAns:"-2x",arrRightAns:"-16",answer:"8",qtype:4},
 {leftPart:"x",rightPart:"3(x-2)",expLeftAns:"x",expRightAns:"3x-6",transLeftList:["-3x+x","x-3x"],transRightList:["-6"],arrLeftAns:"-2x",arrRightAns:"-6",answer:"3",qtype:5},
-{leftPart:"9-3(3x+1)",rightPart:"15",expLeftAns:"9-9x-3",expRightAns:"15",transLeftList:["-9x"],transRightList:["-9+15+3","-9+3+15","15+3-9","15-9+3","3+15-9","3-9+15","15-6","-6+15"],arrLeftAns:"-9x",arrRightAns:"9",answer:"-1",qtype:6},
+{leftPart:"9-3(3x+1)",rightPart:"15",expLeftAns:"9-9x-3",expRightAns:"15",transLeftList:["-9x"],transRightList:["-9+15+3","-9+3+15","15+3-9","15-9+3","3+15-9","3-9+15"],arrLeftAns:"-9x",arrRightAns:"9",answer:"-1",qtype:6},
 {leftPart:"-3(3x+4)",rightPart:"-7x",expLeftAns:"-9x-12",expRightAns:"-7x",transLeftList:["-9x+7x","7x-9x"],transRightList:["12"],arrLeftAns:"-2x",arrRightAns:"12",answer:"-6",qtype:7},
-{leftPart:"-31",rightPart:"-3-2(-x+5)",expLeftAns:"-31",expRightAns:"-3+2x-10",transLeftList:["-2x"],transRightList:["-10+31-3","-10-3+31","-3+31-10","-3-10+31","31-10-3","31-3-10","-13+31","31-13"],arrLeftAns:"-2x",arrRightAns:"18",answer:"-9",qtype:8},
+{leftPart:"-31",rightPart:"-3-2(-x+5)",expLeftAns:"-31",expRightAns:"-3+2x-10",transLeftList:["-2x"],transRightList:["-10+31-3","-10-3+31","-3+31-10","-3-10+31","31-10-3","31-3-10"],arrLeftAns:"-2x",arrRightAns:"18",answer:"-9",qtype:8},
 {leftPart:"-2(x+1)",rightPart:"-5x-14",expLeftAns:"-2x-2",expRightAns:"-5x-14",transLeftList:["-2x+5x","5x-2x"],transRightList:["-14+2","2-14"],arrLeftAns:"3x",arrRightAns:"-12",answer:"-4",qtype:1},
 {leftPart:"5x+4",rightPart:"-3(-2x-2)",expLeftAns:"5x+4",expRightAns:"6x+6",transLeftList:["-6x+5x","5x-6x"],transRightList:["-4+6","6-4"],arrLeftAns:"-x",arrRightAns:"2",answer:"-2",qtype:2},
 {leftPart:"2(x+2)",rightPart:"3(2x+12)",expLeftAns:"2x+4",expRightAns:"6x+36",transLeftList:["-6x+2x","2x-6x"],transRightList:["-4+36","36-4"],arrLeftAns:"-4x",arrRightAns:"32",answer:"-8",qtype:3},
 {leftPart:"-5(-2x-4)",rightPart:"3(x+9)",expLeftAns:"10x+20",expRightAns:"3x+27",transLeftList:["-3x+10x","10x-3x"],transRightList:["-20+27","27-20"],arrLeftAns:"7x",arrRightAns:"7",answer:"1",qtype:4},
 {leftPart:"x",rightPart:"2(2x-3)",expLeftAns:"x",expRightAns:"4x-6",transLeftList:["-4x+x","x-4x"],transRightList:["-6"],arrLeftAns:"-3x",arrRightAns:"-6",answer:"2",qtype:5},
-{leftPart:"-9-2(-3x+3)",rightPart:"27",expLeftAns:"-9+6x-6",expRightAns:"27",transLeftList:["6x"],transRightList:["27+6+9","27+9+6","6+27+9","6+9+27","9+27+6","9+6+27","27+15","15+27"],arrLeftAns:"6x",arrRightAns:"42",answer:"7",qtype:6},
+{leftPart:"-9-2(-3x+3)",rightPart:"27",expLeftAns:"-9+6x-6",expRightAns:"27",transLeftList:["6x"],transRightList:["27+6+9","27+9+6","6+27+9","6+9+27","9+27+6","9+6+27"],arrLeftAns:"6x",arrRightAns:"42",answer:"7",qtype:6},
 {leftPart:"3(-2x-4)",rightPart:"-3x",expLeftAns:"-6x-12",expRightAns:"-3x",transLeftList:["-6x+3x","3x-6x"],transRightList:["12"],arrLeftAns:"-3x",arrRightAns:"12",answer:"-4",qtype:7},
-{leftPart:"-15",rightPart:"-3+2(-x-1)",expLeftAns:"-15",expRightAns:"-3-2x-2",transLeftList:["2x"],transRightList:["-2+15-3","-2-3+15","-3+15-2","-3-2+15","15-2-3","15-3-2","-5+15","15-5"],arrLeftAns:"2x",arrRightAns:"10",answer:"5",qtype:8},
+{leftPart:"-15",rightPart:"-3+2(-x-1)",expLeftAns:"-15",expRightAns:"-3-2x-2",transLeftList:["2x"],transRightList:["-2+15-3","-2-3+15","-3+15-2","-3-2+15","15-2-3","15-3-2"],arrLeftAns:"2x",arrRightAns:"10",answer:"5",qtype:8},
 {leftPart:"-3(2x-3)",rightPart:"-5x+8",expLeftAns:"-6x+9",expRightAns:"-5x+8",transLeftList:["-6x+5x","5x-6x"],transRightList:["-9+8","8-9"],arrLeftAns:"-x",arrRightAns:"-1",answer:"1",qtype:1},
 {leftPart:"5x+20",rightPart:"5(2x+2)",expLeftAns:"5x+20",expRightAns:"10x+10",transLeftList:["-10x+5x","5x-10x"],transRightList:["-20+10","10-20"],arrLeftAns:"-5x",arrRightAns:"-10",answer:"2",qtype:2},
 {leftPart:"3(x-1)",rightPart:"3(3x-5)",expLeftAns:"3x-3",expRightAns:"9x-15",transLeftList:["-9x+3x","3x-9x"],transRightList:["-15+3","3-15"],arrLeftAns:"-6x",arrRightAns:"-12",answer:"2",qtype:3},
 {leftPart:"-4(2x+4)",rightPart:"2(-2x+2)",expLeftAns:"-8x-16",expRightAns:"-4x+4",transLeftList:["-8x+4x","4x-8x"],transRightList:["16+4","4+16"],arrLeftAns:"-4x",arrRightAns:"20",answer:"-5",qtype:4},
 {leftPart:"-6x",rightPart:"-3(3x+1)",expLeftAns:"-6x",expRightAns:"-9x-3",transLeftList:["-6x+9x","9x-6x"],transRightList:["-3"],arrLeftAns:"3x",arrRightAns:"-3",answer:"-1",qtype:5},
-{leftPart:"-8-5(-x-1)",rightPart:"-33",expLeftAns:"-8+5x+5",expRightAns:"-33",transLeftList:["5x"],transRightList:["-33+8-5","-33-5+8","-5+8-33","-5-33+8","8-33-5","8-5-33","-33+3","3-33"],arrLeftAns:"5x",arrRightAns:"-30",answer:"-6",qtype:6},
+{leftPart:"-8-5(-x-1)",rightPart:"-33",expLeftAns:"-8+5x+5",expRightAns:"-33",transLeftList:["5x"],transRightList:["-33+8-5","-33-5+8","-5+8-33","-5-33+8","8-33-5","8-5-33"],arrLeftAns:"5x",arrRightAns:"-30",answer:"-6",qtype:6},
 {leftPart:"3(-3x+4)",rightPart:"-3x",expLeftAns:"-9x+12",expRightAns:"-3x",transLeftList:["-9x+3x","3x-9x"],transRightList:["-12"],arrLeftAns:"-6x",arrRightAns:"-12",answer:"2",qtype:7},
-{leftPart:"-40",rightPart:"-4-4(2x+3)",expLeftAns:"-40",expRightAns:"-4-8x-12",transLeftList:["8x"],transRightList:["-12+40-4","-12-4+40","-4+40-12","-4-12+40","40-12-4","40-4-12","-16+40","40-16"],arrLeftAns:"8x",arrRightAns:"24",answer:"3",qtype:8},
+{leftPart:"-40",rightPart:"-4-4(2x+3)",expLeftAns:"-40",expRightAns:"-4-8x-12",transLeftList:["8x"],transRightList:["-12+40-4","-12-4+40","-4+40-12","-4-12+40","40-12-4","40-4-12"],arrLeftAns:"8x",arrRightAns:"24",answer:"3",qtype:8},
 {leftPart:"-2(-x+2)",rightPart:"-2x-8",expLeftAns:"2x-4",expRightAns:"-2x-8",transLeftList:["2x+2x"],transRightList:["-8+4","4-8"],arrLeftAns:"4x",arrRightAns:"-4",answer:"-1",qtype:1},
 {leftPart:"5x-20",rightPart:"-5(2x-2)",expLeftAns:"5x-20",expRightAns:"-10x+10",transLeftList:["10x+5x","5x+10x"],transRightList:["10+20","20+10"],arrLeftAns:"15x",arrRightAns:"30",answer:"2",qtype:2},
 {leftPart:"4(-x+1)",rightPart:"2(3x+17)",expLeftAns:"-4x+4",expRightAns:"6x+34",transLeftList:["-4x-6x","-6x-4x"],transRightList:["-4+34","34-4"],arrLeftAns:"-10x",arrRightAns:"30",answer:"-3",qtype:3},
 {leftPart:"2(-2x-1)",rightPart:"-2(x+10)",expLeftAns:"-4x-2",expRightAns:"-2x-20",transLeftList:["-4x+2x","2x-4x"],transRightList:["-20+2","2-20"],arrLeftAns:"-2x",arrRightAns:"-18",answer:"9",qtype:4},
 {leftPart:"-8x",rightPart:"-4(x-4)",expLeftAns:"-8x",expRightAns:"-4x+16",transLeftList:["-8x+4x","4x-8x"],transRightList:["16"],arrLeftAns:"-4x",arrRightAns:"16",answer:"-4",qtype:5},
-{leftPart:"6+4(x-1)",rightPart:"18",expLeftAns:"6+4x-4",expRightAns:"18",transLeftList:["4x"],transRightList:["-6+18+4","-6+4+18","18+4-6","18-6+4","4+18-6","4-6+18","18-2","-2+18"],arrLeftAns:"4x",arrRightAns:"16",answer:"4",qtype:6},
+{leftPart:"6+4(x-1)",rightPart:"18",expLeftAns:"6+4x-4",expRightAns:"18",transLeftList:["4x"],transRightList:["-6+18+4","-6+4+18","18+4-6","18-6+4","4+18-6","4-6+18"],arrLeftAns:"4x",arrRightAns:"16",answer:"4",qtype:6},
 {leftPart:"-4(x+3)",rightPart:"-16x",expLeftAns:"-4x-12",expRightAns:"-16x",transLeftList:["-4x+16x","16x-4x"],transRightList:["12"],arrLeftAns:"12x",arrRightAns:"12",answer:"1",qtype:7},
-{leftPart:"-4",rightPart:"6+2(x+2)",expLeftAns:"-4",expRightAns:"6+2x+4",transLeftList:["-2x"],transRightList:["4+4+6","4+6+4","6+4+4","10+4","4+10"],arrLeftAns:"-2x",arrRightAns:"14",answer:"-7",qtype:8},
+{leftPart:"-4",rightPart:"6+2(x+2)",expLeftAns:"-4",expRightAns:"6+2x+4",transLeftList:["-2x"],transRightList:["4+4+6","4+6+4","6+4+4"],arrLeftAns:"-2x",arrRightAns:"14",answer:"-7",qtype:8},
 {leftPart:"-3(x+5)",rightPart:"2x+30",expLeftAns:"-3x-15",expRightAns:"2x+30",transLeftList:["-2x-3x","-3x-2x"],transRightList:["15+30","30+15"],arrLeftAns:"-5x",arrRightAns:"45",answer:"-9",qtype:1},
 {leftPart:"-5x-14",rightPart:"-4(-3x-5)",expLeftAns:"-5x-14",expRightAns:"12x+20",transLeftList:["-12x-5x","-5x-12x"],transRightList:["14+20","20+14"],arrLeftAns:"-17x",arrRightAns:"34",answer:"-2",qtype:2},
 {leftPart:"3(-2x-1)",rightPart:"3(x+8)",expLeftAns:"-6x-3",expRightAns:"3x+24",transLeftList:["-3x-6x","-6x-3x"],transRightList:["24+3","3+24"],arrLeftAns:"-9x",arrRightAns:"27",answer:"-3",qtype:3},
 {leftPart:"-4(x-4)",rightPart:"-5(3x+10)",expLeftAns:"-4x+16",expRightAns:"-15x-50",transLeftList:["-4x+15x","15x-4x"],transRightList:["-16-50","-50-16"],arrLeftAns:"11x",arrRightAns:"-66",answer:"-6",qtype:4},
 {leftPart:"-14x",rightPart:"-4(3x-4)",expLeftAns:"-14x",expRightAns:"-12x+16",transLeftList:["-14x+12x","12x-14x"],transRightList:["16"],arrLeftAns:"-2x",arrRightAns:"16",answer:"-8",qtype:5},
-{leftPart:"-2-5(x+1)",rightPart:"23",expLeftAns:"-2-5x-5",expRightAns:"23",transLeftList:["-5x"],transRightList:["2+23+5","2+5+23","23+2+5","23+5+2","5+2+23","5+23+2","23+7","7+23"],arrLeftAns:"-5x",arrRightAns:"30",answer:"-6",qtype:6},
+{leftPart:"-2-5(x+1)",rightPart:"23",expLeftAns:"-2-5x-5",expRightAns:"23",transLeftList:["-5x"],transRightList:["2+23+5","2+5+23","23+2+5","23+5+2","5+2+23","5+23+2"],arrLeftAns:"-5x",arrRightAns:"30",answer:"-6",qtype:6},
 {leftPart:"-3(-3x+2)",rightPart:"8x",expLeftAns:"9x-6",expRightAns:"8x",transLeftList:["-8x+9x","9x-8x"],transRightList:["6"],arrLeftAns:"x",arrRightAns:"6",answer:"6",qtype:7},
-{leftPart:"-30",rightPart:"-3-3(2x+3)",expLeftAns:"-30",expRightAns:"-3-6x-9",transLeftList:["6x"],transRightList:["-3+30-9","-3-9+30","-9+30-3","-9-3+30","30-3-9","30-9-3","-12+30","30-12"],arrLeftAns:"6x",arrRightAns:"18",answer:"3",qtype:8},
+{leftPart:"-30",rightPart:"-3-3(2x+3)",expLeftAns:"-30",expRightAns:"-3-6x-9",transLeftList:["6x"],transRightList:["-3+30-9","-3-9+30","-9+30-3","-9-3+30","30-3-9","30-9-3"],arrLeftAns:"6x",arrRightAns:"18",answer:"3",qtype:8},
 {leftPart:"3(3x-3)",rightPart:"4x-4",expLeftAns:"9x-9",expRightAns:"4x-4",transLeftList:["-4x+9x","9x-4x"],transRightList:["-4+9","9-4"],arrLeftAns:"5x",arrRightAns:"5",answer:"1",qtype:1},
 {leftPart:"-2x+10",rightPart:"4(-3x+5)",expLeftAns:"-2x+10",expRightAns:"-12x+20",transLeftList:["-2x+12x","12x-2x"],transRightList:["-10+20","20-10"],arrLeftAns:"10x",arrRightAns:"10",answer:"1",qtype:2},
 {leftPart:"2(-x-5)",rightPart:"2(-2x-1)",expLeftAns:"-2x-10",expRightAns:"-4x-2",transLeftList:["-2x+4x","4x-2x"],transRightList:["-2+10","10-2"],arrLeftAns:"2x",arrRightAns:"8",answer:"4",qtype:3},
 {leftPart:"-5(-3x-3)",rightPart:"-3(-x-17)",expLeftAns:"15x+15",expRightAns:"3x+51",transLeftList:["-3x+15x","15x-3x"],transRightList:["-15+51","51-15"],arrLeftAns:"12x",arrRightAns:"36",answer:"3",qtype:4},
 {leftPart:"-4x",rightPart:"4(2x+3)",expLeftAns:"-4x",expRightAns:"8x+12",transLeftList:["-4x-8x","-8x-4x"],transRightList:["12"],arrLeftAns:"-12x",arrRightAns:"12",answer:"-1",qtype:5},
-{leftPart:"-8-4(-x-3)",rightPart:"8",expLeftAns:"-8+4x+12",expRightAns:"8",transLeftList:["4x"],transRightList:["-12+8+8","8+8-12","8-12+8","8-4","-4+8"],arrLeftAns:"4x",arrRightAns:"4",answer:"1",qtype:6},
+{leftPart:"-8-4(-x-3)",rightPart:"8",expLeftAns:"-8+4x+12",expRightAns:"8",transLeftList:["4x"],transRightList:["-12+8+8","8+8-12","8-12+8"],arrLeftAns:"4x",arrRightAns:"4",answer:"1",qtype:6},
 {leftPart:"4(x-5)",rightPart:"14x",expLeftAns:"4x-20",expRightAns:"14x",transLeftList:["-14x+4x","4x-14x"],transRightList:["20"],arrLeftAns:"-10x",arrRightAns:"20",answer:"-2",qtype:7},
-{leftPart:"30",rightPart:"5+5(-2x-1)",expLeftAns:"30",expRightAns:"5-10x-5",transLeftList:["10x"],transRightList:["-30+5-5","-30-5+5","-5+5-30","-5-30+5","5-30-5","5-5-30","-30"],arrLeftAns:"10x",arrRightAns:"-30",answer:"-3",qtype:8},
+{leftPart:"30",rightPart:"5+5(-2x-1)",expLeftAns:"30",expRightAns:"5-10x-5",transLeftList:["10x"],transRightList:["-30+5-5","-30-5+5","-5+5-30","-5-30+5","5-30-5","5-5-30"],arrLeftAns:"10x",arrRightAns:"-30",answer:"-3",qtype:8},
 {leftPart:"-4(-3x-3)",rightPart:"2x+22",expLeftAns:"12x+12",expRightAns:"2x+22",transLeftList:["-2x+12x","12x-2x"],transRightList:["-12+22","22-12"],arrLeftAns:"10x",arrRightAns:"10",answer:"1",qtype:1},
 {leftPart:"-2x+2",rightPart:"-2(-x+3)",expLeftAns:"-2x+2",expRightAns:"2x-6",transLeftList:["-2x-2x"],transRightList:["-2-6","-6-2"],arrLeftAns:"-4x",arrRightAns:"-8",answer:"2",qtype:2},
 {leftPart:"5(3x-3)",rightPart:"3(3x+9)",expLeftAns:"15x-15",expRightAns:"9x+27",transLeftList:["-9x+15x","15x-9x"],transRightList:["15+27","27+15"],arrLeftAns:"6x",arrRightAns:"42",answer:"7",qtype:3},
 {leftPart:"-4(3x-4)",rightPart:"4(x-12)",expLeftAns:"-12x+16",expRightAns:"4x-48",transLeftList:["-12x-4x","-4x-12x"],transRightList:["-16-48","-48-16"],arrLeftAns:"-16x",arrRightAns:"-64",answer:"4",qtype:4},
 {leftPart:"-6x",rightPart:"-2(x+2)",expLeftAns:"-6x",expRightAns:"-2x-4",transLeftList:["-6x+2x","2x-6x"],transRightList:["-4"],arrLeftAns:"-4x",arrRightAns:"-4",answer:"1",qtype:5},
-{leftPart:"7-3(x+1)",rightPart:"-23",expLeftAns:"7-3x-3",expRightAns:"-23",transLeftList:["-3x"],transRightList:["-23+3-7","-23-7+3","-7+3-23","-7-23+3","3-23-7","3-7-23","-23-4","-4-23"],arrLeftAns:"-3x",arrRightAns:"-27",answer:"9",qtype:6},
+{leftPart:"7-3(x+1)",rightPart:"-23",expLeftAns:"7-3x-3",expRightAns:"-23",transLeftList:["-3x"],transRightList:["-23+3-7","-23-7+3","-7+3-23","-7-23+3","3-23-7","3-7-23"],arrLeftAns:"-3x",arrRightAns:"-27",answer:"9",qtype:6},
 {leftPart:"3(-3x-5)",rightPart:"-14x",expLeftAns:"-9x-15",expRightAns:"-14x",transLeftList:["-9x+14x","14x-9x"],transRightList:["15"],arrLeftAns:"5x",arrRightAns:"15",answer:"3",qtype:7},
-{leftPart:"30",rightPart:"-2-4(-x+1)",expLeftAns:"30",expRightAns:"-2+4x-4",transLeftList:["-4x"],transRightList:["-2-30-4","-2-4-30","-30-2-4","-30-4-2","-4-2-30","-4-30-2","-6-30","-30-6"],arrLeftAns:"-4x",arrRightAns:"-36",answer:"9",qtype:8},
+{leftPart:"30",rightPart:"-2-4(-x+1)",expLeftAns:"30",expRightAns:"-2+4x-4",transLeftList:["-4x"],transRightList:["-2-30-4","-2-4-30","-30-2-4","-30-4-2","-4-2-30","-4-30-2"],arrLeftAns:"-4x",arrRightAns:"-36",answer:"9",qtype:8},
 {leftPart:"2(-2x+4)",rightPart:"-x-10",expLeftAns:"-4x+8",expRightAns:"-x-10",transLeftList:["-4x+x","x-4x"],transRightList:["-10-8","-8-10"],arrLeftAns:"-3x",arrRightAns:"-18",answer:"6",qtype:1},
 {leftPart:"-3x-15",rightPart:"2(-x-3)",expLeftAns:"-3x-15",expRightAns:"-2x-6",transLeftList:["-3x+2x","2x-3x"],transRightList:["-6+15","15-6"],arrLeftAns:"-x",arrRightAns:"9",answer:"-9",qtype:2},
 {leftPart:"3(2x-4)",rightPart:"2(-x-14)",expLeftAns:"6x-12",expRightAns:"-2x-28",transLeftList:["2x+6x","6x+2x"],transRightList:["-28+12","12-28"],arrLeftAns:"8x",arrRightAns:"-16",answer:"-2",qtype:3},
 {leftPart:"-3(3x+5)",rightPart:"3(-x-11)",expLeftAns:"-9x-15",expRightAns:"-3x-33",transLeftList:["-9x+3x","3x-9x"],transRightList:["-33+15","15-33"],arrLeftAns:"-6x",arrRightAns:"-18",answer:"3",qtype:4},
 {leftPart:"-6x",rightPart:"-3(3x-1)",expLeftAns:"-6x",expRightAns:"-9x+3",transLeftList:["-6x+9x","9x-6x"],transRightList:["3"],arrLeftAns:"3x",arrRightAns:"3",answer:"1",qtype:5},
-{leftPart:"6+2(-x-1)",rightPart:"18",expLeftAns:"6-2x-2",expRightAns:"18",transLeftList:["-2x"],transRightList:["-6+18+2","-6+2+18","18+2-6","18-6+2","2+18-6","2-6+18","18-4","-4+18"],arrLeftAns:"-2x",arrRightAns:"14",answer:"-7",qtype:6},
+{leftPart:"6+2(-x-1)",rightPart:"18",expLeftAns:"6-2x-2",expRightAns:"18",transLeftList:["-2x"],transRightList:["-6+18+2","-6+2+18","18+2-6","18-6+2","2+18-6","2-6+18"],arrLeftAns:"-2x",arrRightAns:"14",answer:"-7",qtype:6},
 {leftPart:"-4(-x+3)",rightPart:"16x",expLeftAns:"4x-12",expRightAns:"16x",transLeftList:["-16x+4x","4x-16x"],transRightList:["12"],arrLeftAns:"-12x",arrRightAns:"12",answer:"-1",qtype:7},
-{leftPart:"19",rightPart:"-8-3(2x+3)",expLeftAns:"19",expRightAns:"-8-6x-9",transLeftList:["6x"],transRightList:["-19-8-9","-19-9-8","-8-19-9","-8-9-19","-9-19-8","-9-8-19","-17-19","-19-17"],arrLeftAns:"6x",arrRightAns:"-36",answer:"-6",qtype:8},
+{leftPart:"19",rightPart:"-8-3(2x+3)",expLeftAns:"19",expRightAns:"-8-6x-9",transLeftList:["6x"],transRightList:["-19-8-9","-19-9-8","-8-19-9","-8-9-19","-9-19-8","-9-8-19"],arrLeftAns:"6x",arrRightAns:"-36",answer:"-6",qtype:8},
 {leftPart:"-4(-2x-1)",rightPart:"3x-21",expLeftAns:"8x+4",expRightAns:"3x-21",transLeftList:["-3x+8x","8x-3x"],transRightList:["-21-4","-4-21"],arrLeftAns:"5x",arrRightAns:"-25",answer:"-5",qtype:1},
 {leftPart:"-x-25",rightPart:"-3(-x+3)",expLeftAns:"-x-25",expRightAns:"3x-9",transLeftList:["-3x-x","-x-3x"],transRightList:["-9+25","25-9"],arrLeftAns:"-4x",arrRightAns:"16",answer:"-4",qtype:2},
 {leftPart:"3(x-2)",rightPart:"3(2x-3)",expLeftAns:"3x-6",expRightAns:"6x-9",transLeftList:["-6x+3x","3x-6x"],transRightList:["-9+6","6-9"],arrLeftAns:"-3x",arrRightAns:"-3",answer:"1",qtype:3},
 {leftPart:"4(x-1)",rightPart:"-2(2x+26)",expLeftAns:"4x-4",expRightAns:"-4x-52",transLeftList:["4x+4x"],transRightList:["-52+4","4-52"],arrLeftAns:"8x",arrRightAns:"-48",answer:"-6",qtype:4},
 {leftPart:"6x",rightPart:"4(x-2)",expLeftAns:"6x",expRightAns:"4x-8",transLeftList:["-4x+6x","6x-4x"],transRightList:["-8"],arrLeftAns:"2x",arrRightAns:"-8",answer:"-4",qtype:5},
-{leftPart:"9+2(2x-1)",rightPart:"-5",expLeftAns:"9+4x-2",expRightAns:"-5",transLeftList:["4x"],transRightList:["-5+2-9","-5-9+2","-9+2-5","-9-5+2","2-5-9","2-9-5","-5-7","-7-5"],arrLeftAns:"4x",arrRightAns:"-12",answer:"-3",qtype:6},
+{leftPart:"9+2(2x-1)",rightPart:"-5",expLeftAns:"9+4x-2",expRightAns:"-5",transLeftList:["4x"],transRightList:["-5+2-9","-5-9+2","-9+2-5","-9-5+2","2-5-9","2-9-5"],arrLeftAns:"4x",arrRightAns:"-12",answer:"-3",qtype:6},
 {leftPart:"-2(-2x+4)",rightPart:"-4x",expLeftAns:"4x-8",expRightAns:"-4x",transLeftList:["4x+4x"],transRightList:["8"],arrLeftAns:"8x",arrRightAns:"8",answer:"1",qtype:7},
-{leftPart:"16",rightPart:"-4-2(-x-2)",expLeftAns:"16",expRightAns:"-4+2x+4",transLeftList:["-2x"],transRightList:["-16+4-4","-16-4+4","-4+4-16","-4-16+4","4-16-4","4-4-16","-16"],arrLeftAns:"-2x",arrRightAns:"-16",answer:"8",qtype:8},
+{leftPart:"16",rightPart:"-4-2(-x-2)",expLeftAns:"16",expRightAns:"-4+2x+4",transLeftList:["-2x"],transRightList:["-16+4-4","-16-4+4","-4+4-16","-4-16+4","4-16-4","4-4-16"],arrLeftAns:"-2x",arrRightAns:"-16",answer:"8",qtype:8},
 {leftPart:"-5(x+1)",rightPart:"-4x-8",expLeftAns:"-5x-5",expRightAns:"-4x-8",transLeftList:["-5x+4x","4x-5x"],transRightList:["-8+5","5-8"],arrLeftAns:"-x",arrRightAns:"-3",answer:"3",qtype:1},
 {leftPart:"-5x-29",rightPart:"3(3x-5)",expLeftAns:"-5x-29",expRightAns:"9x-15",transLeftList:["-5x-9x","-9x-5x"],transRightList:["-15+29","29-15"],arrLeftAns:"-14x",arrRightAns:"14",answer:"-1",qtype:2},
 {leftPart:"3(-2x-2)",rightPart:"2(-x+13)",expLeftAns:"-6x-6",expRightAns:"-2x+26",transLeftList:["-6x+2x","2x-6x"],transRightList:["26+6","6+26"],arrLeftAns:"-4x",arrRightAns:"32",answer:"-8",qtype:3},
 {leftPart:"3(x-4)",rightPart:"-2(-2x+4)",expLeftAns:"3x-12",expRightAns:"4x-8",transLeftList:["-4x+3x","3x-4x"],transRightList:["-8+12","12-8"],arrLeftAns:"-x",arrRightAns:"4",answer:"-4",qtype:4},
 {leftPart:"-4x",rightPart:"-2(-2x+4)",expLeftAns:"-4x",expRightAns:"4x-8",transLeftList:["-4x-4x"],transRightList:["-8"],arrLeftAns:"-8x",arrRightAns:"-8",answer:"1",qtype:5},
-{leftPart:"6-2(-3x-3)",rightPart:"-36",expLeftAns:"6+6x+6",expRightAns:"-36",transLeftList:["6x"],transRightList:["-36-6-6","-6-36-6","-6-6-36","-36-12","-12-36"],arrLeftAns:"6x",arrRightAns:"-48",answer:"-8",qtype:6},
+{leftPart:"6-2(-3x-3)",rightPart:"-36",expLeftAns:"6+6x+6",expRightAns:"-36",transLeftList:["6x"],transRightList:["-36-6-6","-6-36-6","-6-6-36"],arrLeftAns:"6x",arrRightAns:"-48",answer:"-8",qtype:6},
 {leftPart:"4(-3x-2)",rightPart:"-16x",expLeftAns:"-12x-8",expRightAns:"-16x",transLeftList:["-12x+16x","16x-12x"],transRightList:["8"],arrLeftAns:"4x",arrRightAns:"8",answer:"2",qtype:7},
-{leftPart:"-31",rightPart:"-1+3(-2x+2)",expLeftAns:"-31",expRightAns:"-1-6x+6",transLeftList:["6x"],transRightList:["-1+31+6","-1+6+31","31+6-1","31-1+6","6+31-1","6-1+31","5+31","31+5"],arrLeftAns:"6x",arrRightAns:"36",answer:"6",qtype:8}
+{leftPart:"-31",rightPart:"-1+3(-2x+2)",expLeftAns:"-31",expRightAns:"-1-6x+6",transLeftList:["6x"],transRightList:["-1+31+6","-1+6+31","31+6-1","31-1+6","6+31-1","6-1+31"],arrLeftAns:"6x",arrRightAns:"36",answer:"6",qtype:8}
 ];
 
         let pendingResetType = null;
@@ -3102,10 +3203,10 @@ if (bestNormalTimeMs === null || totalElapsedTimeMs < bestNormalTimeMs) {
                         leftPart: leftStr, rightPart: rightStr,
                         expLeftAns: `${fmt(b*c,true,true)}${fmt(b*d,false,false)}`,
                         expRightAns: rightStr,
-                        transLeftList: uniq([stripPlus(`${fmt(b*c,true,true)}${fmt(-a,false,true)}`), stripPlus(`${fmt(-a,true,true)}${fmt(b*c,false,true)}`)]),
-                        transRightList: [stripPlus(fmt(-b*d,true,false))],
-                        arrLeftAns: stripPlus(fmt(b*c-a,true,true)),
-                        arrRightAns: String(-b*d),
+                        transLeftList: [stripPlus(fmt(b*d,true,false))],
+                        transRightList: uniq([stripPlus(`${fmt(a,true,true)}${fmt(-b*c,false,true)}`), stripPlus(`${fmt(-b*c,true,true)}${fmt(a,false,true)}`)]),
+                        arrLeftAns: String(b*d),
+                        arrRightAns: stripPlus(fmt(a-b*c,true,true)),
                         answer: String(x)
                     };
                 }
@@ -3129,10 +3230,7 @@ if (bestNormalTimeMs === null || totalElapsedTimeMs < bestNormalTimeMs) {
                         [-a,e,-b*d], [-a,-b*d,e],
                         [-b*d,e,-a], [-b*d,-a,e]
                     ];
-                    const transRightListBase = uniq(p3.map(arr => stripPlus(fmt(arr[0],true,false)+fmt(arr[1],false,false)+fmt(arr[2],false,false))));
-                    const preS = -a - b * d;
-                    const preList = (preS === 0) ? [String(e)] : [stripPlus(fmt(e,true,false)+fmt(preS,false,false)), stripPlus(fmt(preS,true,false)+fmt(e,false,false))];
-                    const transRightList = uniq(transRightListBase.concat(preList));
+                    const transRightList = uniq(p3.map(arr => stripPlus(fmt(arr[0],true,false)+fmt(arr[1],false,false)+fmt(arr[2],false,false))));
                     return {
                         leftPart: leftStr, rightPart: rightStr,
                         expLeftAns: `${a}${fmt(b*c,false,true)}${fmt(b*d,false,false)}`,
@@ -3160,22 +3258,19 @@ if (bestNormalTimeMs === null || totalElapsedTimeMs < bestNormalTimeMs) {
                     const leftStr = `${e}`;
                     const rightStr = `${a}${bSign}(${fmt(c,true,true)}${fmt(d,false,false)})`;
                     const p3 = [
-                        [-e,a,b*d], [-e,b*d,a],
-                        [a,-e,b*d], [a,b*d,-e],
-                        [b*d,-e,a], [b*d,a,-e]
+                        [e,-a,-b*d], [e,-b*d,-a],
+                        [-a,e,-b*d], [-a,-b*d,e],
+                        [-b*d,e,-a], [-b*d,-a,e]
                     ];
-                    const transRightListBase = uniq(p3.map(arr => stripPlus(fmt(arr[0],true,false)+fmt(arr[1],false,false)+fmt(arr[2],false,false))));
-                    const preT = a + b * d;
-                    const preList = (preT === 0) ? [String(-e)] : [stripPlus(fmt(preT,true,false)+fmt(-e,false,false)), stripPlus(fmt(-e,true,false)+fmt(preT,false,false))];
-                    const transRightList = uniq(transRightListBase.concat(preList));
+                    const transLeftList = uniq(p3.map(arr => stripPlus(fmt(arr[0],true,false)+fmt(arr[1],false,false)+fmt(arr[2],false,false))));
                     return {
                         leftPart: leftStr, rightPart: rightStr,
                         expLeftAns: leftStr,
                         expRightAns: `${a}${fmt(b*c,false,true)}${fmt(b*d,false,false)}`,
-                        transLeftList: [stripPlus(fmt(-b*c,true,true))],
-                        transRightList: transRightList,
-                        arrLeftAns: stripPlus(fmt(-b*c,true,true)),
-                        arrRightAns: String(a+b*d-e),
+                        transLeftList: transLeftList,
+                        transRightList: [stripPlus(fmt(b*c,true,true))],
+                        arrLeftAns: String(e-a-b*d),
+                        arrRightAns: stripPlus(fmt(b*c,true,true)),
                         answer: String(x)
                     };
                 }
