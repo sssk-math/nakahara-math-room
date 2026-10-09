@@ -2421,6 +2421,7 @@ function isCurrentStageEmpty() {
         document.getElementById(stageGroupId(next)).className = "input-box-group active-focus";
         document.getElementById(stageBadgeId(next)).textContent = "入力中";
         document.getElementById('hint-text').innerHTML = HINT_DATA[stageHintKey(next, 'Init')];
+        updateMathJax([document.getElementById('hint-text')]);
         focusDefaultNode(); refreshMathJaxPreview();
         updateControlKeysState('playing');
         if (restartTimer) startQuestionTimer();   // 正解時：タイマーをリセットして再開
@@ -2783,6 +2784,7 @@ function isCurrentStageEmpty() {
         updateMathJax([formulaBox]);
 
         document.getElementById('hint-text').innerHTML = HINT_DATA[stageHintKey(ACTIVE_STAGES[0], 'Init')];
+        updateMathJax([document.getElementById('hint-text')]);
 
         setTimeout(() => { focusDefaultNode(); refreshMathJaxPreview(); }, 50);
         startQuestionTimer();
@@ -2959,7 +2961,6 @@ function buildTransCandidates(q) {
             } else {
                 showStepError(document.getElementById('group-arrangement'));
                 document.getElementById('hint-text').innerHTML = HINT_DATA.arrangementError;
-                startQuestionTimer(); // 正解時：タイマーをリセットして再開
             }
         } else if (currentStage === 'answer') {
             let userAns = getUserAnswerBySide('answer', 'right');
