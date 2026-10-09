@@ -1142,24 +1142,34 @@
                 <div class="start-title-sub">Step7：かっこがある方程式</div>
             </div>
             <div class="start-menu">
-                <button class="start-menu-btn" onclick="showScreen('screen-mondai'); renderMondaiGrid();">📚 問題選択</button>
+                <button class="start-menu-btn" onclick="openMondaiSelect()">📚 問題選択</button>
                 <button class="start-menu-btn" onclick="enterKenteiScreen()">📝 検定</button>
                 <button class="start-menu-btn" onclick="showScreen('screen-kiroku'); renderKirokuScreen();">🏆 記録</button>
                 <button class="start-menu-btn" onclick="showScreen('screen-settei')">⚙️ 設定</button>
             </div>
         </div>
 
-        <div id="screen-mondai" class="app-screen" style="display:none;">
+        <div id="screen-mondai-groups" class="app-screen" style="display:none;">
             <div class="sub-screen-header">
-                <h1>📚 問題選択</h1>
+                <h1>📚 問題選択（グループを選ぼう）</h1>
             </div>
-            <div id="mondai-grid-wrap" class="mondai-grid"></div>
-            <div style="text-align:center; margin-top:8px;">
+            <div id="group-select-wrap" class="group-select-list"></div>
+            <div style="text-align:center; margin-top:16px;">
                 <button class="btn-tutorial-hud-secondary" onclick="showScreen('screen-start')">←開始画面へ</button>
             </div>
         </div>
 
-        <div id="screen-kiroku" class="app-screen" style="display:none; align-items:center; justify-content:center; gap:20px;">
+        <div id="screen-mondai" class="app-screen" style="display:none;">
+            <div class="sub-screen-header">
+                <h1 id="mondai-group-title">📚 問題選択</h1>
+            </div>
+            <div id="mondai-grid-wrap" class="mondai-grid"></div>
+            <div style="text-align:center; margin-top:8px;">
+                <button class="btn-tutorial-hud-secondary" id="btn-back-from-mondai" onclick="backFromMondaiGrid()">←グループ選択へ</button>
+            </div>
+        </div>
+
+        <div id="screen-kiroku" class="app-screen" style="display:none; align-items:center; justify-content:center; gap:16px;">
             <div class="sub-screen-header"><h1>🏆 記録</h1></div>
             <div class="kiroku-cards">
                 <div class="kiroku-card">
@@ -1178,6 +1188,7 @@
                     <div class="kiroku-card-label">検定：連続正解記録</div>
                     <div class="kiroku-card-value" id="kiroku-streak">現在：0問／最高：0問</div>
                 </div>
+
             </div>
             <button class="btn-tutorial-hud-secondary" onclick="showScreen('screen-start')">←開始画面へ</button>
         </div>
@@ -1222,37 +1233,37 @@
             </div>
             
             <div style="display: flex; align-items: center; gap: 8px;">
-            <div class="number-field-wrapper" id="wrapper-area">
-                <input type="text" id="number-field" class="login-input" placeholder="生徒番号" readonly autocomplete="off">
-                
-                <div class="input-tooltip" id="number-tooltip">
-                    <div class="tooltip-hint">
-                        💡 1年2組34番 → 「1234」<br>
-                        <span style="font-size: 10px; color: #888;">クラス: 1〜5組 / 番号: 01〜35</span>
-                    </div>
+                <div class="number-field-wrapper" id="wrapper-area">
+                    <input type="text" id="number-field" class="login-input" placeholder="生徒番号" readonly autocomplete="off">
                     
-                    <div class="keypad-mini">
-                        <button class="key-mini" onclick="pressNum('7')">7</button>
-                        <button class="key-mini" onclick="pressNum('8')">8</button>
-                        <button class="key-mini" onclick="pressNum('9')">9</button>
+                    <div class="input-tooltip" id="number-tooltip">
+                        <div class="tooltip-hint">
+                            💡 1年2組34番 → 「1234」<br>
+                            <span style="font-size: 10px; color: #888;">クラス: 1〜5組 / 番号: 01〜35</span>
+                        </div>
                         
-                        <button class="key-mini" onclick="pressNum('4')">4</button>
-                        <button class="key-mini" onclick="pressNum('5')">5</button>
-                        <button class="key-mini" onclick="pressNum('6')">6</button>
+                        <div class="keypad-mini">
+                            <button class="key-mini" onclick="pressNum('7')">7</button>
+                            <button class="key-mini" onclick="pressNum('8')">8</button>
+                            <button class="key-mini" onclick="pressNum('9')">9</button>
+                            
+                            <button class="key-mini" onclick="pressNum('4')">4</button>
+                            <button class="key-mini" onclick="pressNum('5')">5</button>
+                            <button class="key-mini" onclick="pressNum('6')">6</button>
+                            
+                            <button class="key-mini" onclick="pressNum('1')">1</button>
+                            <button class="key-mini" onclick="pressNum('2')">2</button>
+                            <button class="key-mini" onclick="pressNum('3')">3</button>
+                            
+                            <button class="key-mini" onclick="pressNum('0')">0</button>
+                            <button class="key-mini btn-clear" onclick="pressClear()">⌫ 消す</button>
+                        </div>
                         
-                        <button class="key-mini" onclick="pressNum('1')">1</button>
-                        <button class="key-mini" onclick="pressNum('2')">2</button>
-                        <button class="key-mini" onclick="pressNum('3')">3</button>
-                        
-                        <button class="key-mini" onclick="pressNum('0')">0</button>
-                        <button class="key-mini btn-clear" onclick="pressClear()">⌫ 消す</button>
+                        <div class="error-msg" id="error-display">存在しない番号です</div>
                     </div>
-                    
-                    <div class="error-msg" id="error-display">存在しない番号です</div>
                 </div>
-            </div>
                 <button id="send-btn" onclick="manualSendToGoogleForm()" disabled>送信</button>
-        </div>
+            </div>
         </div>
         
         <div class="main-content" id="quiz-screen">
@@ -1266,10 +1277,19 @@
                     <div class="formula-display" id="formula-box"></div>
 
                     <div class="input-block-container" id="dynamic-input-container">
-                        <!-- ① かっこをはずす -->
+                        <div class="input-box-group active-focus" id="group-clear-denom">
+                            <div class="input-label">
+                                <span>分母をはらう</span>
+                                <span class="step-badge" id="badge-clear-denom">入力中</span>
+                            </div>
+                            <div id="math-preview-clear-denom" class="mathjax-render-zone"></div>
+                            <div id="math-editor-clear-denom-left" class="math-editor-container"></div>
+                            <div id="math-editor-clear-denom-right" class="math-editor-container"></div>
+                        </div>
+
                         <div class="input-box-group locked-disabled" id="group-expansion">
                             <div class="input-label">
-                                <span>① かっこをはずす</span>
+                                <span>かっこをはずす</span>
                                 <span class="step-badge" id="badge-expansion">ロック中</span>
                             </div>
                             <div id="math-preview-expansion" class="mathjax-render-zone"></div>
@@ -1277,10 +1297,9 @@
                             <div id="math-editor-expansion-right" class="math-editor-container"></div>
                         </div>
 
-                        <!-- ② 移項 -->
                         <div class="input-box-group locked-disabled" id="group-transposition">
                             <div class="input-label">
-                                <span>② 移項</span>
+                                <span>移項</span>
                                 <span class="step-badge" id="badge-transposition">ロック中</span>
                             </div>
                             <div id="math-preview-transposition" class="mathjax-render-zone"></div>
@@ -1288,10 +1307,9 @@
                             <div id="math-editor-transposition-right" class="math-editor-container"></div>
                         </div>
 
-                        <!-- ③ 整理 -->
                         <div class="input-box-group locked-disabled" id="group-arrangement">
                             <div class="input-label">
-                                <span>③ 整理</span>
+                                <span>整理</span>
                                 <span class="step-badge" id="badge-arrangement">ロック中</span>
                             </div>
                             <div id="math-preview-arrangement" class="mathjax-render-zone"></div>
@@ -1299,18 +1317,18 @@
                             <div id="math-editor-arrangement-right" class="math-editor-container"></div>
                         </div>
 
-                        <!-- ④ 解 -->
                         <div class="input-box-group locked-disabled" id="group-answer">
                             <div class="input-label">
-                                <span>④ 解</span>
+                                <span>解</span>
                                 <span class="step-badge" id="badge-answer">ロック中</span>
                             </div>
                             <div id="math-preview-answer" class="mathjax-render-zone"></div>
                             <div id="math-editor-answer-right" class="math-editor-container"></div>
                         </div>
-                    </div>
-                    
-                    <div class="result-message" id="result-message"></div>
+                    </div> <!-- /#dynamic-input-container の閉じタグ -->
+
+                    <!-- ↓↓↓ 以下の1行をここに追加してください ↓↓↓ -->
+                    <div id="result-message" class="result-message"></div>
                 </div>
 
                 <div class="right-panel">
@@ -1353,7 +1371,8 @@
                 </div>
             </div>
         </div>
-        </div>
+
+                </div>
 
         <footer>
             © 中原先生の数学部屋
@@ -1362,254 +1381,938 @@
 
     <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
 
-    <script>
-        const GOOGLE_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfRKzlMtAWPnB3o7b5qDwBnuf8Y90WKeo6uuS8pZlS2-fgS0w/formResponse';
-        const FORM_NUM_ID         = 'entry.351767117';   // 問題番号
-        const FORM_NAME_ID        = 'entry.785004272';   // 名前
-        const FORM_TIME_ID        = 'entry.1218861448';  // クリアタイム
-        const FORM_STAGE_COUNT_ID = 'entry.2033679053';  // 正解数
+<script>
+    /* ==========================================================================
+       1. グローバル変数・連携用設定【共通・固有】
+       ========================================================================== */
 
-        let startTime              = 0;
-        let timerInterval          = null;
-        let bestNormalTimeMs       = null;
-        let kenteiAttemptCount     = 0;
-        let lastClearTimeText      = "";
-        let elapsedBeforeResume    = 0;
+    /* --- 共通の変数（タイマー・進行状態・画面部品・練習モード） --- */
+    let startTime              = 0;
+    let timerInterval          = null;
+    let bestNormalTimeMs       = null;
+    let kenteiAttemptCount     = 0;
+    let lastClearTimeText      = "";
+    let elapsedBeforeResume    = 0;
 
-        let gameStarted            = false;
-        let isCompleted            = false;
-        let isCorrectState         = false;
-        const KENTEI_TIME_LIMIT_MS = 6 * 60 * 1000; // 検定の制限時間（6分）
-        let quizData               = [];
-        let currentQuestionIndex   = 0;
-        let score                  = 0;
-        let currentQuestionWrongCount = 0;
+    let gameStarted            = false;
+    let isCompleted            = false;
+    let isCorrectState         = false;
+    let quizData               = [];
+    let currentQuestionIndex   = 0;
+    let score                  = 0;
+    let currentQuestionWrongCount = 0;
 
-        let currentStage           = 'expansion'; // 'expansion'(かっこ), 'transposition'(移項), 'arrangement'(整理), 'answer'(解)
-        let activeEditorId         = 'math-editor-expansion-left';
+    let questionTimerId        = null;
+    let currentControlState    = 'start';
 
-        let questionTimerId        = null;
-        let questionTimeLeft       = 30;
-        let currentControlState    = 'start';
+    const container            = document.getElementById('app-container');
+    const formulaBox           = document.getElementById('formula-box');
+    const actionBtn            = document.getElementById('action-btn');
+    const clearBtn             = document.getElementById('clear-btn');
+    const clearAllBtn          = document.getElementById('clear-all-btn');
+    const resultMsgEl          = document.getElementById('result-message');
+    const progressEl           = document.getElementById('progress');
 
-        const container            = document.getElementById('app-container');
-        const formulaBox           = document.getElementById('formula-box');
-        const actionBtn            = document.getElementById('action-btn');
-        const clearBtn             = document.getElementById('clear-btn');
-        const clearAllBtn          = document.getElementById('clear-all-btn');
-        const resultMsgEl          = document.getElementById('result-message');
-        const progressEl           = document.getElementById('progress');
+    let mathjaxPromise         = Promise.resolve();
 
-        let mathjaxPromise         = Promise.resolve();
+    const numberField = document.getElementById('number-field');
+    const tooltip = document.getElementById('number-tooltip');
+    const errorDisplay = document.getElementById('error-display');
+    let isConfirmed = false;
 
-        const numberField = document.getElementById('number-field');
-        const tooltip = document.getElementById('number-tooltip');
-        const errorDisplay = document.getElementById('error-display');
-        let isConfirmed = false;
+    let practiceMode              = false;
+    let practiceCurrentGroup      = null;
+    let practiceCurrentIndex      = null;
+    let currentMondaiGroup        = null;
+    let savedQuizData              = null;
+    let savedCurrentQuestionIndex  = 0;
+    let savedTimerDisplayText      = null;
+    let savedBestDisplayText       = null;
 
-        function updateMathJax(elements) {
-            if (window.MathJax && MathJax.typesetPromise) {
-                if (MathJax.typesetClear) MathJax.typesetClear(elements);
-                mathjaxPromise = mathjaxPromise.then(() => MathJax.typesetPromise(elements))
-                    .catch((err) => console.log("MathJax typesetting failed: " + err.message));
-            }
-        }
+    let correctStreakCount = 0;
+    let maxStreakCount = 0;
+    let pendingResetType = null;
 
-        function resizeApp() {
-            const scale = Math.min(window.innerWidth / 960, window.innerHeight / 640, 1);
-            container.style.transform = `scale(${scale})`;
-        }
-        window.addEventListener('resize', resizeApp);
-        window.addEventListener('DOMContentLoaded', () => {
-            resizeApp();
-            initValidationControls();
-            quizData = generateQuizData();
-            loadPracticeProgress();
-            loadKenteiRecords();
-            if (bestNormalTimeMs !== null) {
-                const bestDisplayEl = document.getElementById('best-normal-display');
-                if (bestDisplayEl) bestDisplayEl.innerText = `ベストタイム(4問): ${formatMs(bestNormalTimeMs)}`;
-            }
-            showStartLayout();
+
+    /* --- 固有の変数・設定値（フォーム連携・制限時間・ステージ名・保存キー・グループ構成） --- */
+    const GOOGLE_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfRKzlMtAWPnB3o7b5qDwBnuf8Y90WKeo6uuS8pZlS2-fgS0w/formResponse';
+    const FORM_NUM_ID         = 'entry.351767117';   // 問題番号
+    const FORM_TIME_ID        = 'entry.1218861448';  // クリアタイム
+    const FORM_STAGE_COUNT_ID = 'entry.2033679053';  // 正解数
+
+    const KENTEI_TIME_LIMIT_MS = 6 * 60 * 1000; // 検定の制限時間（6分）
+    const QUESTION_TIME_LIMIT_SEC = 30;          // 1問の制限秒数
+    const KENTEI_GROUPS = ['A'];                 // 検定で出すグループ（このアプリはグループA のみ）
+    const QUESTION_COUNT = 4;                    // 検定の問題数（generateQuizData の出題数と一致させる）
+    let questionTimeLeft       = QUESTION_TIME_LIMIT_SEC;
+
+    const STAGE_ORDER   = ['clear-denom', 'expansion', 'transposition', 'arrangement', 'answer']; // 【全アプリ共通・変更しない】
+    const ACTIVE_STAGES = ['expansion', 'transposition', 'arrangement', 'answer']; // このアプリで使うステージ（STAGE_ORDER の並びで指定）
+    let currentStage           = ACTIVE_STAGES[0];
+    let activeEditorId         = stageFirstEditorId(ACTIVE_STAGES[0]);
+
+    let practiceProgress = { A: [] };
+    const PRACTICE_PROGRESS_KEY = 'kakko_ga_aru_practice_progress_v1';
+    const KENTEI_RECORDS_KEY = 'kakko_ga_aru_kentei_records_v1';
+    /* ==========================================================================
+       2. 画面・表示【共通】
+       ========================================================================== */
+
+    /* --- 画面サイズに合わせた全体の拡大縮小（resizeApp） --- */
+    function resizeApp() {
+        const scale = Math.min(window.innerWidth / 960, window.innerHeight / 640, 1);
+        container.style.transform = `scale(${scale})`;
+    }
+
+    /* --- 画面の切り替え（showScreen） --- */
+    function showScreen(screenId) {
+        document.querySelectorAll('.app-screen').forEach(el => {
+            el.style.display = 'none';
         });
+        const target = document.getElementById(screenId);
+        if (target) target.style.display = 'flex';
+    }
 
-        function refreshMathJaxPreview() {
-            if (!quizData[currentQuestionIndex]) return;
-
-            const buildPreview = (stage, leftEdId, rightEdId, leftDefault, rightDefault, noSmallBox = false) => {
-                const leftEd = document.getElementById(leftEdId);
-                const rightEd = document.getElementById(rightEdId);
-                const preview = document.getElementById(`math-preview-${stage}`);
-                const group = document.getElementById(`group-${stage}`);
-                if (!preview) return;
-
-                const getVal = ed => {
-                    let val = "";
-                    if (ed) ed.childNodes.forEach(n => { if (n.value) val += n.value; });
-                    return val;
-                };
-                const leftVal = getVal(leftEd);
-                const rightVal = getVal(rightEd);
-                const isCorrect = group && group.classList.contains('locked-correct');
-
-                let leftHtml, rightHtml;
-
-                if (isCorrect || noSmallBox) {
-                    leftHtml = leftVal ? `$${leftVal}$` : `$${leftDefault}$`;
-                    rightHtml = rightVal ? `$${rightVal}$` : (noSmallBox && !rightVal ? `<span class="placeholder-text">${rightDefault}</span>` : `$${rightDefault}$`);
-                } else {
-                    const leftActive = activeEditorId === leftEdId ? 'active-side' : '';
-                    const rightActive = activeEditorId === rightEdId ? 'active-side' : '';
-                    leftHtml = `<span class="step-box-small ${leftActive}">${leftVal ? `$${leftVal}$` : `<span class="placeholder-text">${leftDefault}</span>`}</span>`;
-                    rightHtml = `<span class="step-box-small ${rightActive}">${rightVal ? `$${rightVal}$` : `<span class="placeholder-text">${rightDefault}</span>`}</span>`;
-                }
-
-                preview.innerHTML = `
-                    <div class="equation-grid">
-                        <div class="eq-left">${leftHtml}</div>
-                        <div class="eq-equal">$=$</div>
-                        <div class="eq-right">${rightHtml}</div>
-                    </div>`;
-            };
-
-            buildPreview('expansion', 'math-editor-expansion-left', 'math-editor-expansion-right', '左辺', '右辺');
-            buildPreview('transposition', 'math-editor-transposition-left', 'math-editor-transposition-right', '左辺', '右辺');
-            buildPreview('arrangement', 'math-editor-arrangement-left', 'math-editor-arrangement-right', '左辺', '右辺');
-            buildPreview('answer', null, 'math-editor-answer-right', 'x', 'ここに解を入力', true);
-
-            updateMathJax([
-                document.getElementById('math-preview-expansion'),
-                document.getElementById('math-preview-transposition'),
-                document.getElementById('math-preview-arrangement'),
-                document.getElementById('math-preview-answer')
-            ]);
+    /* --- MathJaxによる数式の再描画（updateMathJax） --- */
+    function updateMathJax(elements) {
+        if (window.MathJax && MathJax.typesetPromise) {
+            if (MathJax.typesetClear) MathJax.typesetClear(elements);
+            mathjaxPromise = mathjaxPromise.then(() => MathJax.typesetPromise(elements))
+                .catch((err) => console.log("MathJax typesetting failed: " + err.message));
         }
+    }
+    /* ==========================================================================
+       3. タイマー【共通】
+       ========================================================================== */
 
-        function showStartLayout() {
-            window.isAlreadySubmitted = false;
+    /* --- 検定タイマーの開始（startTimerClock） --- */
+    function startTimerClock() {
+        if (practiceMode) return;
+        isCorrectState = false;
+        lastClearTimeText = "";
+        elapsedBeforeResume = 0;
+        
+        startTime = Date.now();
+        clearInterval(timerInterval);
+        timerInterval = setInterval(updateTimer, 100);
+        document.getElementById('best-update-message').innerText = "";
+        const sendBtn = document.getElementById('send-btn');
+        if (sendBtn) {
+            sendBtn.disabled = true;
+            sendBtn.textContent = "送信";
+        }
+        if (numberField) numberField.disabled = false;
+    }
+
+    /* --- 検定タイマーの表示更新（updateTimer） --- */
+    function updateTimer() {
+        const diff = (Date.now() - startTime) + elapsedBeforeResume;
+        if (diff >= KENTEI_TIME_LIMIT_MS) { handleKenteiTimeUp(); return; }
+        const min = Math.floor(diff / 60000);
+        const sec = Math.floor((diff % 60000) / 1000);
+        const msec = Math.floor((diff % 1000) / 100);
+        const minStr = String(min).padStart(2, '0');
+        const secStr = String(sec).padStart(2, '0');
+        document.getElementById('timer-display').innerText = `⏱️ ${minStr}:${secStr}.${msec}`;
+    }
+
+    /* --- 検定の制限時間切れ処理（handleKenteiTimeUp） --- */
+    function handleKenteiTimeUp() {
+        if (!gameStarted || isCompleted || practiceMode) return;
+        clearInterval(timerInterval);
+        clearInterval(questionTimerId);
+        isCompleted = true;
+        document.getElementById('timer-display').innerText = `⏱️ ${formatMs(KENTEI_TIME_LIMIT_MS)}`;
+
+    // 時間切れは連続正解記録をリセット
+        correctStreakCount = 0;
+        saveKenteiRecords();
+
+        if (document.activeElement) document.activeElement.blur();
+        stopTimerClockAndEvaluate(true);   // 送信処理は全問終了時と共通
+        resultMsgEl.textContent = `時間切れ！全 ${quizData.length} 問中 ${score} 問ノーミス正解`;
+        resultMsgEl.className = "result-message incorrect";
+        progressEl.textContent = "時間切れ！";
+        document.getElementById('hint-text').innerHTML = HINT_DATA.allFinished;
+        updateControlKeysState('finished'); updateSendButtonState();
+    }
+
+    /* --- タイマー停止とクリア判定（stopTimerClockAndEvaluate） --- */
+    function stopTimerClockAndEvaluate(isTimeUp = false) {
+        clearInterval(timerInterval);
+        isCorrectState = true; 
+        clearInterval(questionTimerId);
+        document.getElementById('countdown-timer').style.display = 'none';
+        const finalTimeStr = document.getElementById('timer-display').innerText.replace('⏱️ ', '');
+        lastClearTimeText = finalTimeStr;
+
+    const totalElapsedTimeMs = isTimeUp ? KENTEI_TIME_LIMIT_MS : ((Date.now() - startTime) + elapsedBeforeResume);
+    elapsedBeforeResume = totalElapsedTimeMs;
+
+    if (!practiceMode) {
+        kenteiAttemptCount++;
+        saveKenteiRecords();
+    }
+
+    if (bestNormalTimeMs === null || totalElapsedTimeMs < bestNormalTimeMs) {
+        bestNormalTimeMs = totalElapsedTimeMs;
+        document.getElementById('best-normal-display').innerText = bestTimeText(finalTimeStr);
+        document.getElementById('best-update-message').innerText = isTimeUp ? "" : "🎉 ベスト更新！";
+        saveKenteiRecords();
+    }
+
+        const numInput = numberField ? numberField.value.trim() : "";
+        const isValidNum = (isConfirmed && /^\d{4}$/.test(numInput));
+        
+        if (isValidNum && !window.isAlreadySubmitted) {
+            executeFormSubmit(numInput, lastClearTimeText, score);
+            window.isAlreadySubmitted = true; 
+            
             const sendBtnTop = document.getElementById('send-btn');
+            const sendBtnBottom = document.getElementById('action-btn');
             if (sendBtnTop) {
-                sendBtnTop.textContent = "送信";
+                sendBtnTop.textContent = "完了";
                 sendBtnTop.disabled = true;
             }
-            if (numberField) {
-                numberField.disabled = false;
+            if (sendBtnBottom) {
+                sendBtnBottom.textContent = "完了";
+                sendBtnBottom.disabled = true;
+                sendBtnBottom.className = "key clear-btn";
             }
-
-            gameStarted = false;
-            isCompleted = false;
-            progressEl.textContent = "スタートボタンを押してください";
-            formulaBox.innerHTML = practiceMode
-                ? `<span style="color:#aaa; font-size:24px;">【スタート】を押して挑戦しよう</span>`
-                : `<span style="color:#aaa; font-size:24px;">生徒番号を入力→【スタート】</span>`;
-            document.getElementById('hint-text').innerHTML = HINT_MASTER.start;
-            updateMathJax([document.getElementById('hint-text')]);
-
-            currentStage = 'expansion';
-            activeEditorId = 'math-editor-expansion-left';
-
-            document.getElementById('badge-expansion').textContent = "ロック中";
-            document.getElementById('badge-transposition').textContent = "ロック中";
-            document.getElementById('badge-arrangement').textContent = "ロック中";
-            document.getElementById('badge-answer').textContent = "ロック中";
-
-            document.getElementById('group-expansion').className = "input-box-group locked-disabled";
-            document.getElementById('group-transposition').className = "input-box-group locked-disabled";
-            document.getElementById('group-arrangement').className = "input-box-group locked-disabled";
-            document.getElementById('group-answer').className = "input-box-group locked-disabled";
-
-            ['math-editor-expansion-left', 'math-editor-expansion-right',
-             'math-editor-transposition-left', 'math-editor-transposition-right',
-             'math-editor-arrangement-left', 'math-editor-arrangement-right',
-             'math-editor-answer-right'].forEach(id => {
-                const ed = document.getElementById(id);
-                if (ed) {
-                    ed.innerHTML = '';
-                    ed.classList.remove('wide-fraction-mode');
-                    createTextBlock(ed, "");
-                }
-            });
-            updateInputWidths();
-
-            if (!practiceMode) {
-                const timerDisplayEl = document.getElementById('timer-display');
-                if (timerDisplayEl) timerDisplayEl.innerText = '⏱️ 00:00.0';
-            }
-
-            updateControlKeysState('start');
-            resultMsgEl.textContent = "";
-
-            refreshMathJaxPreview();
+            if (numberField) numberField.disabled = true;
+        } else {
+            window.isAlreadySubmitted = false;
+            if (numberField) numberField.disabled = false;
         }
         
-        function startQuizGame() {
-            window.isAlreadySubmitted = false; 
-            gameStarted = true;
-            score = 0;
-            currentQuestionIndex = 0;
-            startTimerClock();       
-            
-            if (numberField) numberField.disabled = true;
-            if (tooltip) tooltip.classList.remove('show');
+        updateSendButtonState();
+    }
 
-            loadQuestion(); 
-            if (actionBtn) actionBtn.className = "key action-btn judge-mode"; 
+    /* --- 1問ごとのタイマー開始（startQuestionTimer） --- */
+    function startQuestionTimer() {
+        clearInterval(questionTimerId);
+        if (practiceMode) {
+            document.getElementById('countdown-timer').style.display = 'none';
+            return;
+        }
+        if (!gameStarted || isCompleted) {
+            document.getElementById('countdown-timer').style.display = 'none';
+            return;
         }
 
-        function loadQuestion() {
-            isCompleted = false;
-            currentQuestionWrongCount = 0;
-            resultMsgEl.textContent = "";
-            resultMsgEl.className = "result-message";
+        if (currentQuestionWrongCount >= 2) {
+            document.getElementById('countdown-timer').style.display = 'inline-block';
+            document.getElementById('countdown-timer').textContent = "じっくりタイム";
+            return;
+        }
+        questionTimeLeft = QUESTION_TIME_LIMIT_SEC;
+        updateQuestionTimerUI();
+        document.getElementById('countdown-timer').style.display = 'inline-block';
+        
+        questionTimerId = setInterval(() => {
+            questionTimeLeft--;
+            updateQuestionTimerUI();
+            if (questionTimeLeft <= 0) {
+                handleQuestionTimeout();
+            }
+        }, 1000);
+    }
 
-            currentStage = 'expansion';
-            activeEditorId = 'math-editor-expansion-left';
+    /* --- 1問ごとのタイマー表示更新（updateQuestionTimerUI） --- */
+    function updateQuestionTimerUI() {
+        const el = document.getElementById('countdown-timer');
+        if (el) el.textContent = `残り ${questionTimeLeft}秒`;
+    }
 
-            document.getElementById('badge-expansion').textContent = "入力中";
-            document.getElementById('badge-transposition').textContent = "ロック中";
-            document.getElementById('badge-arrangement').textContent = "ロック中";
-            document.getElementById('badge-answer').textContent = "ロック中";
+    /* --- ミリ秒の時間表示への変換（formatMs） --- */
+    function formatMs(ms) {
+        const totalMs = Math.max(0, Math.round(ms));
+        const min = Math.floor(totalMs / 60000);
+        const sec = Math.floor((totalMs % 60000) / 1000);
+        const msec = Math.floor((totalMs % 1000) / 100);
+        return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}.${msec}`;
+    }
 
-            document.getElementById('group-expansion').className = "input-box-group active-focus";
-            document.getElementById('group-transposition').className = "input-box-group locked-disabled";
-            document.getElementById('group-arrangement').className = "input-box-group locked-disabled";
-            document.getElementById('group-answer').className = "input-box-group locked-disabled";
+    /* --- ベストタイム表示文字列（問題数は QUESTION_COUNT から） --- */
+    function bestTimeText(timeStr) {
+        return `ベストタイム(${QUESTION_COUNT}問): ${timeStr}`;
+    }
+    /* ==========================================================================
+       4. 生徒番号入力・記録送信【共通】
+       ========================================================================== */
 
-            ['math-editor-expansion-left', 'math-editor-expansion-right',
-             'math-editor-transposition-left', 'math-editor-transposition-right',
-             'math-editor-arrangement-left', 'math-editor-arrangement-right',
-             'math-editor-answer-right'].forEach(id => {
-                const ed = document.getElementById(id);
-                if (ed) { ed.innerHTML = ''; createTextBlock(ed, ""); }
-            });
-            updateInputWidths();
+    /* --- 生徒番号入力欄の初期設定（initValidationControls） --- */
+    function initValidationControls() {
+        if (!numberField) return;
 
-            updateControlKeysState('playing');
+        numberField.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (isConfirmed || numberField.value !== '') {
+                numberField.value = '';
+                isConfirmed = false;
+                errorDisplay.style.display = 'none';
+                updateSendButtonState();
+            }
+            tooltip.classList.add('show');
+            numberField.focus();
+        });
 
-            const q = quizData[currentQuestionIndex];
-            progressEl.textContent = practiceMode
-                ? `問題 ${practiceCurrentIndex + 1} / ${FIXED_PROBLEMS.length}`
-                : `第 ${currentQuestionIndex + 1} 問 / 全 4 問`;
+        tooltip.addEventListener('click', (e) => { e.stopPropagation(); });
 
-            formulaBox.innerHTML = `
-                <div class="equation-grid">
-                    <div class="eq-left">$${q.leftPart}$</div>
-                    <div class="eq-equal">$=$</div>
-                    <div class="eq-right">$${q.rightPart}$</div>
-                </div>`;
-            updateMathJax([formulaBox]);
+        document.addEventListener('click', (e) => {
+            if (tooltip.classList.contains('show') && !isConfirmed) {
+                numberField.value = '';
+                errorDisplay.style.display = 'none';
+                tooltip.classList.remove('show');
+                numberField.blur();
+                updateSendButtonState();
+            }
+        });
+    }
 
-            document.getElementById('hint-text').innerHTML = HINT_MASTER.expansionInit;
-            updateMathJax([document.getElementById('hint-text')]);
+    /* --- 生徒番号の数字入力（pressNum） --- */
+    function pressNum(num) {
+        if (!numberField) return;
+        let currentVal = numberField.value;
 
-            setTimeout(() => {
-                focusDefaultNode();
-                refreshMathJaxPreview();
-            }, 50);
-
-            startQuestionTimer();
+        if (currentVal.length === 4) {
+            currentVal = '';
+            errorDisplay.style.display = 'none';
         }
 
+        currentVal += num;
+        numberField.value = currentVal;
+        updateSendButtonState();
+
+        if (currentVal.length === 4) {
+            const isValid = /^(9999|[1-3][1-5](0[1-9]|[1-2][0-9]|3[0-5]))$/.test(currentVal);
+            if (isValid) completeInput(currentVal); 
+            else errorDisplay.style.display = 'block';
+        }
+    }
+
+    /* --- 生徒番号の確定（completeInput） --- */
+    function completeInput(value) {
+        isConfirmed = true;
+        tooltip.classList.remove('show');
+        numberField.blur();
+        updateSendButtonState();
+    }
+
+    /* --- 生徒番号の1文字削除（pressClear） --- */
+    function pressClear() {
+        if (!numberField) return;
+        let currentVal = numberField.value;
+        if (currentVal.length > 0) {
+            numberField.value = currentVal.slice(0, -1);
+        }
+        errorDisplay.style.display = 'none';
+        isConfirmed = false;
+        updateSendButtonState();
+    }
+
+    /* --- 送信ボタンの状態更新（updateSendButtonState） --- */
+    function updateSendButtonState() {
+        if (window.isAlreadySubmitted) return;
+
+        const numVal = numberField ? numberField.value.trim() : "";
+        const sendBtnTop = document.getElementById('send-btn');       
+        const sendBtnBottom = document.getElementById('action-btn');   
+    
+        if (sendBtnTop && sendBtnTop.textContent === "完了") return;
+        const canSend = (isCorrectState && numVal !== "" && /^\d{4}$/.test(numVal) && isConfirmed);
+        
+        if (sendBtnTop) sendBtnTop.disabled = !canSend;
+        if (currentControlState === 'finished') {
+            if (sendBtnBottom) {
+                sendBtnBottom.disabled = !canSend;
+                if (!canSend) sendBtnBottom.className = "key clear-btn"; 
+                else sendBtnBottom.className = "key action-btn judge-mode"; 
+            }
+        }
+    }
+
+    /* --- Googleフォームへの送信実行（executeFormSubmit） --- */
+    function executeFormSubmit(num, timeText, stageCount) {
+
+        const form = document.createElement('form');
+        form.action = GOOGLE_FORM_URL;
+        form.method = 'POST';
+        form.target = 'hidden_iframe';
+        
+        const fields = {
+            [FORM_NUM_ID]:         num,                               
+            [FORM_TIME_ID]:        timeText,    
+            [FORM_STAGE_COUNT_ID]: stageCount                  
+        };
+        for (const key in fields) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = fields[key];
+            form.appendChild(input);
+        }
+        document.body.appendChild(form);
+        try { form.submit(); } catch (e) { console.error('送信エラー', e); }
+        
+        setTimeout(() => { document.body.removeChild(form); }, 1000);
+    }
+
+    /* --- 送信ボタン押下時の送信処理（manualSendToGoogleForm） --- */
+    function manualSendToGoogleForm() {
+        const numInput = numberField ? numberField.value.trim() : "";
+        if (numInput === "" || !isConfirmed || !/^\d{4}$/.test(numInput) || !isCorrectState || window.isAlreadySubmitted) {
+            return;
+        }
+        
+        const sendBtnTop = document.getElementById('send-btn');
+        const sendBtnBottom = document.getElementById('action-btn'); 
+        
+        if (sendBtnTop) {
+            sendBtnTop.textContent = "送信中";
+            sendBtnTop.disabled = true; 
+        }
+        if (currentControlState === 'finished' && sendBtnBottom) {
+            sendBtnBottom.textContent = "送信中";
+            sendBtnBottom.disabled = true;
+            sendBtnBottom.className = "key clear-btn"; 
+        }
+        
+        const currentTimerText = document.getElementById('timer-display').innerText.replace('⏱️ ', '');
+        const timeToSend = lastClearTimeText || currentTimerText;
+        executeFormSubmit(numInput, timeToSend, score);
+        window.isAlreadySubmitted = true;
+        
+        if (numberField) numberField.disabled = true;
+        if (tooltip) tooltip.classList.remove('show');
+    
+        setTimeout(() => { 
+            if (sendBtnTop) sendBtnTop.textContent = "完了"; 
+            if (currentControlState === 'finished' && sendBtnBottom) {
+                sendBtnBottom.textContent = "完了";
+                sendBtnBottom.className = "key clear-btn"; 
+            }
+        }, 1000);
+    }
+    /* ==========================================================================
+       5. 記録の保存・読み込み・記録画面【共通】
+       ========================================================================== */
+
+    /* --- 検定記録の読み込み（loadKenteiRecords） --- */
+    function loadKenteiRecords() {
+        try {
+            const raw = localStorage.getItem(KENTEI_RECORDS_KEY);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                bestNormalTimeMs = (typeof parsed.bestTimeMs === 'number') ? parsed.bestTimeMs : null;
+                correctStreakCount = (typeof parsed.streak === 'number') ? parsed.streak : 0;
+                maxStreakCount = (typeof parsed.maxStreak === 'number') ? parsed.maxStreak : 0;
+                kenteiAttemptCount = (typeof parsed.attempts === 'number') ? parsed.attempts : 0;
+                return;
+            }
+        } catch (e) { /* 読み込み失敗時は初期化 */ }
+        bestNormalTimeMs = null;
+        correctStreakCount = 0;
+        maxStreakCount = 0;
+        kenteiAttemptCount = 0;
+    }
+
+    /* --- 検定記録の保存（saveKenteiRecords） --- */
+    function saveKenteiRecords() {
+        try {
+            localStorage.setItem(KENTEI_RECORDS_KEY, JSON.stringify({ bestTimeMs: bestNormalTimeMs, streak: correctStreakCount, maxStreak: maxStreakCount, attempts: kenteiAttemptCount }));
+        } catch (e) { /* 保存失敗時は何もしない */ }
+    }
+
+    /* --- 問題選択の進捗の読み込み（loadPracticeProgress） --- */
+    function loadPracticeProgress() {
+        try {
+            const raw = localStorage.getItem(PRACTICE_PROGRESS_KEY);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                // 旧形式（グループ分けなしの配列）の保存データは、グループが1つだけのアプリでそのまま引き継ぐ
+                if (Array.isArray(parsed) && GROUP_ORDER.length === 1 && parsed.length === GROUP_INFO[GROUP_ORDER[0]].total) {
+                    practiceProgress = {};
+                    practiceProgress[GROUP_ORDER[0]] = parsed;
+                    return;
+                }
+                let ok = true;
+                GROUP_ORDER.forEach(g => {
+                    if (!Array.isArray(parsed[g]) || parsed[g].length !== GROUP_INFO[g].total) ok = false;
+                });
+                if (ok) { practiceProgress = parsed; return; }
+            }
+        } catch (e) { /* 読み込み失敗時は初期化 */ }
+        practiceProgress = {};
+        GROUP_ORDER.forEach(g => { practiceProgress[g] = new Array(GROUP_INFO[g].total).fill(0); });
+    }
+
+    /* --- 問題選択の進捗の保存（savePracticeProgress） --- */
+    function savePracticeProgress() {
+        try {
+            localStorage.setItem(PRACTICE_PROGRESS_KEY, JSON.stringify(practiceProgress));
+        } catch (e) { /* 保存失敗時は何もしない */ }
+    }
+
+    /* --- 問題選択の進捗のリセット（resetPracticeProgress） --- */
+    function resetPracticeProgress() {
+        GROUP_ORDER.forEach(g => { practiceProgress[g] = new Array(GROUP_INFO[g].total).fill(0); });
+        savePracticeProgress();
+    }
+
+    /* --- 記録画面の描画（renderKirokuScreen） --- */
+    function renderKirokuScreen() {
+        let totalPerfect = 0, totalMistake = 0;
+        GROUP_ORDER.forEach(g => {
+            const progress = practiceProgress[g] || [];
+            totalPerfect += progress.filter(v => v === 2).length;
+            totalMistake += progress.filter(v => v === 1).length;
+        });
+        const mondaiCountEl = document.getElementById('kiroku-mondai-count');
+        if (mondaiCountEl) mondaiCountEl.textContent = `★：${totalPerfect}問／☆：${totalMistake}問`;
+
+        GROUP_ORDER.forEach(g => {
+            const el = document.getElementById(`kiroku-group-${g.toLowerCase()}`);
+            if (!el) return;
+            const progress = practiceProgress[g] || [];
+            const starCount = progress.filter(v => v === 2).length;
+            el.textContent = `★：${starCount}問／全${GROUP_INFO[g].total}問`;
+        });
+
+        const bestTimeEl = document.getElementById('kiroku-best-time');
+        if (bestTimeEl) bestTimeEl.textContent = (bestNormalTimeMs !== null) ? formatMs(bestNormalTimeMs) : '--:--.-';
+
+        const streakEl = document.getElementById('kiroku-streak');
+        if (streakEl) streakEl.textContent = `現在：${correctStreakCount}問／最高：${maxStreakCount}問`;
+        const attemptsEl = document.getElementById('kiroku-attempts');
+        if (attemptsEl) attemptsEl.textContent = `${kenteiAttemptCount}回`;
+    }
+
+    /* --- リセット確認を開く（openResetConfirm） --- */
+    function openResetConfirm(type) {
+        pendingResetType = type;
+        const msgEl = document.getElementById('reset-confirm-message');
+        if (msgEl) {
+            msgEl.textContent = (type === 'mondai')
+                ? '問題選択の取り組み（★/☆の記録）がすべてリセットされます。よろしいですか？'
+                : '検定のベストタイム・連続正解記録・受検回数がリセットされます。よろしいですか？';
+        }
+        const modal = document.getElementById('reset-confirm-modal');
+        if (modal) modal.style.display = 'flex';
+    }
+
+    /* --- リセット確認を閉じる（closeResetConfirm） --- */
+    function closeResetConfirm() {
+        pendingResetType = null;
+        const modal = document.getElementById('reset-confirm-modal');
+        if (modal) modal.style.display = 'none';
+    }
+
+    /* --- リセットの実行（confirmReset） --- */
+    function confirmReset() {
+        if (pendingResetType === 'mondai') {
+            resetPracticeProgress();
+        } else if (pendingResetType === 'kiroku') {
+            bestNormalTimeMs = null;
+            correctStreakCount = 0;
+            maxStreakCount = 0;
+            kenteiAttemptCount = 0;
+            saveKenteiRecords();
+            if (!practiceMode) {
+                const bestDisplayEl = document.getElementById('best-normal-display');
+                if (bestDisplayEl) bestDisplayEl.innerText = bestTimeText('--:--.-');
+            }
+        }
+        closeResetConfirm();
+    }
+    /* ==========================================================================
+       6. 問題選択・練習モード【共通】
+       ========================================================================== */
+
+    /* --- 検定画面への移行（enterKenteiScreen） --- */
+    function enterKenteiScreen() {
+        restartQuiz();
+        showScreen('screen-kentei');
+    }
+
+    /* --- グループの解放判定（isGroupUnlocked） --- */
+    function isGroupUnlocked(group) {
+        const idx = GROUP_ORDER.indexOf(group);
+        if (idx <= 0) return true;
+        const prevGroup = GROUP_ORDER[idx - 1];
+        const prevInfo = GROUP_INFO[prevGroup];
+        const prevProgress = practiceProgress[prevGroup] || [];
+        for (let i = 0; i < prevInfo.patternsPerSet; i++) {
+            if (prevProgress[i] !== 2) return false;
+        }
+        return true;
+    }
+
+    /* --- グループ選択画面の描画（renderGroupSelectScreen） --- */
+    function renderGroupSelectScreen() {
+        const wrap = document.getElementById('group-select-wrap');
+        if (!wrap) return;
+        let html = '';
+        GROUP_ORDER.forEach(g => {
+            const info = GROUP_INFO[g];
+            const nextGroup = GROUP_ORDER[GROUP_ORDER.indexOf(g) + 1];
+            const subText = nextGroup ? `★${info.patternsPerSet}つでグループ${nextGroup}解除` : '';
+            const firstQ = (FIXED_PROBLEMS_BY_GROUP[g] || [])[0];
+            const firstFormula = firstQ ? `$${firstQ.leftPart}=${firstQ.rightPart}$` : '';
+            const unlocked = isGroupUnlocked(g);
+            const disabledAttr = unlocked ? '' : 'disabled';
+            const onclickAttr = unlocked ? `onclick="enterMondaiGrid('${g}')"` : '';
+            html += `<button type="button" class="group-select-btn" ${onclickAttr} ${disabledAttr}>`
+                  +   `<span>${unlocked ? '🔓' : '🔒'} ${info.label}　${firstFormula}</span>`
+                  +   `<span class="group-select-sub">${subText}</span>`
+                  + `</button>`;
+        });
+        wrap.innerHTML = html;
+        updateMathJax([wrap]);
+    }
+
+    /* --- 問題選択画面への移行（enterMondaiGrid） --- */
+    function enterMondaiGrid(group) {
+        currentMondaiGroup = group;
+        const titleEl = document.getElementById('mondai-group-title');
+        if (titleEl) titleEl.textContent = `📚 ${GROUP_INFO[group].label}（${GROUP_INFO[group].desc}）`;
+        showScreen('screen-mondai');
+        renderMondaiGrid(group);
+    }
+
+    /* --- 問題選択ボタンの遷移先（グループが1つだけのときはグループ選択画面を飛ばす） --- */
+    function openMondaiSelect() {
+        if (GROUP_ORDER.length === 1) {
+            enterMondaiGrid(GROUP_ORDER[0]);
+            return;
+        }
+        showScreen('screen-mondai-groups');
+        renderGroupSelectScreen();
+    }
+
+    /* --- 問題グリッドからの戻り先（グループが1つだけのときは開始画面へ） --- */
+    function backFromMondaiGrid() {
+        if (GROUP_ORDER.length === 1) {
+            showScreen('screen-start');
+            return;
+        }
+        showScreen('screen-mondai-groups');
+        renderGroupSelectScreen();
+    }
+
+    /* --- 問題選択グリッドの描画（renderMondaiGrid） --- */
+    function renderMondaiGrid(group) {
+        const wrap = document.getElementById('mondai-grid-wrap');
+        if (!wrap || !group) return;
+        const problems = FIXED_PROBLEMS_BY_GROUP[group] || [];
+        const progress = practiceProgress[group] || [];
+        const total = GROUP_INFO[group].total;
+
+        if (problems.length === 0) {
+            wrap.innerHTML = `<div style="grid-column: 1 / -1; text-align:center; color:#999; padding:20px;">この${GROUP_INFO[group].label}の問題は準備中です</div>`;
+            return;
+        }
+
+        let html = '';
+        for (let i = 0; i < total; i++) {
+            const status = progress[i] || 0;
+            const unlocked = (i === 0) || (progress[i - 1] >= 1);
+
+            let cellClass = 'grid-cell';
+            let starHtml = '';
+            if (!unlocked) {
+                cellClass += ' locked';
+            } else if (status === 2) {
+                cellClass += ' star-perfect';
+                starHtml = '<span class="grid-cell-star star-perfect-mark">★</span>';
+            } else if (status === 1) {
+                cellClass += ' star-mistake';
+                starHtml = '<span class="grid-cell-star star-mistake-mark">☆</span>';
+            } else {
+                cellClass += ' available';
+            }
+
+            const disabledAttr = unlocked ? '' : 'disabled';
+            const onclickAttr = unlocked ? `onclick="startPractice('${group}', ${i})"` : '';
+            const q = problems[i];
+            const formulaHtml = q ? `$${q.leftPart}=${q.rightPart}$` : '';
+
+            html += `<button type="button" class="${cellClass}" ${onclickAttr} ${disabledAttr}>`
+                  +   `${starHtml}<span class="grid-cell-num">${i + 1}</span>`
+                  +   `<span class="grid-cell-formula">${formulaHtml}</span>`
+                  + `</button>`;
+        }
+        wrap.innerHTML = html;
+        wrap.scrollTop = 0;
+        updateMathJax([wrap]);
+    }
+
+    /* --- 練習モードの開始（startPractice） --- */
+    function startPractice(group, index) {
+        if (!practiceMode) {
+            savedQuizData = quizData;
+            savedCurrentQuestionIndex = currentQuestionIndex;
+
+            const timerDisplayEl = document.getElementById('timer-display');
+            const bestDisplayEl = document.getElementById('best-normal-display');
+            savedTimerDisplayText = timerDisplayEl ? timerDisplayEl.innerText : null;
+            savedBestDisplayText = bestDisplayEl ? bestDisplayEl.innerText : null;
+            if (timerDisplayEl) timerDisplayEl.innerText = '⏱️ --:--.-';
+            if (bestDisplayEl) bestDisplayEl.innerText = bestTimeText('--:--.-');
+        }
+        practiceMode = true;
+        practiceCurrentGroup = group;
+        practiceCurrentIndex = index;
+        quizData = [FIXED_PROBLEMS_BY_GROUP[group][index]];
+        currentQuestionIndex = 0;
+
+        const timerArea = document.getElementById('timer-container-area');
+        if (timerArea) timerArea.classList.add('practice-disabled');
+
+        showScreen('screen-kentei');
+        startQuizGame();
+    }
+
+    /* --- 練習モードの終了（exitPracticeMode） --- */
+    function exitPracticeMode() {
+        practiceMode = false;
+        practiceCurrentGroup = null;
+        practiceCurrentIndex = null;
+        quizData = savedQuizData || generateQuizData();
+        currentQuestionIndex = savedCurrentQuestionIndex || 0;
+        gameStarted = false;
+        isCompleted = false;
+
+        const timerDisplayEl = document.getElementById('timer-display');
+        const bestDisplayEl = document.getElementById('best-normal-display');
+        if (timerDisplayEl && savedTimerDisplayText !== null) timerDisplayEl.innerText = savedTimerDisplayText;
+        if (bestDisplayEl && savedBestDisplayText !== null) bestDisplayEl.innerText = savedBestDisplayText;
+
+        const timerArea = document.getElementById('timer-container-area');
+        if (timerArea) timerArea.classList.remove('practice-disabled');
+
+        showStartLayout();
+    }
+
+    /* --- 検定画面から戻る処理（goBackFromKentei） --- */
+    function goBackFromKentei() {
+        if (practiceMode) {
+            const g = practiceCurrentGroup || currentMondaiGroup;
+            exitPracticeMode();
+            showScreen('screen-mondai');
+            renderMondaiGrid(g);
+        } else {
+            showScreen('screen-start');
+        }
+    }
+
+    /* --- 練習結果（星）の保存（saveCurrentPracticeResult） --- */
+    function saveCurrentPracticeResult() {
+        const group = practiceCurrentGroup;
+        const idx = practiceCurrentIndex;
+        if (!group || idx === null || idx === undefined) return;
+        const star = (currentQuestionWrongCount > 0) ? 1 : 2;
+        const prev = practiceProgress[group][idx] || 0;
+        practiceProgress[group][idx] = Math.max(prev, star);
+        savePracticeProgress();
+    }
+
+    /* --- 練習結果の記録と問題選択画面への復帰（recordPracticeResult） --- */
+    function recordPracticeResult() {
+        const g = practiceCurrentGroup;
+        saveCurrentPracticeResult();
+        exitPracticeMode();
+        showScreen('screen-mondai');
+        renderMondaiGrid(g);
+    }
+
+    /* --- 次の練習問題への移動（advancePracticeToNext） --- */
+    function advancePracticeToNext() {
+        const group = practiceCurrentGroup;
+        saveCurrentPracticeResult();
+        const nextIndex = practiceCurrentIndex + 1;
+        const total = GROUP_INFO[group].total;
+        if (nextIndex < total && FIXED_PROBLEMS_BY_GROUP[group][nextIndex]) {
+            startPractice(group, nextIndex);
+        } else {
+            exitPracticeMode();
+            showScreen('screen-mondai');
+            renderMondaiGrid(group);
+        }
+    }
+    /* ==========================================================================
+       7. 入力UI・コントロールキー【共通】
+       ========================================================================== */
+
+    /* --- 削除キー（Backspace）の動作（handleDeleteBehavior） --- */
+    function handleDeleteBehavior(active) {
+        const currentEd = document.getElementById(activeEditorId);
+        const isFrac = active.classList.contains('editor-fraction-field');
+        if (isFrac) {
+            const fracNode = active.closest('.editor-fraction-node');
+            const fields = fracNode.querySelectorAll('.editor-fraction-field');
+            if (fields[0].value.length === 0 && fields[1].value.length === 0) {
+                let prev = fracNode.previousSibling;
+                fracNode.remove();
+                if (prev) {
+                    if (prev.classList.contains('editor-fraction-node')) {
+                        prev.querySelectorAll('.editor-fraction-field')[1].focus();
+                    } else prev.focus();
+                } else createTextBlock(currentEd, "").focus();
+            }
+        } else {
+            const allNodes = currentEd.querySelectorAll('.editor-text-node, .editor-fraction-node');
+            if (allNodes.length > 1) {
+                let prev = active.previousSibling;
+                active.remove();
+                if (prev) {
+                    if (prev.classList.contains('editor-fraction-node')) {
+                        prev.querySelectorAll('.editor-fraction-field')[1].focus();
+                    } else prev.focus();
+                }
+            }
+        }
+        
+        if (currentEd.querySelectorAll('.editor-fraction-node').length === 0) {
+            currentEd.classList.remove('wide-fraction-mode');
+        }
+        updateInputWidths();
+    }
+
+    /* --- アクションボタン（判定・次へ・送信など）の処理（handleAction） --- */
+    function handleAction() {
+        if (!gameStarted) {
+            startQuizGame();
+            return;
+        }
+        if (isCompleted) {
+            if (practiceMode) {
+                recordPracticeResult();
+                return;
+            }
+            if (currentControlState === 'finished') {
+                manualSendToGoogleForm();
+                return;
+            }
+            nextQuestion();
+            return;
+        }
+        checkAnswer(); 
+    }
+
+    /* --- 右ボタンの処理（handleRightBtn） --- */
+    function handleRightBtn() {
+        if (currentControlState === 'start') {
+            goBackFromKentei();
+            return;
+        }
+        if (practiceMode && currentControlState === 'cleared') {
+            recordPracticeResult();
+            return;
+        }
+        if (practiceMode && currentControlState === 'playing' && isCurrentStageEmpty()) {
+            goBackFromKentei();
+            return;
+        }
+        if (currentControlState === 'finished') {
+            goBackFromKentei();
+        } else {
+            pressKey('clear');
+        }
+    }
+
+    /* --- 中央ボタンの処理（handleCenterBtn） --- */
+    function handleCenterBtn() {
+        if (practiceMode && currentControlState === 'cleared') {
+            advancePracticeToNext();
+            return;
+        }
+        if (currentControlState === 'finished') {
+            restartQuiz();
+        } else {
+            pressKey('Backspace');
+        }
+    }
+
+    /* --- コントロールキーの表示状態の更新（updateControlKeysState） --- */
+    function updateControlKeysState(state) {
+        currentControlState = state;
+        actionBtn.className = "key action-btn";
+        clearBtn.className = "key clear-btn";
+        clearAllBtn.className = "key clear-btn";
+
+        if (state === 'start') {
+            actionBtn.textContent = "スタート"; actionBtn.disabled = false;
+            clearBtn.textContent = "消す"; clearBtn.disabled = true;
+            clearAllBtn.textContent = "戻る";
+            clearAllBtn.className = "key action-btn-back";
+            clearAllBtn.disabled = false;
+        } else if (state === 'playing') {
+            actionBtn.textContent = "判定する";
+            actionBtn.className = "key action-btn judge-mode";
+            actionBtn.disabled = false;
+            clearBtn.textContent = "消す"; clearBtn.className = "key clear-btn"; clearBtn.disabled = false;
+            if (isCurrentStageEmpty()) {
+                actionBtn.disabled = true;
+                clearBtn.disabled = true;
+                if (practiceMode) {
+                    clearAllBtn.textContent = "戻る";
+                    clearAllBtn.className = "key action-btn-back";
+                    clearAllBtn.disabled = false;
+                } else {
+                    clearAllBtn.textContent = "全消去";
+                    clearAllBtn.className = "key clear-btn";
+                    clearAllBtn.disabled = true;
+                }
+            } else {
+                clearAllBtn.textContent = "全消去"; clearAllBtn.disabled = false;
+            }
+        } else if (state === 'cleared') {
+            if (practiceMode) {
+                actionBtn.textContent = "終了"; actionBtn.className = "key clear-btn"; actionBtn.disabled = true;
+                clearBtn.textContent = "次へ"; clearBtn.className = "key action-btn judge-mode"; clearBtn.disabled = false;
+                clearAllBtn.textContent = "戻る"; clearAllBtn.className = "key action-btn-back"; clearAllBtn.disabled = false;
+            } else {
+                actionBtn.textContent = "次の問題"; actionBtn.className = "key action-btn judge-mode"; actionBtn.disabled = false;
+                clearBtn.textContent = "消す"; clearBtn.disabled = true;
+                clearAllBtn.textContent = "全消去"; clearAllBtn.disabled = true;
+            }
+        } else if (state === 'finished') {
+            actionBtn.textContent = "送信"; actionBtn.className = "key action-btn judge-mode"; actionBtn.disabled = false;
+            clearBtn.textContent = "もう一回"; clearBtn.className = "key action-btn"; clearBtn.disabled = false;
+            clearAllBtn.textContent = "戻る"; clearAllBtn.className = "key action-btn-back"; clearAllBtn.disabled = false;
+        }
+    }
+
+    /* --- 利き手（左右レイアウト）の切り替え（changeHandedness） --- */
+    function changeHandedness(hand) {
+        const workspace = document.querySelector('.game-layout');
+        const rightBtn = document.getElementById('hand-right-btn');
+        const leftBtn = document.getElementById('hand-left-btn');
+        if (hand === 'left') {
+            workspace.classList.add('left-handed');
+            leftBtn.classList.add('active');
+            rightBtn.classList.remove('active');
+        } else {
+            workspace.classList.remove('left-handed');
+            rightBtn.classList.add('active');
+            leftBtn.classList.remove('active');
+        }
+    }
+
+    /* --- 入力欄の幅の自動調整（updateInputWidths） --- */
+    function updateInputWidths() {
+        const ed = document.getElementById(activeEditorId);
+        if (!ed) return;
+        ed.querySelectorAll('.editor-text-node').forEach(node => {
+                let displayStr = node.value || "";
+                let w = displayStr.length * 15 + 12;
+                if (displayStr === "") w = 150;
+                node.style.width = `${Math.max(20, w)}px`;
+        });
+    }
+
+    /* --- 現在のステージの未入力判定（isCurrentStageEmpty） --- */
 function isCurrentStageEmpty() {
     // 「+」だけの入力も「入力あり」として扱う
     // （getUserAnswerBySide は先頭の+を除去するため、ここでは使わない）
@@ -1619,268 +2322,85 @@ function isCurrentStageEmpty() {
         return Array.from(ed.querySelectorAll('.editor-text-node, .editor-fraction-field'))
             .some(el => el.value.replace(/\s+/g, '') !== '');
     };
-    if (currentStage === 'answer') {
-        return !hasInput('answer', 'right');
+    if (isRightOnlyStage(currentStage)) {
+        return !hasInput(currentStage, 'right');
     }
     return !hasInput(currentStage, 'left') && !hasInput(currentStage, 'right');
 }
-        function getUserAnswerBySide(stage, side) {
-            const ed = document.getElementById(`math-editor-${stage}-${side}`);
-            if (!ed) return "";
-            let result = "";
-            ed.childNodes.forEach(node => {
-                if (node.classList && node.classList.contains('editor-fraction-node')) {
-                    const top = node.querySelector('.frac-top') ? node.querySelector('.frac-top').value : "";
-                    const bottom = node.querySelector('.frac-bottom') ? node.querySelector('.frac-bottom').value : "";
-                    result += `${top}/${bottom}`;
-                } else if (node.classList && node.classList.contains('editor-text-node')) {
-                    result += node.value;
-                }
-            });
-            let s = result.replace(/\s+/g, "");
-            if (s.startsWith("+")) s = s.substring(1);
-            return s;
+
+    /* --- ステージの不正解時の処理（showStepError） --- */
+    function showStepError(groupEl) {
+        currentQuestionWrongCount++;
+        if (!practiceMode && correctStreakCount !== 0) {
+            correctStreakCount = 0;
+            saveKenteiRecords();
         }
-
-        function checkAnswer() {
-            const q = quizData[currentQuestionIndex];
-            startQuestionTimer();
-
-            if (currentStage === 'expansion') {
-                let userLeft = getUserAnswerBySide('expansion', 'left');
-                let userRight = getUserAnswerBySide('expansion', 'right');
-                if (!userLeft && !userRight) return;
-
-                if (userLeft === q.expLeftAns.replace(/^\+/, '') && userRight === q.expRightAns.replace(/^\+/, '')) {
-                    document.getElementById('group-expansion').className = "input-box-group locked-correct";
-                    document.getElementById('badge-expansion').textContent = "正解！";
-
-                    currentStage = 'transposition';
-                    activeEditorId = 'math-editor-transposition-left';
-                    document.getElementById('group-transposition').className = "input-box-group active-focus";
-                    document.getElementById('badge-transposition').textContent = "入力中";
-
-                    document.getElementById('hint-text').innerHTML = HINT_MASTER.transpositionInit;
-            updateMathJax([document.getElementById('hint-text')]);
-                    focusDefaultNode(); refreshMathJaxPreview();
-                    updateControlKeysState('playing');
-                } else {
-                    showStepError(document.getElementById('group-expansion'));
-                    document.getElementById('hint-text').innerHTML = HINT_MASTER.expansionError;
-            updateMathJax([document.getElementById('hint-text')]);
-                }
-            } else if (currentStage === 'transposition') {
-                let userLeft = getUserAnswerBySide('transposition', 'left');
-                let userRight = getUserAnswerBySide('transposition', 'right');
-                if (!userLeft && !userRight) return;
-
-                if (q.transLeftList.includes(userLeft) && q.transRightList.includes(userRight)) {
-                    document.getElementById('group-transposition').className = "input-box-group locked-correct";
-                    document.getElementById('badge-transposition').textContent = "正解！";
-
-                    currentStage = 'arrangement';
-                    activeEditorId = 'math-editor-arrangement-left';
-                    document.getElementById('group-arrangement').className = "input-box-group active-focus";
-                    document.getElementById('badge-arrangement').textContent = "入力中";
-
-                    document.getElementById('hint-text').innerHTML = HINT_MASTER.arrangementInit;
-            updateMathJax([document.getElementById('hint-text')]);
-                    focusDefaultNode(); refreshMathJaxPreview();
-                    updateControlKeysState('playing');
-                } else {
-                    showStepError(document.getElementById('group-transposition'));
-                    document.getElementById('hint-text').innerHTML = HINT_MASTER.transpositionError;
-            updateMathJax([document.getElementById('hint-text')]);
-                }
-            } else if (currentStage === 'arrangement') {
-                let userLeft = getUserAnswerBySide('arrangement', 'left');
-                let userRight = getUserAnswerBySide('arrangement', 'right');
-                if (!userLeft && !userRight) return;
-
-                if (userLeft === q.arrLeftAns && userRight === q.arrRightAns) {
-                    document.getElementById('group-arrangement').className = "input-box-group locked-correct";
-                    document.getElementById('badge-arrangement').textContent = "正解！";
-
-                    currentStage = 'answer';
-                    activeEditorId = 'math-editor-answer-right';
-                    document.getElementById('group-answer').className = "input-box-group active-focus";
-                    document.getElementById('badge-answer').textContent = "入力中";
-
-                    document.getElementById('hint-text').innerHTML = HINT_MASTER.answerInit;
-            updateMathJax([document.getElementById('hint-text')]);
-                    focusDefaultNode(); refreshMathJaxPreview();
-                    updateControlKeysState('playing');
-                } else {
-                    showStepError(document.getElementById('group-arrangement'));
-                    document.getElementById('hint-text').innerHTML = HINT_MASTER.arrangementError;
-            updateMathJax([document.getElementById('hint-text')]);
-                }
-            } else if (currentStage === 'answer') {
-                let userAns = getUserAnswerBySide('answer', 'right');
-                if (!userAns) return;
-
-                if (userAns === q.answer) {
-                    isCompleted = true;
-                    clearInterval(questionTimerId);
-                    document.getElementById('countdown-timer').style.display = 'none';
-                    document.getElementById('group-answer').className = "input-box-group locked-correct";
-                    document.getElementById('badge-answer').textContent = "正解！";
-
-                    if (currentQuestionWrongCount === 0) {
-                        score++;
-                        if (!practiceMode) {
-                            correctStreakCount++;
-                            if (correctStreakCount > maxStreakCount) maxStreakCount = correctStreakCount;
-                            saveKenteiRecords();
-                        }
-                    }
-                    if (document.activeElement) document.activeElement.blur();
-                    refreshMathJaxPreview();
-
-                    if (currentQuestionIndex === 3) {
-                        stopTimerClockAndEvaluate();
-                        resultMsgEl.textContent = `全 4 問中 ${score} 問ノーミス正解！`;
-                        resultMsgEl.className = "result-message correct";
-
-                        progressEl.textContent = (score === 4) ? HINT_MASTER.perfect : HINT_MASTER.finished;
-                        document.getElementById('hint-text').innerHTML = HINT_MASTER.allFinished;
-            updateMathJax([document.getElementById('hint-text')]);
-
-                        updateControlKeysState('finished');
-                        updateSendButtonState();
-                    } else {
-                        resultMsgEl.textContent = "";
-                        document.getElementById('hint-text').innerHTML = HINT_MASTER.nextQuestion;
-            updateMathJax([document.getElementById('hint-text')]);
-                        updateControlKeysState('cleared');
-                    }
-                } else {
-                    showStepError(document.getElementById('group-answer'));
-                    document.getElementById('hint-text').innerHTML = HINT_MASTER.answerError;
-            updateMathJax([document.getElementById('hint-text')]);
-                }
-            }
+        startQuestionTimer();
+        if (groupEl) {
+            groupEl.classList.remove('error-shake');
+            void groupEl.offsetWidth;
+            groupEl.classList.add('error-shake');
         }
+    }
+    /* ==========================================================================
+       8. ステージ依存の関数【共通（ACTIVE_STAGES で動作）】
+       ========================================================================== */
 
-        function showStepError(groupEl) {
-            currentQuestionWrongCount++;                           
-            if (!practiceMode && correctStreakCount !== 0) {
-                correctStreakCount = 0;
-                saveKenteiRecords();
+    /* --- ステージ一覧のヘルパー（STAGE_ORDER / ACTIVE_STAGES から ID・次のステージ・ヒントのキーを返す） --- */
+    function stageGroupId(stage)     { return `group-${stage}`; }
+    function stageBadgeId(stage)     { return `badge-${stage}`; }
+    function isRightOnlyStage(stage) { return stage === 'answer'; }   // 右辺だけ入力するステージ
+    function stageEditorIds(stage) {
+        return isRightOnlyStage(stage)
+            ? [`math-editor-${stage}-right`]
+            : [`math-editor-${stage}-left`, `math-editor-${stage}-right`];
+    }
+    function stageFirstEditorId(stage) { return stageEditorIds(stage)[0]; }
+    function stageOfEditorId(editorId) {
+        return ACTIVE_STAGES.find(s => editorId.includes(s)) || ACTIVE_STAGES[0];
+    }
+    function nextStage(stage) {
+        const i = ACTIVE_STAGES.indexOf(stage);
+        return (i >= 0 && i < ACTIVE_STAGES.length - 1) ? ACTIVE_STAGES[i + 1] : null;
+    }
+    function stageCamel(stage) {   // 'clear-denom' → 'clearDenom'
+        return stage.replace(/-([a-z])/g, (m, c) => c.toUpperCase());
+    }
+    function stageHintKey(stage, suffix) {   // ('clear-denom', 'Init') → 'clearDenomInit'
+        return stageCamel(stage) + suffix;
+    }
+    function stageTimeoutHintKey(stage) {    // 'clear-denom' → 'timeoutClearDenom'
+        const c = stageCamel(stage);
+        return 'timeout' + c.charAt(0).toUpperCase() + c.slice(1);
+    }
+    function hideInactiveStages() {          // 使わないステージの入力枠を非表示にする
+        STAGE_ORDER.forEach(s => {
+            if (!ACTIVE_STAGES.includes(s)) {
+                const el = document.getElementById(stageGroupId(s));
+                if (el) el.style.display = 'none';
             }
-            startQuestionTimer();
-            if (groupEl) {
-                groupEl.classList.remove('error-shake');
-                void groupEl.offsetWidth;
-                groupEl.classList.add('error-shake');
-            }
-        }
+        });
+    }
 
-        function nextQuestion() {
-            currentQuestionIndex++;
-            if (currentQuestionIndex < quizData.length) { loadQuestion(); }
-        }
+    /* --- 正解後に次のステージへ進む共通の遷移処理（advanceStage） --- */
+    function advanceStage(fromStage, restartTimer = true) {
+        const next = nextStage(fromStage);
+        document.getElementById(stageGroupId(fromStage)).className = "input-box-group locked-correct";
+        document.getElementById(stageBadgeId(fromStage)).textContent = "正解！";
+        if (!next) return;
+        currentStage = next;
+        activeEditorId = stageFirstEditorId(next);
+        document.getElementById(stageGroupId(next)).className = "input-box-group active-focus";
+        document.getElementById(stageBadgeId(next)).textContent = "入力中";
+        document.getElementById('hint-text').innerHTML = HINT_DATA[stageHintKey(next, 'Init')];
+        updateMathJax([document.getElementById('hint-text')]);
+        focusDefaultNode(); refreshMathJaxPreview();
+        updateControlKeysState('playing');
+        if (restartTimer) startQuestionTimer();   // 正解時：タイマーをリセットして再開
+    }
 
-        function restartQuiz() {
-            quizData = generateQuizData(); 
-            showStartLayout(); 
-        }
-
-        function handleDeleteBehavior(active) {
-            const currentEd = document.getElementById(activeEditorId);
-            const isFrac = active.classList.contains('editor-fraction-field');
-            if (isFrac) {
-                const fracNode = active.closest('.editor-fraction-node');
-                const fields = fracNode.querySelectorAll('.editor-fraction-field');
-                if (fields[0].value.length === 0 && fields[1].value.length === 0) {
-                    let prev = fracNode.previousSibling;
-                    fracNode.remove();
-                    if (prev) prev.focus();
-                    else createTextBlock(currentEd, "").focus();
-                }
-            } else {
-                const allNodes = currentEd.querySelectorAll('.editor-text-node, .editor-fraction-node');
-                if (allNodes.length > 1) {
-                    let prev = active.previousSibling;
-                    active.remove();
-                    if (prev) {
-                        if (prev.classList.contains('editor-fraction-node')) {
-                            prev.querySelectorAll('.editor-fraction-field')[1].focus();
-                        } else prev.focus();
-                    }
-                }
-            }
-            
-            if (currentEd.querySelectorAll('.editor-fraction-node').length === 0) {
-                currentEd.classList.remove('wide-fraction-mode');
-            }
-            updateInputWidths();
-        }
-        function startQuestionTimer() {
-            clearInterval(questionTimerId);
-            if (practiceMode) {
-                document.getElementById('countdown-timer').style.display = 'none';
-                return;
-            }
-            if (!gameStarted || isCompleted) {
-                document.getElementById('countdown-timer').style.display = 'none';
-                return;
-            }
-
-            if (currentQuestionWrongCount >= 2) {
-                document.getElementById('countdown-timer').style.display = 'inline-block';
-                document.getElementById('countdown-timer').textContent = "じっくりタイム";
-                return;
-            }
-            questionTimeLeft = 30;
-            updateQuestionTimerUI();
-            document.getElementById('countdown-timer').style.display = 'inline-block';
-            
-            questionTimerId = setInterval(() => {
-                questionTimeLeft--;
-                updateQuestionTimerUI();
-                if (questionTimeLeft <= 0) {
-                    handleQuestionTimeout();
-                }
-            }, 1000);
-        }
-
-        function updateQuestionTimerUI() {
-            const el = document.getElementById('countdown-timer');
-            if (el) el.textContent = `残り ${questionTimeLeft}秒`;
-        }
-
-        function handleQuestionTimeout() {
-            clearInterval(questionTimerId);
-            let targetGroup;
-            let hintKey;
-            if (currentStage === 'expansion') {
-                targetGroup = document.getElementById('group-expansion');
-                hintKey = 'timeoutExpansion';
-            } else if (currentStage === 'transposition') {
-                targetGroup = document.getElementById('group-transposition');
-                hintKey = 'timeoutTransposition';
-            } else if (currentStage === 'arrangement') {
-                targetGroup = document.getElementById('group-arrangement');
-                hintKey = 'timeoutArrangement';
-            } else {
-                targetGroup = document.getElementById('group-answer');
-                hintKey = 'timeoutAnswer';
-            }
-
-            showStepError(targetGroup);
-
-            const hintBody = document.getElementById('hint-text');
-            hintBody.innerHTML = HINT_MASTER[hintKey];
-
-            if (typeof updateMathJax === 'function') {
-                updateMathJax([hintBody]);
-            }
-
-            startQuestionTimer();
-        }
-
-        function pressKey(key) {
+    /* --- キー入力の処理（pressKey） --- */
+    function pressKey(key) {
             if (!gameStarted || isCompleted) return;
 
             if (key === '=') {
@@ -1904,11 +2424,9 @@ function isCurrentStageEmpty() {
             }
 
             if (!active) return;
+            
             let targetGroup = null;
-            if (activeEditorId.startsWith('math-editor-expansion')) targetGroup = document.getElementById('group-expansion');
-            else if (activeEditorId.startsWith('math-editor-transposition')) targetGroup = document.getElementById('group-transposition');
-            else if (activeEditorId.startsWith('math-editor-arrangement')) targetGroup = document.getElementById('group-arrangement');
-            else targetGroup = document.getElementById('group-answer');
+            targetGroup = document.getElementById(stageGroupId(stageOfEditorId(activeEditorId)));
 
             if (targetGroup && targetGroup.classList.contains('error-shake')) {
                 targetGroup.classList.remove('error-shake');
@@ -1920,6 +2438,7 @@ function isCurrentStageEmpty() {
                 createTextBlock(currentEd, "").focus();
                 currentEd.classList.remove('wide-fraction-mode');
                 updateInputWidths();
+                syncClearDenom();
                 refreshMathJaxPreview(); 
                 updateControlKeysState(currentControlState);
                 return;
@@ -1930,595 +2449,771 @@ function isCurrentStageEmpty() {
                 
                 if (isFrac) {
                     const fracNode = active.closest('.editor-fraction-node');
-                    let prev = fracNode.previousSibling;
-                    fracNode.remove();
+                    const fields = fracNode.querySelectorAll('.editor-fraction-field');
                     
-                    if (prev) {
-                        prev.focus();
+                    if (fields[0].value.length === 0 && fields[1].value.length === 0) {
+                        let prev = fracNode.previousSibling;
+                        fracNode.remove();
+                        
+                        if (prev) {
+                            if (prev.classList.contains('editor-fraction-node')) {
+                                prev.querySelectorAll('.editor-fraction-field')[1].focus();
+                            } else {
+                                prev.focus();
+                            }
+                        } else {
+                            createTextBlock(currentEd, "").focus();
+                        }
+                        
+                        if (currentEd.querySelectorAll('.editor-fraction-node').length === 0) {
+                            currentEd.classList.remove('wide-fraction-mode');
+                        }
                     } else {
-                        createTextBlock(currentEd, "").focus();
+                        if (active.value.length > 0) {
+                            const start = active.selectionStart;
+                            const end = active.selectionEnd;
+                            const val = active.value;
+                            if (start !== end) {
+                                active.value = val.substring(0, start) + val.substring(end);
+                                active.selectionStart = active.selectionEnd = start;
+                            } else if (start > 0) {
+                                active.value = val.substring(0, start - 1) + val.substring(start);
+                                active.selectionStart = active.selectionEnd = start - 1;
+                            }
+                        }
                     }
-                    
-                    if (currentEd.querySelectorAll('.editor-fraction-node').length === 0) {
-                        currentEd.classList.remove('wide-fraction-mode');
-                    }
-                }
-                else if (active.selectionStart === 0 && active.selectionEnd === 0 && active.previousSibling && active.previousSibling.classList.contains('editor-fraction-node')) {
-                    const fracNode = active.previousSibling;
-                    fracNode.remove();
-                    
-                    if (currentEd.querySelectorAll('.editor-fraction-node').length === 0) {
-                        currentEd.classList.remove('wide-fraction-mode');
-                    }
-                    active.focus();
-                }
-                else {
-                    if (active.value.length === 0) { 
-                        handleDeleteBehavior(active); 
+                } else {
+                    if (active.value.length > 0) {
+                        active.value = active.value.slice(0, -1);
                     } else {
-                        const start = active.selectionStart;
-                        const end = active.selectionEnd;
-                        const val = active.value;
-                        if (start !== end) {
-                            active.value = val.substring(0, start) + val.substring(end);
-                            active.selectionStart = active.selectionEnd = start;
-                        } else if (start > 0) {
-                            active.value = val.substring(0, start - 1) + val.substring(start);
-                            active.selectionStart = active.selectionEnd = start - 1;
+                        const allNodes = currentEd.querySelectorAll('.editor-text-node, .editor-fraction-node');
+                        if (allNodes.length > 1) {
+                            let prev = active.previousSibling;
+                            active.remove();
+                            if (prev) {
+                                if (prev.classList.contains('editor-fraction-node')) {
+                                    prev.querySelectorAll('.editor-fraction-field')[1].focus();
+                                } else {
+                                    prev.focus();
+                                }
+                            }
                         }
                     }
                 }
+                updateInputWidths();
+                if (document.activeElement) document.activeElement.focus();
+                syncClearDenom();
+                refreshMathJaxPreview();
+                updateControlKeysState(currentControlState);
+                return;
+            }
 
-            } else {
-
-                if (!/^[0-9]$/.test(key) && active.classList.contains('editor-fraction-field')) {
-
+            if (active.classList.contains('editor-fraction-field')) {
+                if (!/^[0-9]$/.test(key)) {
                     const fracNode = active.closest('.editor-fraction-node');
-                    if (fracNode && fracNode.nextSibling && fracNode.nextSibling.classList.contains('editor-text-node')) {
+                    if (fracNode && fracNode.nextSibling) {
                         active = fracNode.nextSibling;
+                        active.focus();
                     }
                 }
-
-                const start = active.selectionStart;
-                active.value = active.value.substring(0, start) + key + active.value.substring(active.selectionEnd);
-                active.selectionStart = active.selectionEnd = start + key.length;
             }
+
+            const start = active.selectionStart;
+            const end = active.selectionEnd;
+            const val = active.value;
+            active.value = val.substring(0, start) + key + val.substring(end);
+            active.selectionStart = active.selectionEnd = start + key.length;
 
             updateInputWidths();
             active.focus();
-            
+            syncClearDenom();
             refreshMathJaxPreview();
             updateControlKeysState(currentControlState);
         }
 
-        function initValidationControls() {
-            if (!numberField) return;
-
-            numberField.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (isConfirmed || numberField.value !== '') {
-                    numberField.value = '';
-                    isConfirmed = false;
-                    errorDisplay.style.display = 'none';
-                    updateSendButtonState();
-                }
-                tooltip.classList.add('show');
-                numberField.focus();
-            });
-
-            tooltip.addEventListener('click', (e) => {
-                e.stopPropagation();
-            });
-
-            document.addEventListener('click', (e) => {
-                if (tooltip.classList.contains('show') && !isConfirmed) {
-                    numberField.value = '';
-                    errorDisplay.style.display = 'none';
-                    tooltip.classList.remove('show');
-                    numberField.blur();
-                    updateSendButtonState();
-                }
-            });
-        }
-
-        function pressNum(num) {
-            if (!numberField) return;
-            let currentVal = numberField.value;
-
-            if (currentVal.length === 4) {
-                currentVal = '';
-                errorDisplay.style.display = 'none';
-            }
-
-            currentVal += num;
-            numberField.value = currentVal;
-            updateSendButtonState();
-
-            if (currentVal.length === 4) {
-                const isValid = /^(9999|[1-3][1-5](0[1-9]|[1-2][0-9]|3[0-5]))$/.test(currentVal);
-
-                if (isValid) {
-                    completeInput(currentVal); 
-                } else {
-                    errorDisplay.style.display = 'block';
-                }
-            }
-        }
-
-        function completeInput(value) {
-            isConfirmed = true;
-            tooltip.classList.remove('show');
-            numberField.blur();
-            console.log('確定した番号: ' + value);
-            updateSendButtonState();
-        }
-
-        function pressClear() {
-            if (!numberField) return;
-            let currentVal = numberField.value;
-            if (currentVal.length > 0) {
-                numberField.value = currentVal.slice(0, -1);
-            }
-            errorDisplay.style.display = 'none';
-            isConfirmed = false;
-            updateSendButtonState();
-        }
-
-        function handleAction() {
-            if (!gameStarted) {
-                startQuizGame();
-                return;
-            }
-            if (isCompleted) {
-                if (practiceMode) {
-                    recordPracticeResult();
-                    return;
-                }
-                if (currentControlState === 'finished') {
-                    manualSendToGoogleForm();
-                    return;
-                }
-                nextQuestion();
-                return;
-            }
-
-            checkAnswer(); 
-        }
-
-        function updateControlKeysState(state) {
-            currentControlState = state;
-            actionBtn.className = "key action-btn";
-            clearBtn.className = "key clear-btn";
-            clearAllBtn.className = "key clear-btn";
-
-            if (state === 'start') {
-                actionBtn.textContent = "スタート";
-                actionBtn.disabled = false;
-                clearBtn.textContent = "消す";
-                clearBtn.disabled = true;
-                clearAllBtn.textContent = "戻る";
-                clearAllBtn.className = "key action-btn-back";
-                clearAllBtn.disabled = false;
-            } else if (state === 'playing') {
-                actionBtn.textContent = "判定する";
-                actionBtn.className = "key action-btn judge-mode"; 
-
-                const isEmpty = isCurrentStageEmpty();
-
-                if (isEmpty) {
-                    actionBtn.disabled = true;
-                    clearBtn.textContent = "消す";
-                    clearBtn.disabled = true;
-                    if (practiceMode) {
-                        clearAllBtn.textContent = "戻る";
-                        clearAllBtn.className = "key action-btn-back";
-                        clearAllBtn.disabled = false;
-                    } else {
-                        clearAllBtn.textContent = "全消去";
-                        clearAllBtn.className = "key clear-btn";
-                        clearAllBtn.disabled = true;
-                    }
-                } else {
-                    actionBtn.disabled = false;
-                    clearBtn.textContent = "消す";
-                    clearBtn.disabled = false;
-                    clearAllBtn.textContent = "全消去";
-                    clearAllBtn.className = "key clear-btn";
-                    clearAllBtn.disabled = false;
-                }
-            } else if (state === 'cleared') {
-                if (practiceMode) {
-                    actionBtn.textContent = "終了";
-                    actionBtn.className = "key clear-btn";
-                    actionBtn.disabled = true;
-                    clearBtn.textContent = "次へ";
-                    clearBtn.className = "key action-btn judge-mode";
-                    clearBtn.disabled = false;
-                    clearAllBtn.textContent = "戻る";
-                    clearAllBtn.className = "key action-btn-back";
-                    clearAllBtn.disabled = false;
-                } else {
-                    actionBtn.textContent = "次の問題";
-                    actionBtn.className = "key action-btn judge-mode";
-                    actionBtn.disabled = false;
-                    clearBtn.textContent = "消す";
-                    clearBtn.disabled = true;
-                    clearAllBtn.textContent = "全消去";
-                    clearAllBtn.disabled = true;
-                }
-            } else if (state === 'finished') {
-                actionBtn.textContent = "送信";
-                actionBtn.className = "key action-btn judge-mode";
-                actionBtn.disabled = false;
-                clearBtn.textContent = "もう一回";
-                clearBtn.className = "key action-btn";
-                clearBtn.disabled = false;
-                clearAllBtn.textContent = "戻る";
-                clearAllBtn.className = "key action-btn-back";
-                clearAllBtn.disabled = false;
-            }
-        }
-
-        function handleCenterBtn() {
-            if (practiceMode && currentControlState === 'cleared') {
-                advancePracticeToNext();
-                return;
-            }
-            if (currentControlState === 'finished') {
-                restartQuiz();
-            } else {
-                pressKey('Backspace');
-            }
-        }
-
-        function handleRightBtn() {
-            if (currentControlState === 'start') {
-                goBackFromKentei();
-                return;
-            }
-            if (practiceMode && currentControlState === 'cleared') {
-                recordPracticeResult();
-                return;
-            }
-            if (practiceMode && currentControlState === 'playing' && isCurrentStageEmpty()) {
-                goBackFromKentei();
-                return;
-            }
-            if (currentControlState === 'finished') {
-                goBackFromKentei();
-            } else {
-                pressKey('clear');
-            }
-        }
-        function focusDefaultNode(editorId = activeEditorId) {
-            if (!gameStarted || isCompleted) return;
-
-            let targetGroupId;
-            if (editorId.startsWith('math-editor-expansion')) targetGroupId = 'group-expansion';
-            else if (editorId.startsWith('math-editor-transposition')) targetGroupId = 'group-transposition';
-            else if (editorId.startsWith('math-editor-arrangement')) targetGroupId = 'group-arrangement';
-            else targetGroupId = 'group-answer';
-            const targetGroup = document.getElementById(targetGroupId);
-            if (targetGroup && targetGroup.classList.contains('locked-disabled')) {
-                return; 
-            }
-
-            const ed = document.getElementById(editorId);
-            if (ed) {
-                activeEditorId = editorId;
-                
-                ['group-expansion', 'group-transposition', 'group-arrangement', 'group-answer'].forEach(gid => {
-                    const g = document.getElementById(gid);
-                    if (g && gid !== targetGroupId) g.classList.remove('active-focus');
-                });
-                if (targetGroup) targetGroup.classList.add('active-focus');
-                
-                const input = ed.querySelector('.editor-text-node') || ed.querySelector('input');
-                if (input) input.focus();
-                refreshMathJaxPreview();
-            }
-        }
-
-        function createTextBlock(containerEl, initialValue = "") {
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.className = 'editor-text-node';
-            input.value = initialValue;
-            input.autocomplete = 'off';
-            input.inputMode = 'none'; 
-            input.readOnly = true;
-            if (containerEl.childNodes.length === 0) {
-                if (containerEl.id.startsWith('math-editor-expansion')) {
-                    input.placeholder = "ここにかっこを外した式を入力";
-                } else if (containerEl.id.startsWith('math-editor-transposition')) {
-                    input.placeholder = "ここに移項した式を入力";
-                } else if (containerEl.id.startsWith('math-editor-arrangement')) {
-                    input.placeholder = "ここに整理した式を入力";
-                } else {
-                    input.placeholder = "ここに解を入力";
-                }
-            }
-                
-            input.addEventListener('keydown', (e) => e.preventDefault());
-            containerEl.appendChild(input);
-            return input;
-        }
-        
+    /* --- 分母入力から分数への変換（convertDenominatorToFraction） --- */
         function convertDenominatorToFraction() {
-                if (!gameStarted || isCompleted) return;
-                const currentEd = document.getElementById(activeEditorId);
-                let currentInputNode = document.activeElement;
-                if (!currentInputNode || !currentEd.contains(currentInputNode) || !currentInputNode.classList.contains('editor-text-node')) {
-                        const inputs = currentEd.querySelectorAll('.editor-text-node');
-                        currentInputNode = inputs[inputs.length - 1];
-                }
-                if (!currentInputNode) return;
-                const currentText = currentInputNode.value || "";
-                
-                const match = currentText.match(/^(.*?)(\d+)$/);
-                let keepText = currentText; 
-                let denValue = "";          
-                if (match) {
-                        keepText = match[1];
-                        denValue = match[2];
-                }
-                const fractionNode = document.createElement("div");
-                fractionNode.className = "editor-fraction-node";
-                const numInput = document.createElement("input");
-                numInput.type = "text";
-                numInput.className = "editor-fraction-field frac-top";
-                numInput.inputMode = "none";
-                numInput.readOnly = true; 
-                const line = document.createElement("div");
-                line.className = "editor-fraction-line";
-                const denInput = document.createElement("input");
-                denInput.type = "text";
-                denInput.className = "editor-fraction-field frac-bottom";
-                denInput.inputMode = "none";
-                denInput.readOnly = true; 
-
-                denInput.value = denValue;
-                numInput.addEventListener('keydown', (e) => e.preventDefault());
-                denInput.addEventListener('keydown', (e) => e.preventDefault());
-                fractionNode.appendChild(numInput);
-                fractionNode.appendChild(line);
-                fractionNode.appendChild(denInput);
-
-                currentInputNode.value = keepText;
-            currentInputNode.parentNode.insertBefore(fractionNode, currentInputNode.nextSibling);
-            const nextTextNode = createTextBlock(currentEd, "");
-            currentEd.insertBefore(nextTextNode, fractionNode.nextSibling);
-            currentEd.classList.add('wide-fraction-mode'); 
-            updateInputWidths();
+            if (!gameStarted || isCompleted) return;
+            const currentEd = document.getElementById(activeEditorId);
+            if (!currentEd) return;
             
-            numInput.focus();
+            let active = document.activeElement;
+            if (!active || !currentEd.contains(active)) {
+                const inputs = currentEd.querySelectorAll('input');
+                active = inputs[inputs.length - 1];
+            }
+            if (!active || active.classList.contains('editor-fraction-field')) return;
+
+            currentEd.classList.add('wide-fraction-mode');
+
+            const fracNode = document.createElement('div');
+            fracNode.className = 'editor-fraction-node';
+
+            const topField = document.createElement('input');
+            topField.type = 'text';
+            topField.className = 'editor-fraction-field frac-top';
+            topField.readOnly = true;
+            topField.addEventListener('keydown', (e) => e.preventDefault());
+
+            const line = document.createElement('div');
+            line.className = 'editor-fraction-line';
+
+            const bottomField = document.createElement('input');
+            bottomField.type = 'text';
+            bottomField.className = 'editor-fraction-field frac-bottom';
+            bottomField.readOnly = true;
+            bottomField.addEventListener('keydown', (e) => e.preventDefault());
+
+            fracNode.appendChild(topField);
+            fracNode.appendChild(line);
+            fracNode.appendChild(bottomField);
+
+            if (active.classList.contains('editor-text-node')) {
+                let val = active.value;
+                let match = val.match(/[0-9a-zA-Z]+$/);
+                
+                if (match && match.index > 0) {
+                    let preStr = val.substring(0, match.index);
+                    const preNode = document.createElement('input');
+                    preNode.type = 'text';
+                    preNode.className = 'editor-text-node';
+                    preNode.value = preStr;
+                    preNode.readOnly = true;
+                    preNode.addEventListener('keydown', (e) => e.preventDefault());
+                    currentEd.insertBefore(preNode, active);
+                    
+                    bottomField.value = match[0];
+                } else if (match && match.index === 0) {
+                    bottomField.value = match[0];
+                } else {
+                    bottomField.value = val;
+                }
+                
+                active.value = "";
+                currentEd.insertBefore(fracNode, active);
+                topField.focus(); 
+            } else {
+                currentEd.appendChild(fracNode);
+                topField.focus();
+            }
+
+            updateInputWidths();
+            syncClearDenom();
             refreshMathJaxPreview();
             updateControlKeysState(currentControlState);
         }
 
-        function updateInputWidths() {
-                const ed = document.getElementById(activeEditorId);
-                if (!ed) return;
-                ed.querySelectorAll('.editor-text-node').forEach(node => {
-                        let displayStr = node.value || "";
-                        let w = displayStr.length * 15 + 12;
-                        
-                        if (displayStr === "" && node.placeholder) w = 220;
-                        
-                        node.style.width = `${Math.max(20, w)}px`;
+    /* --- 「分母をはらう」ステージの左右の入力欄の同期（syncClearDenom） --- */
+        function syncClearDenom() {
+        if (!activeEditorId.includes('clear-denom')) return;
+        const sourceEd = document.getElementById(activeEditorId);
+        const targetId = activeEditorId.endsWith('-left')
+            ? 'math-editor-clear-denom-right'
+            : 'math-editor-clear-denom-left';
+        const targetEd = document.getElementById(targetId);
+        if (!sourceEd || !targetEd) return;
+
+        targetEd.innerHTML = '';
+        targetEd.className = sourceEd.className;
+        
+        sourceEd.childNodes.forEach(node => {
+            if (node.classList && node.classList.contains('editor-text-node')) {
+                // 新しいノードとして正しく再作成する
+                createTextBlock(targetEd, node.value);
+            } else if (node.classList && node.classList.contains('editor-fraction-node')) {
+                const fracNode = node.cloneNode(true);
+                // クローンした input に対しても keydown 無効化イベントを再付与
+                fracNode.querySelectorAll('input').forEach(inp => {
+                    inp.addEventListener('keydown', (e) => e.preventDefault());
                 });
-        }
-
-        function changeHandedness(hand) {
-            const workspace = document.querySelector('.game-layout');
-            const rightBtn = document.getElementById('hand-right-btn');
-            const leftBtn = document.getElementById('hand-left-btn');
-            if (hand === 'left') {
-                workspace.classList.add('left-handed');
-                leftBtn.classList.add('active');
-                rightBtn.classList.remove('active');
-            } else {
-                workspace.classList.remove('left-handed');
-                rightBtn.classList.add('active');
-                leftBtn.classList.remove('active');
+                targetEd.appendChild(fracNode);
             }
-        }
-
-        function updateSendButtonState() {
-            if (window.isAlreadySubmitted) return;
-
-            const numVal = numberField ? numberField.value.trim() : "";
-            const sendBtnTop = document.getElementById('send-btn');       
-            const sendBtnBottom = document.getElementById('action-btn');   
+        });
         
-            if (sendBtnTop && sendBtnTop.textContent === "完了") return;
+        // コピー先側の入力幅も再計算する
+        const currentActive = activeEditorId;
+        activeEditorId = targetId;
+        updateInputWidths();
+        activeEditorId = currentActive;
+    }
 
-            const canSend = (isCorrectState && numVal !== "" && /^\d{4}$/.test(numVal) && isConfirmed);
+    /* --- 入力欄のテキストブロックの作成（createTextBlock） --- */
+    function createTextBlock(containerEl, initialValue = "") {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'editor-text-node';
+        input.value = initialValue;
+        input.autocomplete = 'off';
+        input.inputMode = 'none'; 
+        input.readOnly = true;
             
-            if (sendBtnTop) sendBtnTop.disabled = !canSend;
-            if (currentControlState === 'finished') {
-                if (sendBtnBottom) {
-                    sendBtnBottom.disabled = !canSend;
-                    if (!canSend) sendBtnBottom.className = "key clear-btn"; 
-                    else sendBtnBottom.className = "key action-btn judge-mode"; 
-                }
-            }
+        input.addEventListener('keydown', (e) => e.preventDefault());
+        containerEl.appendChild(input);
+        return input;
+    }
+
+    /* --- 入力欄の初期フォーカス（focusDefaultNode） --- */
+    function focusDefaultNode(editorId = activeEditorId) {
+        if (!gameStarted || isCompleted) return;
+        const targetGroupId = stageGroupId(stageOfEditorId(editorId));
+        const targetGroup = document.getElementById(targetGroupId);
+        if (targetGroup && targetGroup.classList.contains('locked-disabled')) return;
+        activeEditorId = editorId;
+        STAGE_ORDER.forEach(s => {
+            const el = document.getElementById(stageGroupId(s));
+            if (el) el.classList.remove('active-focus');
+        });
+        if (targetGroup) targetGroup.classList.add('active-focus');
+        const ed = document.getElementById(editorId);
+        if (ed) {
+            const input = ed.querySelector('.editor-text-node') || ed.querySelector('input');
+            if (input) input.focus();
         }
+        refreshMathJaxPreview();
+    }
 
-        function executeFormSubmit(num, name, timeText, stageCount) {
-            const form = document.createElement('form');
-            form.action = GOOGLE_FORM_URL;
-            form.method = 'POST';
-            form.target = 'hidden_iframe';
-            
-            const fields = {
-                [FORM_NUM_ID]:         num,                               
-                [FORM_NAME_ID]:        name,
-                [FORM_TIME_ID]:        timeText,    
-                [FORM_STAGE_COUNT_ID]: stageCount                  
-            };
-            for (const key in fields) {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = key;
-                input.value = fields[key];
-                form.appendChild(input);
-            }
-            document.body.appendChild(form);
-            try { form.submit(); } catch (e) { console.error('送信エラー', e); }
-            document.body.removeChild(form);
+    /* --- 開始画面の表示（showStartLayout） --- */
+    function showStartLayout() {
+        window.isAlreadySubmitted = false;
+        const sendBtnTop = document.getElementById('send-btn');
+        if (sendBtnTop) {
+            sendBtnTop.textContent = "送信";
+            sendBtnTop.disabled = true;
         }
+        if (numberField) numberField.disabled = false;
 
-        function manualSendToGoogleForm() {
-            const numInput = numberField ? numberField.value.trim() : "";
-            if (numInput === "" || !isConfirmed || !/^\d{4}$/.test(numInput) || !isCorrectState || window.isAlreadySubmitted) {
-                return;
+        gameStarted = false;
+        isCompleted = false;
+        progressEl.textContent = "スタートボタンを押してください";
+        formulaBox.innerHTML = practiceMode
+            ? `<span style="color:#aaa; font-size:24px;">【スタート】を押して挑戦しよう</span>`
+            : `<span style="color:#aaa; font-size:24px;">生徒番号を入力→【スタート】</span>`;
+        document.getElementById('hint-text').innerHTML = HINT_DATA.start;
+
+        ACTIVE_STAGES.forEach(s => {
+            document.getElementById(stageBadgeId(s)).textContent = "ロック中";
+            document.getElementById(stageGroupId(s)).className = "input-box-group locked-disabled";
+        });
+        STAGE_ORDER.forEach(s => stageEditorIds(s).forEach(id => {
+            const ed = document.getElementById(id);
+            if (ed) {
+                ed.innerHTML = '';
+                ed.classList.remove('wide-fraction-mode');
+                createTextBlock(ed, "");
+                updateInputWidths();
             }
-            
-            const sendBtnTop = document.getElementById('send-btn');
-            const sendBtnBottom = document.getElementById('action-btn'); 
-            
-            if (sendBtnTop) {
-                sendBtnTop.textContent = "送信中";
-                sendBtnTop.disabled = true; 
-            }
-            if (currentControlState === 'finished' && sendBtnBottom) {
-                sendBtnBottom.textContent = "送信中";
-                sendBtnBottom.disabled = true;
-                sendBtnBottom.className = "key clear-btn"; 
-            }
-            
-            const currentTimerText = document.getElementById('timer-display').innerText.replace('⏱️ ', '');
-            const timeToSend = lastClearTimeText || currentTimerText;
-            executeFormSubmit(numInput, "", timeToSend, score);
-            window.isAlreadySubmitted = true;
-            
-            if (numberField) numberField.disabled = true;
-            if (tooltip) tooltip.classList.remove('show');
+        }));
+        updateControlKeysState('start');
+        resultMsgEl.textContent = "";
+        refreshMathJaxPreview();
+    }
+
+    /* --- ゲームの開始（startQuizGame） --- */
+    function startQuizGame() {
+        window.isAlreadySubmitted = false; 
+        gameStarted = true;
+        score = 0;
+        currentQuestionIndex = 0;
+        startTimerClock();       
         
-            setTimeout(() => { 
-                if (sendBtnTop) sendBtnTop.textContent = "完了"; 
-                if (currentControlState === 'finished' && sendBtnBottom) {
-                    sendBtnBottom.textContent = "完了";
-                    sendBtnBottom.className = "key clear-btn"; 
-                }
-            }, 1000);
-        }
+        if (numberField) numberField.disabled = true;
+        if (tooltip) tooltip.classList.remove('show');
 
-        function updateTimer() {
-            const diff = (Date.now() - startTime) + elapsedBeforeResume;
-            if (diff >= KENTEI_TIME_LIMIT_MS) { handleKenteiTimeUp(); return; }
-            const min = Math.floor(diff / 60000);
-            const sec = Math.floor((diff % 60000) / 1000);
-            const msec = Math.floor((diff % 1000) / 100);
-            const minStr = String(min).padStart(2, '0');
-            const secStr = String(sec).padStart(2, '0');
-            document.getElementById('timer-display').innerText = `⏱️ ${minStr}:${secStr}.${msec}`;
-        }
-        function startTimerClock() {
-            if (practiceMode) return;
-            isCorrectState = false;
-            lastClearTimeText = "";
-            elapsedBeforeResume = 0;
-            
-            startTime = Date.now();
-            clearInterval(timerInterval);
-            timerInterval = setInterval(updateTimer, 100);
-            document.getElementById('best-update-message').innerText = "";
-            const sendBtn = document.getElementById('send-btn');
-            if (sendBtn) {
-                sendBtn.disabled = true;
-                sendBtn.textContent = "送信";
-            }
-            if (numberField) numberField.disabled = false;
-        }
+        loadQuestion(); 
+        if (actionBtn) actionBtn.className = "key action-btn judge-mode"; 
+    }
 
-function handleKenteiTimeUp() {
-    if (!gameStarted || isCompleted || practiceMode) return;
-    clearInterval(timerInterval);
-    clearInterval(questionTimerId);
-    isCompleted = true;
-    document.getElementById('timer-display').innerText = '⏱️ 06:00.0';
+    /* --- 問題の読み込みと表示（loadQuestion） --- */
+    function loadQuestion() {
+        isCompleted = false;
+        currentQuestionWrongCount = 0;
+        resultMsgEl.textContent = "";
+        resultMsgEl.className = "result-message";
 
-    // 時間切れは連続正解記録をリセット
-    correctStreakCount = 0;
-    saveKenteiRecords();
+        currentStage = ACTIVE_STAGES[0];
+        activeEditorId = stageFirstEditorId(ACTIVE_STAGES[0]);
+        ACTIVE_STAGES.forEach((s, i) => {
+            document.getElementById(stageBadgeId(s)).textContent = (i === 0) ? "入力中" : "ロック中";
+            document.getElementById(stageGroupId(s)).className = (i === 0) ? "input-box-group active-focus" : "input-box-group locked-disabled";
+        });
+        STAGE_ORDER.forEach(s => stageEditorIds(s).forEach(id => {
+            const ed = document.getElementById(id);
+            if (ed) { ed.innerHTML = ''; createTextBlock(ed, ""); }
+        }));
+        updateControlKeysState('playing');
 
-    if (document.activeElement) document.activeElement.blur();
-    stopTimerClockAndEvaluate(true);   // 送信処理は全問終了時と共通
-    resultMsgEl.textContent = `時間切れ！全 ${quizData.length} 問中 ${score} 問ノーミス正解`;
-    resultMsgEl.className = "result-message incorrect";
-    progressEl.textContent = "時間切れ！";
-    document.getElementById('hint-text').innerHTML = HINT_DATA.allFinished;
-    updateControlKeysState('finished'); updateSendButtonState();
-}
+        const q = quizData[currentQuestionIndex];
+        progressEl.textContent = practiceMode
+            ? `問題 ${practiceCurrentIndex + 1} / ${GROUP_INFO[practiceCurrentGroup].total}`
+            : `第 ${currentQuestionIndex + 1} 問 / 全 ${QUESTION_COUNT} 問`;
+        
+        formulaBox.innerHTML = `
+            <div class="equation-grid">
+                <div class="eq-left">$${q.leftPart.replace(/\\d?frac/g, '\\dfrac')}$</div>
+                <div class="eq-equal">$=$</div>
+                <div class="eq-right">$${q.rightPart.replace(/\\d?frac/g, '\\dfrac')}$</div>
+            </div>`;
+        updateMathJax([formulaBox]);
 
-        function stopTimerClockAndEvaluate(isTimeUp = false) {
-            clearInterval(timerInterval);
-            isCorrectState = true; 
+        document.getElementById('hint-text').innerHTML = HINT_DATA[stageHintKey(ACTIVE_STAGES[0], 'Init')];
+        updateMathJax([document.getElementById('hint-text')]);
+
+        setTimeout(() => { focusDefaultNode(); refreshMathJaxPreview(); }, 50);
+        startQuestionTimer();
+    }
+
+    /* --- 次の問題への移動（nextQuestion） --- */
+    function nextQuestion() {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < quizData.length) { loadQuestion(); }
+    }
+
+    /* --- もう一回（再スタート）（restartQuiz） --- */
+    function restartQuiz() {
+        quizData = generateQuizData(); 
+        showStartLayout(); 
+    }
+
+    /* --- 1問ごとの時間切れ処理（handleQuestionTimeout） --- */
+    function handleQuestionTimeout() {
             clearInterval(questionTimerId);
-            document.getElementById('countdown-timer').style.display = 'none';
-            const finalTimeStr = document.getElementById('timer-display').innerText.replace('⏱️ ', '');
-            lastClearTimeText = finalTimeStr;
             
-            const totalElapsedTimeMs = isTimeUp ? KENTEI_TIME_LIMIT_MS : ((Date.now() - startTime) + elapsedBeforeResume);
-elapsedBeforeResume = totalElapsedTimeMs;
+            // 【修正1】現在の問題データ q を取得
+            const q = quizData[currentQuestionIndex];
+            if (!q) return;
 
-if (!practiceMode) {
-    kenteiAttemptCount++;
-    saveKenteiRecords();
-}
+            // 【修正2】現在のステージの入力枠グループを取得
+            const targetGroup = document.getElementById('group-' + currentStage);
+            const hintBody = document.getElementById('hint-text');
 
-if (bestNormalTimeMs === null || totalElapsedTimeMs < bestNormalTimeMs) {
-    bestNormalTimeMs = totalElapsedTimeMs;
-    document.getElementById('best-normal-display').innerText = `ベストタイム(4問): ${finalTimeStr}`;
-    document.getElementById('best-update-message').innerText = isTimeUp ? "" : "🎉 ベスト更新！";
-    saveKenteiRecords();
-}
-
-            const numInput = numberField ? numberField.value.trim() : "";
-            const isValidNum = (isConfirmed && /^\d{4}$/.test(numInput));
-            
-            if (isValidNum && !window.isAlreadySubmitted) {
-                executeFormSubmit(numInput, "", lastClearTimeText, score);
-                window.isAlreadySubmitted = true; 
+            // ステージごとのタイムアウト時ヒントを表示
+            if (currentStage === 'clear-denom') {
+                let userLeft = getUserAnswerBySide('clear-denom', 'left');
+                let userRight = getUserAnswerBySide('clear-denom', 'right');
                 
-                const sendBtnTop = document.getElementById('send-btn');
-                const sendBtnBottom = document.getElementById('action-btn');
-                if (sendBtnTop) {
-                    sendBtnTop.textContent = "完了";
-                    sendBtnTop.disabled = true;
+                // 入力されている場合は正解判定を試みる
+                if (userLeft && userRight) {
+                    const clean = str => (str || '').replace(/^\(([0-9x]+)\)/, '$1').replace(/^\+/, '');
+                    if (clean(userLeft) === clean(q.clearDenomLeftAns) && clean(userRight) === clean(q.clearDenomRightAns)) {
+                        advanceStage('clear-denom');
+                        return;
+                    }
                 }
-                if (sendBtnBottom) {
-                    sendBtnBottom.textContent = "完了";
-                    sendBtnBottom.disabled = true;
-                    sendBtnBottom.className = "key clear-btn";
-                }
-                if (numberField) numberField.disabled = true;
+                hintBody.innerHTML = HINT_DATA.timeoutClearDenom;
             } else {
-                window.isAlreadySubmitted = false;
-                if (numberField) numberField.disabled = false;
+                hintBody.innerHTML = HINT_DATA[stageTimeoutHintKey(currentStage)];
             }
             
-            updateSendButtonState();
+            // エラーアニメーションを実行してタイマー再開
+            showStepError(targetGroup);
+            startQuestionTimer();
         }
+    /* ==========================================================================
+       9. 判定・途中式プレビュー【固有】
+       ========================================================================== */
 
-        function showScreen(screenId) {
-            document.querySelectorAll('.app-screen').forEach(el => {
-                el.style.display = 'none';
-            });
-            const target = document.getElementById(screenId);
-            if (target) {
-                target.style.display = 'flex';
+    /* --- 入力された式の取得（左辺・右辺）（getUserAnswerBySide） --- */
+    function getUserAnswerBySide(stage, side) {
+        const ed = document.getElementById(`math-editor-${stage}-${side}`);
+        if (!ed) return "";
+        let result = "";
+        ed.childNodes.forEach(node => {
+            if (node.classList && node.classList.contains('editor-fraction-node')) {
+                const top = node.querySelector('.frac-top') ? node.querySelector('.frac-top').value : "";
+                const bottom = node.querySelector('.frac-bottom') ? node.querySelector('.frac-bottom').value : "";
+                result += `${top}/${bottom}`;
+            } else if (node.classList && node.classList.contains('editor-text-node')) {
+                result += node.value;
+            }
+        });
+        let s = result.replace(/\s+/g, "");
+        if (s.startsWith("+")) s = s.substring(1);
+        return s;
+    }
+
+    /* --- 答えの判定（checkAnswer） --- */
+    function checkAnswer() {
+        const q = quizData[currentQuestionIndex];
+
+        if (currentStage === 'expansion') {
+            let userLeft = getUserAnswerBySide('expansion', 'left');
+            let userRight = getUserAnswerBySide('expansion', 'right');
+            if (!userLeft && !userRight) return;
+
+            if (userLeft === q.expLeftAns.replace(/^\+/, '') && userRight === q.expRightAns.replace(/^\+/, '')) {
+                advanceStage('expansion');
+            } else {
+                showStepError(document.getElementById('group-expansion'));
+                document.getElementById('hint-text').innerHTML = HINT_DATA.expansionError;
+            }
+        } else if (currentStage === 'transposition') {
+            let userLeft = getUserAnswerBySide('transposition', 'left');
+            let userRight = getUserAnswerBySide('transposition', 'right');
+            if (!userLeft && !userRight) return;
+
+            if (q.transLeftList.includes(userLeft) && q.transRightList.includes(userRight)) {
+                advanceStage('transposition');
+            } else {
+                showStepError(document.getElementById('group-transposition'));
+                document.getElementById('hint-text').innerHTML = HINT_DATA.transpositionError;
+            }
+        } else if (currentStage === 'arrangement') {
+            let userLeft = getUserAnswerBySide('arrangement', 'left');
+            let userRight = getUserAnswerBySide('arrangement', 'right');
+            if (!userLeft && !userRight) return;
+
+            if (userLeft === q.arrLeftAns && userRight === q.arrRightAns) {
+                advanceStage('arrangement');
+            } else {
+                showStepError(document.getElementById('group-arrangement'));
+                document.getElementById('hint-text').innerHTML = HINT_DATA.arrangementError;
+            }
+        } else if (currentStage === 'answer') {
+            let userAns = getUserAnswerBySide('answer', 'right');
+            if (!userAns) return;
+
+            if (userAns === q.answer) {
+                isCompleted = true;
+                clearInterval(questionTimerId);
+                document.getElementById('countdown-timer').style.display = 'none';
+                document.getElementById('group-answer').className = "input-box-group locked-correct";
+                document.getElementById('badge-answer').textContent = "正解！";
+
+                if (currentQuestionWrongCount === 0) {
+                    score++;
+                    if (!practiceMode) {
+                        correctStreakCount++;
+                        if (correctStreakCount > maxStreakCount) maxStreakCount = correctStreakCount;
+                        saveKenteiRecords();
+                    }
+                }
+                if (document.activeElement) document.activeElement.blur();
+                refreshMathJaxPreview();
+
+                if (currentQuestionIndex === QUESTION_COUNT - 1) {
+                    stopTimerClockAndEvaluate();
+                    resultMsgEl.textContent = `全 ${QUESTION_COUNT} 問中 ${score} 問ノーミス正解！`;
+                    resultMsgEl.className = "result-message correct";
+                    progressEl.textContent = (score === QUESTION_COUNT) ? HINT_DATA.perfect : HINT_DATA.finished;
+                    document.getElementById('hint-text').innerHTML = HINT_DATA.allFinished;
+                    updateControlKeysState('finished'); updateSendButtonState();
+                } else {
+                    resultMsgEl.textContent = "";
+                    document.getElementById('hint-text').innerHTML = HINT_DATA.nextQuestion;
+                    updateControlKeysState('cleared');
+                }
+            } else {
+                showStepError(document.getElementById('group-answer'));
+                document.getElementById('hint-text').innerHTML = HINT_DATA.answerError;
             }
         }
+    }
 
-        function enterKenteiScreen() {
-            restartQuiz();
-            showScreen('screen-kentei');
+    /* --- 途中式プレビューの更新（refreshMathJaxPreview） --- */
+    function refreshMathJaxPreview() {
+        if (!quizData[currentQuestionIndex]) return;
+
+        const buildPreview = (stage, leftEdId, rightEdId, leftDefault, rightDefault, noSmallBox = false) => {
+            const leftEd = document.getElementById(leftEdId);
+            const rightEd = document.getElementById(rightEdId);
+            const preview = document.getElementById(`math-preview-${stage}`);
+            const group = document.getElementById(`group-${stage}`);
+            if (!preview) return;
+
+            const getVal = ed => {
+                let val = "";
+                if (ed) ed.childNodes.forEach(n => { if (n.value) val += n.value; });
+                return val;
+            };
+            const leftVal = getVal(leftEd);
+            const rightVal = getVal(rightEd);
+            const isCorrect = group && group.classList.contains('locked-correct');
+
+            let leftHtml, rightHtml;
+
+            if (isCorrect || noSmallBox) {
+                leftHtml = leftVal ? `$${leftVal}$` : `$${leftDefault}$`;
+                rightHtml = rightVal ? `$${rightVal}$` : (noSmallBox && !rightVal ? `<span class="placeholder-text">${rightDefault}</span>` : `$${rightDefault}$`);
+            } else {
+                const leftActive = activeEditorId === leftEdId ? 'active-side' : '';
+                const rightActive = activeEditorId === rightEdId ? 'active-side' : '';
+                leftHtml = `<span class="step-box-small ${leftActive}">${leftVal ? `$${leftVal}$` : `<span class="placeholder-text">${leftDefault}</span>`}</span>`;
+                rightHtml = `<span class="step-box-small ${rightActive}">${rightVal ? `$${rightVal}$` : `<span class="placeholder-text">${rightDefault}</span>`}</span>`;
+            }
+
+            preview.innerHTML = `
+                <div class="equation-grid">
+                    <div class="eq-left">${leftHtml}</div>
+                    <div class="eq-equal">$=$</div>
+                    <div class="eq-right">${rightHtml}</div>
+                </div>`;
+        };
+
+        buildPreview('expansion', 'math-editor-expansion-left', 'math-editor-expansion-right', '左辺', '右辺');
+        buildPreview('transposition', 'math-editor-transposition-left', 'math-editor-transposition-right', '左辺', '右辺');
+        buildPreview('arrangement', 'math-editor-arrangement-left', 'math-editor-arrangement-right', '左辺', '右辺');
+        buildPreview('answer', null, 'math-editor-answer-right', 'x', 'ここに解を入力', true);
+
+        updateMathJax([
+            document.getElementById('math-preview-expansion'),
+            document.getElementById('math-preview-transposition'),
+            document.getElementById('math-preview-arrangement'),
+            document.getElementById('math-preview-answer')
+        ]);
+    }
+
+    /* ==========================================================================
+       10. 問題生成【固有】
+       ========================================================================== */
+
+    /* --- クイズデータを生成する関数（generateQuizData） --- */
+    function generateQuizData() {
+        function fmt(val, isFirst, isX) {
+            if (val === 0) return "";
+            let sign = (val > 0) ? (isFirst ? "" : "+") : "-";
+            let av = Math.abs(val);
+            if (isX) return sign + (av === 1 ? "x" : av + "x");
+            return sign + av;
+        }
+        function stripPlus(s) { return s.startsWith('+') ? s.substring(1) : s; }
+        function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+        function randIntSign(min, max) { const v = randInt(min, max); return Math.random() < 0.5 ? v : -v; }
+        function uniq(arr) { return Array.from(new Set(arr)); }
+
+        function genType1() {
+            for (let i = 0; i < 500; i++) {
+                const x = randInt(-9, 9); if (x === 0) continue;
+                const a = randIntSign(2, 5);
+                const b = randIntSign(1, 3);
+                const c = randInt(-5, 5); if (c === 0) continue;
+                const e = randInt(-5, 5);
+                if (e === 0 || a * b - e === 0 || a * b - e === 1) continue;
+                const f = a * (b * x + c) - e * x;
+                if (f === 0 || Math.abs(f) > 30) continue;
+                const leftStr = `${a}(${fmt(b,true,true)}${fmt(c,false,false)})`;
+                const rightStr = `${fmt(e,true,true)}${fmt(f,false,false)}`;
+                return {
+                    leftPart: leftStr, rightPart: rightStr,
+                    expLeftAns: `${fmt(a*b,true,true)}${fmt(a*c,false,false)}`,
+                    expRightAns: rightStr,
+                    transLeftList: uniq([stripPlus(`${fmt(a*b,true,true)}${fmt(-e,false,true)}`), stripPlus(`${fmt(-e,true,true)}${fmt(a*b,false,true)}`)]),
+                    transRightList: uniq([stripPlus(`${fmt(f,true,false)}${fmt(-a*c,false,false)}`), stripPlus(`${fmt(-a*c,true,false)}${fmt(f,false,false)}`)]),
+                    arrLeftAns: stripPlus(fmt(a*b-e,true,true)),
+                    arrRightAns: String(f-a*c),
+                    answer: String(x)
+                };
+            }
+            return null;
         }
 
-        const FIXED_PROBLEMS = [
+        function genType2() {
+            for (let i = 0; i < 500; i++) {
+                const x = randInt(-9, 9); if (x === 0) continue;
+                const d = randIntSign(2, 5);
+                const e = randIntSign(1, 3);
+                const f = randInt(-5, 5); if (f === 0) continue;
+                const b = randInt(-5, 5);
+                if (b === 0 || b - d * e === 0 || b - d * e === 1) continue;
+                const c = d * (e * x + f) - b * x;
+                if (c === 0 || Math.abs(c) > 30) continue;
+                const leftStr = `${fmt(b,true,true)}${fmt(c,false,false)}`;
+                const rightStr = `${d}(${fmt(e,true,true)}${fmt(f,false,false)})`;
+                return {
+                    leftPart: leftStr, rightPart: rightStr,
+                    expLeftAns: leftStr,
+                    expRightAns: `${fmt(d*e,true,true)}${fmt(d*f,false,false)}`,
+                    transLeftList: uniq([stripPlus(`${fmt(b,true,true)}${fmt(-d*e,false,true)}`), stripPlus(`${fmt(-d*e,true,true)}${fmt(b,false,true)}`)]),
+                    transRightList: uniq([stripPlus(`${fmt(d*f,true,false)}${fmt(-c,false,false)}`), stripPlus(`${fmt(-c,true,false)}${fmt(d*f,false,false)}`)]),
+                    arrLeftAns: stripPlus(fmt(b-d*e,true,true)),
+                    arrRightAns: String(d*f-c),
+                    answer: String(x)
+                };
+            }
+            return null;
+        }
+
+        function genType34(isType4) {
+            for (let i = 0; i < 1000; i++) {
+                const x = randInt(-9, 9); if (x === 0) continue;
+                let a, d;
+                if (!isType4) {
+                    a = randInt(2, 5); d = randInt(2, 5);
+                } else {
+                    do { a = randIntSign(2, 5); d = randIntSign(2, 5); } while (!(a < 0 || d < 0));
+                }
+                const b = randIntSign(1, 3);
+                const c = randInt(-5, 5); if (c === 0) continue;
+                const e = randIntSign(1, 3);
+                if (a * b - d * e === 0 || a * b - d * e === 1) continue;
+                const L = a * (b * x + c);
+                const rem = L - d * e * x;
+                if (rem % d !== 0) continue;
+                const f = rem / d;
+                if (f === 0 || Math.abs(f) > 30) continue;
+                const leftStr = `${a}(${fmt(b,true,true)}${fmt(c,false,false)})`;
+                const rightStr = `${d}(${fmt(e,true,true)}${fmt(f,false,false)})`;
+                return {
+                    leftPart: leftStr, rightPart: rightStr,
+                    expLeftAns: `${fmt(a*b,true,true)}${fmt(a*c,false,false)}`,
+                    expRightAns: `${fmt(d*e,true,true)}${fmt(d*f,false,false)}`,
+                    transLeftList: uniq([stripPlus(`${fmt(a*b,true,true)}${fmt(-d*e,false,true)}`), stripPlus(`${fmt(-d*e,true,true)}${fmt(a*b,false,true)}`)]),
+                    transRightList: uniq([stripPlus(`${fmt(d*f,true,false)}${fmt(-a*c,false,false)}`), stripPlus(`${fmt(-a*c,true,false)}${fmt(d*f,false,false)}`)]),
+                    arrLeftAns: stripPlus(fmt(a*b-d*e,true,true)),
+                    arrRightAns: String(d*f-a*c),
+                    answer: String(x)
+                };
+            }
+            return null;
+        }
+
+        function genType5() {
+            for (let i = 0; i < 500; i++) {
+                const x = randInt(-9, 9); if (x === 0) continue;
+                const b = randIntSign(2, 5);
+                const c = randIntSign(1, 3);
+                const d = randInt(-5, 5); if (d === 0) continue;
+                const R = b * (c * x + d);
+                if (R % x !== 0) continue;
+                const a = R / x;
+                if (a === 0 || a - b * c === 0 || a - b * c === 1) continue;
+                const leftStr = fmt(a, true, true);
+                const rightStr = `${b}(${fmt(c,true,true)}${fmt(d,false,false)})`;
+                return {
+                    leftPart: leftStr, rightPart: rightStr,
+                    expLeftAns: leftStr,
+                    expRightAns: `${fmt(b*c,true,true)}${fmt(b*d,false,false)}`,
+                    transLeftList: uniq([stripPlus(`${fmt(a,true,true)}${fmt(-b*c,false,true)}`), stripPlus(`${fmt(-b*c,true,true)}${fmt(a,false,true)}`)]),
+                    transRightList: [stripPlus(fmt(b*d,true,false))],
+                    arrLeftAns: stripPlus(fmt(a-b*c,true,true)),
+                    arrRightAns: String(b*d),
+                    answer: String(x)
+                };
+            }
+            return null;
+        }
+
+        function genType7() {
+            for (let i = 0; i < 500; i++) {
+                const x = randInt(-9, 9); if (x === 0) continue;
+                const b = randIntSign(2, 5);
+                const c = randIntSign(1, 3);
+                const d = randInt(-5, 5); if (d === 0) continue;
+                const R = b * (c * x + d);
+                if (R % x !== 0) continue;
+                const a = R / x;
+                if (a === 0 || a - b * c === 0 || a - b * c === 1) continue;
+                const leftStr = `${b}(${fmt(c,true,true)}${fmt(d,false,false)})`;
+                const rightStr = fmt(a, true, true);
+                return {
+                    leftPart: leftStr, rightPart: rightStr,
+                    expLeftAns: `${fmt(b*c,true,true)}${fmt(b*d,false,false)}`,
+                    expRightAns: rightStr,
+                    transLeftList: [stripPlus(fmt(b*d,true,false))],
+                    transRightList: uniq([stripPlus(`${fmt(a,true,true)}${fmt(-b*c,false,true)}`), stripPlus(`${fmt(-b*c,true,true)}${fmt(a,false,true)}`)]),
+                    arrLeftAns: String(b*d),
+                    arrRightAns: stripPlus(fmt(a-b*c,true,true)),
+                    answer: String(x)
+                };
+            }
+            return null;
+        }
+
+        function genType6() {
+            for (let i = 0; i < 500; i++) {
+                const x = randInt(-9, 9); if (x === 0) continue;
+                const a = randInt(-9, 9); if (a === 0) continue;
+                const b = randIntSign(2, 5);
+                const c = randIntSign(1, 3);
+                const d = randInt(-5, 5); if (d === 0) continue;
+                const e = a + b * (c * x + d);
+                if (e === 0 || Math.abs(e) > 40) continue;
+                const bSign = b > 0 ? `+${b}` : `${b}`;
+                const leftStr = `${a}${bSign}(${fmt(c,true,true)}${fmt(d,false,false)})`;
+                const rightStr = `${e}`;
+                const p3 = [
+                    [e,-a,-b*d], [e,-b*d,-a],
+                    [-a,e,-b*d], [-a,-b*d,e],
+                    [-b*d,e,-a], [-b*d,-a,e]
+                ];
+                const transRightList = uniq(p3.map(arr => stripPlus(fmt(arr[0],true,false)+fmt(arr[1],false,false)+fmt(arr[2],false,false))));
+                return {
+                    leftPart: leftStr, rightPart: rightStr,
+                    expLeftAns: `${a}${fmt(b*c,false,true)}${fmt(b*d,false,false)}`,
+                    expRightAns: rightStr,
+                    transLeftList: [stripPlus(fmt(b*c,true,true))],
+                    transRightList: transRightList,
+                    arrLeftAns: stripPlus(fmt(b*c,true,true)),
+                    arrRightAns: String(e-a-b*d),
+                    answer: String(x)
+                };
+            }
+            return null;
+        }
+
+        function genType8() {
+            for (let i = 0; i < 500; i++) {
+                const x = randInt(-9, 9); if (x === 0) continue;
+                const a = randInt(-9, 9); if (a === 0) continue;
+                const b = randIntSign(2, 5);
+                const c = randIntSign(1, 3);
+                const d = randInt(-5, 5); if (d === 0) continue;
+                const e = a + b * (c * x + d);
+                if (e === 0 || Math.abs(e) > 40) continue;
+                const bSign = b > 0 ? `+${b}` : `${b}`;
+                const leftStr = `${e}`;
+                const rightStr = `${a}${bSign}(${fmt(c,true,true)}${fmt(d,false,false)})`;
+                const p3 = [
+                    [e,-a,-b*d], [e,-b*d,-a],
+                    [-a,e,-b*d], [-a,-b*d,e],
+                    [-b*d,e,-a], [-b*d,-a,e]
+                ];
+                const transLeftList = uniq(p3.map(arr => stripPlus(fmt(arr[0],true,false)+fmt(arr[1],false,false)+fmt(arr[2],false,false))));
+                return {
+                    leftPart: leftStr, rightPart: rightStr,
+                    expLeftAns: leftStr,
+                    expRightAns: `${a}${fmt(b*c,false,true)}${fmt(b*d,false,false)}`,
+                    transLeftList: transLeftList,
+                    transRightList: [stripPlus(fmt(b*c,true,true))],
+                    arrLeftAns: String(e-a-b*d),
+                    arrRightAns: stripPlus(fmt(b*c,true,true)),
+                    answer: String(x)
+                };
+            }
+            return null;
+        }
+
+        const GENS = { 1: genType1, 2: genType2, 3: () => genType34(false), 4: () => genType34(true), 5: genType5, 6: genType6, 7: genType7, 8: genType8 };
+
+        function genOne(t) {
+            for (let i = 0; i < 20; i++) {
+                const q = GENS[t]();
+                if (q) return q;
+            }
+            // フォールバック(理論上到達しない): シンプルな type1 を返す
+            return { leftPart: "2(x+1)", rightPart: "3x-1", expLeftAns: "2x+2", expRightAns: "3x-1", transLeftList: ["2x-3x","-3x+2x"], transRightList: ["-1-2","-2-1"], arrLeftAns: "-x", arrRightAns: "-3", answer: "3" };
+        }
+
+        // 検定(4問): {1,2} / {3,4} / {5,7} / {6,8} の4グループから各1問ランダムに選ぶ
+        const groups = [[1,2], [3,4], [5,7], [6,8]];
+        return groups.map(g => genOne(g[randInt(0, g.length - 1)]));
+    }
+
+
+    /* ==========================================================================
+       11. 固有データ（出題パターン・規定問題・ヒント）【固有】
+       ========================================================================== */
+
+    /* --- グループ情報（GROUP_INFO） --- */
+    /* --- 問題選択（グループ制）関連 --- */
+    const GROUP_INFO = {
+        A: { label: '問題選択', desc: 'かっこがある方程式', patternsPerSet: 4, total: 300 }
+    };
+
+    /* --- グループの並び順（GROUP_ORDER） --- */
+    const GROUP_ORDER = ['A'];
+
+    /* --- 規定問題（グループA）（FIXED_PROBLEMS_A） --- */
+    const FIXED_PROBLEMS_A = [
 {leftPart:"3(x+3)",rightPart:"-4x+16",expLeftAns:"3x+9",expRightAns:"-4x+16",transLeftList:["3x+4x","4x+3x"],transRightList:["-9+16","16-9"],arrLeftAns:"7x",arrRightAns:"7",answer:"1",qtype:1},
 {leftPart:"x-8",rightPart:"-2(x+1)",expLeftAns:"x-8",expRightAns:"-2x-2",transLeftList:["2x+x","x+2x"],transRightList:["-2+8","8-2"],arrLeftAns:"3x",arrRightAns:"6",answer:"2",qtype:2},
 {leftPart:"3(3x+2)",rightPart:"2(-2x-23)",expLeftAns:"9x+6",expRightAns:"-4x-46",transLeftList:["4x+9x","9x+4x"],transRightList:["-46-6","-6-46"],arrLeftAns:"13x",arrRightAns:"-52",answer:"-4",qtype:3},
@@ -2819,500 +3514,56 @@ if (bestNormalTimeMs === null || totalElapsedTimeMs < bestNormalTimeMs) {
 {leftPart:"6-2(-3x-3)",rightPart:"-36",expLeftAns:"6+6x+6",expRightAns:"-36",transLeftList:["6x"],transRightList:["-36-6-6","-6-36-6","-6-6-36","-36-12","-12-36"],arrLeftAns:"6x",arrRightAns:"-48",answer:"-8",qtype:6},
 {leftPart:"4(-3x-2)",rightPart:"-16x",expLeftAns:"-12x-8",expRightAns:"-16x",transLeftList:["-12x+16x","16x-12x"],transRightList:["8"],arrLeftAns:"4x",arrRightAns:"8",answer:"2",qtype:7},
 {leftPart:"-31",rightPart:"-1+3(-2x+2)",expLeftAns:"-31",expRightAns:"-1-6x+6",transLeftList:["6x"],transRightList:["-1+31+6","-1+6+31","31+6-1","31-1+6","6+31-1","6-1+31","5+31","31+5"],arrLeftAns:"6x",arrRightAns:"36",answer:"6",qtype:8}
-];
+    ];
 
-        let pendingResetType = null;
+    /* --- 規定問題のグループ別まとめ（FIXED_PROBLEMS_BY_GROUP） --- */
+    const FIXED_PROBLEMS_BY_GROUP = { A: FIXED_PROBLEMS_A };
 
-        function openResetConfirm(type) {
-            pendingResetType = type;
-            const msgEl = document.getElementById('reset-confirm-message');
-            if (msgEl) {
-                msgEl.textContent = (type === 'mondai')
-                    ? '問題選択の取り組み（★/☆の記録）がすべてリセットされます。よろしいですか？'
-                    : '検定のベストタイム・連続正解記録・受検回数がリセットされます。よろしいですか？';
-            }
-            const modal = document.getElementById('reset-confirm-modal');
-            if (modal) modal.style.display = 'flex';
-        }
-
-        function closeResetConfirm() {
-            pendingResetType = null;
-            const modal = document.getElementById('reset-confirm-modal');
-            if (modal) modal.style.display = 'none';
-        }
-
-        function confirmReset() {
-            if (pendingResetType === 'mondai') {
-                resetPracticeProgress();
-            } else if (pendingResetType === 'kiroku') {
-                bestNormalTimeMs = null;
-                correctStreakCount = 0;
-                maxStreakCount = 0;
-                kenteiAttemptCount = 0;
-                saveKenteiRecords();
-                if (!practiceMode) {
-                    const bestDisplayEl = document.getElementById('best-normal-display');
-                    if (bestDisplayEl) bestDisplayEl.innerText = 'ベストタイム(4問): --:--.-';
-                }
-            }
-            closeResetConfirm();
-        }
+    /* --- ヒント情報のマスターデータ（HINT_DATA） --- */
+    const HINT_DATA = {
+        start: "目指せ！パーフェクト！",
+        perfect: "全問ノーミスパーフェクト！",
+        finished: "全問終了！",
+        expansionInit: "まずは分配法則を使って、かっこをはずそう！",
+        expansionError: "符号に気をつけて展開しよう！",
+        timeoutExpansion: "時間切れ！<br>符号に気をつけて展開しよう！",
+        transpositionInit: "かっこがはずれたね！<br>次は $x$ の項を左へ、数字を右へ移項しよう！",
+        transpositionError: "移項すると「符号が変わる」ことに注意しよう！",
+        timeoutTransposition: "時間切れ！<br>移項すると符号が変わることに注意しよう！",
+        arrangementInit: "移項バッチリ！<br>次は両辺を計算して整理しよう。",
+        arrangementError: "計算ミスかも？もう一度確かめよう。",
+        timeoutArrangement: "時間切れ！<br>両辺の計算をもう一度確かめよう！",
+        answerInit: "計算バッチリ！<br>最後に解 $x$ を求めよう。",
+        answerError: "最後の一息！解をもう一度確かめよう。",
+        timeoutAnswer: "時間切れ！<br>解をもう一度確かめよう。",
+        nextQuestion: "正解！<br>『次の問題へ』を押そう。",
+        allFinished: "全問終了！<br>『送信』ボタンを押そう。"
+    };
 
 
-        let practiceMode              = false;
-        let practiceCurrentIndex      = null;
-        let practiceProgress          = [];
-        let savedQuizData              = null;
-        let savedCurrentQuestionIndex  = 0;
-        let savedTimerDisplayText      = null;
-        let savedBestDisplayText       = null;
+    /* ==========================================================================
+       12. イベントリスナー・初期化【共通】
+       ========================================================================== */
 
-        const PRACTICE_PROGRESS_KEY = 'kakko_ga_aru_practice_progress_v1';
+    /* --- 画面リサイズ時の拡大縮小（resize） --- */
+    window.addEventListener('resize', resizeApp);
 
-        let correctStreakCount = 0;
-        let maxStreakCount = 0;
-        const KENTEI_RECORDS_KEY = 'kakko_ga_aru_kentei_records_v1';
+    /* --- 読み込み完了時の初期化（DOMContentLoaded） --- */
+    window.addEventListener('DOMContentLoaded', () => {
+        resizeApp();
+        initValidationControls();
+        quizData = generateQuizData();
+        loadPracticeProgress();
+        loadKenteiRecords();
+        hideInactiveStages();
+        const bestDisplayEl = document.getElementById('best-normal-display');
+        if (bestDisplayEl) bestDisplayEl.innerText = bestTimeText(bestNormalTimeMs !== null ? formatMs(bestNormalTimeMs) : '--:--.-');
+        const backFromMondaiBtn = document.getElementById('btn-back-from-mondai');
+        if (backFromMondaiBtn && GROUP_ORDER.length === 1) backFromMondaiBtn.textContent = '←戻る';
+        showStartLayout();
+        showScreen('screen-start');
+    });
 
-        function formatMs(ms) {
-            const totalMs = Math.max(0, Math.round(ms));
-            const min = Math.floor(totalMs / 60000);
-            const sec = Math.floor((totalMs % 60000) / 1000);
-            const msec = Math.floor((totalMs % 1000) / 100);
-            return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}.${msec}`;
-        }
-
-        function loadKenteiRecords() {
-            try {
-                const raw = localStorage.getItem(KENTEI_RECORDS_KEY);
-                if (raw) {
-                    const parsed = JSON.parse(raw);
-                    bestNormalTimeMs = (typeof parsed.bestTimeMs === 'number') ? parsed.bestTimeMs : null;
-                    correctStreakCount = (typeof parsed.streak === 'number') ? parsed.streak : 0;
-                    maxStreakCount = (typeof parsed.maxStreak === 'number') ? parsed.maxStreak : 0;
-                    kenteiAttemptCount = (typeof parsed.attempts === 'number') ? parsed.attempts : 0;
-                    return;
-                }
-            } catch (e) { }
-            bestNormalTimeMs = null;
-            correctStreakCount = 0;
-            maxStreakCount = 0;
-            kenteiAttemptCount = 0;
-        }
-
-    function saveKenteiRecords() {
-        try {
-            localStorage.setItem(KENTEI_RECORDS_KEY, JSON.stringify({ bestTimeMs: bestNormalTimeMs, streak: correctStreakCount, maxStreak: maxStreakCount, attempts: kenteiAttemptCount }));
-        } catch (e) { /* 保存失敗時は何もしない */ }
-    }
-
-        function renderKirokuScreen() {
-            const perfectCount = practiceProgress.filter(s => s === 2).length;
-            const mistakeCount = practiceProgress.filter(s => s === 1).length;
-            const mondaiCountEl = document.getElementById('kiroku-mondai-count');
-            if (mondaiCountEl) mondaiCountEl.textContent = `★：${perfectCount}問／☆：${mistakeCount}問`;
-
-            const bestTimeEl = document.getElementById('kiroku-best-time');
-            if (bestTimeEl) bestTimeEl.textContent = (bestNormalTimeMs !== null) ? formatMs(bestNormalTimeMs) : '--:--.-';
-
-            const streakEl = document.getElementById('kiroku-streak');
-            if (streakEl) streakEl.textContent = `現在：${correctStreakCount}問／最高：${maxStreakCount}問`;
-            const attemptsEl = document.getElementById('kiroku-attempts');
-            if (attemptsEl) attemptsEl.textContent = `${kenteiAttemptCount}回`;
-        }
-
-        function loadPracticeProgress() {
-            try {
-                const raw = localStorage.getItem(PRACTICE_PROGRESS_KEY);
-                if (raw) {
-                    const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed) && parsed.length === FIXED_PROBLEMS.length) {
-                        practiceProgress = parsed;
-                        return;
-                    }
-                }
-            } catch (e) { }
-            practiceProgress = new Array(FIXED_PROBLEMS.length).fill(0);
-        }
-
-        function savePracticeProgress() {
-            try {
-                localStorage.setItem(PRACTICE_PROGRESS_KEY, JSON.stringify(practiceProgress));
-            } catch (e) { }
-        }
-
-        function resetPracticeProgress() {
-            practiceProgress = new Array(FIXED_PROBLEMS.length).fill(0);
-            savePracticeProgress();
-        }
-
-        function renderMondaiGrid() {
-            const wrap = document.getElementById('mondai-grid-wrap');
-            if (!wrap) return;
-
-            let html = '';
-            for (let i = 0; i < FIXED_PROBLEMS.length; i++) {
-                const status = practiceProgress[i] || 0;
-                const unlocked = (i === 0) || (practiceProgress[i - 1] >= 1);
-
-                let cellClass = 'grid-cell';
-                let starHtml = '';
-                if (!unlocked) {
-                    cellClass += ' locked';
-                } else if (status === 2) {
-                    cellClass += ' star-perfect';
-                    starHtml = '<span class="grid-cell-star star-perfect-mark">★</span>';
-                } else if (status === 1) {
-                    cellClass += ' star-mistake';
-                    starHtml = '<span class="grid-cell-star star-mistake-mark">☆</span>';
-                } else {
-                    cellClass += ' available';
-                }
-
-                const disabledAttr = unlocked ? '' : 'disabled';
-                const onclickAttr = unlocked ? `onclick="startPractice(${i})"` : '';
-
-                html += `<button type="button" class="${cellClass}" ${onclickAttr} ${disabledAttr}>`
-                      +   `${starHtml}<span class="grid-cell-num">${i + 1}</span>`
-                      +   `<span class="grid-cell-formula">$${FIXED_PROBLEMS[i].leftPart}=${FIXED_PROBLEMS[i].rightPart}$</span>`
-                      + `</button>`;
-            }
-            wrap.innerHTML = html;
-            wrap.scrollTop = 0;
-            updateMathJax([wrap]);
-        }
-
-        function startPractice(index) {
-            if (!practiceMode) {
-                savedQuizData = quizData;
-                savedCurrentQuestionIndex = currentQuestionIndex;
-
-                const timerDisplayEl = document.getElementById('timer-display');
-                const bestDisplayEl = document.getElementById('best-normal-display');
-                savedTimerDisplayText = timerDisplayEl ? timerDisplayEl.innerText : null;
-                savedBestDisplayText = bestDisplayEl ? bestDisplayEl.innerText : null;
-                if (timerDisplayEl) timerDisplayEl.innerText = '⏱️ --:--.-';
-                if (bestDisplayEl) bestDisplayEl.innerText = 'ベストタイム(4問): --:--.-';
-            }
-            practiceMode = true;
-            practiceCurrentIndex = index;
-            quizData = [FIXED_PROBLEMS[index]];
-            currentQuestionIndex = 0;
-
-            const timerArea = document.getElementById('timer-container-area');
-            if (timerArea) timerArea.classList.add('practice-disabled');
-
-            showScreen('screen-kentei');
-            startQuizGame();
-        }
-
-        function exitPracticeMode() {
-            practiceMode = false;
-            practiceCurrentIndex = null;
-            quizData = savedQuizData || generateQuizData();
-            currentQuestionIndex = savedCurrentQuestionIndex || 0;
-            gameStarted = false;
-            isCompleted = false;
-
-            const timerDisplayEl = document.getElementById('timer-display');
-            const bestDisplayEl = document.getElementById('best-normal-display');
-            if (timerDisplayEl && savedTimerDisplayText !== null) timerDisplayEl.innerText = savedTimerDisplayText;
-            if (bestDisplayEl && savedBestDisplayText !== null) bestDisplayEl.innerText = savedBestDisplayText;
-
-            const timerArea = document.getElementById('timer-container-area');
-            if (timerArea) timerArea.classList.remove('practice-disabled');
-
-            showStartLayout();
-        }
-
-        function goBackFromKentei() {
-            if (practiceMode) {
-                exitPracticeMode();
-                showScreen('screen-mondai');
-                renderMondaiGrid();
-            } else {
-                showScreen('screen-start');
-            }
-        }
-
-        function saveCurrentPracticeResult() {
-            const idx = practiceCurrentIndex;
-            if (idx === null || idx === undefined) return;
-            const star = (currentQuestionWrongCount > 0) ? 1 : 2;
-            const prev = practiceProgress[idx] || 0;
-            practiceProgress[idx] = Math.max(prev, star);
-            savePracticeProgress();
-        }
-
-        function recordPracticeResult() {
-            saveCurrentPracticeResult();
-            exitPracticeMode();
-            showScreen('screen-mondai');
-            renderMondaiGrid();
-        }
-
-        function advancePracticeToNext() {
-            saveCurrentPracticeResult();
-            const nextIndex = practiceCurrentIndex + 1;
-            if (nextIndex < FIXED_PROBLEMS.length) {
-                startPractice(nextIndex);
-            } else {
-                exitPracticeMode();
-                showScreen('screen-mondai');
-                renderMondaiGrid();
-            }
-        }
-
-        function generateQuizData() {
-            function fmt(val, isFirst, isX) {
-                if (val === 0) return "";
-                let sign = (val > 0) ? (isFirst ? "" : "+") : "-";
-                let av = Math.abs(val);
-                if (isX) return sign + (av === 1 ? "x" : av + "x");
-                return sign + av;
-            }
-            function stripPlus(s) { return s.startsWith('+') ? s.substring(1) : s; }
-            function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-            function randIntSign(min, max) { const v = randInt(min, max); return Math.random() < 0.5 ? v : -v; }
-            function uniq(arr) { return Array.from(new Set(arr)); }
-
-            function genType1() {
-                for (let i = 0; i < 500; i++) {
-                    const x = randInt(-9, 9); if (x === 0) continue;
-                    const a = randIntSign(2, 5);
-                    const b = randIntSign(1, 3);
-                    const c = randInt(-5, 5); if (c === 0) continue;
-                    const e = randInt(-5, 5);
-                    if (e === 0 || a * b - e === 0 || a * b - e === 1) continue;
-                    const f = a * (b * x + c) - e * x;
-                    if (f === 0 || Math.abs(f) > 30) continue;
-                    const leftStr = `${a}(${fmt(b,true,true)}${fmt(c,false,false)})`;
-                    const rightStr = `${fmt(e,true,true)}${fmt(f,false,false)}`;
-                    return {
-                        leftPart: leftStr, rightPart: rightStr,
-                        expLeftAns: `${fmt(a*b,true,true)}${fmt(a*c,false,false)}`,
-                        expRightAns: rightStr,
-                        transLeftList: uniq([stripPlus(`${fmt(a*b,true,true)}${fmt(-e,false,true)}`), stripPlus(`${fmt(-e,true,true)}${fmt(a*b,false,true)}`)]),
-                        transRightList: uniq([stripPlus(`${fmt(f,true,false)}${fmt(-a*c,false,false)}`), stripPlus(`${fmt(-a*c,true,false)}${fmt(f,false,false)}`)]),
-                        arrLeftAns: stripPlus(fmt(a*b-e,true,true)),
-                        arrRightAns: String(f-a*c),
-                        answer: String(x)
-                    };
-                }
-                return null;
-            }
-
-            function genType2() {
-                for (let i = 0; i < 500; i++) {
-                    const x = randInt(-9, 9); if (x === 0) continue;
-                    const d = randIntSign(2, 5);
-                    const e = randIntSign(1, 3);
-                    const f = randInt(-5, 5); if (f === 0) continue;
-                    const b = randInt(-5, 5);
-                    if (b === 0 || b - d * e === 0 || b - d * e === 1) continue;
-                    const c = d * (e * x + f) - b * x;
-                    if (c === 0 || Math.abs(c) > 30) continue;
-                    const leftStr = `${fmt(b,true,true)}${fmt(c,false,false)}`;
-                    const rightStr = `${d}(${fmt(e,true,true)}${fmt(f,false,false)})`;
-                    return {
-                        leftPart: leftStr, rightPart: rightStr,
-                        expLeftAns: leftStr,
-                        expRightAns: `${fmt(d*e,true,true)}${fmt(d*f,false,false)}`,
-                        transLeftList: uniq([stripPlus(`${fmt(b,true,true)}${fmt(-d*e,false,true)}`), stripPlus(`${fmt(-d*e,true,true)}${fmt(b,false,true)}`)]),
-                        transRightList: uniq([stripPlus(`${fmt(d*f,true,false)}${fmt(-c,false,false)}`), stripPlus(`${fmt(-c,true,false)}${fmt(d*f,false,false)}`)]),
-                        arrLeftAns: stripPlus(fmt(b-d*e,true,true)),
-                        arrRightAns: String(d*f-c),
-                        answer: String(x)
-                    };
-                }
-                return null;
-            }
-
-            function genType34(isType4) {
-                for (let i = 0; i < 1000; i++) {
-                    const x = randInt(-9, 9); if (x === 0) continue;
-                    let a, d;
-                    if (!isType4) {
-                        a = randInt(2, 5); d = randInt(2, 5);
-                    } else {
-                        do { a = randIntSign(2, 5); d = randIntSign(2, 5); } while (!(a < 0 || d < 0));
-                    }
-                    const b = randIntSign(1, 3);
-                    const c = randInt(-5, 5); if (c === 0) continue;
-                    const e = randIntSign(1, 3);
-                    if (a * b - d * e === 0 || a * b - d * e === 1) continue;
-                    const L = a * (b * x + c);
-                    const rem = L - d * e * x;
-                    if (rem % d !== 0) continue;
-                    const f = rem / d;
-                    if (f === 0 || Math.abs(f) > 30) continue;
-                    const leftStr = `${a}(${fmt(b,true,true)}${fmt(c,false,false)})`;
-                    const rightStr = `${d}(${fmt(e,true,true)}${fmt(f,false,false)})`;
-                    return {
-                        leftPart: leftStr, rightPart: rightStr,
-                        expLeftAns: `${fmt(a*b,true,true)}${fmt(a*c,false,false)}`,
-                        expRightAns: `${fmt(d*e,true,true)}${fmt(d*f,false,false)}`,
-                        transLeftList: uniq([stripPlus(`${fmt(a*b,true,true)}${fmt(-d*e,false,true)}`), stripPlus(`${fmt(-d*e,true,true)}${fmt(a*b,false,true)}`)]),
-                        transRightList: uniq([stripPlus(`${fmt(d*f,true,false)}${fmt(-a*c,false,false)}`), stripPlus(`${fmt(-a*c,true,false)}${fmt(d*f,false,false)}`)]),
-                        arrLeftAns: stripPlus(fmt(a*b-d*e,true,true)),
-                        arrRightAns: String(d*f-a*c),
-                        answer: String(x)
-                    };
-                }
-                return null;
-            }
-
-            function genType5() {
-                for (let i = 0; i < 500; i++) {
-                    const x = randInt(-9, 9); if (x === 0) continue;
-                    const b = randIntSign(2, 5);
-                    const c = randIntSign(1, 3);
-                    const d = randInt(-5, 5); if (d === 0) continue;
-                    const R = b * (c * x + d);
-                    if (R % x !== 0) continue;
-                    const a = R / x;
-                    if (a === 0 || a - b * c === 0 || a - b * c === 1) continue;
-                    const leftStr = fmt(a, true, true);
-                    const rightStr = `${b}(${fmt(c,true,true)}${fmt(d,false,false)})`;
-                    return {
-                        leftPart: leftStr, rightPart: rightStr,
-                        expLeftAns: leftStr,
-                        expRightAns: `${fmt(b*c,true,true)}${fmt(b*d,false,false)}`,
-                        transLeftList: uniq([stripPlus(`${fmt(a,true,true)}${fmt(-b*c,false,true)}`), stripPlus(`${fmt(-b*c,true,true)}${fmt(a,false,true)}`)]),
-                        transRightList: [stripPlus(fmt(b*d,true,false))],
-                        arrLeftAns: stripPlus(fmt(a-b*c,true,true)),
-                        arrRightAns: String(b*d),
-                        answer: String(x)
-                    };
-                }
-                return null;
-            }
-
-            function genType7() {
-                for (let i = 0; i < 500; i++) {
-                    const x = randInt(-9, 9); if (x === 0) continue;
-                    const b = randIntSign(2, 5);
-                    const c = randIntSign(1, 3);
-                    const d = randInt(-5, 5); if (d === 0) continue;
-                    const R = b * (c * x + d);
-                    if (R % x !== 0) continue;
-                    const a = R / x;
-                    if (a === 0 || a - b * c === 0 || a - b * c === 1) continue;
-                    const leftStr = `${b}(${fmt(c,true,true)}${fmt(d,false,false)})`;
-                    const rightStr = fmt(a, true, true);
-                    return {
-                        leftPart: leftStr, rightPart: rightStr,
-                        expLeftAns: `${fmt(b*c,true,true)}${fmt(b*d,false,false)}`,
-                        expRightAns: rightStr,
-                        transLeftList: [stripPlus(fmt(b*d,true,false))],
-                        transRightList: uniq([stripPlus(`${fmt(a,true,true)}${fmt(-b*c,false,true)}`), stripPlus(`${fmt(-b*c,true,true)}${fmt(a,false,true)}`)]),
-                        arrLeftAns: String(b*d),
-                        arrRightAns: stripPlus(fmt(a-b*c,true,true)),
-                        answer: String(x)
-                    };
-                }
-                return null;
-            }
-
-            function genType6() {
-                for (let i = 0; i < 500; i++) {
-                    const x = randInt(-9, 9); if (x === 0) continue;
-                    const a = randInt(-9, 9); if (a === 0) continue;
-                    const b = randIntSign(2, 5);
-                    const c = randIntSign(1, 3);
-                    const d = randInt(-5, 5); if (d === 0) continue;
-                    const e = a + b * (c * x + d);
-                    if (e === 0 || Math.abs(e) > 40) continue;
-                    const bSign = b > 0 ? `+${b}` : `${b}`;
-                    const leftStr = `${a}${bSign}(${fmt(c,true,true)}${fmt(d,false,false)})`;
-                    const rightStr = `${e}`;
-                    const p3 = [
-                        [e,-a,-b*d], [e,-b*d,-a],
-                        [-a,e,-b*d], [-a,-b*d,e],
-                        [-b*d,e,-a], [-b*d,-a,e]
-                    ];
-                    const transRightList = uniq(p3.map(arr => stripPlus(fmt(arr[0],true,false)+fmt(arr[1],false,false)+fmt(arr[2],false,false))));
-                    return {
-                        leftPart: leftStr, rightPart: rightStr,
-                        expLeftAns: `${a}${fmt(b*c,false,true)}${fmt(b*d,false,false)}`,
-                        expRightAns: rightStr,
-                        transLeftList: [stripPlus(fmt(b*c,true,true))],
-                        transRightList: transRightList,
-                        arrLeftAns: stripPlus(fmt(b*c,true,true)),
-                        arrRightAns: String(e-a-b*d),
-                        answer: String(x)
-                    };
-                }
-                return null;
-            }
-
-            function genType8() {
-                for (let i = 0; i < 500; i++) {
-                    const x = randInt(-9, 9); if (x === 0) continue;
-                    const a = randInt(-9, 9); if (a === 0) continue;
-                    const b = randIntSign(2, 5);
-                    const c = randIntSign(1, 3);
-                    const d = randInt(-5, 5); if (d === 0) continue;
-                    const e = a + b * (c * x + d);
-                    if (e === 0 || Math.abs(e) > 40) continue;
-                    const bSign = b > 0 ? `+${b}` : `${b}`;
-                    const leftStr = `${e}`;
-                    const rightStr = `${a}${bSign}(${fmt(c,true,true)}${fmt(d,false,false)})`;
-                    const p3 = [
-                        [e,-a,-b*d], [e,-b*d,-a],
-                        [-a,e,-b*d], [-a,-b*d,e],
-                        [-b*d,e,-a], [-b*d,-a,e]
-                    ];
-                    const transLeftList = uniq(p3.map(arr => stripPlus(fmt(arr[0],true,false)+fmt(arr[1],false,false)+fmt(arr[2],false,false))));
-                    return {
-                        leftPart: leftStr, rightPart: rightStr,
-                        expLeftAns: leftStr,
-                        expRightAns: `${a}${fmt(b*c,false,true)}${fmt(b*d,false,false)}`,
-                        transLeftList: transLeftList,
-                        transRightList: [stripPlus(fmt(b*c,true,true))],
-                        arrLeftAns: String(e-a-b*d),
-                        arrRightAns: stripPlus(fmt(b*c,true,true)),
-                        answer: String(x)
-                    };
-                }
-                return null;
-            }
-
-            const GENS = { 1: genType1, 2: genType2, 3: () => genType34(false), 4: () => genType34(true), 5: genType5, 6: genType6, 7: genType7, 8: genType8 };
-
-            function genOne(t) {
-                for (let i = 0; i < 20; i++) {
-                    const q = GENS[t]();
-                    if (q) return q;
-                }
-                // フォールバック(理論上到達しない): シンプルな type1 を返す
-                return { leftPart: "2(x+1)", rightPart: "3x-1", expLeftAns: "2x+2", expRightAns: "3x-1", transLeftList: ["2x-3x","-3x+2x"], transRightList: ["-1-2","-2-1"], arrLeftAns: "-x", arrRightAns: "-3", answer: "3" };
-            }
-
-            // 検定(4問): {1,2} / {3,4} / {5,7} / {6,8} の4グループから各1問ランダムに選ぶ
-            const groups = [[1,2], [3,4], [5,7], [6,8]];
-            return groups.map(g => genOne(g[randInt(0, g.length - 1)]));
-        }
-
-        const HINT_MASTER = {
-            start: "目指せ！パーフェクト！",
-            perfect: "全問ノーミスパーフェクト！",
-            finished: "全問終了！",
-            expansionInit: "まずは分配法則を使って、かっこをはずそう！",
-            expansionError: "符号に気をつけて展開しよう！",
-            timeoutExpansion: "時間切れ！<br>符号に気をつけて展開しよう！",
-            transpositionInit: "かっこがはずれたね！<br>次は $x$ の項を左へ、数字を右へ移項しよう！",
-            transpositionError: "移項すると「符号が変わる」ことに注意しよう！",
-            timeoutTransposition: "時間切れ！<br>移項すると符号が変わることに注意しよう！",
-            arrangementInit: "移項バッチリ！<br>次は両辺を計算して整理しよう。",
-            arrangementError: "計算ミスかも？もう一度確かめよう。",
-            timeoutArrangement: "時間切れ！<br>両辺の計算をもう一度確かめよう！",
-            answerInit: "計算バッチリ！<br>最後に解 $x$ を求めよう。",
-            answerError: "最後の一息！解をもう一度確かめよう。",
-            timeoutAnswer: "時間切れ！<br>解をもう一度確かめよう。",
-            nextQuestion: "正解！<br>『次の問題へ』を押そう。",
-            allFinished: "全問終了！<br>『送信』ボタンを押そう。"
-        };
-
-    </script>
+</script>
 </body>
 </html>
