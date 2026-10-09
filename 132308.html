@@ -2787,24 +2787,8 @@ function isCurrentStageEmpty() {
             const hintBody = document.getElementById('hint-text');
 
             // ステージごとのタイムアウト時ヒントを表示
-            if (currentStage === 'clear-denom') {
-                let userLeft = getUserAnswerBySide('clear-denom', 'left');
-                let userRight = getUserAnswerBySide('clear-denom', 'right');
-                
-                // 入力されている場合は正解判定を試みる
-                if (userLeft && userRight) {
-                    const clean = str => (str || '').replace(/^\(([0-9x]+)\)/, '$1').replace(/^\+/, '');
-                    const isOk = (ans, user) => Array.isArray(ans) ? ans.includes(clean(user)) : clean(user) === clean(ans);
-                    if (isOk(q.clearDenomLeftAns, userLeft) && isOk(q.clearDenomRightAns, userRight)) {
-                        advanceStage('clear-denom');
-                        return;
-                    }
-                }
-                hintBody.innerHTML = HINT_DATA.timeoutClearDenom;
-            } else {
-                hintBody.innerHTML = HINT_DATA[stageTimeoutHintKey(currentStage)];
-            }
-            
+            hintBody.innerHTML = HINT_DATA[stageTimeoutHintKey(currentStage)];
+        
             // エラーアニメーションを実行してタイマー再開
             showStepError(targetGroup);
             startQuestionTimer();
