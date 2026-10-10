@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>座標ゲーム「バトルシップ」</title>
+<script>window.MathJax={startup:{typeset:false},svg:{fontCache:'global'}};</script>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;background:#cfe6f5;overflow:hidden;font-family:"Hiragino Kaku Gothic ProN","Meiryo",sans-serif;color:#1b2a3a}
+#app{position:absolute;left:50%;top:50%;width:960px;height:640px;transform:translate(-50%,-50%) scale(var(--s,1));background:#eaf4fb;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.25)}
+header{height:44px;flex:none;background:#0d3b66;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:bold;letter-spacing:.05em}
+footer{height:28px;flex:none;background:#0d3b66;color:#cfe6f5;display:flex;align-items:center;justify-content:center;font-size:13px}
+main{flex:1;min-height:0;position:relative}
+.screen{position:absolute;inset:0;display:none}
+.screen.active{display:flex}
+button{font-family:inherit;cursor:pointer}
+
+/* 開始画面 */
+#start{align-items:center;justify-content:center}
+.card{width:860px;background:#fff;border:2px solid #9cc3e0;border-radius:12px;padding:16px 24px 18px;text-align:center}
+.card h2{font-size:22px;color:#0d3b66;margin-bottom:10px}
+.steps{text-align:left;font-size:15px;line-height:1.7;margin:0 auto 10px;width:780px}
+.steps b{color:#0d3b66}
+.judges{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:6px 0 14px;text-align:left}
+.jcard{border-radius:8px;padding:8px 10px;font-size:13px;line-height:1.5;color:#1b2a3a;border:2px solid}
+.jcard b{display:block;font-size:16px;margin-bottom:2px}
+.j-hit{border-color:#e53935;background:#fdecec}.j-hit b{color:#e53935}
+.j-stay{border-color:#fb8c00;background:#fff3e3}.j-stay b{color:#e07b00}
+.j-near{border-color:#1e88e5;background:#e8f2fd}.j-near b{color:#1e88e5}
+.j-miss{border-color:#8e9aa5;background:#f1f3f5}.j-miss b{color:#67737e}
+.bigbtn{font-size:22px;font-weight:bold;color:#fff;background:#e53935;border:none;border-radius:10px;padding:10px 56px;box-shadow:0 3px 0 #a52422}
+.bigbtn:active{transform:translateY(2px);box-shadow:0 1px 0 #a52422}
+
+/* ゲーム画面 */
+#game{padding:8px;gap:8px}
+.col{display:flex;flex-direction:column;gap:8px;min-width:0}
+#left{width:520px}
+#right{width:416px}
+.panel{background:#fff;border:2px solid #9cc3e0;border-radius:8px;padding:6px;display:flex;flex-direction:column;min-height:0}
+.panel.top{height:380px}
+.panel.bottom{height:164px}
+.ph{display:flex;align-items:center;justify-content:space-between;height:22px;flex:none;font-size:14px;font-weight:bold;color:#0d3b66}
+.legend{font-size:11px;font-weight:normal;color:#444;display:flex;gap:6px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:2px;vertical-align:-1px}
+svg.graph{flex:1;min-height:0;width:100%;cursor:crosshair;display:block}
+#left .panel.top{position:relative}
+#banner{position:absolute;inset:0;display:none;align-items:center;justify-content:center;pointer-events:none;background:rgba(255,255,255,.55);border-radius:8px;z-index:5}
+#bannerText{font-size:72px;font-weight:bold;text-shadow:0 0 6px #fff,0 0 6px #fff,0 3px 6px rgba(0,0,0,.35)}
+#banner.show{display:flex;animation:bnr 1s ease-out forwards}
+@keyframes bnr{0%{opacity:0;transform:scale(.6)}15%{opacity:1;transform:scale(1.1)}25%{transform:scale(1)}80%{opacity:1}100%{opacity:0}}
+#left .bottom{flex-direction:row;gap:8px}
+#lcol{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+#turn{font-size:15px;font-weight:bold;padding:4px 8px;border-radius:6px;background:#e8f2fd;color:#0d3b66;white-space:nowrap;overflow:hidden}
+#turn.cpu{background:#fdecec;color:#b53030}
+.inrow{display:flex;align-items:center;justify-content:center;gap:4px}
+.inrow label{font-size:14px;font-weight:bold;color:#0d3b66;margin-right:2px;white-space:nowrap}
+.inrow .par{font-size:20px;font-weight:bold;color:#0d3b66}
+.cbox{display:inline-flex;align-items:center;justify-content:center;padding:0;width:64px;height:34px;font-size:20px;font-family:inherit;font-weight:bold;color:#1b2a3a;background:#fff;border:2px solid #9cc3e0;border-radius:6px}
+.cbox.ph{font-size:13px;color:#8a97a3;font-weight:normal}
+.cbox.sel{border-color:#e53935;background:#fff6f5;box-shadow:0 0 0 2px #f6b5b2}
+.cbox:disabled{background:#eee}
+.row3{display:flex;align-items:center;justify-content:center}
+.cbox mjx-container{margin:0!important}
+#pad{width:188px;flex:none;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,1fr);gap:4px;user-select:none;-webkit-user-select:none}
+#pad button{font-size:20px;font-weight:bold;border:2px solid #0d3b66;background:#f4f9fd;color:#0d3b66;border-radius:6px;padding:0}
+#pad button:not(:disabled):active{background:#cfe6f5}
+#pad button:disabled{background:#e3e7ea;border-color:#b9c2c9;color:#a9b3bb;cursor:default}
+#pad .z{grid-column:2/4}
+#pad .nx{grid-column:4;grid-row:2/5;background:#0d3b66;color:#fff;font-size:16px}
+#atk{font-size:18px;font-weight:bold;color:#fff;background:#e53935;border:none;border-radius:8px;padding:5px 32px;box-shadow:0 3px 0 #a52422}
+#atk:disabled{background:#b9c2c9;box-shadow:0 3px 0 #8e9aa5;cursor:default}
+#atk:not(:disabled):active{transform:translateY(2px);box-shadow:0 1px 0 #a52422}
+#pickinfo{font-size:13px;color:#444}
+#msg{font-size:12px;line-height:1.25;color:#c62828;min-height:30px;font-weight:bold}
+
+#setupView,#resultView{display:none;flex:1;min-height:0;flex-direction:column;gap:6px}
+#setupView.active,#resultView.active{display:flex}
+#setupView p{font-size:14px;line-height:1.5}
+#setupCount{font-size:18px;font-weight:bold;color:#0d3b66}
+.btnrow{display:flex;align-items:center;gap:8px;flex-wrap:nowrap}
+.sbtn{font-size:14px;font-weight:bold;border:2px solid #0d3b66;background:#fff;color:#0d3b66;border-radius:8px;padding:6px 10px}
+.sbtn.go{background:#0d3b66;color:#fff}
+.sbtn:disabled{opacity:.4;cursor:default}
+.rbox-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;flex:none}
+.rbox{height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:bold;color:#fff;opacity:.28;border:3px solid transparent;transition:.15s}
+.rbox.on{opacity:1;transform:scale(1.04);border-color:#222;box-shadow:0 0 8px rgba(0,0,0,.4)}
+#b-hit{background:#e53935}#b-stay{background:#fb8c00}#b-near{background:#1e88e5}#b-miss{background:#8e9aa5}
+#latest{font-size:13px;font-weight:bold;min-height:18px;flex:none}
+#score{font-size:12px;color:#0d3b66;flex:none}
+#log{flex:1;min-height:0;overflow:hidden;font-size:12px;line-height:1.35;color:#333;border-top:1px dashed #9cc3e0;padding-top:3px}
+#log div:first-child{font-weight:bold}
+
+/* 結果オーバーレイ */
+#over{position:absolute;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:10}
+#over.active{display:flex}
+#overCard{background:#fff;border-radius:14px;padding:26px 44px;text-align:center;border:4px solid #0d3b66}
+#overCard h2{font-size:30px;margin-bottom:8px}
+#overCard p{font-size:16px;margin-bottom:16px;line-height:1.6}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>座標ゲーム「バトルシップ」</header>
+  <main>
+    <!-- 開始画面 -->
+    <section id="start" class="screen active">
+      <div class="card">
+        <h2>ゲームの進め方</h2>
+        <div class="steps">
+          <div><b>① 準備：</b>右上のグラフで、自分の点を<b>5つ</b>えらびます（x, yは -5〜5 の整数）。CPUも5点をかくしています。</div>
+          <div><b>② 予想：</b>左上のグラフに、「相手の点がありそうな場所」の点をとります。</div>
+          <div><b>③ 読む：</b>左下の「x座標」「y座標」の枠を選び、ミニテンキーで読んだ座標を入力して、<b>「アタック」</b>を押します。</div>
+          <div><b>④ 判定：</b>ヒットしたら続けてアタック！ それ以外は交代です。先に相手の5点をすべてヒットさせたら勝ち！</div>
+        </div>
+        <div class="judges">
+          <div class="jcard j-hit"><b>ヒット</b>とった点も、読みも、相手の同じ点にあっている</div>
+          <div class="jcard j-stay"><b>ステイ</b>とった点、または読みの<br>どちらかがあっている</div>
+          <div class="jcard j-near"><b>ニア</b>相手の点の周り8点を、とっている（または読んでいる）</div>
+          <div class="jcard j-miss"><b>ミス</b>それ以外</div>
+        </div>
+        <button class="bigbtn" id="startBtn">スタート</button>
+      </div>
+    </section>
+
+    <!-- ゲーム画面 -->
+    <section id="game" class="screen">
+      <div id="left" class="col">
+        <div class="panel top">
+          <div class="ph"><span>プレイ画面（相手の点を予想してとろう）</span>
+            <span class="legend"><span><i style="background:#e53935"></i>ヒット</span><span><i style="background:#fb8c00"></i>ステイ</span><span><i style="background:#1e88e5"></i>ニア</span><span><i style="background:#8e9aa5"></i>ミス</span></span></div>
+          <svg id="gLeft" class="graph" viewBox="0 0 384 384"></svg>
+          <div id="banner"><span id="bannerText"></span></div>
+        </div>
+        <div class="panel bottom">
+          <div id="lcol">
+            <div id="turn">準備中</div>
+            <div class="inrow">
+              <label>座標を読む</label><span class="par">(</span>
+              <button type="button" class="cbox ph" id="bx" disabled>x座標</button>
+              <span class="par">,</span>
+              <button type="button" class="cbox ph" id="by" disabled>y座標</button>
+              <span class="par">)</span>
+            </div>
+            <div class="row3"><button id="atk" disabled>アタック</button></div>
+            <div id="msg"></div>
+          </div>
+          <div id="pad">
+            <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button><button data-k="bs">⌫</button>
+            <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button><button class="nx" id="padNext" data-k="next">次へ</button>
+            <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+            <button data-k="neg">−</button><button class="z" data-k="0">0</button>
+          </div>
+        </div>
+      </div>
+      <div id="right" class="col">
+        <div class="panel top">
+          <div class="ph"><span>自分の画面（■ = 自分の点）</span></div>
+          <svg id="gRight" class="graph" viewBox="0 0 384 384"></svg>
+        </div>
+        <div class="panel bottom">
+          <div id="setupView" class="active">
+            <p>右上のグラフをクリックして、<b>自分の5点</b>をえらぼう。<br>もう一度クリックすると取り消せます。</p>
+            <div class="btnrow">
+              <div id="setupCount">0 / 5 点</div>
+              <button class="sbtn" id="clearBtn">やりなおし</button>
+              <button class="sbtn go" id="goBtn" disabled>バトル開始</button>
+            </div>
+          </div>
+          <div id="resultView">
+            <div class="rbox-row">
+              <div class="rbox" id="b-hit">ヒット</div>
+              <div class="rbox" id="b-stay">ステイ</div>
+              <div class="rbox" id="b-near">ニア</div>
+              <div class="rbox" id="b-miss">ミス</div>
+            </div>
+            <div id="latest">結果がここに表示されます</div>
+            <div id="score"></div>
+            <div id="log"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div id="over"><div id="overCard"><h2 id="overTitle"></h2><p id="overText"></p><button class="bigbtn" id="againBtn">もう一度あそぶ</button></div></div>
+  </main>
+  <footer>©中原先生の数学部屋</footer>
+</div>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const NS=5, R=5, U=30, OFF=6.4;
+const COL={hit:'#e53935',stay:'#fb8c00',near:'#1e88e5',miss:'#8e9aa5'};
+const JP={hit:'ヒット',stay:'ステイ',near:'ニア',miss:'ミス'};
+const CH={hit:'ヒ',stay:'ス',near:'ニ',miss:'ミ'};
+const X=x=>(x+OFF)*U, Y=y=>(OFF-y)*U;
+const same=(a,b)=>a.x===b.x&&a.y===b.y;
+const key=c=>c.x+','+c.y;
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const inRange=c=>Math.abs(c.x)<=R&&Math.abs(c.y)<=R;
+
+let st={};
+
+/* ---------- 画面の拡縮（小さい画面のみ縮小） ---------- */
+function fit(){const s=Math.min(window.innerWidth/960,window.innerHeight/640,1);$('app').style.setProperty('--s',s);}
+window.addEventListener('resize',fit);fit();
+
+/* ---------- グラフ描画 ---------- */
+function baseGrid(){
+  let s='';
+  for(let i=-R;i<=R;i++){
+    s+=`<line x1="${X(i)}" y1="${Y(-R)}" x2="${X(i)}" y2="${Y(R)}" stroke="#d3dce4" stroke-width="1"/>`;
+    s+=`<line x1="${X(-R)}" y1="${Y(i)}" x2="${X(R)}" y2="${Y(i)}" stroke="#d3dce4" stroke-width="1"/>`;
+  }
+  s+=`<line x1="${X(-6)}" y1="${Y(0)}" x2="${X(6)}" y2="${Y(0)}" stroke="#1b2a3a" stroke-width="1.6"/>`;
+  s+=`<line x1="${X(0)}" y1="${Y(-6)}" x2="${X(0)}" y2="${Y(6)}" stroke="#1b2a3a" stroke-width="1.6"/>`;
+  s+=`<polygon points="${X(6.2)},${Y(0)} ${X(5.8)},${Y(0.18)} ${X(5.8)},${Y(-0.18)}" fill="#1b2a3a"/>`;
+  s+=`<polygon points="${X(0)},${Y(6.2)} ${X(0.18)},${Y(5.8)} ${X(-0.18)},${Y(5.8)}" fill="#1b2a3a"/>`;
+  for(let i=-R;i<=R;i++){
+    if(i===0)continue;
+    s+=`<text x="${X(i)}" y="${Y(0)+14}" text-anchor="middle" font-size="10" fill="#333">${i}</text>`;
+    s+=`<text x="${X(0)-5}" y="${Y(i)+3.5}" text-anchor="end" font-size="10" fill="#333">${i}</text>`;
+  }
+  s+=`<text x="${X(0)-5}" y="${Y(0)+14}" text-anchor="end" font-size="10" fill="#333">O</text>`;
+  s+=`<text x="${X(5.95)}" y="${Y(0)-7}" text-anchor="middle" font-size="12" font-style="italic" fill="#1b2a3a">x</text>`;
+  s+=`<text x="${X(0)+9}" y="${Y(5.95)+3}" text-anchor="start" font-size="12" font-style="italic" fill="#1b2a3a">y</text>`;
+  return s;
+}
+function mark(c,kind,latest){
+  const cx=X(c.x),cy=Y(c.y);
+  let s='<g>';
+  if(latest)s+=`<circle cx="${cx}" cy="${cy}" r="15" fill="none" stroke="#111" stroke-width="2" stroke-dasharray="3 2"/>`;
+  s+=`<circle cx="${cx}" cy="${cy}" r="10" fill="${COL[kind]}" fill-opacity=".92" stroke="#fff" stroke-width="1.5"/>`;
+  s+=`<text x="${cx}" y="${cy+4}" text-anchor="middle" font-size="11" font-weight="bold" fill="#fff">${CH[kind]}</text></g>`;
+  return s;
+}
+function renderLeft(){
+  let s=baseGrid();
+  const pk=new Set(st.pAttacks.map(a=>key(a.P)));
+  st.omarks.forEach(c=>{
+    if(st.blocked.has(key(c)))return;
+    s+=`<circle cx="${X(c.x)}" cy="${Y(c.y)}" r="8" fill="none" stroke="#1e88e5" stroke-width="2.4"/>`;
+  });
+  st.xmarks.forEach(c=>{
+    if(pk.has(key(c)))return;
+    const cx=X(c.x),cy=Y(c.y);
+    s+=`<line x1="${cx-6}" y1="${cy-6}" x2="${cx+6}" y2="${cy+6}" stroke="#c0392b" stroke-width="2.4" stroke-linecap="round"/><line x1="${cx-6}" y1="${cy+6}" x2="${cx+6}" y2="${cy-6}" stroke="#c0392b" stroke-width="2.4" stroke-linecap="round"/>`;
+  });
+  if(st.phase==='over'){
+    st.cpuShips.filter(h=>!h.hit).forEach(c=>{
+      s+=`<rect x="${X(c.x)-9}" y="${Y(c.y)-9}" width="18" height="18" rx="3" fill="none" stroke="#0d3b66" stroke-width="2" stroke-dasharray="3 2"/>`;
+    });
+  }
+  st.pAttacks.forEach(a=>{s+=mark(a.P,a.kind,false);});
+  if(st.pick){
+    const cx=X(st.pick.x),cy=Y(st.pick.y);
+    s+=`<circle cx="${cx}" cy="${cy}" r="13" fill="none" stroke="#0d3b66" stroke-width="2.5" stroke-dasharray="4 2"/>`;
+    s+=`<circle cx="${cx}" cy="${cy}" r="3.5" fill="#0d3b66"/>`;
+  }
+  $('gLeft').innerHTML=s;
+}
+function renderRight(){
+  let s=baseGrid();
+  st.myShips.forEach(c=>{
+    s+=`<rect x="${X(c.x)-9}" y="${Y(c.y)-9}" width="18" height="18" rx="3" fill="${c.hit?'#7b1f1f':'#0d3b66'}" stroke="${c.hit?'#e53935':'#fff'}" stroke-width="1.5"/>`;
+  });
+  const n=st.cAttacks.length;
+  st.cAttacks.forEach((a,i)=>{s+=mark(a.P,a.kind,i===n-1);});
+  $('gRight').innerHTML=s;
+}
+
+/* ---------- 判定 ---------- */
+function judge(ships,P,Rd){
+  const alive=ships.filter(s=>!s.hit);
+  const iP=alive.findIndex(s=>same(s,P));
+  const iR=alive.findIndex(s=>same(s,Rd));
+  if(iP>=0&&iP===iR)return{kind:'hit',ship:alive[iP]};
+  if(iP>=0||iR>=0)return{kind:'stay'};
+  const near=a=>alive.some(s=>Math.max(Math.abs(s.x-a.x),Math.abs(s.y-a.y))===1);
+  if(near(P)||near(Rd))return{kind:'near'};
+  return{kind:'miss'};
+}
+const isHitCell=(ships,c)=>ships.some(s=>s.hit&&same(s,c));
+const nbrs=c=>{const a=[];for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){if(!dx&&!dy)continue;const n={x:c.x+dx,y:c.y+dy};if(inRange(n))a.push(n);}return a;};
+
+/* ---------- 表示更新 ---------- */
+function setMath(b,v){
+  if(b.dataset.v===v)return;
+  b.dataset.v=v;
+  if(v===''){b.textContent=b.id==='bx'?'x座標':'y座標';return;}
+  if(v==='-'||!(window.MathJax&&window.MathJax.typesetPromise)){b.textContent=v.replace('-','−');return;}
+  b.textContent='\\('+v+'\\)';
+  window.MathJax.typesetPromise([b]).catch(()=>{b.textContent=v.replace('-','−');});
+}
+function updateAtk(){
+  const ok=st.phase==='player'&&!!st.pick&&/^-?\d$/.test(st.vals.x)&&/^-?\d$/.test(st.vals.y);
+  $('atk').disabled=!ok;
+}
+function renderInput(){
+  const on=st.phase==='player';
+  [['x','bx'],['y','by']].forEach(([f,id])=>{
+    const b=$(id),v=st.vals[f];
+    b.disabled=!on;
+    b.classList.toggle('ph',v==='');
+    b.classList.toggle('sel',on&&st.field===f);
+    setMath(b,v);
+  });
+  const padOn=on&&!!st.field;
+  $('pad').querySelectorAll('button').forEach(k=>{k.disabled=!padOn;});
+  $('padNext').textContent=st.field==='y'?'OK':'次へ';
+  updateAtk();
+}
+function updateTurn(){
+  const t=$('turn');
+  t.classList.remove('cpu');
+  if(st.phase==='setup'){t.textContent='準備中：右上で5点をえらぼう';}
+  else if(st.phase==='player'){t.textContent='あなたのターン';}
+  else if(st.phase==='cpu'){t.textContent='CPUのターン…';t.classList.add('cpu');}
+  else{t.textContent='ゲーム終了';}
+  if(st.phase!=='player')st.field=null;
+  renderInput();
+}
+function updatePick(){updateAtk();}
+function updateScore(){
+  const a=st.cpuShips.filter(s=>s.hit).length,b=st.myShips.filter(s=>s.hit).length;
+  $('score').textContent=`あなたのヒット：${a} / ${NS} 点　　CPUのヒット：${b} / ${NS} 点`;
+}
+function showResult(who,kind,P,Rd){
+  ['hit','stay','near','miss'].forEach(k=>$('b-'+k).classList.toggle('on',k===kind));
+  $('latest').textContent=`${who}の攻撃 → ${JP[kind]}！`;
+  $('latest').style.color=COL[kind];
+  const line=`${who}　とった点(${P.x}, ${Rd===null?'':''}${P.y})　読み(${Rd.x}, ${Rd.y})　→ ${JP[kind]}`;
+  st.log.unshift(line);
+  st.log=st.log.slice(0,3);
+  $('log').innerHTML=st.log.map(l=>`<div>${l}</div>`).join('');
+  updateScore();
+}
+function updateSetupUI(){
+  const n=st.myShips.length;
+  $('setupCount').textContent=`${n} / ${NS} 点`;
+  $('goBtn').disabled=(n!==NS);
+}
+
+function flashBanner(kind){
+  const b=$('banner'),t=$('bannerText');
+  t.textContent=JP[kind];
+  t.style.color=COL[kind];
+  b.classList.remove('show');
+  void b.offsetWidth;
+  b.classList.add('show');
+  clearTimeout(flashBanner.tm);
+  flashBanner.tm=setTimeout(()=>b.classList.remove('show'),1000);
+}
+
+/* ---------- ゲーム進行 ---------- */
+function randomShips(){
+  const all=[];for(let x=-R;x<=R;x++)for(let y=-R;y<=R;y++)all.push({x,y});
+  return shuffle(all).slice(0,NS).map(c=>({x:c.x,y:c.y,hit:false}));
+}
+function resetGame(){
+  st={phase:'setup',myShips:[],cpuShips:randomShips(),pAttacks:[],cAttacks:[],pick:null,log:[],vals:{x:'',y:''},field:null,blocked:new Set(),xmarks:[],omarks:[],
+      cpu:{queue:[],exact:new Set()}};
+  $('over').classList.remove('active');
+  $('setupView').classList.add('active');$('resultView').classList.remove('active');
+  ['hit','stay','near','miss'].forEach(k=>$('b-'+k).classList.remove('on'));
+  $('latest').textContent='結果がここに表示されます';$('latest').style.color='';
+  $('log').innerHTML='';$('score').textContent='';$('msg').textContent='';
+  renderLeft();renderRight();updateTurn();updatePick();updateSetupUI();
+}
+function cellFrom(e,svg){
+  const r=svg.getBoundingClientRect();
+  const sc=Math.min(r.width,r.height)/384;
+  const ox=(r.width-384*sc)/2,oy=(r.height-384*sc)/2;
+  const vx=(e.clientX-r.left-ox)/sc,vy=(e.clientY-r.top-oy)/sc;
+  const c={x:Math.round(vx/U-OFF),y:Math.round(OFF-vy/U)};
+  return inRange(c)?c:null;
+}
+
+/* 準備：右グラフで5点をえらぶ */
+$('gRight').addEventListener('click',e=>{
+  if(st.phase!=='setup')return;
+  const c=cellFrom(e,$('gRight'));if(!c)return;
+  const i=st.myShips.findIndex(s=>same(s,c));
+  if(i>=0)st.myShips.splice(i,1);
+  else if(st.myShips.length<NS)st.myShips.push({x:c.x,y:c.y,hit:false});
+  renderRight();updateSetupUI();
+});
+$('clearBtn').addEventListener('click',()=>{st.myShips=[];renderRight();updateSetupUI();});
+$('goBtn').addEventListener('click',()=>{
+  if(st.myShips.length!==NS)return;
+  st.phase='player';
+  $('setupView').classList.remove('active');$('resultView').classList.add('active');
+  updateScore();updateTurn();
+});
+
+/* 左グラフで点をとる */
+$('gLeft').addEventListener('click',e=>{
+  if(st.phase!=='player')return;
+  const c=cellFrom(e,$('gLeft'));if(!c)return;
+  $('msg').style.color='';
+  if(st.blocked.has(key(c))){$('msg').textContent='この点はえらべません。';return;}
+  st.pick=c;$('msg').textContent='';st.field='x';renderLeft();renderInput();
+});
+
+/* プレイヤーのアタック */
+function playerAttack(){
+  if(st.phase!=='player')return;
+  const msg=$('msg');msg.textContent='';msg.style.color='';
+  if(!st.pick){msg.textContent='先に、左上のグラフに点をとってください。';return;}
+  const vx=st.vals.x,vy=st.vals.y;
+  if(!/^-?\d$/.test(vx)||!/^-?\d$/.test(vy)){msg.textContent='x座標・y座標を入力してください。';return;}
+  const Rd={x:parseInt(vx,10)+0,y:parseInt(vy,10)+0};
+  if(!inRange(Rd)){msg.textContent='x, y は -5〜5 の整数で入力してください。';return;}
+  const P=st.pick;
+  if(isHitCell(st.cpuShips,P)||isHitCell(st.cpuShips,Rd)){msg.textContent='すでにヒットした点には、もうアタックできません。';return;}
+  const res=judge(st.cpuShips,P,Rd);
+  if(res.kind==='hit')res.ship.hit=true;
+  st.pAttacks.push({P,R:Rd,kind:res.kind});
+  if(res.kind!=='stay')st.blocked.add(key(P));
+  if(res.kind==='miss')nbrs(P).forEach(c=>{st.blocked.add(key(c));st.xmarks.push(c);});
+  if(res.kind==='near')nbrs(P).forEach(c=>{st.omarks.push(c);});
+  st.pick=null;st.vals={x:'',y:''};st.field=null;renderInput();
+  renderLeft();updatePick();showResult('あなた',res.kind,P,Rd);
+  flashBanner(res.kind);
+  if(st.cpuShips.every(s=>s.hit)){gameOver(true);return;}
+  if(res.kind==='hit'){
+    $('msg').style.color='#2e7d32';msg.textContent='ヒット！ 続けてアタックできます。';
+    setTimeout(()=>{if(st.phase==='player'){msg.textContent='';msg.style.color='';}},2500);
+  }else{
+    st.phase='cpu';updateTurn();setTimeout(cpuTurn,1300);
+  }
+}
+$('atk').addEventListener('click',playerAttack);
+$('bx').addEventListener('click',()=>{if(st.phase==='player'){st.field='x';renderInput();}});
+$('by').addEventListener('click',()=>{if(st.phase==='player'){st.field='y';renderInput();}});
+$('pad').addEventListener('click',e=>{
+  const btn=e.target.closest('button');
+  if(!btn||st.phase!=='player'||!st.field)return;
+  $('msg').textContent='';
+  const kk=btn.dataset.k,f=st.field;
+  if(kk==='next'){st.field=(f==='x')?'y':null;}
+  else{
+    let v=st.vals[f];
+    if(kk==='bs')v=v.slice(0,-1);
+    else if(kk==='neg')v=v.startsWith('-')?v.slice(1):'-'+v;
+    else v=(v.startsWith('-')?'-':'')+kk;
+    st.vals[f]=v;
+  }
+  renderInput();
+});
+
+/* CPU */
+function cpuChoose(){
+  const cpu=st.cpu;
+  let T=null;
+  while(cpu.queue.length){
+    const c=cpu.queue.shift();
+    if(!isHitCell(st.myShips,c)&&!cpu.exact.has(key(c))){T=c;break;}
+  }
+  if(!T){
+    const pool=[];
+    for(let x=-R;x<=R;x++)for(let y=-R;y<=R;y++){
+      const c={x,y};
+      if(!cpu.exact.has(key(c))&&!isHitCell(st.myShips,c))pool.push(c);
+    }
+    T=pool[Math.floor(Math.random()*pool.length)];
+  }
+  let Rd=T;
+  if(Math.random()<0.2){ // ときどき「読みまちがい」をする
+    const cand=nbrs(T).filter(c=>!isHitCell(st.myShips,c));
+    if(cand.length)Rd=cand[Math.floor(Math.random()*cand.length)];
+  }
+  return{P:T,R:Rd};
+}
+function cpuTurn(){
+  if(st.phase!=='cpu')return;
+  const cpu=st.cpu;
+  const {P,R:Rd}=cpuChoose();
+  const res=judge(st.myShips,P,Rd);
+  if(res.kind==='hit')res.ship.hit=true;
+  st.cAttacks.push({P,R:Rd,kind:res.kind});
+  if(same(P,Rd)&&res.kind!=='hit')cpu.exact.add(key(P));
+  if(res.kind==='stay'){
+    const add=[P,Rd].filter(c=>!isHitCell(st.myShips,c)&&!cpu.exact.has(key(c)));
+    cpu.queue=add.concat(cpu.queue);
+  }else if(res.kind==='near'){
+    const seen=new Set();const add=[];
+    nbrs(P).concat(same(P,Rd)?[]:nbrs(Rd)).forEach(c=>{
+      if(!seen.has(key(c))&&!isHitCell(st.myShips,c)&&!cpu.exact.has(key(c))){seen.add(key(c));add.push(c);}
+    });
+    cpu.queue=shuffle(add).concat(cpu.queue);
+  }
+  renderRight();showResult('CPU',res.kind,P,Rd);
+  if(st.myShips.every(s=>s.hit)){gameOver(false);return;}
+  if(res.kind==='hit')setTimeout(cpuTurn,1300);
+  else setTimeout(()=>{st.phase='player';updateTurn();},1100);
+}
+
+/* 終了 */
+function gameOver(win){
+  st.phase='over';updateTurn();renderLeft();renderRight();
+  $('overTitle').textContent=win?'🎉 あなたの勝ち！':'CPUの勝ち…';
+  $('overTitle').style.color=win?'#e53935':'#0d3b66';
+  $('overText').textContent=win?'CPUの5点をすべてヒットさせました！':'あなたの5点がすべてヒットされました。もう一度挑戦しよう！';
+  setTimeout(()=>$('over').classList.add('active'),900);
+}
+
+/* 開始 */
+$('startBtn').addEventListener('click',()=>{
+  $('start').classList.remove('active');$('game').classList.add('active');resetGame();
+});
+$('againBtn').addEventListener('click',resetGame);
+})();
+</script>
+</body>
+</html>
