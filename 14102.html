@@ -1354,35 +1354,44 @@
         }
         .problem-frame {
             flex: none;
-            height: 58px;
+            height: 30px;
             box-sizing: border-box;
             flex-direction: row;
             align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            padding: 4px 10px;
-        }
-        .problem-frame .pf-left {
-            width: 122px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            justify-content: flex-start;
+            gap: 0;
+            padding: 0 4px;
+            background: none;
+            border: none;
         }
         .problem-frame .question-text {
-            flex: 1;
             margin: 0;
-            font-size: 19px;
+            font-size: 20px;
             font-weight: bold;
+            color: #333;
             white-space: nowrap;
         }
-        .problem-frame .result-message {
-            width: 215px;
+        #countdown-timer {
+            margin-left: 15px;
+            font-size: 18px;
+        }
+        .problem-frame .progress {
+            margin-left: auto;
+            font-size: 16px;
+            color: #666;
+            white-space: nowrap;
+        }
+        .left-panel .result-message {
+            flex: none;
+            min-height: 30px;
             margin: 0;
-            min-height: 0;
-            font-size: 14px;
+            font-size: 17px;
+            font-weight: bold;
             text-align: center;
             white-space: pre-line;
-            line-height: 1.3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .read-row {
             display: flex;
@@ -1426,14 +1435,15 @@
             font-size: 20px; font-weight: bold; font-family: inherit; color: #1b2a3a;
             background: #fff; border: 2px solid #9cc3e0; border-radius: 6px; cursor: pointer;
         }
-        .cbox.ph { font-size: 14px; font-weight: normal; font-style: italic; color: #8a97a3; }
-        .cbox.sel { border-color: #e53935; background: #fff6f5; box-shadow: 0 0 0 2px #f6b5b2; }
+        .cbox.ph { font-size: 18px; font-weight: normal; color: #8a97a3; }
+        .cbox.sel { border-color: #1e88e5; background: #f1f8ff; box-shadow: 0 0 0 2px #a9d1f7; }
         .cbox:disabled { cursor: default; }
         .answer-row.pending { opacity: 0.45; }
         .answer-row.done { background: #e8f5e9; border-color: #81c784; }
         .answer-row.done .cbox { border-color: #81c784; background: #f1f8e9; color: #2e7d32; }
         .answer-row.wrong { background: #ffebee; border-color: #e57373; animation: graph-shake 0.35s; }
         .answer-row.wrong .cbox { border-color: #e57373; }
+        .answer-row.wrong .cbox.sel { border-color: #e57373; background: #fff6f5; box-shadow: 0 0 0 2px #f6b5b2; }
         .svg-pt-label { font-size: 24px; font-weight: bold; fill: #0d3b66; }
         .svg-pt-label.done { fill: #2e7d32; }
     </style>
@@ -1557,12 +1567,9 @@
                 <div class="left-panel">
                     <!-- 問題枠（上段・横幅いっぱい） -->
                     <div class="problem-frame" id="problem-frame">
-                        <div class="pf-left">
-                            <span class="progress" id="progress"></span>
-                            <span id="countdown-timer" style="display:none;"></span>
-                        </div>
                         <div class="question-text" id="question-text"></div>
-                        <div id="result-message" class="result-message"></div>
+                        <span id="countdown-timer" style="display:none;"></span>
+                        <span class="progress" id="progress"></span>
                     </div>
 
                     <!-- 下段：グラフ枠（左）と解答枠（右）を横並び -->
@@ -1575,6 +1582,7 @@
                             <div id="answer-rows"></div>
                         </div>
                     </div>
+                    <div id="result-message" class="result-message"></div>
                 </div>
 
                 <div class="right-panel">
@@ -1601,13 +1609,13 @@
                         <button class="key num-btn" data-k="2" onclick="pressKey('2')">$2$</button>
                         <button class="key num-btn" data-k="3" onclick="pressKey('3')">$3$</button>
                         <button class="key op-btn" disabled>$×$</button>
-                        <button class="key frac-btn" disabled></button>
+                        <button class="key op-btn" disabled>$=$</button>
 
                         <button class="key num-btn" data-k="0" onclick="pressKey('0')">$0$</button>
                         <button class="key paren-btn" disabled>$($</button>
                         <button class="key paren-btn" disabled>$)$</button>
-                        <button class="key var-btn" disabled></button>
-                        <button class="key op-btn" disabled>$=$</button>
+                        <button class="key arrow-btn" data-k="left" onclick="pressKey('←')">$←$</button>
+                        <button class="key arrow-btn" data-k="right" onclick="pressKey('→')">$→$</button>
                     </div>
                     <div class="control-keys">
                         <button class="key action-btn" id="action-btn" onclick="handleAction()">スタート</button>
@@ -2187,14 +2195,17 @@
             clearAllBtn.disabled = false;
         } else if (state === 'playing') {
             const a = answers[currentQuestionIndex] || { x: '', y: '' };
-            const valid = /^-?\d$/.test(a[currentField]);
-            actionBtn.textContent = (currentField === 'y') ? "判定" : "次へ";
+            const ready = /^-?\d$/.test(a.x) && /^-?\d$/.test(a.y);   // x・yの両方に数が入っていれば判定できる
+            actionBtn.textContent = "判定";
             actionBtn.className = "key action-btn judge-mode";
             clearBtn.textContent = "消す"; clearBtn.className = "key clear-btn";
             clearAllBtn.textContent = "全消去"; clearAllBtn.className = "key clear-btn";
-            actionBtn.disabled = (!valid || (currentField === 'y' && judgeLocked));   // 数を入れるまで／不正解後は直すまで進めない
+            actionBtn.disabled = (!ready || judgeLocked);   // 両方入れるまで／不正解後は直すまで判定できない
             clearBtn.disabled = (a[currentField] === '');
-            clearAllBtn.disabled = (a.x === '' && a.y === '');
+            const leftKey = document.querySelector('.keypad button[data-k="left"]');
+            const rightKey = document.querySelector('.keypad button[data-k="right"]');
+            if (leftKey) leftKey.disabled = (currentField === 'x');     // xにいるときは←を押せない
+            if (rightKey) rightKey.disabled = (currentField === 'y');   // yにいるときは→を押せない
         } else if (state === 'cleared') {
             actionBtn.textContent = "次の問題"; actionBtn.className = "key action-btn judge-mode"; actionBtn.disabled = false;
             clearBtn.textContent = "消す"; clearBtn.disabled = true;
@@ -2311,13 +2322,15 @@
         let h = '';
         POINT_LABELS.forEach((L, i) => {
             h += `<div class="answer-row pending" id="row-${i}">` +
-                 `<span class="a-label">${L}</span><span class="a-par">(</span>` +
-                 `<button type="button" class="cbox ph" id="cb-${i}-x" onclick="selectField(${i}, 'x')">x</button>` +
-                 `<span class="a-par">,</span>` +
-                 `<button type="button" class="cbox ph" id="cb-${i}-y" onclick="selectField(${i}, 'y')">y</button>` +
-                 `<span class="a-par">)</span></div>`;
+                 `<span class="a-label">$${L}$</span><span class="a-par">$($</span>` +
+                 `<button type="button" class="cbox ph" id="cb-${i}-x" data-v="ph:x" onclick="selectField(${i}, 'x')">$x$</button>` +
+                 `<span class="a-par">$,$</span>` +
+                 `<button type="button" class="cbox ph" id="cb-${i}-y" data-v="ph:y" onclick="selectField(${i}, 'y')">$y$</button>` +
+                 `<span class="a-par">$)$</span></div>`;
         });
-        document.getElementById('answer-rows').innerHTML = h;
+        const wrap = document.getElementById('answer-rows');
+        wrap.innerHTML = h;
+        if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([wrap]).catch(() => {});   // MathJaxの準備ができていれば数式にする
     }
 
     /* --- 解答枠の表示更新（renderAnswerRows）：正解済み＝緑／入力中の欄＝赤枠／まだの点＝薄く --- */
@@ -2333,12 +2346,21 @@
             ['x', 'y'].forEach(f => {
                 const b = document.getElementById(`cb-${i}-${f}`);
                 const v = answers[i][f];
-                b.textContent = (v === '') ? f : v.replace('-', '−');
+                setBoxMath(b, v, f);
                 b.classList.toggle('ph', v === '');
                 b.classList.toggle('sel', isCur && currentField === f);
                 b.disabled = !isCur;
             });
         });
+    }
+
+    /* --- 解答欄の欄の表示（setBoxMath）：空欄は $x$ $y$、入力値は $-3$ のように数式で表示（変わらないときは描き直さない） --- */
+    function setBoxMath(b, v, f) {
+        const key = (v === '') ? 'ph:' + f : v;
+        if (b.dataset.v === key) return;
+        b.dataset.v = key;
+        b.textContent = '$' + ((v === '') ? f : v) + '$';
+        if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([b]).catch(() => {});
     }
 
     /* --- 入力する欄の切り替え（selectField）：いま答えている点のx・yだけタップで切り替えられる --- */
@@ -2352,6 +2374,8 @@
     /* --- テンキー・「消す」の入力処理（pressKey）：数字は1桁（符号つき）、「−」で符号の切り替え、'bs'で1文字消す --- */
     function pressKey(k) {
         if (!gameStarted || isCompleted) return;
+        if (k === '←') { selectField(currentQuestionIndex, 'x'); return; }   // ←：x欄へ
+        if (k === '→') { selectField(currentQuestionIndex, 'y'); return; }   // →：y欄へ
         const a = answers[currentQuestionIndex];
         let v = a[currentField];
         if (k === 'bs') v = v.slice(0, -1);
@@ -2453,7 +2477,7 @@
         clearInterval(questionTimerId);
         document.getElementById('countdown-timer').style.display = 'none';
         progressEl.textContent = "スタート前";
-        document.getElementById('question-text').innerHTML = "生徒番号を入力 →【スタート】";
+        document.getElementById('question-text').innerHTML = "次の図の座標を答えなさい。";
         document.getElementById('hint-text').innerHTML = hintData().start;
         resetGraphState();
         setGraphActive(false);
@@ -2510,7 +2534,13 @@
         const q = quizData[currentQuestionIndex];
         if (!q || isCompleted) return;
         document.getElementById('hint-text').innerHTML = hintData().timeout;
-        showStepError(document.getElementById('row-' + currentQuestionIndex));   // ミス回数を加算し、タイマーを再開する
+        showStepError(null);   // ミス回数を加算し、タイマーを再開する
+        const row = document.getElementById('row-' + currentQuestionIndex);   // 解答枠の行を赤くする（入力し直すと青に戻る）
+        if (row) {
+            row.classList.remove('wrong');
+            void row.offsetWidth;
+            row.classList.add('wrong');
+        }
     }
 
 
@@ -2544,17 +2574,9 @@
         return HINT_DATA.bothError;
     }
 
-    /* --- 「次へ」「判定」ボタンの処理（onActionKey）：x入力中は y へ進み、y入力中は判定する --- */
+    /* --- 「判定」ボタンの処理（onActionKey）：xとyの両方が入っていれば判定する（x↔yの移動は矢印ボタン） --- */
     function onActionKey() {
-        const a = answers[currentQuestionIndex];
-        if (currentField === 'x') {
-            if (!/^-?\d$/.test(a.x)) return;
-            currentField = 'y';
-            renderAnswerRows();
-            updateControlKeysState('playing');
-        } else {
-            checkAnswer();
-        }
+        checkAnswer();
     }
 
     /* --- 判定（checkAnswer）：1点ずつ判定。最初の判定で正解した点だけ1点 --- */
