@@ -6,6 +6,8 @@
 <title>座標ゲーム「バトルシップ」</title>
 <script>window.MathJax={startup:{typeset:false},svg:{fontCache:'global'}};</script>
 <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{width:100%;height:100%;background:#cfe6f5;overflow:hidden;font-family:"Hiragino Kaku Gothic ProN","Meiryo",sans-serif;color:#1b2a3a}
@@ -98,6 +100,22 @@ svg.graph{flex:1;min-height:0;width:100%;cursor:crosshair;display:block}
 #overCard{background:#fff;border-radius:14px;padding:26px 44px;text-align:center;border:4px solid #0d3b66}
 #overCard h2{font-size:30px;margin-bottom:8px}
 #overCard p{font-size:16px;margin-bottom:16px;line-height:1.6}
+
+/* 対人戦：開始画面・通信画面 */
+.modebtns{display:flex;gap:28px;justify-content:center}
+.bigbtn.blue{background:#1e88e5;box-shadow:0 3px 0 #1565a8}
+.bigbtn.blue:active{box-shadow:0 1px 0 #1565a8}
+.bigbtn:disabled{background:#b9c2c9;box-shadow:0 3px 0 #8e9aa5;cursor:default}
+#lobby{align-items:center;justify-content:center}
+.lobrow{display:flex;gap:16px;margin:14px 0 8px}
+.lobbox{flex:1;border:2px solid #9cc3e0;border-radius:10px;padding:12px 14px;background:#f4f9fd;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px}
+.lobbox h3{font-size:18px;color:#0d3b66}
+.lobbox p{font-size:14px;line-height:1.5;min-height:42px}
+.lobbox .bigbtn{font-size:18px;padding:8px 30px}
+#roomCode{font-size:44px;font-weight:bold;letter-spacing:.2em;color:#0d3b66;min-height:56px;line-height:56px}
+#codeIn{width:170px;font-size:32px;text-align:center;letter-spacing:.15em;font-family:inherit;border:2px solid #9cc3e0;border-radius:8px;padding:2px 4px}
+#lobMsg{min-height:24px;font-size:14px;font-weight:bold;margin:4px 0 10px}
+#homeBtn{display:none;font-size:16px;padding:10px 18px;margin-left:12px}
 </style>
 </head>
 <body>
@@ -109,7 +127,7 @@ svg.graph{flex:1;min-height:0;width:100%;cursor:crosshair;display:block}
       <div class="card">
         <h2>ゲームの進め方</h2>
         <div class="steps">
-          <div><b>① 準備：</b>右上のグラフで、自分の点を<b>5つ</b>えらびます（x, yは -5〜5 の整数）。CPUも5点をかくしています。</div>
+          <div><b>① 準備：</b>右上のグラフで、自分の点を<b>5つ</b>えらびます（x, yは -5〜5 の整数）。対戦相手も5点をかくしています。</div>
           <div><b>② 予想：</b>左上のグラフに、「相手の点がありそうな場所」の点をとります。</div>
           <div><b>③ 読む：</b>左下の「x座標」「y座標」の枠を選び、ミニテンキーで読んだ座標を入力して、<b>「アタック」</b>を押します。</div>
           <div><b>④ 判定：</b>ヒットしたら続けてアタック！ それ以外は交代です。先に相手の5点をすべてヒットさせたら勝ち！</div>
@@ -120,7 +138,33 @@ svg.graph{flex:1;min-height:0;width:100%;cursor:crosshair;display:block}
           <div class="jcard j-near"><b>ニア</b>相手の点の周り8点を、とっている（または読んでいる）</div>
           <div class="jcard j-miss"><b>ミス</b>それ以外</div>
         </div>
-        <button class="bigbtn" id="startBtn">スタート</button>
+        <div class="modebtns">
+          <button class="bigbtn blue" id="pvpBtn">対人戦</button>
+          <button class="bigbtn" id="startBtn">対CPU戦</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 通信画面（対人戦） -->
+    <section id="lobby" class="screen">
+      <div class="card">
+        <h2>対人戦（べつの端末どうしで対戦）</h2>
+        <div class="lobrow">
+          <div class="lobbox">
+            <h3>① 部屋を作る</h3>
+            <p>部屋コード（4けた）が表示されます。<br>対戦相手にコードを伝えましょう。（先攻は部屋を作った人）</p>
+            <button class="bigbtn" id="mkBtn">部屋を作る</button>
+            <div id="roomCode"></div>
+          </div>
+          <div class="lobbox">
+            <h3>② 部屋に入る</h3>
+            <p>相手に教えてもらった<br>部屋コード（4けた）を入力します。</p>
+            <input id="codeIn" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="0000">
+            <button class="bigbtn blue" id="joinBtn">入る</button>
+          </div>
+        </div>
+        <div id="lobMsg"></div>
+        <button class="sbtn" id="lobBack">もどる</button>
       </div>
     </section>
 
@@ -183,7 +227,7 @@ svg.graph{flex:1;min-height:0;width:100%;cursor:crosshair;display:block}
       </div>
     </section>
 
-    <div id="over"><div id="overCard"><h2 id="overTitle"></h2><p id="overText"></p><button class="bigbtn" id="againBtn">もう一度あそぶ</button></div></div>
+    <div id="over"><div id="overCard"><h2 id="overTitle"></h2><p id="overText"></p><button class="bigbtn" id="againBtn">もう一度あそぶ</button><button class="sbtn" id="homeBtn">はじめにもどる</button></div></div>
   </main>
   <footer>©中原先生の数学部屋</footer>
 </div>
@@ -316,8 +360,10 @@ function updateTurn(){
   const t=$('turn');
   t.classList.remove('cpu');
   if(st.phase==='setup'){t.textContent='準備中：右上で5点をえらぼう';}
+  else if(st.phase==='wait'){t.textContent='相手の準備を待っています…';}
+  else if(st.phase==='waitres'){t.textContent='判定を待っています…';}
   else if(st.phase==='player'){t.textContent='あなたのターン';}
-  else if(st.phase==='cpu'){t.textContent='CPUのターン…';t.classList.add('cpu');}
+  else if(st.phase==='cpu'){t.textContent=(st.mode==='pvp'?'相手':'CPU')+'のターン…';t.classList.add('cpu');}
   else{t.textContent='ゲーム終了';}
   if(st.phase!=='player')st.field=null;
   renderInput();
@@ -325,7 +371,7 @@ function updateTurn(){
 function updatePick(){updateAtk();}
 function updateScore(){
   const a=st.cpuShips.filter(s=>s.hit).length,b=st.myShips.filter(s=>s.hit).length;
-  $('score').textContent=`あなたのヒット：${a} / ${NS} 点　　CPUのヒット：${b} / ${NS} 点`;
+  $('score').textContent=`あなたのヒット：${a} / ${NS} 点　　${st.mode==='pvp'?'相手':'CPU'}のヒット：${b} / ${NS} 点`;
 }
 function showResult(who,kind,P,Rd){
   ['hit','stay','near','miss'].forEach(k=>$('b-'+k).classList.toggle('on',k===kind));
@@ -359,10 +405,13 @@ function randomShips(){
   const all=[];for(let x=-R;x<=R;x++)for(let y=-R;y<=R;y++)all.push({x,y});
   return shuffle(all).slice(0,NS).map(c=>({x:c.x,y:c.y,hit:false}));
 }
-function resetGame(){
-  st={phase:'setup',myShips:[],cpuShips:randomShips(),pAttacks:[],cAttacks:[],pick:null,log:[],vals:{x:'',y:''},field:null,blocked:new Set(),xmarks:[],omarks:[],
-      cpu:{queue:[],exact:new Set()}};
+function resetGame(mode){
+  const pv=(mode==='pvp');
+  st={mode:pv?'pvp':'cpu',phase:'setup',myShips:[],cpuShips:pv?[]:randomShips(),pAttacks:[],cAttacks:[],pick:null,log:[],vals:{x:'',y:''},field:null,blocked:new Set(),xmarks:[],omarks:[],
+      cpu:{queue:[],exact:new Set()},meReady:false,oppReady:false,pending:null};
   $('over').classList.remove('active');
+  $('clearBtn').disabled=false;
+  $('againBtn').style.display='';$('againBtn').disabled=false;$('againBtn').textContent='もう一度あそぶ';$('homeBtn').style.display='none';
   $('setupView').classList.add('active');$('resultView').classList.remove('active');
   ['hit','stay','near','miss'].forEach(k=>$('b-'+k).classList.remove('on'));
   $('latest').textContent='結果がここに表示されます';$('latest').style.color='';
@@ -387,9 +436,10 @@ $('gRight').addEventListener('click',e=>{
   else if(st.myShips.length<NS)st.myShips.push({x:c.x,y:c.y,hit:false});
   renderRight();updateSetupUI();
 });
-$('clearBtn').addEventListener('click',()=>{st.myShips=[];renderRight();updateSetupUI();});
+$('clearBtn').addEventListener('click',()=>{if(st.phase!=='setup')return;st.myShips=[];renderRight();updateSetupUI();});
 $('goBtn').addEventListener('click',()=>{
   if(st.myShips.length!==NS)return;
+  if(st.mode==='pvp'){pvpReady();return;}
   st.phase='player';
   $('setupView').classList.remove('active');$('resultView').classList.add('active');
   updateScore();updateTurn();
@@ -415,6 +465,13 @@ function playerAttack(){
   if(!inRange(Rd)){msg.textContent='x, y は -5〜5 の整数で入力してください。';return;}
   const P=st.pick;
   if(isHitCell(st.cpuShips,P)||isHitCell(st.cpuShips,Rd)){msg.textContent='すでにヒットした点には、もうアタックできません。';return;}
+  if(st.mode==='pvp'){
+    st.pending={P:{x:P.x,y:P.y},R:{x:Rd.x,y:Rd.y}};st.phase='waitres';
+    st.pick=null;st.vals={x:'',y:''};st.field=null;
+    renderLeft();renderInput();updateTurn();
+    netSend({type:'attack',P:st.pending.P,R:st.pending.R});
+    return;
+  }
   const res=judge(st.cpuShips,P,Rd);
   if(res.kind==='hit')res.ship.hit=true;
   st.pAttacks.push({P,R:Rd,kind:res.kind});
@@ -501,17 +558,218 @@ function cpuTurn(){
 /* 終了 */
 function gameOver(win){
   st.phase='over';updateTurn();renderLeft();renderRight();
-  $('overTitle').textContent=win?'🎉 あなたの勝ち！':'CPUの勝ち…';
+  const pv=(st.mode==='pvp');
+  $('overTitle').textContent=win?'🎉 あなたの勝ち！':(pv?'相手の勝ち…':'CPUの勝ち…');
   $('overTitle').style.color=win?'#e53935':'#0d3b66';
-  $('overText').textContent=win?'CPUの5点をすべてヒットさせました！':'あなたの5点がすべてヒットされました。もう一度挑戦しよう！';
+  $('overText').textContent=win?(pv?'相手の5点をすべてヒットさせました！':'CPUの5点をすべてヒットさせました！'):'あなたの5点がすべてヒットされました。もう一度挑戦しよう！';
+  $('homeBtn').style.display=pv?'inline-block':'none';
   setTimeout(()=>$('over').classList.add('active'),900);
 }
+
+/* ---------- 対人戦（Firebase Realtime Database） ---------- */
+const firebaseConfig={
+  apiKey:"AIzaSyDo9_mCSYO68B0SFfar9pDyeF6WQlqhGeU",
+  authDomain:"nakahara-math-room.firebaseapp.com",
+  databaseURL:"https://nakahara-math-room-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:"nakahara-math-room",
+  storageBucket:"nakahara-math-room.firebasestorage.app",
+  messagingSenderId:"554581999821",
+  appId:"1:554581999821:web:e93fe79643b322517c6984"
+};
+let db=null, net=null;
+function fbInit(){
+  if(db)return true;
+  try{
+    if(typeof firebase==='undefined'||!firebase.database)return false;
+    if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+    db=firebase.database();return true;
+  }catch(e){return false;}
+}
+const netPath=s=>'rooms/'+net.code+'/'+s;
+const tmo=(p,ms)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))]);
+function lobMsg(t,ok){const m=$('lobMsg');m.textContent=t;m.style.color=ok?'#0d3b66':'#c62828';}
+function lobBusy(b){['mkBtn','joinBtn','codeIn'].forEach(id=>{$(id).disabled=b;});}
+function netError(e){
+  leaveNet();
+  lobMsg(e&&e.message==='timeout'?'つながりません。学校のネットワークで通信が制限されている可能性があります。':'通信エラーがおきました。もう一度ためしてください。');
+  lobBusy(false);$('roomCode').textContent='';
+}
+function leaveNet(){
+  if(!net)return;
+  const n=net;net=null;
+  try{
+    ['msgRef','oppRef','connRef','rmRef'].forEach(k=>{if(n[k])n[k].off();});
+    clearTimeout(n.leftTimer);
+    const r=db.ref('rooms/'+n.code+'/players/'+n.role);
+    r.onDisconnect().cancel();
+    if(n.role==='host')db.ref('rooms/'+n.code).remove();else r.remove();
+  }catch(e){}
+}
+function goStart(){
+  ['lobby','game'].forEach(id=>$(id).classList.remove('active'));
+  $('over').classList.remove('active');
+  $('start').classList.add('active');
+}
+/* 接続開始：自分の在室を記録し、相手の入室・退室と再戦の合図を見張る */
+function netStart(){
+  net.connRef=db.ref('.info/connected');
+  net.connRef.on('value',s=>{
+    if(s.val()!==true||!net)return;
+    const r=db.ref(netPath('players/'+net.role));
+    r.onDisconnect().remove();r.set(true);
+  });
+  net.oppRef=db.ref(netPath('players/'+net.opp));
+  net.oppRef.on('value',s=>{
+    if(!net)return;
+    if(s.val()){
+      clearTimeout(net.leftTimer);
+      if(!net.oppSeen){net.oppSeen=true;enterGame();}
+    }else if(net.oppSeen){
+      clearTimeout(net.leftTimer);
+      net.leftTimer=setTimeout(netLeft,6000); // 一時的な切れは6秒だけ待つ
+    }
+  });
+  net.rmRef=db.ref(netPath('rematch'));
+  net.rmRef.on('value',s=>{
+    if(!net||!st||st.mode!=='pvp'||st.phase!=='over')return;
+    const v=s.val()||{};
+    if(v.host===net.round&&v.guest===net.round){net.round++;startRound();}
+  });
+}
+function enterGame(){
+  $('lobby').classList.remove('active');$('game').classList.add('active');
+  resetGame('pvp');attachMsgs();
+}
+function startRound(){resetGame('pvp');attachMsgs();}
+function attachMsgs(){
+  if(net.msgRef)net.msgRef.off();
+  net.msgRef=db.ref(netPath('r'+net.round+'/msgs'));
+  net.msgRef.on('child_added',s=>{
+    const m=s.val();
+    if(!m||m.from===net.role)return;
+    netRecv(m);
+  });
+}
+function netSend(m){m.from=net.role;net.msgRef.push(m);}
+const okCell=c=>c&&Number.isInteger(c.x)&&Number.isInteger(c.y)&&inRange(c);
+function netRecv(m){
+  if(!st||st.mode!=='pvp')return;
+  if(m.type==='ready'){
+    st.oppReady=true;
+    if(st.meReady)startBattle();
+    else{$('msg').style.color='#2e7d32';$('msg').textContent='相手は準備OK！';}
+  }else if(m.type==='attack')pvpDefend(m);
+  else if(m.type==='result')pvpResult(m);
+}
+function pvpReady(){
+  st.meReady=true;st.phase='wait';
+  $('clearBtn').disabled=true;$('goBtn').disabled=true;
+  netSend({type:'ready'});
+  if(st.oppReady)startBattle();else updateTurn();
+}
+function startBattle(){
+  st.phase=(net.role==='host')?'player':'cpu'; // 'cpu'は「相手のターン」を表す
+  $('setupView').classList.remove('active');$('resultView').classList.add('active');
+  $('msg').textContent='';
+  updateScore();updateTurn();
+}
+/* 相手のアタックを自分の点で判定して、結果だけを返す */
+function pvpDefend(m){
+  if(st.phase!=='cpu'||!okCell(m.P)||!okCell(m.R))return;
+  const P={x:m.P.x,y:m.P.y},Rd={x:m.R.x,y:m.R.y};
+  const res=judge(st.myShips,P,Rd);
+  if(res.kind==='hit')res.ship.hit=true;
+  st.cAttacks.push({P,R:Rd,kind:res.kind});
+  renderRight();showResult('相手',res.kind,P,Rd);
+  const over=st.myShips.every(s=>s.hit);
+  netSend({type:'result',kind:res.kind,over});
+  if(over){gameOver(false);return;}
+  if(res.kind!=='hit'){st.phase='player';updateTurn();}
+}
+/* 自分のアタックの判定結果を受け取る */
+function pvpResult(m){
+  if(st.phase!=='waitres'||!st.pending||!COL[m.kind])return;
+  const kind=m.kind,P=st.pending.P,Rd=st.pending.R;
+  st.pending=null;
+  if(kind==='hit')st.cpuShips.push({x:P.x,y:P.y,hit:true});
+  st.pAttacks.push({P,R:Rd,kind});
+  if(kind!=='stay')st.blocked.add(key(P));
+  if(kind==='miss')nbrs(P).forEach(c=>{st.blocked.add(key(c));st.xmarks.push(c);});
+  if(kind==='near')nbrs(P).forEach(c=>{st.omarks.push(c);});
+  renderLeft();showResult('あなた',kind,P,Rd);
+  flashBanner(kind);
+  if(m.over){gameOver(true);return;}
+  if(kind==='hit'){
+    st.phase='player';updateTurn();
+    const msg=$('msg');msg.style.color='#2e7d32';msg.textContent='ヒット！ 続けてアタックできます。';
+    setTimeout(()=>{if(st.phase==='player'){msg.textContent='';msg.style.color='';}},2500);
+  }else{st.phase='cpu';updateTurn();}
+}
+function netLeft(){
+  if(!net)return;
+  if(st.phase==='over'){
+    $('againBtn').disabled=true;$('againBtn').textContent='相手が退出しました';
+    return;
+  }
+  st.phase='over';updateTurn();
+  $('overTitle').textContent='相手が切断しました';$('overTitle').style.color='#0d3b66';
+  $('overText').textContent='通信がとぎれました。はじめにもどって、やりなおしてください。';
+  $('againBtn').style.display='none';$('homeBtn').style.display='inline-block';
+  $('over').classList.add('active');
+}
+function pvpRematch(){
+  if(!net)return;
+  $('againBtn').disabled=true;$('againBtn').textContent='相手を待っています…';
+  db.ref(netPath('rematch/'+net.role)).set(net.round);
+}
+
+/* 通信画面のボタン */
+$('pvpBtn').addEventListener('click',()=>{
+  $('start').classList.remove('active');$('lobby').classList.add('active');
+  $('roomCode').textContent='';$('codeIn').value='';lobBusy(false);lobMsg('');
+  if(!fbInit()){lobMsg('通信の準備ができません。ネットワークの設定を確認してください。');lobBusy(true);}
+});
+$('codeIn').addEventListener('input',()=>{$('codeIn').value=$('codeIn').value.replace(/[^0-9]/g,'');});
+$('mkBtn').addEventListener('click',async()=>{
+  if(net||!fbInit())return;
+  lobBusy(true);lobMsg('つないでいます…',true);
+  try{
+    let code=null;
+    for(let i=0;i<8&&!code;i++){
+      const c=String(Math.floor(Math.random()*10000)).padStart(4,'0');
+      const s=await tmo(db.ref('rooms/'+c+'/players').once('value'),10000);
+      if(!s.exists())code=c;
+    }
+    if(!code)throw new Error('full');
+    net={code,role:'host',opp:'guest',round:0,oppSeen:false};
+    await tmo(db.ref('rooms/'+code).set({created:firebase.database.ServerValue.TIMESTAMP,players:{host:true}}),10000);
+    netStart();
+    $('roomCode').textContent=code;
+    lobMsg('相手に部屋コードを伝えてください。入ってくるのを待っています…',true);
+  }catch(e){netError(e);}
+});
+$('joinBtn').addEventListener('click',async()=>{
+  if(net||!fbInit())return;
+  const code=$('codeIn').value.trim();
+  if(!/^\d{4}$/.test(code)){lobMsg('4けたの数字を入力してください。');return;}
+  lobBusy(true);lobMsg('つないでいます…',true);
+  try{
+    const h=await tmo(db.ref('rooms/'+code+'/players/host').once('value'),10000);
+    if(!h.exists()){lobMsg('その部屋コードの部屋は見つかりません。');lobBusy(false);return;}
+    const tr=await tmo(db.ref('rooms/'+code+'/players/guest').transaction(c=>c===null?true:undefined),10000);
+    if(!tr.committed){lobMsg('その部屋はすでに対戦中です。');lobBusy(false);return;}
+    net={code,role:'guest',opp:'host',round:0,oppSeen:false};
+    netStart();
+  }catch(e){netError(e);}
+});
+$('lobBack').addEventListener('click',()=>{leaveNet();goStart();});
+$('homeBtn').addEventListener('click',()=>{leaveNet();goStart();});
 
 /* 開始 */
 $('startBtn').addEventListener('click',()=>{
   $('start').classList.remove('active');$('game').classList.add('active');resetGame();
 });
-$('againBtn').addEventListener('click',resetGame);
+$('againBtn').addEventListener('click',()=>{if(st.mode==='pvp')pvpRematch();else resetGame();});
 })();
 </script>
 </body>
