@@ -1289,7 +1289,7 @@
                             </div>
                             <div class="expr-row">
                                 <span class="expr-y">$y$</span><span>$=$</span>
-                                <div class="cell cell-expr" data-i="7" onclick="selectCell(7)"></div>
+                                <div class="cell cell-expr" data-i="6" onclick="selectCell(6)"></div>
                             </div>
                         </div>
                     </div>
@@ -1314,7 +1314,7 @@
                         <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('5')">5</button>
                         <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('6')">6</button>
                         <button class="key var-btn" disabled></button>
-                        <button class="key op-btn" id="key-minus" onmousedown="event.preventDefault()" onclick="pressKey('-')">−</button>
+                        <button class="key var-btn" disabled></button>
 
                         <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('1')">1</button>
                         <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('2')">2</button>
@@ -1406,12 +1406,13 @@
 
     const KENTEI_RECORDS_KEY = 'hirei_table_shiki_kentei_records_v1';
 
-    /* --- 固有：入力マスの管理（0〜6＝表のyの欄 / 7＝式の欄） --- */
-    const TABLE_X       = [-3, -2, -1, 0, 1, 2, 3];
-    const TABLE_CELLS   = [0, 1, 2, 3, 4, 5, 6];
-    const EXPR_CELL     = 7;
-    let cellVals        = new Array(8).fill('');
-    let cellState       = new Array(8).fill('');   // ''＝未判定 / 'ok'＝正解 / 'ng'＝不正解
+    /* --- 固有：入力マスの管理（0〜5＝表のyの欄 / 6＝式の欄） --- */
+    const TABLE_X       = [0, 1, 2, 3, 4, 5];
+    const TABLE_CELLS   = [0, 1, 2, 3, 4, 5];
+    const EXPR_CELL     = 6;
+    const CELL_COUNT    = 7;
+    let cellVals        = new Array(CELL_COUNT).fill('');
+    let cellState       = new Array(CELL_COUNT).fill('');   // ''＝未判定 / 'ok'＝正解 / 'ng'＝不正解
     let activeIdx       = 0;
     let currentStage    = 'table';                 // 'table' → 'expr'
 
@@ -1939,15 +1940,13 @@
         updateKeypadState();
     }
 
-    /* --- キーパッドの有効・無効の更新（updateKeypadState）：表では「x」不可、式では「−」「◀▶」不可 --- */
+    /* --- キーパッドの有効・無効の更新（updateKeypadState）：表では「x」不可、式では「←→」不可 --- */
     function updateKeypadState() {
         const playing = gameStarted && !isCompleted;
         const inTable = (currentStage === 'table');
-        const minus = document.getElementById('key-minus');
         const xKey  = document.getElementById('key-x');
         const prev  = document.getElementById('key-prev');
         const next  = document.getElementById('key-next');
-        if (minus) minus.disabled = !(playing && inTable);
         if (xKey)  xKey.disabled  = !(playing && !inTable);
         if (prev)  prev.disabled  = !(playing && inTable);
         if (next)  next.disabled  = !(playing && inTable);
@@ -1993,9 +1992,9 @@
                     if (val) updateMathJax([el]);
                 }
             } else {
-                el.innerHTML = val.replace('-', '−');
+                el.innerHTML = val;
             }
-            el.className = 'cell' + (cellState[i] ? ' ' + cellState[i] : '') + (isActive ? ' active' : '');
+            el.className = 'cell' + (i === EXPR_CELL ? ' cell-expr' : '') + (cellState[i] ? ' ' + cellState[i] : '') + (isActive ? ' active' : '');
         });
     }
 
@@ -2045,9 +2044,6 @@
 
         if (key === 'Backspace') {
             val = val.slice(0, -1);
-        } else if (key === '-') {
-            if (!inTable || val !== '') return;
-            val = '-';
         } else if (key === 'x') {
             if (inTable || val.includes('x') || val.length >= 4) return;
             val = val + 'x';
@@ -2094,8 +2090,8 @@
         setHint(HINT_DATA.start);
 
         currentStage = 'table';
-        cellVals = new Array(8).fill('');
-        cellState = new Array(8).fill('');
+        cellVals = new Array(CELL_COUNT).fill('');
+        cellState = new Array(CELL_COUNT).fill('');
         activeIdx = 0;
         setStageUI('table', 'locked-disabled', 'ロック中');
         setStageUI('expr', 'locked-disabled', 'ロック中');
@@ -2134,8 +2130,8 @@
         resultMsgEl.className = "result-message";
 
         currentStage = 'table';
-        cellVals = new Array(8).fill('');
-        cellState = new Array(8).fill('');
+        cellVals = new Array(CELL_COUNT).fill('');
+        cellState = new Array(CELL_COUNT).fill('');
         activeIdx = 0;
         setStageUI('table', 'active-focus', '入力中');
         setStageUI('expr', 'locked-disabled', 'ロック中');
@@ -2350,7 +2346,7 @@
         start: "目指せ！パーフェクト！",
         tableInit: "文章から $x$ と $y$ の関係を考えて、$y$ の値を求めよう。<br>マスをタップするか、← → で移動できるよ。",
         tableEmpty: "空いているマスがあるよ。<br>すべてのマスに数を入れよう。",
-        tableError: "$x$ が 1 増えると、$y$ はいくつ増えるかな？<br>$x$ が負の数のときの符号にも注意しよう。",
+        tableError: "$x$ が 1 増えると、$y$ はいくつ増えるかな？",
         timeoutTable: "時間切れ！<br>$x$ が 1 増えるごとの $y$ の増え方に注目しよう。",
         exprInit: "表が完成したね！<br>最後に、$y$ = の右側を「$6x$」のように入力しよう。",
         exprError: "$x$ = 1 のときの $y$ の値に注目しよう。<br>$y$ = (決まった数) × $x$ の形になるよ。",
