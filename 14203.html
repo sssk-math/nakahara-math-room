@@ -64,7 +64,7 @@ svg.graph{flex:1;min-height:0;width:100%;cursor:crosshair;display:block}
 .inrow .par{font-size:20px;font-weight:bold;color:#0d3b66}
 .cbox{display:inline-flex;align-items:center;justify-content:center;padding:0;width:64px;height:34px;font-size:20px;font-family:inherit;font-weight:bold;color:#1b2a3a;background:#fff;border:2px solid #9cc3e0;border-radius:6px}
 .cbox.ph{font-size:13px;color:#8a97a3;font-weight:normal}
-.cbox.sel{border-color:#e53935;background:#fff6f5;box-shadow:0 0 0 2px #f6b5b2}
+.cbox.sel{border-color:#1e88e5;background:#f2f8ff;box-shadow:0 0 0 2px #b7d7f5}
 .cbox:disabled{background:#eee}
 .row3{display:flex;align-items:center;justify-content:center}
 .cbox mjx-container{margin:0!important}
@@ -190,10 +190,10 @@ svg.graph{flex:1;min-height:0;width:100%;cursor:crosshair;display:block}
           <div id="lcol">
             <div id="turn">準備中</div>
             <div class="inrow">
-              <label>座標を読む</label><span class="par">(</span>
-              <button type="button" class="cbox ph" id="bx" disabled>x座標</button>
+              <label>点の位置を読む</label><span class="par">(</span>
+              <button type="button" class="cbox ph" id="bx" disabled>横</button>
               <span class="par">,</span>
-              <button type="button" class="cbox ph" id="by" disabled>y座標</button>
+              <button type="button" class="cbox ph" id="by" disabled>縦</button>
               <span class="par">)</span>
             </div>
             <div class="row3"><button id="atk" disabled>アタック</button></div>
@@ -342,7 +342,7 @@ const nbrs=c=>{const a=[];for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){if(
 function setMath(b,v){
   if(b.dataset.v===v)return;
   b.dataset.v=v;
-  if(v===''){b.textContent=b.id==='bx'?'x座標':'y座標';return;}
+  if(v===''){b.textContent=b.id==='bx'?'横':'縦';return;}
   if(v==='-'||!(window.MathJax&&window.MathJax.typesetPromise)){b.textContent=v.replace('-','−');return;}
   b.textContent='\\('+v+'\\)';
   window.MathJax.typesetPromise([b]).catch(()=>{b.textContent=v.replace('-','−');});
@@ -362,7 +362,7 @@ function renderInput(){
   });
   const padOn=on&&!!st.field;
   $('pad').querySelectorAll('button').forEach(k=>{k.disabled=!padOn;});
-  $('padNext').textContent=st.field==='y'?'OK':'次へ';
+  $('padNext').textContent=st.field==='y'?'OK':'，';
   updateAtk();
 }
 function updateTurn(){
@@ -470,7 +470,7 @@ function playerAttack(){
   const msg=$('msg');msg.textContent='';msg.style.color='';
   if(!st.pick){msg.textContent='先に、左上のグラフに点をとってください。';return;}
   const vx=st.vals.x,vy=st.vals.y;
-  if(!/^-?\d$/.test(vx)||!/^-?\d$/.test(vy)){msg.textContent='x座標・y座標を入力してください。';return;}
+  if(!/^-?\d$/.test(vx)||!/^-?\d$/.test(vy)){msg.textContent='横の位置・縦の位置を入力してください。';return;}
   const Rd={x:parseInt(vx,10)+0,y:parseInt(vy,10)+0};
   if(!inRange(Rd)){msg.textContent='x, y は -5〜5 の整数で入力してください。';return;}
   const P=st.pick;
@@ -580,7 +580,7 @@ const firebaseConfig={
 };
 let db=null, net=null;
 function fbInit(){
-  if(db)return true;
+  if(db){db.goOnline();return true;}
   try{
     if(typeof firebase==='undefined'||!firebase.database)return false;
     if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
@@ -596,16 +596,21 @@ function netError(e){
   lobMsg(e&&e.message==='timeout'?'つながりません。学校のネットワークで通信が制限されている可能性があります。':'通信エラーがおきました。もう一度ためしてください。');
   lobBusy(false);$('roomCode').textContent='';
 }
+/* 退室の書き込みが済んでから接続を切る（別の対戦がもう始まっていれば切らない） */
+function netOffline(p){
+  Promise.race([Promise.resolve(p),new Promise(r=>setTimeout(r,3000))]).then(()=>{if(!net&&db)db.goOffline();});
+}
 function leaveNet(){
-  if(!net)return;
-  const n=net;net=null;
+  if(!net){if(db)netOffline();return;}
+  const n=net;net=null;let done=null;
   try{
     ['msgRef','oppRef','connRef','rmRef'].forEach(k=>{if(n[k])n[k].off();});
     clearTimeout(n.leftTimer);
     const r=db.ref('rooms/'+n.code+'/players/'+n.role);
     r.onDisconnect().cancel();
-    if(n.role==='host')db.ref('rooms/'+n.code).remove();else r.remove();
+    done=(n.role==='host')?db.ref('rooms/'+n.code).remove():r.remove();
   }catch(e){}
+  netOffline(done);
 }
 function goStart(){
   $('toStart').style.display='none';
