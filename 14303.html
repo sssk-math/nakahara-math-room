@@ -1,0 +1,1456 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>14303.比例のグラフ</title>
+<script>
+window.MathJax = { tex: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']] }, options: { enableMenu: false } };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+<style>
+/* ===== 1. 全体 ===== */
+* { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+body { background:#fff; font-family:'Helvetica Neue',Arial,'Hiragino Kaku Gothic ProN','Hiragino Sans',Meiryo,sans-serif; display:flex; justify-content:center; align-items:flex-start; -webkit-touch-callout:none; min-height:100vh; overflow:hidden; }
+#app-container { width:960px; height:640px; flex-shrink:0; min-width:960px; min-height:640px; background:#fff; border:2px solid #333; border-radius:12px; position:relative; transform-origin:top center; display:flex; flex-direction:column; justify-content:flex-start; padding:10px 20px; }
+
+/* ===== 2. ヘッダー ===== */
+header { text-align:center; }
+h1 { font-size:24px; color:#333; margin-bottom:5px; }
+.title-bar { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:15px; }
+.title-hand-btn { padding:6px 14px; font-size:.85rem; font-weight:bold; background:#e0e0e0; border:none; border-radius:6px; cursor:pointer; white-space:nowrap; }
+.title-hand-btn.active { background:#1a73e8; color:#fff; }
+.game-layout.left-handed { flex-direction:row-reverse; }
+
+/* ===== 3. キー・ボタン ===== */
+.keypad { display:grid; grid-template-columns:repeat(5,56px); gap:1px; margin-bottom:8px; }
+.key { height:46px; font-size:24px; font-weight:bold; background:#f1f3f5; border:1px solid #ced4da; border-radius:6px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .1s; }
+.key:active:not(:disabled) { background:#dee2e6; transform:scale(.95); }
+.key.num-btn { font-family:'MathJax_Main','Times New Roman',Times,serif; }
+.key.op-btn { background:#e7f5ff; border-color:#a5d8ff; color:#007bff; font-size:20px; }
+.key.var-btn { background:#f3f0ff; border-color:#d0bfff; color:#6f42c1; }
+.key.arrow-btn { background:#fff3e0; border-color:#ffe0b2; color:#e65100; font-weight:bold; }
+.keypad button:disabled { background:#d1d5db !important; color:#9ca3af !important; border-color:#cbd5e1 !important; cursor:not-allowed; opacity:.6; transform:none !important; }
+.control-keys { display:grid; grid-template-columns:repeat(3,92px); gap:4px; width:100%; justify-content:center; }
+.key.action-btn { background:#28a745; color:#fff; font-size:18px; height:46px; border-color:#1e7e34; width:100%; }
+.key.action-btn.judge-mode { background:#007bff; border-color:#0069d9; }
+.key.clear-btn { background:#e9ecef; font-size:16px; height:46px; width:100%; color:#333; }
+.key.action-btn-back { background:#fb8c00; color:#fff; border:none; font-size:18px; height:46px; width:100%; }
+.key.action-btn:disabled, .key.clear-btn:disabled, .key.action-btn-back:disabled { opacity:.55; cursor:not-allowed; }
+.key-mini { height:40px; font-size:18px; font-weight:bold; background:#f1f3f5; border:1px solid #ced4da; border-radius:6px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.key-mini:active { background:#dee2e6; }
+.key-mini.btn-clear { grid-column:span 2; background:#ffebee; border-color:#ffcdd2; color:#c62828; font-size:14px; }
+#send-btn { padding:6px 12px; font-size:15px; background:#1a73e8; color:#fff; border:none; border-radius:5px; cursor:pointer; height:34px; min-width:76px; font-weight:bold; }
+#send-btn:disabled { background:#ccc; color:#888; cursor:not-allowed; }
+
+/* ===== 4. 画面・開始・記録・設定 ===== */
+.app-screen { display:flex; flex-direction:column; flex:1; min-height:0; background:#eceff1; }
+#screen-kentei { background:#fff; }
+.start-screen { justify-content:center; align-items:center; gap:28px; }
+.start-title-main { font-size:18px; color:#333; }
+.start-title-sub { font-size:28px; font-weight:bold; color:#333; margin-top:4px; }
+.start-menu { display:flex; flex-direction:column; gap:16px; width:320px; }
+.start-menu-btn { height:64px; font-size:20px; font-weight:bold; color:#fff; background:#1a73e8; border:none; border-radius:10px; cursor:pointer; }
+.start-menu-btn:active { transform:scale(.97); }
+.sub-screen-header { text-align:center; margin-bottom:10px; }
+.sub-screen-header h1 { font-size:22px; margin-bottom:0; }
+.btn-tutorial-hud-secondary { padding:10px 18px; font-size:15px; font-weight:bold; background:#e3f2fd; color:#1565c0; border:1px solid #90caf9; border-radius:8px; cursor:pointer; }
+.kiroku-cards { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; width:560px; margin:0 auto; }
+.kiroku-card { background:#fff; border:1px solid #dee2e6; border-radius:10px; padding:10px 18px; text-align:center; }
+.kiroku-card-label { font-size:13px; color:#666; margin-bottom:4px; }
+.kiroku-card-value { font-size:18px; font-weight:bold; color:#1a73e8; }
+.placeholder-screen { justify-content:center; align-items:center; gap:24px; }
+.settei-reset-buttons { display:flex; flex-direction:column; align-items:center; gap:16px; }
+.settei-reset-btn { width:280px; height:52px; font-size:16px; font-weight:bold; color:#c0392b; background:#fdecea; border:1px solid #f1a9a0; border-radius:10px; cursor:pointer; }
+.reset-confirm-overlay { position:absolute; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:100; border-radius:12px; }
+.reset-confirm-box { width:340px; background:#fff; border-radius:12px; padding:24px 20px; text-align:center; box-shadow:0 6px 20px rgba(0,0,0,.25); }
+.reset-confirm-message { font-size:15px; color:#333; line-height:1.6; margin-bottom:20px; }
+.reset-confirm-buttons { display:flex; gap:12px; justify-content:center; }
+.reset-confirm-cancel, .reset-confirm-ok { flex:1; height:44px; font-size:15px; font-weight:bold; border-radius:8px; cursor:pointer; border:none; }
+.reset-confirm-cancel { background:#e9ecef; color:#333; }
+.reset-confirm-ok { background:#e74c3c; color:#fff; }
+
+/* ===== 5. タイマー・生徒番号 ===== */
+.timer-container { display:flex; justify-content:space-between; align-items:center; background:#f1f3f4; padding:8px 16px; border-radius:6px; margin-top:8px; font-weight:bold; height:52px; }
+#timer-display { font-size:20px; color:#1a73e8; font-variant-numeric:tabular-nums; min-width:110px; }
+.record-box { display:flex; flex-direction:column; align-items:flex-start; justify-content:center; border-left:2px solid #ccc; padding-left:12px; height:100%; }
+#best-update-message { font-size:12px; font-weight:bold; color:#1a73e8; white-space:nowrap; height:1.2em; margin-bottom:1px; }
+.best-label-container { display:flex; gap:15px; font-size:12px; color:#5f6368; white-space:nowrap; }
+.number-field-wrapper { position:relative; display:inline-block; }
+.login-input { font-size:15px; padding:4px 8px; border:2px solid #ccc; border-radius:6px; outline:none; font-weight:normal; width:80px; }
+.login-input:focus { border-color:#1a73e8; }
+.input-tooltip { display:none; position:absolute; top:120%; left:50%; transform:translateX(-50%); background:#fff; border:2px solid #333; color:#333; padding:12px; border-radius:10px; box-shadow:0 4px 15px rgba(0,0,0,.15); z-index:100; width:210px; }
+.input-tooltip::before { content:""; position:absolute; bottom:100%; left:50%; transform:translateX(-50%); border:8px solid transparent; border-bottom-color:#333; }
+.input-tooltip.show { display:block; }
+.tooltip-hint { font-size:11px; font-weight:bold; color:#5f6368; margin-bottom:8px; text-align:center; line-height:1.4; white-space:nowrap; }
+.keypad-mini { display:grid; grid-template-columns:repeat(3,56px); gap:6px; justify-content:center; }
+.error-msg { color:#d32f2f; font-size:12px; margin-top:8px; font-weight:bold; display:none; text-align:center; white-space:nowrap; }
+
+/* ===== 6. ゲーム画面 ===== */
+.game-layout { display:flex; flex-grow:1; width:100%; align-items:flex-start; justify-content:space-between; gap:20px; margin-top:8px; }
+.left-panel { flex:1; min-width:0; display:flex; flex-direction:column; align-items:stretch; }
+.right-panel { width:285px; display:flex; flex-direction:column; align-items:center; }
+.question-wrapper { display:flex; flex-direction:row; align-items:center; justify-content:space-between; gap:8px; width:100%; height:26px; }
+.question-text { font-size:19px; color:#333; font-weight:bold; white-space:nowrap; }
+.q-status { display:flex; align-items:center; gap:12px; white-space:nowrap; }
+.progress { font-size:16px; color:#666; }
+.formula-display { font-size:24px; font-weight:bold; text-align:center; color:#000; margin:4px 0 6px; background:#f8f9fa; padding:2px 10px; border-radius:8px; border:2px solid #ccc; min-height:46px; width:100%; display:flex; align-items:center; justify-content:center; }
+.formula-display mjx-container { display:inline !important; }
+.problem-inner { display:block; width:100%; }
+.graph-row { display:flex; gap:8px; width:100%; align-items:flex-start; }
+.graph-frame { flex:none; width:396px; height:396px; background:#fff; border:2px solid #ced4da; border-radius:8px; overflow:hidden; transition:opacity .2s, border-color .2s, background-color .2s; }
+#graph-svg { display:block; width:100%; height:100%; cursor:crosshair; touch-action:manipulation; }
+#graph-svg.drawing { cursor:pointer; touch-action:none; }
+.graph-frame.inactive { opacity:.5; pointer-events:none; }
+.graph-frame.locked-correct { border-color:#81c784; background:#e8f5e9; }
+.graph-frame.locked-correct.inactive { opacity:1; }
+.graph-frame.error-shake { border-color:#e57373; background:#ffebee; animation:graph-shake .35s; }
+@keyframes graph-shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-6px)} 40%,80%{transform:translateX(6px)} }
+.svg-axis-label { font-size:19px; font-style:italic; fill:#333; }
+.svg-tick-label { font-size:18px; fill:#555; }
+.side-col { flex:1; min-width:0; display:flex; flex-direction:column; gap:6px; }
+.step-tabs { display:flex; gap:4px; }
+.step-tab { flex:1; text-align:center; font-size:13px; font-weight:bold; padding:4px 0; border-radius:6px; background:#e9ecef; color:#868e96; }
+.step-tab.active { background:#007bff; color:#fff; }
+.step-tab.done { background:#28a745; color:#fff; }
+.input-box-group { background:#fff; border:2px solid #ced4da; border-radius:8px; padding:4px; transition:all .2s; }
+.input-box-group.active-focus { border-color:#007bff; background:#f0f7ff; box-shadow:0 0 0 3px rgba(0,123,255,.15); }
+.input-box-group.locked-correct { border-color:#81c784; background:#e8f5e9; }
+.input-box-group.locked-disabled { border-color:#e9ecef; background:#f8f9fa; opacity:.6; }
+.input-box-group.error-shake { border-color:#e57373; background:#ffebee; }
+.prop-table { border-collapse:collapse; margin:0 auto; }
+.prop-table th, .prop-table td { border:2px solid #555; text-align:center; height:27px; padding:0; font-size:18px; font-family:'Times New Roman',Times,serif; background:#fff; }
+.prop-table th { background:#e7f5ff; width:56px; font-weight:normal; font-style:italic; }
+.prop-table td { width:110px; }
+.prop-table td.xv { background:#f8f9fa; width:56px; }
+.cell { width:100%; height:25px; display:flex; align-items:center; justify-content:center; font-size:18px; font-family:'Times New Roman',Times,serif; background:#fff; cursor:pointer; }
+.cell.active { outline:3px solid #007bff; outline-offset:-3px; background:#f0f7ff; }
+.cell.active::after { content:''; display:inline-block; width:2px; height:18px; background:#007bff; margin-left:2px; animation:caret-blink 1s step-end infinite; }
+.cell.ok { background:#fff; color:#000; cursor:default; }
+.cell.ng { background:#ffebee; }
+@keyframes caret-blink { 50% { opacity:0; } }
+.result-message { font-size:15px; font-weight:bold; min-height:40px; text-align:center; display:flex; align-items:center; justify-content:center; white-space:pre-wrap; width:100%; }
+.correct { color:#28a745; }
+.incorrect { color:#e67e22; }
+.hint-container { width:100%; height:205px; background:#fff9db; border:1px dashed #f59f00; border-radius:8px; padding:10px 12px; display:flex; flex-direction:column; overflow-y:auto; margin-bottom:8px; }
+.hint-title { font-size:13px; font-weight:bold; color:#f59f00; margin-bottom:4px; }
+.hint-body { font-size:15px; font-weight:bold; color:#495057; line-height:1.4; }
+footer { width:100%; text-align:center; font-size:12px; color:#000; font-weight:bold; padding:4px 0; border-top:1px solid #cfd8dc; position:absolute; bottom:0; left:0; background:#fff; border-radius:0 0 10px 10px; }
+</style>
+</head>
+
+<body>
+<div id="app-container">
+    <div id="screen-start" class="app-screen start-screen">
+        <div class="start-title" style="text-align:center;">
+            <div class="start-title-main">比例・反比例</div>
+            <div class="start-title-sub">比例のグラフをかこう</div>
+        </div>
+        <div class="start-menu">
+            <button class="start-menu-btn" onclick="enterKenteiScreen()">📝 検定</button>
+            <button class="start-menu-btn" onclick="showScreen('screen-kiroku'); renderKirokuScreen();">🏆 記録</button>
+            <button class="start-menu-btn" onclick="showScreen('screen-settei')">⚙️ 設定</button>
+        </div>
+    </div>
+
+    <div id="screen-kiroku" class="app-screen" style="display:none; align-items:center; justify-content:center; gap:16px;">
+        <div class="sub-screen-header"><h1>🏆 記録</h1></div>
+        <div class="kiroku-cards">
+            <div class="kiroku-card"><div class="kiroku-card-label">検定：受検回数</div><div class="kiroku-card-value" id="kiroku-attempts">0回</div></div>
+            <div class="kiroku-card"><div class="kiroku-card-label">検定：ベストタイム</div><div class="kiroku-card-value" id="kiroku-best-time">--:--.-</div></div>
+            <div class="kiroku-card"><div class="kiroku-card-label">検定：連続正解記録</div><div class="kiroku-card-value" id="kiroku-streak">現在：0問／最高：0問</div></div>
+        </div>
+        <button class="btn-tutorial-hud-secondary" onclick="showScreen('screen-start')">←開始画面へ</button>
+    </div>
+
+    <div id="screen-settei" class="app-screen placeholder-screen" style="display:none;">
+        <div class="sub-screen-header"><h1>⚙️ 設定</h1></div>
+        <div class="settei-reset-buttons">
+            <button class="settei-reset-btn" onclick="openResetConfirm('kiroku')">🗑️ 記録をリセットする</button>
+        </div>
+        <button class="btn-tutorial-hud-secondary" onclick="showScreen('screen-start')">←開始画面へ</button>
+    </div>
+
+    <div id="reset-confirm-modal" class="reset-confirm-overlay" style="display:none;">
+        <div class="reset-confirm-box">
+            <div class="reset-confirm-message" id="reset-confirm-message"></div>
+            <div class="reset-confirm-buttons">
+                <button class="reset-confirm-cancel" onclick="closeResetConfirm()">キャンセル</button>
+                <button class="reset-confirm-ok" onclick="confirmReset()">リセットする</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-kentei" class="app-screen" style="display:none;">
+        <header>
+            <div class="title-bar">
+                <button class="title-hand-btn" id="hand-left-btn" onclick="changeHandedness('left')">👈 左利き</button>
+                <h1> 比例のグラフ（表 → 点 → 線）</h1>
+                <button class="title-hand-btn active" id="hand-right-btn" onclick="changeHandedness('right')">右利き 👉</button>
+            </div>
+        </header>
+
+        <div class="timer-container" id="timer-container-area">
+            <div style="display:flex; align-items:center; gap:15px;">
+                <div id="timer-display">⏱️ 00:00.0</div>
+                <div class="record-box">
+                    <div id="best-update-message"></div>
+                    <div class="best-label-container"><div id="best-normal-display">ベストタイム(5問): --:--.-</div></div>
+                </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <div class="number-field-wrapper" id="wrapper-area">
+                    <input type="text" id="number-field" class="login-input" placeholder="生徒番号" readonly autocomplete="off">
+                    <div class="input-tooltip" id="number-tooltip">
+                        <div class="tooltip-hint">
+                            💡 1年2組34番 → 「1234」<br>
+                            <span style="font-size:10px; color:#888;">クラス: 1〜5組 / 番号: 01〜35</span>
+                        </div>
+                        <div class="keypad-mini">
+                            <button class="key-mini" onclick="pressNum('7')">7</button>
+                            <button class="key-mini" onclick="pressNum('8')">8</button>
+                            <button class="key-mini" onclick="pressNum('9')">9</button>
+                            <button class="key-mini" onclick="pressNum('4')">4</button>
+                            <button class="key-mini" onclick="pressNum('5')">5</button>
+                            <button class="key-mini" onclick="pressNum('6')">6</button>
+                            <button class="key-mini" onclick="pressNum('1')">1</button>
+                            <button class="key-mini" onclick="pressNum('2')">2</button>
+                            <button class="key-mini" onclick="pressNum('3')">3</button>
+                            <button class="key-mini" onclick="pressNum('0')">0</button>
+                            <button class="key-mini btn-clear" onclick="pressClear()">⌫ 消す</button>
+                        </div>
+                        <div class="error-msg" id="error-display">存在しない番号です</div>
+                    </div>
+                </div>
+                <button id="send-btn" onclick="manualSendToGoogleForm()" disabled>送信</button>
+            </div>
+        </div>
+
+        <div class="main-content" id="quiz-screen">
+            <div class="game-layout">
+                <div class="left-panel">
+                    <div class="question-wrapper">
+                        <div class="question-text">表をつくり、点をとって、グラフをかこう。</div>
+                        <div class="q-status">
+                            <span id="countdown-timer" style="display:none; color:#e57373; font-weight:bold; font-size:18px;"></span>
+                            <span class="progress" id="progress">スタートボタンを押してください。</span>
+                        </div>
+                    </div>
+                    <div class="formula-display" id="formula-box"></div>
+                    <div class="graph-row">
+                        <div class="graph-frame inactive" id="graph-frame">
+                            <svg id="graph-svg" viewBox="0 0 480 480" xmlns="http://www.w3.org/2000/svg"></svg>
+                        </div>
+                        <div class="side-col">
+                            <div class="step-tabs">
+                                <span class="step-tab" id="tab-table">① 表</span>
+                                <span class="step-tab" id="tab-plot">② 点</span>
+                                <span class="step-tab" id="tab-draw">③ 線</span>
+                            </div>
+                            <div class="input-box-group active-focus" id="group-table">
+                                <table class="prop-table" id="prop-table"></table>
+                            </div>
+                            <div id="result-message" class="result-message"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="right-panel">
+                    <div class="hint-container" id="hint-container">
+                        <div class="hint-title">💡 考え方のヒント</div>
+                        <div class="hint-body" id="hint-text">目指せ！パーフェクト！</div>
+                    </div>
+                    <div class="keypad">
+                        <button class="key num-btn" data-k="7" onmousedown="event.preventDefault()" onclick="pressKey('7')">$7$</button>
+                        <button class="key num-btn" data-k="8" onmousedown="event.preventDefault()" onclick="pressKey('8')">$8$</button>
+                        <button class="key num-btn" data-k="9" onmousedown="event.preventDefault()" onclick="pressKey('9')">$9$</button>
+                        <button class="key op-btn" data-k="neg" onmousedown="event.preventDefault()" onclick="pressKey('-')">$-$</button>
+                        <button class="key var-btn" disabled></button>
+
+                        <button class="key num-btn" data-k="4" onmousedown="event.preventDefault()" onclick="pressKey('4')">$4$</button>
+                        <button class="key num-btn" data-k="5" onmousedown="event.preventDefault()" onclick="pressKey('5')">$5$</button>
+                        <button class="key num-btn" data-k="6" onmousedown="event.preventDefault()" onclick="pressKey('6')">$6$</button>
+                        <button class="key arrow-btn" data-k="prev" onmousedown="event.preventDefault()" onclick="pressKey('prev')">←</button>
+                        <button class="key arrow-btn" data-k="next" onmousedown="event.preventDefault()" onclick="pressKey('next')">→</button>
+
+                        <button class="key num-btn" data-k="1" onmousedown="event.preventDefault()" onclick="pressKey('1')">$1$</button>
+                        <button class="key num-btn" data-k="2" onmousedown="event.preventDefault()" onclick="pressKey('2')">$2$</button>
+                        <button class="key num-btn" data-k="3" onmousedown="event.preventDefault()" onclick="pressKey('3')">$3$</button>
+                        <button class="key var-btn" disabled></button>
+                        <button class="key var-btn" disabled></button>
+
+                        <button class="key num-btn" data-k="0" onmousedown="event.preventDefault()" onclick="pressKey('0')">$0$</button>
+                        <button class="key var-btn" disabled></button>
+                        <button class="key var-btn" disabled></button>
+                        <button class="key var-btn" disabled></button>
+                        <button class="key var-btn" disabled></button>
+                    </div>
+                    <div class="control-keys">
+                        <button class="key action-btn" id="action-btn" onclick="handleAction()">スタート</button>
+                        <button class="key clear-btn" id="clear-btn" onmousedown="event.preventDefault()" onclick="handleCenterBtn()">消す</button>
+                        <button class="key clear-btn" id="clear-all-btn" onmousedown="event.preventDefault()" onclick="handleRightBtn()">全消去</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>© 中原先生の数学部屋</footer>
+</div>
+
+<iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
+
+<script>
+/* ==========================================================================
+   1. グローバル変数・設定【共通・固有】
+   ========================================================================== */
+const MODE = 'prop';          // 'prop'＝比例 / 'inv'＝反比例
+const IS_INV = (MODE === 'inv');
+
+let startTime = 0, timerInterval = null, bestNormalTimeMs = null, kenteiAttemptCount = 0;
+let lastClearTimeText = "", elapsedBeforeResume = 0;
+let gameStarted = false, isCompleted = false, isCorrectState = false;
+let quizData = [], currentQuestionIndex = 0, score = 0, currentQuestionWrongCount = 0;
+let questionTimerId = null, currentControlState = 'start';
+let practiceMode = false;   // このアプリには練習モードはない（共通関数が参照するため残している）
+
+const container   = document.getElementById('app-container');
+const formulaBox  = document.getElementById('formula-box');
+const actionBtn   = document.getElementById('action-btn');
+const clearBtn    = document.getElementById('clear-btn');
+const clearAllBtn = document.getElementById('clear-all-btn');
+const resultMsgEl = document.getElementById('result-message');
+const progressEl  = document.getElementById('progress');
+let mathjaxPromise = Promise.resolve();
+
+const numberField  = document.getElementById('number-field');
+const tooltip      = document.getElementById('number-tooltip');
+const errorDisplay = document.getElementById('error-display');
+let isConfirmed = false;
+
+let correctStreakCount = 0, maxStreakCount = 0, pendingResetType = null;
+
+const GOOGLE_FORM_URL = 'https://docs.google.com/forms/d/e/*****変更箇所*****/formResponse';
+const FORM_NUM_ID         = 'entry.351767117';   // 問題番号
+const FORM_TIME_ID        = 'entry.1218861448';  // クリアタイム
+const FORM_STAGE_COUNT_ID = 'entry.2033679053';  // 正解数
+
+const KENTEI_TIME_LIMIT_MS    = 8 * 60 * 1000;   // 検定の制限時間（8分）
+const QUESTION_TIME_LIMIT_SEC = 45;              // 表・点の1手順の制限秒数
+const DRAW_TIME_LIMIT_SEC     = 60;              // 線を引く手順の制限秒数
+const QUESTION_COUNT          = 5;
+let questionTimeLeft = QUESTION_TIME_LIMIT_SEC;
+
+const KENTEI_RECORDS_KEY = IS_INV ? 'hanpirei_graph_kentei_records_v1' : 'hirei_graph_kentei_records_v1';
+
+/* --- 座標平面（viewBox 480×480、原点は中央、1目盛り34px、表示範囲 -6〜6） --- */
+const GRAPH = { size: 480, center: 240, unit: 34, range: 6 };
+const POINT_R = 8;
+const DRAW_TOL  = 0.5;    // なぞった線と正解の線のずれの許容（目盛り）
+const ACC_RATIO = 0.95;   // 許容内に入っている点の割合
+const END_TOL   = 0.9;    // 端点に届いたとみなす距離（目盛り）
+
+/* --- 入力状態 --- */
+const DEFAULT_TABLE_X = IS_INV ? [-6, -3, -2, -1, 0, 1, 2, 3, 6] : [-2, -1, 0, 1, 2];
+const CELL_COUNT = 9;
+let TABLE_X = DEFAULT_TABLE_X.slice();
+let TABLE_CELLS = TABLE_X.map((_, i) => i);
+let cellVals = new Array(CELL_COUNT).fill('');
+let cellState = new Array(CELL_COUNT).fill('');   // ''＝未判定 / 'ok' / 'ng'
+let activeIdx = 0;
+let currentStage = 'table';      // 'table' → 'plot' → 'draw'
+let stageProgress = 0;           // 完了した手順の数（0〜3）
+let plotted = [];                // とった点 [{x,y}]
+let strokes = [];                // なぞった線 [[{x,y},...],...]
+let strokeColor = 'normal';      // 'normal' | 'bad' | 'ok'
+let drawing = false;
+let judgeLocked = false;         // 不正解後、入力を直すまで判定できない
+
+
+/* ==========================================================================
+   2. 画面・表示【共通】
+   ========================================================================== */
+function resizeApp() {
+    const scale = Math.min(window.innerWidth / 960, window.innerHeight / 640, 1);
+    container.style.transform = `scale(${scale})`;
+}
+function showScreen(screenId) {
+    document.querySelectorAll('.app-screen').forEach(el => { el.style.display = 'none'; });
+    const target = document.getElementById(screenId);
+    if (target) target.style.display = 'flex';
+}
+function updateMathJax(elements) {
+    if (window.MathJax && MathJax.typesetPromise) {
+        if (MathJax.typesetClear) MathJax.typesetClear(elements);
+        mathjaxPromise = mathjaxPromise.then(() => MathJax.typesetPromise(elements))
+            .catch((err) => console.log("MathJax typesetting failed: " + err.message));
+    }
+}
+function setHint(html) {
+    const el = document.getElementById('hint-text');
+    el.innerHTML = html;
+    updateMathJax([el]);
+}
+
+
+/* ==========================================================================
+   3. タイマー【共通】
+   ========================================================================== */
+function startTimerClock() {
+    isCorrectState = false;
+    lastClearTimeText = "";
+    elapsedBeforeResume = 0;
+    startTime = Date.now();
+    clearInterval(timerInterval);
+    timerInterval = setInterval(updateTimer, 100);
+    document.getElementById('best-update-message').innerText = "";
+    const sendBtn = document.getElementById('send-btn');
+    if (sendBtn) { sendBtn.disabled = true; sendBtn.textContent = "送信"; }
+    if (numberField) numberField.disabled = false;
+}
+function updateTimer() {
+    const diff = (Date.now() - startTime) + elapsedBeforeResume;
+    if (diff >= KENTEI_TIME_LIMIT_MS) { handleKenteiTimeUp(); return; }
+    const min = Math.floor(diff / 60000);
+    const sec = Math.floor((diff % 60000) / 1000);
+    const msec = Math.floor((diff % 1000) / 100);
+    document.getElementById('timer-display').innerText = `⏱️ ${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}.${msec}`;
+}
+function handleKenteiTimeUp() {
+    if (!gameStarted || isCompleted) return;
+    clearInterval(timerInterval);
+    clearInterval(questionTimerId);
+    isCompleted = true;
+    drawing = false;
+    document.getElementById('timer-display').innerText = `⏱️ ${formatMs(KENTEI_TIME_LIMIT_MS)}`;
+    correctStreakCount = 0;
+    saveKenteiRecords();
+    if (document.activeElement) document.activeElement.blur();
+    stopTimerClockAndEvaluate(true);
+    resultMsgEl.textContent = `時間切れ！全 ${quizData.length} 問中 ${score} 問ノーミス正解`;
+    resultMsgEl.className = "result-message incorrect";
+    progressEl.textContent = "時間切れ！";
+    setGraphActive(false);
+    setHint(HINT_DATA.allFinished);
+    updateStageTabs();
+    updateControlKeysState('finished'); updateSendButtonState();
+}
+function stopTimerClockAndEvaluate(isTimeUp = false) {
+    clearInterval(timerInterval);
+    isCorrectState = true;
+    clearInterval(questionTimerId);
+    document.getElementById('countdown-timer').style.display = 'none';
+    const finalTimeStr = document.getElementById('timer-display').innerText.replace('⏱️ ', '');
+    lastClearTimeText = finalTimeStr;
+
+    const totalElapsedTimeMs = isTimeUp ? KENTEI_TIME_LIMIT_MS : ((Date.now() - startTime) + elapsedBeforeResume);
+    elapsedBeforeResume = totalElapsedTimeMs;
+
+    kenteiAttemptCount++;
+    saveKenteiRecords();
+
+    if (bestNormalTimeMs === null || totalElapsedTimeMs < bestNormalTimeMs) {
+        bestNormalTimeMs = totalElapsedTimeMs;
+        document.getElementById('best-normal-display').innerText = bestTimeText(finalTimeStr);
+        document.getElementById('best-update-message').innerText = isTimeUp ? "" : "🎉 ベスト更新！";
+        saveKenteiRecords();
+    }
+
+    const numInput = numberField ? numberField.value.trim() : "";
+    const isValidNum = (isConfirmed && /^\d{4}$/.test(numInput));
+    if (isValidNum && !window.isAlreadySubmitted) {
+        executeFormSubmit(numInput, lastClearTimeText, score);
+        window.isAlreadySubmitted = true;
+        const sendBtnTop = document.getElementById('send-btn');
+        const sendBtnBottom = document.getElementById('action-btn');
+        if (sendBtnTop) { sendBtnTop.textContent = "完了"; sendBtnTop.disabled = true; }
+        if (sendBtnBottom) { sendBtnBottom.textContent = "完了"; sendBtnBottom.disabled = true; sendBtnBottom.className = "key clear-btn"; }
+        if (numberField) numberField.disabled = true;
+    } else {
+        window.isAlreadySubmitted = false;
+        if (numberField) numberField.disabled = false;
+    }
+    updateSendButtonState();
+}
+function startQuestionTimer() {
+    clearInterval(questionTimerId);
+    const cd = document.getElementById('countdown-timer');
+    if (!gameStarted || isCompleted) { cd.style.display = 'none'; return; }
+    if (currentQuestionWrongCount >= 2) {
+        cd.style.display = 'inline-block';
+        cd.textContent = "じっくりタイム";
+        return;
+    }
+    questionTimeLeft = (currentStage === 'draw') ? DRAW_TIME_LIMIT_SEC : QUESTION_TIME_LIMIT_SEC;
+    updateQuestionTimerUI();
+    cd.style.display = 'inline-block';
+    questionTimerId = setInterval(() => {
+        questionTimeLeft--;
+        updateQuestionTimerUI();
+        if (questionTimeLeft <= 0) handleQuestionTimeout();
+    }, 1000);
+}
+function updateQuestionTimerUI() {
+    const el = document.getElementById('countdown-timer');
+    if (el) el.textContent = `残り ${questionTimeLeft}秒`;
+}
+function formatMs(ms) {
+    const totalMs = Math.max(0, Math.round(ms));
+    const min = Math.floor(totalMs / 60000);
+    const sec = Math.floor((totalMs % 60000) / 1000);
+    const msec = Math.floor((totalMs % 1000) / 100);
+    return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}.${msec}`;
+}
+function bestTimeText(timeStr) { return `ベストタイム(${QUESTION_COUNT}問): ${timeStr}`; }
+
+
+/* ==========================================================================
+   4. 生徒番号入力・記録送信【共通】
+   ========================================================================== */
+function initValidationControls() {
+    if (!numberField) return;
+    numberField.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (isConfirmed || numberField.value !== '') {
+            numberField.value = '';
+            isConfirmed = false;
+            errorDisplay.style.display = 'none';
+            updateSendButtonState();
+        }
+        tooltip.classList.add('show');
+        numberField.focus();
+    });
+    tooltip.addEventListener('click', (e) => { e.stopPropagation(); });
+    document.addEventListener('click', () => {
+        if (tooltip.classList.contains('show') && !isConfirmed) {
+            numberField.value = '';
+            errorDisplay.style.display = 'none';
+            tooltip.classList.remove('show');
+            numberField.blur();
+            updateSendButtonState();
+        }
+    });
+}
+function pressNum(num) {
+    if (!numberField) return;
+    let currentVal = numberField.value;
+    if (currentVal.length === 4) { currentVal = ''; errorDisplay.style.display = 'none'; }
+    currentVal += num;
+    numberField.value = currentVal;
+    updateSendButtonState();
+    if (currentVal.length === 4) {
+        const isValid = /^(9999|[1-3][1-5](0[1-9]|[1-2][0-9]|3[0-5]))$/.test(currentVal);
+        if (isValid) completeInput(currentVal);
+        else errorDisplay.style.display = 'block';
+    }
+}
+function completeInput() {
+    isConfirmed = true;
+    tooltip.classList.remove('show');
+    numberField.blur();
+    updateSendButtonState();
+}
+function pressClear() {
+    if (!numberField) return;
+    const currentVal = numberField.value;
+    if (currentVal.length > 0) numberField.value = currentVal.slice(0, -1);
+    errorDisplay.style.display = 'none';
+    isConfirmed = false;
+    updateSendButtonState();
+}
+function updateSendButtonState() {
+    if (window.isAlreadySubmitted) return;
+    const numVal = numberField ? numberField.value.trim() : "";
+    const sendBtnTop = document.getElementById('send-btn');
+    const sendBtnBottom = document.getElementById('action-btn');
+    if (sendBtnTop && sendBtnTop.textContent === "完了") return;
+    const canSend = (isCorrectState && numVal !== "" && /^\d{4}$/.test(numVal) && isConfirmed);
+    if (sendBtnTop) sendBtnTop.disabled = !canSend;
+    if (currentControlState === 'finished' && sendBtnBottom) {
+        sendBtnBottom.disabled = !canSend;
+        sendBtnBottom.className = canSend ? "key action-btn judge-mode" : "key clear-btn";
+    }
+}
+function executeFormSubmit(num, timeText, stageCount) {
+    const form = document.createElement('form');
+    form.action = GOOGLE_FORM_URL;
+    form.method = 'POST';
+    form.target = 'hidden_iframe';
+    const fields = { [FORM_NUM_ID]: num, [FORM_TIME_ID]: timeText, [FORM_STAGE_COUNT_ID]: stageCount };
+    for (const key in fields) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = fields[key];
+        form.appendChild(input);
+    }
+    document.body.appendChild(form);
+    try { form.submit(); } catch (e) { console.error('送信エラー', e); }
+    setTimeout(() => { document.body.removeChild(form); }, 1000);
+}
+function manualSendToGoogleForm() {
+    const numInput = numberField ? numberField.value.trim() : "";
+    if (numInput === "" || !isConfirmed || !/^\d{4}$/.test(numInput) || !isCorrectState || window.isAlreadySubmitted) return;
+    const sendBtnTop = document.getElementById('send-btn');
+    const sendBtnBottom = document.getElementById('action-btn');
+    if (sendBtnTop) { sendBtnTop.textContent = "送信中"; sendBtnTop.disabled = true; }
+    if (currentControlState === 'finished' && sendBtnBottom) {
+        sendBtnBottom.textContent = "送信中"; sendBtnBottom.disabled = true; sendBtnBottom.className = "key clear-btn";
+    }
+    const currentTimerText = document.getElementById('timer-display').innerText.replace('⏱️ ', '');
+    executeFormSubmit(numInput, lastClearTimeText || currentTimerText, score);
+    window.isAlreadySubmitted = true;
+    if (numberField) numberField.disabled = true;
+    if (tooltip) tooltip.classList.remove('show');
+    setTimeout(() => {
+        if (sendBtnTop) sendBtnTop.textContent = "完了";
+        if (currentControlState === 'finished' && sendBtnBottom) { sendBtnBottom.textContent = "完了"; sendBtnBottom.className = "key clear-btn"; }
+    }, 1000);
+}
+
+
+/* ==========================================================================
+   5. 記録の保存・読み込み・記録画面【共通】
+   ========================================================================== */
+function loadKenteiRecords() {
+    try {
+        const raw = localStorage.getItem(KENTEI_RECORDS_KEY);
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            bestNormalTimeMs = (typeof parsed.bestTimeMs === 'number') ? parsed.bestTimeMs : null;
+            correctStreakCount = (typeof parsed.streak === 'number') ? parsed.streak : 0;
+            maxStreakCount = (typeof parsed.maxStreak === 'number') ? parsed.maxStreak : 0;
+            kenteiAttemptCount = (typeof parsed.attempts === 'number') ? parsed.attempts : 0;
+            return;
+        }
+    } catch (e) { /* 読み込み失敗時は初期化 */ }
+    bestNormalTimeMs = null; correctStreakCount = 0; maxStreakCount = 0; kenteiAttemptCount = 0;
+}
+function saveKenteiRecords() {
+    try {
+        localStorage.setItem(KENTEI_RECORDS_KEY, JSON.stringify({ bestTimeMs: bestNormalTimeMs, streak: correctStreakCount, maxStreak: maxStreakCount, attempts: kenteiAttemptCount }));
+    } catch (e) { /* 保存失敗時は何もしない */ }
+}
+function changeHandedness(hand) {
+    const workspace = document.querySelector('.game-layout');
+    const rightBtn = document.getElementById('hand-right-btn');
+    const leftBtn = document.getElementById('hand-left-btn');
+    if (hand === 'left') { workspace.classList.add('left-handed'); leftBtn.classList.add('active'); rightBtn.classList.remove('active'); }
+    else { workspace.classList.remove('left-handed'); rightBtn.classList.add('active'); leftBtn.classList.remove('active'); }
+}
+function enterKenteiScreen() { restartQuiz(); showScreen('screen-kentei'); }
+function goBackFromKentei() {
+    clearInterval(timerInterval);
+    clearInterval(questionTimerId);
+    gameStarted = false;
+    isCompleted = false;
+    showScreen('screen-start');
+}
+function renderKirokuScreen() {
+    const bestTimeEl = document.getElementById('kiroku-best-time');
+    if (bestTimeEl) bestTimeEl.textContent = (bestNormalTimeMs !== null) ? formatMs(bestNormalTimeMs) : '--:--.-';
+    const streakEl = document.getElementById('kiroku-streak');
+    if (streakEl) streakEl.textContent = `現在：${correctStreakCount}問／最高：${maxStreakCount}問`;
+    const attemptsEl = document.getElementById('kiroku-attempts');
+    if (attemptsEl) attemptsEl.textContent = `${kenteiAttemptCount}回`;
+}
+function openResetConfirm(type) {
+    pendingResetType = type;
+    const msgEl = document.getElementById('reset-confirm-message');
+    if (msgEl) msgEl.textContent = '検定のベストタイム・連続正解記録・受検回数がリセットされます。よろしいですか？';
+    const modal = document.getElementById('reset-confirm-modal');
+    if (modal) modal.style.display = 'flex';
+}
+function closeResetConfirm() {
+    pendingResetType = null;
+    const modal = document.getElementById('reset-confirm-modal');
+    if (modal) modal.style.display = 'none';
+}
+function confirmReset() {
+    bestNormalTimeMs = null; correctStreakCount = 0; maxStreakCount = 0; kenteiAttemptCount = 0;
+    saveKenteiRecords();
+    const bestDisplayEl = document.getElementById('best-normal-display');
+    if (bestDisplayEl) bestDisplayEl.innerText = bestTimeText('--:--.-');
+    closeResetConfirm();
+}
+
+
+/* ==========================================================================
+   6. 操作ボタン・キー状態【共通・固有】
+   ========================================================================== */
+function handleAction() {
+    if (!gameStarted) { startQuizGame(); return; }
+    if (isCompleted) {
+        if (currentControlState === 'finished') { manualSendToGoogleForm(); return; }
+        nextQuestion();
+        return;
+    }
+    checkAnswer();
+}
+function handleRightBtn() {
+    if (currentControlState === 'start' || currentControlState === 'finished') goBackFromKentei();
+    else clearAllInput();
+}
+function handleCenterBtn() {
+    if (currentControlState === 'finished') { restartQuiz(); return; }
+    if (!gameStarted || isCompleted) return;
+    if (currentStage === 'table') pressKey('Backspace');
+    else if (currentStage === 'plot') undoPoint();
+    else undoStroke();
+}
+function hasStageInput() {
+    if (currentStage === 'table') return !isCurrentStageEmpty();
+    if (currentStage === 'plot') return plotted.length > 0;
+    return strokes.length > 0;
+}
+function updateControlKeysState(state) {
+    currentControlState = state;
+    actionBtn.className = "key action-btn";
+    clearBtn.className = "key clear-btn";
+    clearAllBtn.className = "key clear-btn";
+    if (state === 'start') {
+        actionBtn.textContent = "スタート"; actionBtn.disabled = false;
+        clearBtn.textContent = "消す"; clearBtn.disabled = true;
+        clearAllBtn.textContent = "戻る"; clearAllBtn.className = "key action-btn-back"; clearAllBtn.disabled = false;
+    } else if (state === 'playing') {
+        const has = hasStageInput();
+        actionBtn.textContent = "判定する"; actionBtn.className = "key action-btn judge-mode";
+        actionBtn.disabled = (!has || judgeLocked);
+        clearBtn.textContent = "消す"; clearBtn.disabled = !has;
+        clearAllBtn.textContent = "全消去"; clearAllBtn.disabled = !has;
+    } else if (state === 'cleared') {
+        actionBtn.textContent = "次の問題"; actionBtn.className = "key action-btn judge-mode"; actionBtn.disabled = false;
+        clearBtn.textContent = "消す"; clearBtn.disabled = true;
+        clearAllBtn.textContent = "全消去"; clearAllBtn.disabled = true;
+    } else if (state === 'finished') {
+        actionBtn.textContent = "送信"; actionBtn.className = "key action-btn judge-mode"; actionBtn.disabled = false;
+        clearBtn.textContent = "もう一回"; clearBtn.className = "key action-btn"; clearBtn.disabled = false;
+        clearAllBtn.textContent = "戻る"; clearAllBtn.className = "key action-btn-back"; clearAllBtn.disabled = false;
+    }
+    updateKeypadState();
+}
+/* --- テンキーは「表」の手順のときだけ使える --- */
+function updateKeypadState() {
+    const on = gameStarted && !isCompleted && currentStage === 'table';
+    document.querySelectorAll('.keypad button[data-k]').forEach(b => { b.disabled = !on; });
+}
+function updateStageTabs() {
+    ['table', 'plot', 'draw'].forEach((s, i) => {
+        const el = document.getElementById('tab-' + s);
+        if (!el) return;
+        let cls = 'step-tab';
+        if (i < stageProgress) cls += ' done';
+        else if (gameStarted && !isCompleted && i === stageProgress) cls += ' active';
+        el.className = cls;
+    });
+}
+function clearAllInput() {
+    if (!gameStarted || isCompleted) return;
+    if (currentStage === 'table') pressKey('clear');
+    else if (currentStage === 'plot') { plotted = []; afterGraphEdit(); }
+    else { strokes = []; afterGraphEdit(); }
+}
+
+
+/* ==========================================================================
+   7. 手順1：表の入力【固有】
+   ========================================================================== */
+const fmtNum = n => (n < 0 ? '−' + (-n) : String(n));
+const keyOf = p => p.x + ',' + p.y;
+
+function buildTable() {
+    let h = '<tr><th>$x$</th><th>$y$</th></tr>';
+    TABLE_X.forEach((x, i) => {
+        h += `<tr><td class="xv">${fmtNum(x)}</td><td><div class="cell" data-i="${i}" onclick="selectCell(${i})"></div></td></tr>`;
+    });
+    document.getElementById('prop-table').innerHTML = h;
+    updateMathJax([document.getElementById('prop-table')]);
+}
+function setTableUI(cls) { document.getElementById('group-table').className = 'input-box-group ' + cls; }
+function renderCells() {
+    document.querySelectorAll('.cell[data-i]').forEach(el => {
+        const i = parseInt(el.getAttribute('data-i'), 10);
+        const isActive = gameStarted && !isCompleted && currentStage === 'table' && i === activeIdx && cellState[i] !== 'ok';
+        el.textContent = cellVals[i].replace('-', '−');
+        el.className = 'cell' + (cellState[i] ? ' ' + cellState[i] : '') + (isActive ? ' active' : '');
+    });
+}
+function selectCell(i) {
+    if (!gameStarted || isCompleted || currentStage !== 'table') return;
+    if (!TABLE_CELLS.includes(i) || cellState[i] === 'ok') return;
+    activeIdx = i;
+    renderCells();
+}
+function moveActive(dir) {
+    const list = TABLE_CELLS.filter(i => cellState[i] !== 'ok');
+    if (list.length === 0) return;
+    let pos = list.indexOf(activeIdx);
+    pos = (pos < 0) ? 0 : (pos + dir + list.length) % list.length;
+    activeIdx = list[pos];
+}
+function isCurrentStageEmpty() {
+    return TABLE_CELLS.filter(i => cellState[i] !== 'ok').every(i => cellVals[i] === '');
+}
+function pressKey(key) {
+    if (!gameStarted || isCompleted || currentStage !== 'table') return;
+    const group = document.getElementById('group-table');
+    if (group) group.classList.remove('error-shake');
+
+    if (key === 'prev') { moveActive(-1); renderCells(); return; }
+    if (key === 'next') { moveActive(1); renderCells(); return; }
+
+    if (key === 'clear') {   // 全消去：未正解のマスをすべて空にする
+        TABLE_CELLS.forEach(i => { if (cellState[i] !== 'ok') { cellVals[i] = ''; cellState[i] = ''; } });
+        const list = TABLE_CELLS.filter(i => cellState[i] !== 'ok');
+        if (list.length) activeIdx = list[0];
+        judgeLocked = false;
+        renderCells(); updateControlKeysState('playing');
+        return;
+    }
+
+    const i = activeIdx;
+    if (!TABLE_CELLS.includes(i) || cellState[i] === 'ok') return;
+    let val = cellVals[i];
+    if (key === 'Backspace') {
+        val = val.slice(0, -1);
+    } else if (key === '-') {
+        if (val !== '') return;
+        val = '-';
+    } else if (key === '×') {
+        if (!IS_INV || val !== '') return;
+        val = '×';
+    } else if (/^[0-9]$/.test(key)) {
+        if (val.includes('×') || val.length >= 3) return;
+        if (val === '-' && key === '0') return;
+        if (val === '0') val = '';
+        val = val + key;
+    } else {
+        return;
+    }
+    cellVals[i] = val;
+    cellState[i] = '';
+    judgeLocked = false;
+    renderCells();
+    updateControlKeysState('playing');
+}
+function checkTable(q) {
+    const empties = TABLE_CELLS.filter(i => cellVals[i] === '');
+    if (empties.length > 0) {   // 空きマスがあるときは不正解に数えない
+        empties.forEach(i => { cellState[i] = 'ng'; });
+        activeIdx = empties[0];
+        renderCells();
+        setHint(HINT_DATA.tableEmpty);
+        return;
+    }
+    let allOk = true;
+    TABLE_CELLS.forEach(i => {
+        if (cellVals[i] === q.ys[i]) cellState[i] = 'ok';
+        else { cellState[i] = 'ng'; allOk = false; }
+    });
+    if (allOk) { advanceToPlot(); return; }
+    const ngs = TABLE_CELLS.filter(i => cellState[i] === 'ng');
+    activeIdx = ngs[0];
+    renderCells();
+    let hint = HINT_DATA.tableError;
+    if (IS_INV && ngs.some(i => TABLE_X[i] === 0)) hint = HINT_DATA.tableZero;
+    else if (ngs.some(i => cellVals[i].replace('-', '') === q.ys[i].replace('-', ''))) hint = HINT_DATA.tableSign;
+    showStepError(document.getElementById('group-table'));
+    judgeLocked = true;
+    setHint(hint);
+    updateControlKeysState('playing');
+}
+function advanceToPlot() {
+    TABLE_CELLS.forEach(i => { cellState[i] = 'ok'; });
+    setTableUI('locked-correct');
+    currentStage = 'plot';
+    stageProgress = 1;
+    judgeLocked = false;
+    setGraphActive(true);
+    resultMsgEl.textContent = '① 表：正解！';
+    resultMsgEl.className = 'result-message correct';
+    setHint(HINT_DATA.plotInit);
+    renderCells(); updateStageTabs();
+    updateControlKeysState('playing');
+    startQuestionTimer();
+}
+
+
+/* ==========================================================================
+   8. 手順2・3：グラフ（点をとる／線を引く）【固有】
+   ========================================================================== */
+const toPx = x => GRAPH.center + x * GRAPH.unit;
+const toPy = y => GRAPH.center - y * GRAPH.unit;
+
+function buildGraph() {
+    const svg = document.getElementById('graph-svg');
+    const c = GRAPH.center, u = GRAPH.unit, r = GRAPH.range;
+    const lo = c - r * u, hi = c + r * u;
+    let s = '';
+    for (let i = -r; i <= r; i++) {
+        if (i === 0) continue;
+        const p = c + i * u;
+        s += `<line x1="${p}" y1="${lo}" x2="${p}" y2="${hi}" stroke="#cfd8dc" stroke-width="1"/>`;
+        s += `<line x1="${lo}" y1="${p}" x2="${hi}" y2="${p}" stroke="#cfd8dc" stroke-width="1"/>`;
+    }
+    s += `<line x1="${lo - 14}" y1="${c}" x2="${hi + 14}" y2="${c}" stroke="#333" stroke-width="2"/>`;
+    s += `<line x1="${c}" y1="${hi + 14}" x2="${c}" y2="${lo - 14}" stroke="#333" stroke-width="2"/>`;
+    s += `<polygon points="${hi + 26},${c} ${hi + 12},${c - 6} ${hi + 12},${c + 6}" fill="#333"/>`;
+    s += `<polygon points="${c},${lo - 26} ${c - 6},${lo - 12} ${c + 6},${lo - 12}" fill="#333"/>`;
+    s += `<text class="svg-axis-label" x="${hi + 22}" y="${c + 22}">x</text>`;
+    s += `<text class="svg-axis-label" x="${c + 12}" y="${lo - 18}">y</text>`;
+    s += `<text class="svg-axis-label" x="${c - 8}" y="${c + 17}" text-anchor="end" style="font-style:normal;">O</text>`;
+    for (let i = -r; i <= r; i++) {
+        if (i === 0) continue;
+        s += `<text class="svg-tick-label" x="${c + i * u}" y="${c + 20}" text-anchor="middle">${fmtNum(i)}</text>`;
+        s += `<text class="svg-tick-label" x="${c - 7}" y="${c - i * u + 6}" text-anchor="end">${fmtNum(i)}</text>`;
+    }
+    s += `<g id="layer-strokes"></g><g id="layer-ideal"></g><g id="layer-points"></g>`;
+    s += `<circle id="hover-dot" cx="-100" cy="-100" r="${POINT_R + 1}" fill="rgba(255,112,67,0.30)"/>`;
+    svg.innerHTML = s;
+
+    svg.addEventListener('click', onGraphClick);
+    svg.addEventListener('mousemove', onGraphHover);
+    svg.addEventListener('mouseleave', hideHoverDot);
+    svg.addEventListener('pointerdown', onPointerDown);
+    svg.addEventListener('pointermove', onPointerMove);
+    svg.addEventListener('pointerup', endStroke);
+    svg.addEventListener('pointercancel', endStroke);
+}
+function pointFromEvent(e) {   // 画面上の位置 → グラフの座標（連続値）
+    const svg = document.getElementById('graph-svg');
+    const pt = svg.createSVGPoint();
+    pt.x = e.clientX; pt.y = e.clientY;
+    const p = pt.matrixTransform(svg.getScreenCTM().inverse());
+    return { x: (p.x - GRAPH.center) / GRAPH.unit, y: (GRAPH.center - p.y) / GRAPH.unit };
+}
+function eventToLattice(e) {
+    const p = pointFromEvent(e);
+    const x = Math.round(p.x), y = Math.round(p.y);
+    if (Math.abs(x) > GRAPH.range || Math.abs(y) > GRAPH.range) return null;
+    return { x: x, y: y };
+}
+const canPlot = () => gameStarted && !isCompleted && currentStage === 'plot' && currentControlState === 'playing';
+const canDraw = () => gameStarted && !isCompleted && currentStage === 'draw' && currentControlState === 'playing';
+
+function setGraphActive(active) {
+    document.getElementById('graph-frame').classList.toggle('inactive', !active);
+    if (!active) hideHoverDot();
+}
+function hideHoverDot() {
+    const h = document.getElementById('hover-dot');
+    if (h) { h.setAttribute('cx', -100); h.setAttribute('cy', -100); }
+}
+function resetGraphState() {
+    plotted = []; strokes = []; strokeColor = 'normal'; drawing = false;
+    ['layer-strokes', 'layer-ideal', 'layer-points'].forEach(id => {
+        const l = document.getElementById(id);
+        if (l) l.innerHTML = '';
+    });
+    const frame = document.getElementById('graph-frame');
+    frame.classList.remove('error-shake', 'locked-correct');
+    document.getElementById('graph-svg').classList.remove('drawing');
+    hideHoverDot();
+}
+function afterGraphEdit() {
+    judgeLocked = false;
+    strokeColor = 'normal';
+    document.getElementById('graph-frame').classList.remove('error-shake');
+    renderPlotted();
+    renderStrokes();
+    updateControlKeysState('playing');
+}
+
+/* --- 手順2：点をとる --- */
+function onGraphClick(e) {
+    if (!canPlot()) return;
+    const pt = eventToLattice(e);
+    if (!pt) return;
+    const i = plotted.findIndex(p => p.x === pt.x && p.y === pt.y);
+    if (i >= 0) plotted.splice(i, 1); else plotted.push(pt);
+    afterGraphEdit();
+}
+function onGraphHover(e) {
+    const h = document.getElementById('hover-dot');
+    if (!h) return;
+    if (!canPlot()) { hideHoverDot(); return; }
+    const pt = eventToLattice(e);
+    if (!pt) { hideHoverDot(); return; }
+    h.setAttribute('cx', toPx(pt.x)); h.setAttribute('cy', toPy(pt.y));
+}
+function undoPoint() {
+    if (!canPlot() || !plotted.length) return;
+    plotted.pop();
+    afterGraphEdit();
+}
+function renderPlotted(badSet) {
+    const layer = document.getElementById('layer-points');
+    if (!layer) return;
+    const ok = stageProgress >= 2;
+    let s = '';
+    plotted.forEach(p => {
+        const bad = badSet && badSet.has(keyOf(p));
+        const fill = ok ? '#2e7d32' : (bad ? '#d32f2f' : '#ff7043');
+        s += `<circle cx="${toPx(p.x)}" cy="${toPy(p.y)}" r="${POINT_R}" fill="${fill}" stroke="#ffffff" stroke-width="2"/>`;
+    });
+    layer.innerHTML = s;
+}
+function checkPlot(q) {
+    const exp = new Set(q.points.map(keyOf));
+    const got = new Set(plotted.map(keyOf));
+    const extra = plotted.filter(p => !exp.has(keyOf(p)));
+    const missing = q.points.filter(p => !got.has(keyOf(p)));
+    if (!extra.length && !missing.length) { advanceToDraw(); return; }
+    renderPlotted(new Set(extra.map(keyOf)));
+    let hint;
+    if (extra.length) {
+        if (IS_INV && extra.some(p => p.x === 0)) hint = HINT_DATA.plotZero;
+        else if (extra.some(p => exp.has(p.y + ',' + p.x))) hint = HINT_DATA.plotSwap;
+        else hint = HINT_DATA.plotExtra;
+    } else {
+        hint = HINT_DATA.plotMissing(missing.length);
+    }
+    setHint(hint);
+    showStepError(document.getElementById('graph-frame'));
+    judgeLocked = true;
+    updateControlKeysState('playing');
+}
+function advanceToDraw() {
+    currentStage = 'draw';
+    stageProgress = 2;
+    judgeLocked = false;
+    document.getElementById('graph-frame').classList.remove('error-shake');
+    document.getElementById('graph-svg').classList.add('drawing');
+    hideHoverDot();
+    renderPlotted();
+    resultMsgEl.textContent = '② 点：正解！';
+    resultMsgEl.className = 'result-message correct';
+    setHint(HINT_DATA.drawInit);
+    updateStageTabs();
+    updateControlKeysState('playing');
+    startQuestionTimer();
+}
+
+/* --- 手順3：線をなぞる（ドラッグ） --- */
+function onPointerDown(e) {
+    if (!canDraw()) return;
+    e.preventDefault();
+    const svg = document.getElementById('graph-svg');
+    try { svg.setPointerCapture(e.pointerId); } catch (err) { /* 無視 */ }
+    strokes.push([pointFromEvent(e)]);
+    drawing = true;
+    judgeLocked = false;
+    strokeColor = 'normal';
+    document.getElementById('graph-frame').classList.remove('error-shake');
+    renderStrokes();
+    updateControlKeysState('playing');
+}
+function onPointerMove(e) {
+    if (!drawing || !canDraw()) return;
+    const s = strokes[strokes.length - 1];
+    const p = pointFromEvent(e);
+    const last = s[s.length - 1];
+    if (Math.hypot(p.x - last.x, p.y - last.y) < 0.04) return;
+    s.push(p);
+    renderStrokes();
+}
+function endStroke(e) {
+    if (!drawing) return;
+    drawing = false;
+    try { document.getElementById('graph-svg').releasePointerCapture(e.pointerId); } catch (err) { /* 無視 */ }
+    updateControlKeysState('playing');
+}
+function undoStroke() {
+    if (!canDraw() || !strokes.length) return;
+    strokes.pop();
+    afterGraphEdit();
+}
+function renderStrokes() {
+    const layer = document.getElementById('layer-strokes');
+    if (!layer) return;
+    const col = strokeColor === 'bad' ? '#e53935' : (strokeColor === 'ok' ? '#43a047' : '#1e88e5');
+    let s = '';
+    strokes.forEach(st => {
+        if (st.length === 1) {
+            s += `<circle cx="${toPx(st[0].x).toFixed(1)}" cy="${toPy(st[0].y).toFixed(1)}" r="3" fill="${col}" opacity=".5"/>`;
+            return;
+        }
+        const pts = st.map(p => `${toPx(p.x).toFixed(1)},${toPy(p.y).toFixed(1)}`).join(' ');
+        s += `<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity=".45"/>`;
+    });
+    layer.innerHTML = s;
+}
+function renderIdeal(q) {
+    const layer = document.getElementById('layer-ideal');
+    if (!layer) return;
+    let s = '';
+    q.idealPaths.forEach(path => {
+        const pts = path.map(p => `${toPx(p.x).toFixed(1)},${toPy(p.y).toFixed(1)}`).join(' ');
+        s += `<polyline points="${pts}" fill="none" stroke="#2e7d32" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+    });
+    layer.innerHTML = s;
+}
+
+/* --- 判定に使う計算 --- */
+function densify(strs) {   // 点と点のあいだを細かく補う（間隔0.1目盛り以下）
+    const out = [];
+    strs.forEach(s => {
+        if (s.length === 1) { out.push(s[0]); return; }
+        for (let i = 1; i < s.length; i++) {
+            const a = s[i - 1], b = s[i];
+            const n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / 0.1));
+            for (let k = (i === 1 ? 0 : 1); k <= n; k++) {
+                out.push({ x: a.x + (b.x - a.x) * k / n, y: a.y + (b.y - a.y) * k / n });
+            }
+        }
+    });
+    return out;
+}
+function distToIdeal(p, q) {
+    if (!IS_INV) return Math.abs(q.a * p.x - p.y) / Math.sqrt(q.a * q.a + 1);
+    let m = 1e9;
+    for (const s of q.sample) {
+        const d = Math.hypot(s.x - p.x, s.y - p.y);
+        if (d < m) m = d;
+    }
+    return m;
+}
+function minDistTo(e, pts) {
+    let m = 1e9;
+    for (const p of pts) {
+        const d = Math.hypot(p.x - e.x, p.y - e.y);
+        if (d < m) m = d;
+    }
+    return m;
+}
+/* --- 線の判定：{ok:true} または {ok:false, key:ヒントの種類} --- */
+function judgeDraw(q) {
+    const pts = densify(strokes);
+    if (!pts.length) return { ok: false, key: 'drawFar' };
+    if (IS_INV) {   // 反比例：軸をこえていないか
+        let cross = false;
+        strokes.forEach(s => {
+            const px = s.some(p => p.x > 0.15), nx = s.some(p => p.x < -0.15);
+            const py = s.some(p => p.y > 0.15), ny = s.some(p => p.y < -0.15);
+            if ((px && nx) || (py && ny)) cross = true;
+        });
+        if (cross) return { ok: false, key: 'drawCross' };
+    }
+    let near = 0;
+    pts.forEach(p => { if (distToIdeal(p, q) <= DRAW_TOL) near++; });
+    if (near / pts.length < ACC_RATIO) return { ok: false, key: 'drawFar' };
+    // 端から端まで描けているか（点をつないだだけになっていないか）
+    let missingGroup = false, short = false;
+    q.endGroups.forEach(g => {
+        const reached = g.map(e => minDistTo(e, pts) <= END_TOL);
+        if (!reached[0] && !reached[1]) missingGroup = true;
+        else if (!(reached[0] && reached[1])) short = true;
+    });
+    if (IS_INV && missingGroup) return { ok: false, key: 'drawBranch' };
+    if (missingGroup || short) return { ok: false, key: 'drawShort' };
+    return { ok: true };
+}
+function checkDraw(q) {
+    const r = judgeDraw(q);
+    const frame = document.getElementById('graph-frame');
+    if (!r.ok) {
+        strokeColor = 'bad';
+        renderStrokes();
+        setHint(HINT_DATA[r.key]);
+        showStepError(frame);
+        judgeLocked = true;
+        updateControlKeysState('playing');
+        return;
+    }
+    isCompleted = true;
+    drawing = false;
+    clearInterval(questionTimerId);
+    document.getElementById('countdown-timer').style.display = 'none';
+    stageProgress = 3;
+    strokeColor = 'ok';
+    renderStrokes();
+    renderIdeal(q);
+    frame.classList.remove('error-shake');
+    frame.classList.add('locked-correct', 'inactive');
+    updateStageTabs();
+
+    if (currentQuestionWrongCount === 0) {
+        score++;
+        correctStreakCount++;
+        if (correctStreakCount > maxStreakCount) maxStreakCount = correctStreakCount;
+        saveKenteiRecords();
+    }
+    if (document.activeElement) document.activeElement.blur();
+
+    if (currentQuestionIndex === QUESTION_COUNT - 1) {
+        stopTimerClockAndEvaluate();
+        resultMsgEl.textContent = `全 ${QUESTION_COUNT} 問中 ${score} 問ノーミス正解！`;
+        resultMsgEl.className = "result-message correct";
+        progressEl.textContent = (score === QUESTION_COUNT) ? "全問ノーミスパーフェクト！" : "全問終了！";
+        setHint(HINT_DATA.allFinished);
+        updateControlKeysState('finished'); updateSendButtonState();
+    } else {
+        resultMsgEl.textContent = '③ 線：正解！';
+        resultMsgEl.className = 'result-message correct';
+        setHint(HINT_DATA.nextQuestion);
+        updateControlKeysState('cleared');
+    }
+}
+
+
+/* ==========================================================================
+   9. 出題の進行【共通・固有】
+   ========================================================================== */
+function showStartLayout() {
+    window.isAlreadySubmitted = false;
+    const sendBtnTop = document.getElementById('send-btn');
+    if (sendBtnTop) { sendBtnTop.textContent = "送信"; sendBtnTop.disabled = true; }
+    if (numberField) numberField.disabled = false;
+
+    clearInterval(timerInterval);
+    clearInterval(questionTimerId);
+    elapsedBeforeResume = 0;
+    isCorrectState = false;
+    document.getElementById('timer-display').innerText = "⏱️ 00:00.0";
+    document.getElementById('best-update-message').innerText = "";
+    document.getElementById('countdown-timer').style.display = 'none';
+
+    gameStarted = false;
+    isCompleted = false;
+    progressEl.textContent = "スタートボタンを押してください";
+    formulaBox.innerHTML = `<span style="color:#aaa; font-size:22px;">生徒番号を入力→【スタート】</span>`;
+    setHint(HINT_DATA.start);
+
+    TABLE_X = DEFAULT_TABLE_X.slice();
+    TABLE_CELLS = TABLE_X.map((_, i) => i);
+    buildTable();
+    currentStage = 'table';
+    stageProgress = 0;
+    judgeLocked = false;
+    cellVals = new Array(CELL_COUNT).fill('');
+    cellState = new Array(CELL_COUNT).fill('');
+    activeIdx = 0;
+    resetGraphState();
+    setGraphActive(false);
+    setTableUI('locked-disabled');
+    updateStageTabs();
+    renderCells();
+    updateControlKeysState('start');
+    resultMsgEl.textContent = "";
+    resultMsgEl.className = "result-message";
+}
+function startQuizGame() {
+    window.isAlreadySubmitted = false;
+    gameStarted = true;
+    score = 0;
+    currentQuestionIndex = 0;
+    startTimerClock();
+    if (numberField) numberField.disabled = true;
+    if (tooltip) tooltip.classList.remove('show');
+    loadQuestion();
+}
+function loadQuestion() {
+    isCompleted = false;
+    currentQuestionWrongCount = 0;
+    judgeLocked = false;
+    resultMsgEl.textContent = "";
+    resultMsgEl.className = "result-message";
+
+    const q = quizData[currentQuestionIndex];
+    TABLE_X = q.xs.slice();
+    TABLE_CELLS = TABLE_X.map((_, i) => i);
+    cellVals = new Array(CELL_COUNT).fill('');
+    cellState = new Array(CELL_COUNT).fill('');
+    activeIdx = 0;
+    currentStage = 'table';
+    stageProgress = 0;
+    resetGraphState();
+    setGraphActive(false);
+    setTableUI('active-focus');
+    buildTable();
+
+    progressEl.textContent = `第 ${currentQuestionIndex + 1} 問 / 全 ${QUESTION_COUNT} 問`;
+    formulaBox.innerHTML = q.html;
+    updateMathJax([formulaBox]);
+    setHint(HINT_DATA.tableInit);
+
+    renderCells();
+    updateStageTabs();
+    updateControlKeysState('playing');
+    startQuestionTimer();
+}
+function nextQuestion() {
+    currentQuestionIndex++;
+    if (currentQuestionIndex < quizData.length) loadQuestion();
+}
+function restartQuiz() {
+    quizData = generateQuizData();
+    showStartLayout();
+}
+function handleQuestionTimeout() {
+    clearInterval(questionTimerId);
+    const q = quizData[currentQuestionIndex];
+    if (!q || isCompleted) return;
+    const el = (currentStage === 'table') ? document.getElementById('group-table') : document.getElementById('graph-frame');
+    setHint(currentStage === 'table' ? HINT_DATA.timeoutTable : (currentStage === 'plot' ? HINT_DATA.timeoutPlot : HINT_DATA.timeoutDraw));
+    showStepError(el);
+}
+function showStepError(groupEl) {
+    currentQuestionWrongCount++;
+    if (correctStreakCount !== 0) {
+        correctStreakCount = 0;
+        saveKenteiRecords();
+    }
+    startQuestionTimer();
+    if (groupEl) {
+        groupEl.classList.remove('error-shake');
+        void groupEl.offsetWidth;
+        groupEl.classList.add('error-shake');
+    }
+}
+function checkAnswer() {
+    const q = quizData[currentQuestionIndex];
+    if (!q || judgeLocked) return;
+    if (currentStage === 'table') checkTable(q);
+    else if (currentStage === 'plot') checkPlot(q);
+    else checkDraw(q);
+}
+
+
+/* ==========================================================================
+   10. 問題の生成【固有】
+   ========================================================================== */
+const shuffle = arr => {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+};
+const coefText = a => (a === 1 ? '' : (a === -1 ? '-' : String(a)));
+
+/* --- 比例 y=ax：x=-2〜2、aは ±1,±2,±3 から5つ --- */
+function buildPropQuestion(a) {
+    const xs = [-2, -1, 0, 1, 2];
+    const xr = Math.min(GRAPH.range, GRAPH.range / Math.abs(a));   // 枠の端（x=±6 または y=±6）
+    const eR = { x: xr, y: a * xr }, eL = { x: -xr, y: -a * xr };
+    return {
+        a: a, xs: xs,
+        ys: xs.map(x => String(a * x)),
+        points: xs.map(x => ({ x: x, y: a * x })),
+        html: `<div class="problem-inner">関数 $y=${coefText(a)}x$ のグラフをかきなさい。</div>`,
+        endGroups: [[eL, eR]],
+        idealPaths: [[eL, eR]]
+    };
+}
+/* --- 反比例 y=a/x：x=0 は「×」。表のxは枠内（|x|≦6, |y|≦6）に収まる約数の±と0 --- */
+function buildInvQuestion(a) {
+    const A = Math.abs(a), R = GRAPH.range;
+    const ds = [1, 2, 3, 4, 5, 6].filter(d => A % d === 0 && A / d <= R);
+    const xs = [...ds.slice().reverse().map(d => -d), 0, ...ds];
+    const sign = a > 0 ? 1 : -1;
+    const endGroups = [], idealPaths = [], sample = [];
+    [1, -1].forEach(sx => {
+        const sy = sign * sx;
+        endGroups.push([{ x: R * sx, y: a / (R * sx) }, { x: a / (R * sy), y: R * sy }]);
+        const path = [];   // 枠内の曲線（x を対数的に刻む）
+        const x0 = A / R, N = 120;
+        for (let k = 0; k <= N; k++) {
+            const x = sx * x0 * Math.pow(R / x0, k / N);
+            path.push({ x: x, y: a / x });
+        }
+        idealPaths.push(path);
+        const xmin = A / 7, M = 600;   // 判定用の細かい点列（枠の少し外まで）
+        for (let k = 0; k <= M; k++) {
+            const x = sx * xmin * Math.pow(7 / xmin, k / M);
+            sample.push({ x: x, y: a / x });
+        }
+    });
+    return {
+        a: a, xs: xs,
+        ys: xs.map(x => (x === 0 ? '×' : String(a / x))),
+        points: xs.filter(x => x !== 0).map(x => ({ x: x, y: a / x })),
+        html: `<div class="problem-inner">関数 $y=${a < 0 ? '-' : ''}\\dfrac{${A}}{x}$ のグラフをかきなさい。</div>`,
+        endGroups: endGroups, idealPaths: idealPaths, sample: sample
+    };
+}
+function generateQuizData() {
+    if (!IS_INV) return shuffle([1, -1, 2, -2, 3, -3]).slice(0, QUESTION_COUNT).map(buildPropQuestion);
+    const abs = shuffle([3, 4, 5, 6, 12]);
+    const signs = shuffle([1, 1, -1, -1, Math.random() < 0.5 ? 1 : -1]);
+    return abs.map((v, i) => buildInvQuestion(v * signs[i]));
+}
+
+
+/* ==========================================================================
+   11. ヒント【固有】
+   ========================================================================== */
+const HINTS = {
+    prop: {
+        start: "目指せ！パーフェクト！",
+        tableInit: "式の $x$ に表の $x$ の値を代入して、$y$ の値を求めよう。<br>負の数は先に「−」を押そう。マスをタップするか ← → で移動できるよ。",
+        tableEmpty: "空いているマスがあるよ。<br>すべてのマスに数を入れよう。",
+        tableError: "式の $x$ に、表の $x$ の値をそのまま代入して計算し直そう。",
+        tableZero: "",
+        tableSign: "符号を確かめよう。<br>（正の数）×（負の数）は負の数、（負の数）×（負の数）は正の数だよ。",
+        timeoutTable: "時間切れ！<br>$y=ax$ の $x$ に、表の $x$ の値を代入しよう。",
+        plotInit: "表の $x$, $y$ の組が点の座標 $(x, y)$ だよ。<br>グラフをタップして、すべての点をとろう。もう一度タップすると消えるよ。",
+        plotMissing: n => `点があと ${n} 個たりないよ。<br>表の $x$, $y$ の組すべてを点にしよう。`,
+        plotExtra: "表にない点があるよ（赤い点）。<br>$x$ は左右、$y$ は上下に進もう。",
+        plotSwap: "$x$ 座標と $y$ 座標が入れかわっていないかな？<br>$(x, y)$ の順に読もう。",
+        plotZero: "",
+        timeoutPlot: "時間切れ！<br>表の $x$, $y$ の組を $(x, y)$ として、点をとろう。",
+        drawInit: "比例のグラフは<b>原点を通る直線</b>だよ。<br>点を通るように、グラフの<b>端から端まで</b>指（マウス）でなぞろう。点をつなぐだけではだめだよ。",
+        drawFar: "線が点を通っていないよ。<br>原点ととった点を通るように、まっすぐなぞろう。「消す」で描き直せるよ。",
+        drawShort: "線が端まで届いていないよ。<br>グラフは点の外側にもずっと続くよ。グラフの端から端までのばそう。",
+        drawCross: "", drawBranch: "",
+        timeoutDraw: "時間切れ！<br>原点を通る直線を、グラフの端から端までなぞろう。",
+        nextQuestion: "正解！<br>『次の問題』を押そう。",
+        allFinished: "全問終了！<br>『送信』ボタンを押そう。"
+    },
+    inv: {
+        start: "目指せ！パーフェクト！",
+        tableInit: "式の $x$ に表の $x$ の値を代入して、$y$ の値を求めよう。<br>求められないときは「×」を入れよう。負の数は先に「−」を押そう。",
+        tableEmpty: "空いているマスがあるよ。<br>すべてのマスに数か「×」を入れよう。",
+        tableError: "$x$ と $y$ をかけた数（式の数）は、いつも同じになるよ。<br>$x=0$ のときは「×」だよ。",
+        tableZero: "$x=0$ のときは、0でわれないので「×」を入れよう。",
+        tableSign: "符号を確かめよう。<br>$x$ と $y$ をかけると、いつも式の数になるよ。",
+        timeoutTable: "時間切れ！<br>$x \\times y$ の値が、いつも式の数になることに注目しよう。",
+        plotInit: "表の $x$, $y$ の組が点の座標 $(x, y)$ だよ。<br>「×」の点はとれないよ。グラフをタップして、すべての点をとろう。もう一度タップすると消えるよ。",
+        plotMissing: n => `点があと ${n} 個たりないよ。<br>表の「×」以外の $x$, $y$ の組すべてを点にしよう。`,
+        plotExtra: "表にない点があるよ（赤い点）。<br>$x$ は左右、$y$ は上下に進もう。",
+        plotSwap: "$x$ 座標と $y$ 座標が入れかわっていないかな？<br>$(x, y)$ の順に読もう。",
+        plotZero: "$x=0$ のときは「×」だったね。<br>$y$ 軸の上に点はとれないよ。",
+        timeoutPlot: "時間切れ！<br>表の $x$, $y$ の組を $(x, y)$ として、点をとろう。",
+        drawInit: "反比例のグラフは、軸と交わらない<b>2つのなめらかな曲線</b>だよ。<br>点を通るように、<b>端から端まで</b>1本ずつなぞろう。点をつなぐだけではだめだよ。",
+        drawFar: "曲線が点を通っていないよ。<br>直線ではなく、点をなめらかな曲線でつなごう。「消す」で描き直せるよ。",
+        drawShort: "曲線が端まで届いていないよ。<br>点をつないだだけにしないで、軸に近づくところまで、グラフの端までのばそう。",
+        drawCross: "曲線は $x$ 軸や $y$ 軸とは交わらないよ。<br>軸に近づいても、軸をこえないように描こう。",
+        drawBranch: "曲線は2つあるよ。<br>もう1つの曲線も、端から端まで描こう。",
+        timeoutDraw: "時間切れ！<br>点をなめらかな曲線でつないで、端から端までなぞろう。",
+        nextQuestion: "正解！<br>『次の問題』を押そう。",
+        allFinished: "全問終了！<br>『送信』ボタンを押そう。"
+    }
+};
+const HINT_DATA = HINTS[MODE];
+
+
+/* ==========================================================================
+   12. イベントリスナー・初期化【共通】
+   ========================================================================== */
+window.addEventListener('resize', resizeApp);
+window.addEventListener('DOMContentLoaded', () => {
+    resizeApp();
+    initValidationControls();
+    buildGraph();
+    quizData = generateQuizData();
+    loadKenteiRecords();
+    const bestDisplayEl = document.getElementById('best-normal-display');
+    if (bestDisplayEl) bestDisplayEl.innerText = bestTimeText(bestNormalTimeMs !== null ? formatMs(bestNormalTimeMs) : '--:--.-');
+    showStartLayout();
+    showScreen('screen-start');
+});
+
+</script>
+</body>
+</html>
