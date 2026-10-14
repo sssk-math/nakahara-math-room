@@ -10,6 +10,9 @@
 <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
+/* タブレット：ダブルタップ拡大・長押し選択を禁止 */
+*{touch-action:manipulation}
+html,body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 html,body{width:100%;height:100%;background:#cfe6f5;overflow:hidden;font-family:"Hiragino Kaku Gothic ProN","Meiryo",sans-serif;color:#1b2a3a}
 #app{position:absolute;left:50%;top:50%;width:960px;height:640px;transform:translate(-50%,-50%) scale(var(--s,1));background:#eaf4fb;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.25)}
 header{height:44px;flex:none;background:#0d3b66;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:bold;letter-spacing:.05em}
@@ -57,7 +60,7 @@ svg.graph{flex:1;min-height:0;width:100%;cursor:crosshair;display:block}
 @keyframes bnr{0%{opacity:0;transform:scale(.6)}15%{opacity:1;transform:scale(1.1)}25%{transform:scale(1)}80%{opacity:1}100%{opacity:0}}
 #left .bottom{flex-direction:row;gap:8px}
 #lcol{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
-#turn{font-size:15px;font-weight:bold;padding:4px 8px;border-radius:6px;background:#e8f2fd;color:#0d3b66;white-space:nowrap;overflow:hidden}
+#turn{font-size:20px;line-height:1.2;font-weight:bold;padding:3px 8px;border-radius:6px;background:#e8f2fd;color:#0d3b66;white-space:nowrap;overflow:hidden}
 #turn.cpu{background:#fdecec;color:#b53030}
 .inrow{display:flex;align-items:center;justify-content:center;gap:4px}
 .inrow label{font-size:14px;font-weight:bold;color:#0d3b66;margin-right:2px;white-space:nowrap}
@@ -68,17 +71,16 @@ svg.graph{flex:1;min-height:0;width:100%;cursor:crosshair;display:block}
 .cbox:disabled{background:#eee}
 .row3{display:flex;align-items:center;justify-content:center}
 .cbox mjx-container{margin:0!important}
-#pad{width:188px;flex:none;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,1fr);gap:4px;user-select:none;-webkit-user-select:none}
+#pad{width:188px;flex:none;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:4px;user-select:none;-webkit-user-select:none}
 #pad button{font-size:20px;font-weight:bold;border:2px solid #0d3b66;background:#f4f9fd;color:#0d3b66;border-radius:6px;padding:0}
 #pad button:not(:disabled):active{background:#cfe6f5}
 #pad button:disabled{background:#e3e7ea;border-color:#b9c2c9;color:#a9b3bb;cursor:default}
-#pad .z{grid-column:2/4}
-#pad .nx{grid-column:4;grid-row:2/5;background:#0d3b66;color:#fff;font-size:16px}
+#pad .nx{background:#0d3b66;color:#fff}
 #atk{font-size:18px;font-weight:bold;color:#fff;background:#e53935;border:none;border-radius:8px;padding:5px 32px;box-shadow:0 3px 0 #a52422}
 #atk:disabled{background:#b9c2c9;box-shadow:0 3px 0 #8e9aa5;cursor:default}
 #atk:not(:disabled):active{transform:translateY(2px);box-shadow:0 1px 0 #a52422}
 #pickinfo{font-size:13px;color:#444}
-#msg{font-size:12px;line-height:1.25;color:#c62828;min-height:30px;font-weight:bold}
+#msg{font-size:14px;line-height:1.25;color:#c62828;min-height:35px;font-weight:bold}
 
 #setupView,#resultView{display:none;flex:1;min-height:0;flex-direction:column;gap:6px}
 #setupView.active,#resultView.active{display:flex}
@@ -125,6 +127,23 @@ svg.graph{flex:1;min-height:0;width:100%;cursor:crosshair;display:block}
 #quitCard p{font-size:16px;margin-bottom:16px;line-height:1.6}
 #quitCard .sbtn{font-size:16px;padding:10px 22px;margin:0 6px}
 #homeBtn{display:none;font-size:16px;padding:10px 18px;margin-left:12px}
+
+/* ゲームの説明 */
+.intro{font-size:17px;font-weight:bold;color:#1b2a3a;margin-bottom:12px}
+/* 準備中オーバーレイ（左のプレイ画面） */
+#prep{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;background:rgba(255,255,255,.85);border-radius:8px;z-index:4;pointer-events:none;font-size:22px;font-weight:bold;line-height:1.7;color:#0d3b66;padding:20px}
+#prep.show{display:flex}
+/* 部屋コード用テンキー */
+#codeIn{cursor:pointer}
+#kp{position:absolute;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:30}
+#kp.active{display:flex}
+#kpCard{background:#fff;border:4px solid #0d3b66;border-radius:14px;padding:16px 28px 20px;text-align:center}
+#kpCard h3{font-size:18px;color:#0d3b66;margin-bottom:6px}
+#kpDisp{font-size:40px;font-weight:bold;letter-spacing:.1em;color:#0d3b66;margin-bottom:10px;line-height:1.3}
+#kpPad{display:grid;grid-template-columns:repeat(3,92px);grid-auto-rows:54px;gap:8px}
+#kpPad button{font-size:26px;font-weight:bold;border:2px solid #0d3b66;background:#f4f9fd;color:#0d3b66;border-radius:8px;padding:0}
+#kpPad button:active{background:#cfe6f5}
+#kpPad .kc{font-size:16px;background:#0d3b66;color:#fff}
 </style>
 </head>
 <body>
@@ -134,6 +153,8 @@ svg.graph{flex:1;min-height:0;width:100%;cursor:crosshair;display:block}
     <!-- 開始画面 -->
     <section id="start" class="screen active">
       <div class="card">
+        <h2>ゲームの説明</h2>
+        <p class="intro">点の位置を推測し、相手より先に5つの点をすべて見つけ出そう！</p>
         <h2>ゲームの進め方</h2>
         <div class="steps">
           <div><b>① 準備：</b>右上のグラフで、自分の点を<b>5つ</b>えらびます（x, yは -5〜5 の整数）。対戦相手も5点をかくしています。</div>
@@ -168,13 +189,20 @@ svg.graph{flex:1;min-height:0;width:100%;cursor:crosshair;display:block}
           <div class="lobbox">
             <h3>② 部屋に入る</h3>
             <p>相手に教えてもらった<br>部屋コード（4けた）を入力します。</p>
-            <input id="codeIn" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="0000">
+            <input id="codeIn" type="text" inputmode="none" readonly maxlength="4" autocomplete="off" placeholder="タップ">
             <button class="bigbtn blue" id="joinBtn">入る</button>
           </div>
         </div>
         <div id="lobMsg"></div>
         <button class="sbtn" id="lobBack">もどる</button>
       </div>
+      <div id="kp"><div id="kpCard"><h3>部屋コード（4けた）を入力</h3><div id="kpDisp">－ － － －</div>
+        <div id="kpPad">
+          <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
+          <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
+          <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+          <button data-k="bs">⌫</button><button data-k="0">0</button><button class="kc" data-k="close">とじる</button>
+        </div></div></div>
     </section>
 
     <!-- ゲーム画面 -->
@@ -185,6 +213,7 @@ svg.graph{flex:1;min-height:0;width:100%;cursor:crosshair;display:block}
             <span class="legend"><span><i style="background:#2e9e44"></i>ヒット</span><span><i style="background:#1e88e5"></i>ニア</span><span><i style="background:#e53935"></i>ミス</span><span><i style="background:#222"></i>ロック</span></span></div>
           <svg id="gLeft" class="graph" viewBox="0 0 384 384"></svg>
           <div id="banner"><span id="bannerText"></span></div>
+          <div id="prep">準備中：<br>5点選んで【バトル開始】を押してね</div>
         </div>
         <div class="panel bottom">
           <div id="lcol">
@@ -200,10 +229,9 @@ svg.graph{flex:1;min-height:0;width:100%;cursor:crosshair;display:block}
             <div id="msg"></div>
           </div>
           <div id="pad">
-            <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button><button data-k="bs">⌫</button>
-            <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button><button class="nx" id="padNext" data-k="next">次へ</button>
+            <button data-k="4">4</button><button data-k="5">5</button><button data-k="bs">⌫</button>
             <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
-            <button data-k="neg">−</button><button class="z" data-k="0">0</button>
+            <button data-k="0">0</button><button data-k="neg">−</button><button class="nx" id="padNext" data-k="next">OK</button>
           </div>
         </div>
       </div>
@@ -260,6 +288,9 @@ let st={};
 /* ---------- 画面の拡縮（小さい画面のみ縮小） ---------- */
 function fit(){const s=Math.min(window.innerWidth/960,window.innerHeight/640,1);$('app').style.setProperty('--s',s);}
 window.addEventListener('resize',fit);fit();
+/* 長押しメニュー・文字選択を禁止 */
+document.addEventListener('contextmenu',e=>e.preventDefault());
+document.addEventListener('selectstart',e=>e.preventDefault());
 
 /* ---------- グラフ描画 ---------- */
 function baseGrid(){
@@ -362,12 +393,12 @@ function renderInput(){
   });
   const padOn=on&&!!st.field;
   $('pad').querySelectorAll('button').forEach(k=>{k.disabled=!padOn;});
-  $('padNext').textContent=st.field==='y'?'OK':'，';
   updateAtk();
 }
 function updateTurn(){
   const t=$('turn');
   t.classList.remove('cpu');
+  $('prep').classList.toggle('show',st.phase==='setup');
   if(st.phase==='setup'){t.textContent='準備中：右上で5点をえらぼう';}
   else if(st.phase==='wait'){t.textContent='相手の準備を待っています…';}
   else if(st.phase==='waitres'){t.textContent='判定を待っています…';}
@@ -580,7 +611,7 @@ const firebaseConfig={
 };
 let db=null, net=null;
 function fbInit(){
-  if(db){db.goOnline();return true;}
+  if(db)return true;
   try{
     if(typeof firebase==='undefined'||!firebase.database)return false;
     if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
@@ -596,21 +627,16 @@ function netError(e){
   lobMsg(e&&e.message==='timeout'?'つながりません。学校のネットワークで通信が制限されている可能性があります。':'通信エラーがおきました。もう一度ためしてください。');
   lobBusy(false);$('roomCode').textContent='';
 }
-/* 退室の書き込みが済んでから接続を切る（別の対戦がもう始まっていれば切らない） */
-function netOffline(p){
-  Promise.race([Promise.resolve(p),new Promise(r=>setTimeout(r,3000))]).then(()=>{if(!net&&db)db.goOffline();});
-}
 function leaveNet(){
-  if(!net){if(db)netOffline();return;}
-  const n=net;net=null;let done=null;
+  if(!net)return;
+  const n=net;net=null;
   try{
     ['msgRef','oppRef','connRef','rmRef'].forEach(k=>{if(n[k])n[k].off();});
     clearTimeout(n.leftTimer);
     const r=db.ref('rooms/'+n.code+'/players/'+n.role);
     r.onDisconnect().cancel();
-    done=(n.role==='host')?db.ref('rooms/'+n.code).remove():r.remove();
+    if(n.role==='host')db.ref('rooms/'+n.code).remove();else r.remove();
   }catch(e){}
-  netOffline(done);
 }
 function goStart(){
   $('toStart').style.display='none';
@@ -734,10 +760,26 @@ function pvpRematch(){
 /* 通信画面のボタン */
 $('pvpBtn').addEventListener('click',()=>{
   $('start').classList.remove('active');$('lobby').classList.add('active');
-  $('roomCode').textContent='';$('codeIn').value='';lobBusy(false);lobMsg('');
+  $('roomCode').textContent='';$('codeIn').value='';$('kp').classList.remove('active');lobBusy(false);lobMsg('');
   if(!fbInit()){lobMsg('通信の準備ができません。ネットワークの設定を確認してください。');lobBusy(true);}
 });
 $('codeIn').addEventListener('input',()=>{$('codeIn').value=$('codeIn').value.replace(/[^0-9]/g,'');});
+/* 部屋コード入力用テンキー：入力欄をタップで空欄にして開き、4けたで自動的に閉じる */
+function kpShow(){$('kpDisp').textContent=($('codeIn').value+'－－－－').slice(0,4).split('').join(' ');}
+function kpClose(){$('kp').classList.remove('active');}
+$('codeIn').addEventListener('click',()=>{
+  if($('codeIn').disabled)return;
+  $('codeIn').value='';kpShow();$('kp').classList.add('active');
+});
+$('kpPad').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  const k=b.dataset.k,i=$('codeIn');
+  if(k==='close'){kpClose();return;}
+  if(k==='bs')i.value=i.value.slice(0,-1);
+  else if(i.value.length<4)i.value+=k;
+  kpShow();
+  if(i.value.length===4)setTimeout(kpClose,250);
+});
 $('mkBtn').addEventListener('click',async()=>{
   if(net||!fbInit())return;
   lobBusy(true);lobMsg('つないでいます…',true);
