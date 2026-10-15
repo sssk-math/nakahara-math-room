@@ -129,7 +129,7 @@ svg.graph{flex:1;min-height:0;width:100%;cursor:crosshair;display:block}
 #homeBtn{display:none;font-size:16px;padding:10px 18px;margin-left:12px}
 
 /* ゲームの説明 */
-.intro{font-size:17px;font-weight:bold;color:#1b2a3a;margin-bottom:12px}
+.intro{font-size:26px;font-weight:bold;color:#1b2a3a;margin-bottom:12px}
 /* 準備中オーバーレイ（左のプレイ画面） */
 #prep{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;background:rgba(255,255,255,.85);border-radius:8px;z-index:4;pointer-events:none;font-size:22px;font-weight:bold;line-height:1.7;color:#0d3b66;padding:20px}
 #prep.show{display:flex}
@@ -157,9 +157,9 @@ svg.graph{flex:1;min-height:0;width:100%;cursor:crosshair;display:block}
         <p class="intro">点の位置を推測し、相手より先に5つの点をすべて見つけ出そう！</p>
         <h2>ゲームの進め方</h2>
         <div class="steps">
-          <div><b>① 準備：</b>右上のグラフで、自分の点を<b>5つ</b>えらびます（x, yは -5〜5 の整数）。対戦相手も5点をかくしています。</div>
+          <div><b>① 準備：</b>右上のグラフで、自分の点を<b>5つ</b>えらびます。対戦相手も5つの点をかくしています。</div>
           <div><b>② 予想：</b>左上のグラフに、「相手の点がありそうな場所」の点をとります。</div>
-          <div><b>③ 読む：</b>左下の「横」「縦」の枠を選び、点の位置を読んでテンキーで入力し、<b>「アタック」</b>を押します。</div>
+          <div><b>③ 読む：</b>左下の「横」「縦」の枠に、予想した点の位置をテンキーで入力し、<b>「アタック」</b>を押します。</div>
           <div><b>④ 判定：</b>ヒットしたら続けてアタック！ それ以外は交代です。先に相手の5点をすべてヒットさせたら勝ち！</div>
         </div>
         <div class="judges">
