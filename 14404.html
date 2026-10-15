@@ -2,8 +2,8 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>14404.反比例のグラフ</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>14403.反比例のグラフ</title>
 <script>
 window.MathJax = { tex: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']] }, options: { enableMenu: false } };
 </script>
@@ -11,7 +11,8 @@ window.MathJax = { tex: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']] 
 <style>
 /* ===== 1. 全体 ===== */
 * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
-body { background:#fff; font-family:'Helvetica Neue',Arial,'Hiragino Kaku Gothic ProN','Hiragino Sans',Meiryo,sans-serif; display:flex; justify-content:center; align-items:flex-start; -webkit-touch-callout:none; min-height:100vh; overflow:hidden; }
+html { height:100%; overflow:hidden; overscroll-behavior:none; }
+body { position:fixed; top:0; left:0; width:100%; height:100%; overscroll-behavior:none; touch-action:manipulation; background:#fff; font-family:'Helvetica Neue',Arial,'Hiragino Kaku Gothic ProN','Hiragino Sans',Meiryo,sans-serif; display:flex; justify-content:center; align-items:flex-start; -webkit-touch-callout:none; min-height:100vh; overflow:hidden; }
 #app-container { width:960px; height:640px; flex-shrink:0; min-width:960px; min-height:640px; background:#fff; border:2px solid #333; border-radius:12px; position:relative; transform-origin:top center; display:flex; flex-direction:column; justify-content:flex-start; padding:10px 20px; }
 
 /* ===== 2. ヘッダー ===== */
@@ -94,42 +95,46 @@ h1 { font-size:24px; color:#333; margin-bottom:5px; }
 .question-text { font-size:19px; color:#333; font-weight:bold; white-space:nowrap; }
 .q-status { display:flex; align-items:center; gap:12px; white-space:nowrap; }
 .progress { font-size:16px; color:#666; }
-.formula-display { font-size:24px; font-weight:bold; text-align:center; color:#000; margin:4px 0 6px; background:#f8f9fa; padding:2px 10px; border-radius:8px; border:2px solid #ccc; min-height:46px; width:100%; display:flex; align-items:center; justify-content:center; }
+.formula-display { font-size:22px; font-weight:bold; text-align:center; color:#000; margin:3px 0 5px; background:#f8f9fa; padding:1px 10px; border-radius:8px; border:2px solid #ccc; min-height:42px; width:100%; display:flex; align-items:center; justify-content:center; }
 .formula-display mjx-container { display:inline !important; }
 .problem-inner { display:block; width:100%; }
 .graph-row { display:flex; gap:8px; width:100%; align-items:flex-start; }
-.graph-frame { flex:none; width:396px; height:396px; background:#fff; border:2px solid #ced4da; border-radius:8px; overflow:hidden; transition:opacity .2s, border-color .2s, background-color .2s; }
-#graph-svg { display:block; width:100%; height:100%; cursor:crosshair; touch-action:manipulation; }
+.graph-frame { touch-action:none; flex:none; width:396px; height:396px; background:#fff; border:2px solid #ced4da; border-radius:8px; overflow:hidden; transition:opacity .2s, border-color .2s, background-color .2s; }
+#graph-svg { display:block; width:100%; height:100%; cursor:crosshair; touch-action:none; }
 #graph-svg.drawing { cursor:pointer; touch-action:none; }
 .graph-frame.inactive { opacity:.5; pointer-events:none; }
 .graph-frame.locked-correct { border-color:#81c784; background:#e8f5e9; }
 .graph-frame.locked-correct.inactive { opacity:1; }
 .graph-frame.error-shake { border-color:#e57373; background:#ffebee; animation:graph-shake .35s; }
+.graph-ruler-preview { pointer-events:none; }
+.graph-wrong-line-reject { transform-box:fill-box; transform-origin:center; animation:graph-wrong-reject .46s ease-in-out forwards; pointer-events:none; }
+@keyframes graph-wrong-reject { 0%{opacity:1;transform:translateX(0)} 24%{opacity:1;transform:translateX(-5px)} 48%{opacity:1;transform:translateX(5px)} 72%{opacity:.85;transform:translateX(-3px)} 100%{opacity:0;transform:translateX(0)} }
 @keyframes graph-shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-6px)} 40%,80%{transform:translateX(6px)} }
-.svg-axis-label { font-size:19px; font-style:italic; fill:#333; }
-.svg-tick-label { font-size:18px; fill:#555; }
+.svg-axis-label { font-size:22px; font-style:italic; fill:#333; }
+.svg-tick-label { font-size:21px; fill:#555; }
 .side-col { flex:1; min-width:0; display:flex; flex-direction:column; gap:6px; }
-.step-tabs { display:flex; gap:4px; }
-.step-tab { flex:1; text-align:center; font-size:13px; font-weight:bold; padding:4px 0; border-radius:6px; background:#e9ecef; color:#868e96; }
+.step-tabs { display:flex; flex-direction:column; gap:6px; }
+.step-tab { text-align:left; font-size:18px; font-weight:bold; padding:9px 14px; border-radius:10px; background:#e9ecef; color:#868e96; }
 .step-tab.active { background:#007bff; color:#fff; }
 .step-tab.done { background:#28a745; color:#fff; }
-.input-box-group { background:#fff; border:2px solid #ced4da; border-radius:8px; padding:4px; transition:all .2s; }
+.input-box-group { background:#fff; border:2px solid #ced4da; border-radius:8px; padding:4px; margin-bottom:6px; transition:all .2s; }
 .input-box-group.active-focus { border-color:#007bff; background:#f0f7ff; box-shadow:0 0 0 3px rgba(0,123,255,.15); }
 .input-box-group.locked-correct { border-color:#81c784; background:#e8f5e9; }
 .input-box-group.locked-disabled { border-color:#e9ecef; background:#f8f9fa; opacity:.6; }
 .input-box-group.error-shake { border-color:#e57373; background:#ffebee; }
-.prop-table { border-collapse:collapse; margin:0 auto; }
-.prop-table th, .prop-table td { border:2px solid #555; text-align:center; height:27px; padding:0; font-size:18px; font-family:'Times New Roman',Times,serif; background:#fff; }
-.prop-table th { background:#e7f5ff; width:56px; font-weight:normal; font-style:italic; }
-.prop-table td { width:110px; }
-.prop-table td.xv { background:#f8f9fa; width:56px; }
-.cell { width:100%; height:25px; display:flex; align-items:center; justify-content:center; font-size:18px; font-family:'Times New Roman',Times,serif; background:#fff; cursor:pointer; }
+.prop-table { border-collapse:collapse; margin:0 auto; width:100%; table-layout:fixed; }
+.prop-table th, .prop-table td { border:1.5px solid #555; text-align:center; height:30px; padding:0; font-size:15px; font-family:'Times New Roman',Times,serif; background:#fff; }
+.prop-table th { background:#e7f5ff; width:26px; font-weight:normal; font-style:italic; }
+.prop-table td.xv { background:#f8f9fa; }
+.cell { width:100%; height:28px; display:flex; align-items:center; justify-content:center; font-size:15px; font-family:'Times New Roman',Times,serif; background:#fff; cursor:pointer; }
 .cell.active { outline:3px solid #007bff; outline-offset:-3px; background:#f0f7ff; }
-.cell.active::after { content:''; display:inline-block; width:2px; height:18px; background:#007bff; margin-left:2px; animation:caret-blink 1s step-end infinite; }
+.cell.active::after { content:''; display:inline-block; width:2px; height:14px; background:#007bff; margin-left:1px; animation:caret-blink 1s step-end infinite; }
 .cell.ok { background:#fff; color:#000; cursor:default; }
 .cell.ng { background:#ffebee; }
+.prop-table.dense th, .prop-table.dense td, .prop-table.dense .cell { font-size:13px; }
+.prop-table.dense th { width:22px; }
 @keyframes caret-blink { 50% { opacity:0; } }
-.result-message { font-size:15px; font-weight:bold; min-height:40px; text-align:center; display:flex; align-items:center; justify-content:center; white-space:pre-wrap; width:100%; }
+.result-message { font-size:15px; font-weight:bold; min-height:40px; margin-top:6px; text-align:center; display:flex; align-items:center; justify-content:center; white-space:pre-wrap; width:100%; }
 .correct { color:#28a745; }
 .incorrect { color:#e67e22; }
 .hint-container { width:100%; height:205px; background:#fff9db; border:1px dashed #f59f00; border-radius:8px; padding:10px 12px; display:flex; flex-direction:column; overflow-y:auto; margin-bottom:8px; }
@@ -195,7 +200,7 @@ footer { width:100%; text-align:center; font-size:12px; color:#000; font-weight:
                 <div id="timer-display">⏱️ 00:00.0</div>
                 <div class="record-box">
                     <div id="best-update-message"></div>
-                    <div class="best-label-container"><div id="best-normal-display">ベストタイム(5問): --:--.-</div></div>
+                    <div class="best-label-container"><div id="best-normal-display">ベストタイム(2問): --:--.-</div></div>
                 </div>
             </div>
             <div style="display:flex; align-items:center; gap:8px;">
@@ -238,9 +243,6 @@ footer { width:100%; text-align:center; font-size:12px; color:#000; font-weight:
                     </div>
                     <div class="formula-display" id="formula-box"></div>
                     <div class="graph-row">
-                        <div class="graph-frame inactive" id="graph-frame">
-                            <svg id="graph-svg" viewBox="0 0 480 480" xmlns="http://www.w3.org/2000/svg"></svg>
-                        </div>
                         <div class="side-col">
                             <div class="step-tabs">
                                 <span class="step-tab" id="tab-table">① 表</span>
@@ -251,6 +253,9 @@ footer { width:100%; text-align:center; font-size:12px; color:#000; font-weight:
                                 <table class="prop-table" id="prop-table"></table>
                             </div>
                             <div id="result-message" class="result-message"></div>
+                        </div>
+                        <div class="graph-frame inactive" id="graph-frame">
+                            <svg id="graph-svg" viewBox="0 0 480 480" xmlns="http://www.w3.org/2000/svg"></svg>
                         </div>
                     </div>
                 </div>
@@ -335,23 +340,25 @@ const FORM_NUM_ID         = 'entry.351767117';   // 問題番号
 const FORM_TIME_ID        = 'entry.1218861448';  // クリアタイム
 const FORM_STAGE_COUNT_ID = 'entry.2033679053';  // 正解数
 
-const KENTEI_TIME_LIMIT_MS    = 8 * 60 * 1000;   // 検定の制限時間（8分）
+const KENTEI_TIME_LIMIT_MS    = 4 * 60 * 1000;   // 検定の制限時間（4分）
 const QUESTION_TIME_LIMIT_SEC = 45;              // 表・点の1手順の制限秒数
 const DRAW_TIME_LIMIT_SEC     = 60;              // 線を引く手順の制限秒数
-const QUESTION_COUNT          = 5;
+const QUESTION_COUNT          = 2;   // 1問目＝a>0、2問目＝a<0
 let questionTimeLeft = QUESTION_TIME_LIMIT_SEC;
 
 const KENTEI_RECORDS_KEY = IS_INV ? 'hanpirei_graph_kentei_records_v1' : 'hirei_graph_kentei_records_v1';
 
 /* --- 座標平面（viewBox 480×480、原点は中央、1目盛り34px、表示範囲 -6〜6） --- */
 const GRAPH = { size: 480, center: 240, unit: 34, range: 6 };
-const POINT_R = 8;
-const DRAW_TOL  = 0.5;    // なぞった線と正解の線のずれの許容（目盛り）
-const ACC_RATIO = 0.95;   // 許容内に入っている点の割合
-const END_TOL   = 0.9;    // 端点に届いたとみなす距離（目盛り）
+const POINT_R = 9;
+const RULER_SNAP = 0.75;  // 比例（定規）：始点・終点が正解の線からこの距離以内なら、正解の線に吸着する
+const EDGE_SNAP  = 0.75;  // グラフの端からこの距離以内で止めた線は、端までのびる
+const AUTO_TOL   = 0.6;   // 反比例（フリーハンド）：正解の曲線からのずれの許容
+const AUTO_RATIO = 0.9;   // 　〃　許容内に入っている点の割合
+const GAP_TOL    = 0.7;   // 線と線のすき間がこれ以下なら、つながっているとみなす
 
 /* --- 入力状態 --- */
-const DEFAULT_TABLE_X = IS_INV ? [-6, -3, -2, -1, 0, 1, 2, 3, 6] : [-2, -1, 0, 1, 2];
+const DEFAULT_TABLE_X = IS_INV ? [-3, -2, -1, 0, 1, 2, 3] : [-2, -1, 0, 1, 2];
 const CELL_COUNT = 9;
 let TABLE_X = DEFAULT_TABLE_X.slice();
 let TABLE_CELLS = TABLE_X.map((_, i) => i);
@@ -361,7 +368,8 @@ let activeIdx = 0;
 let currentStage = 'table';      // 'table' → 'plot' → 'draw'
 let stageProgress = 0;           // 完了した手順の数（0〜3）
 let plotted = [];                // とった点 [{x,y}]
-let strokes = [];                // なぞった線 [[{x,y},...],...]
+let segments = [];               // 引いた線（補正後）[{g, lo, hi, pts}]
+let dragRaw = null;              // ドラッグ中の生の軌跡
 let strokeColor = 'normal';      // 'normal' | 'bad' | 'ok'
 let drawing = false;
 let judgeLocked = false;         // 不正解後、入力を直すまで判定できない
@@ -617,6 +625,7 @@ function loadKenteiRecords() {
         const raw = localStorage.getItem(KENTEI_RECORDS_KEY);
         if (raw) {
             const parsed = JSON.parse(raw);
+            if (parsed.qc !== QUESTION_COUNT) throw new Error('問題数がちがう古い記録');
             bestNormalTimeMs = (typeof parsed.bestTimeMs === 'number') ? parsed.bestTimeMs : null;
             correctStreakCount = (typeof parsed.streak === 'number') ? parsed.streak : 0;
             maxStreakCount = (typeof parsed.maxStreak === 'number') ? parsed.maxStreak : 0;
@@ -628,7 +637,7 @@ function loadKenteiRecords() {
 }
 function saveKenteiRecords() {
     try {
-        localStorage.setItem(KENTEI_RECORDS_KEY, JSON.stringify({ bestTimeMs: bestNormalTimeMs, streak: correctStreakCount, maxStreak: maxStreakCount, attempts: kenteiAttemptCount }));
+        localStorage.setItem(KENTEI_RECORDS_KEY, JSON.stringify({ bestTimeMs: bestNormalTimeMs, streak: correctStreakCount, maxStreak: maxStreakCount, attempts: kenteiAttemptCount, qc: QUESTION_COUNT }));
     } catch (e) { /* 保存失敗時は何もしない */ }
 }
 function changeHandedness(hand) {
@@ -701,7 +710,7 @@ function handleCenterBtn() {
 function hasStageInput() {
     if (currentStage === 'table') return !isCurrentStageEmpty();
     if (currentStage === 'plot') return plotted.length > 0;
-    return strokes.length > 0;
+    return segments.length > 0;
 }
 function updateControlKeysState(state) {
     currentControlState = state;
@@ -748,7 +757,7 @@ function clearAllInput() {
     if (!gameStarted || isCompleted) return;
     if (currentStage === 'table') pressKey('clear');
     else if (currentStage === 'plot') { plotted = []; afterGraphEdit(); }
-    else { strokes = []; afterGraphEdit(); }
+    else { segments = []; afterGraphEdit(); }
 }
 
 
@@ -758,13 +767,13 @@ function clearAllInput() {
 const fmtNum = n => (n < 0 ? '−' + (-n) : String(n));
 const keyOf = p => p.x + ',' + p.y;
 
-function buildTable() {
-    let h = '<tr><th>$x$</th><th>$y$</th></tr>';
-    TABLE_X.forEach((x, i) => {
-        h += `<tr><td class="xv">${fmtNum(x)}</td><td><div class="cell" data-i="${i}" onclick="selectCell(${i})"></div></td></tr>`;
-    });
-    document.getElementById('prop-table').innerHTML = h;
-    updateMathJax([document.getElementById('prop-table')]);
+function buildTable() {   // 横向きの表：1行目が x、2行目が y
+    let h = '<tr><th>$x$</th>' + TABLE_X.map(x => `<td class="xv">${fmtNum(x)}</td>`).join('') + '</tr>';
+    h += '<tr><th>$y$</th>' + TABLE_X.map((x, i) => `<td><div class="cell" data-i="${i}" onclick="selectCell(${i})"></div></td>`).join('') + '</tr>';
+    const tb = document.getElementById('prop-table');
+    tb.className = 'prop-table' + (TABLE_X.length >= 8 ? ' dense' : '');   // 列が多いときは字を小さく
+    tb.innerHTML = h;
+    updateMathJax([tb]);
 }
 function setTableUI(cls) { document.getElementById('group-table').className = 'input-box-group ' + cls; }
 function renderCells() {
@@ -904,7 +913,7 @@ function buildGraph() {
         s += `<text class="svg-tick-label" x="${c + i * u}" y="${c + 20}" text-anchor="middle">${fmtNum(i)}</text>`;
         s += `<text class="svg-tick-label" x="${c - 7}" y="${c - i * u + 6}" text-anchor="end">${fmtNum(i)}</text>`;
     }
-    s += `<g id="layer-strokes"></g><g id="layer-ideal"></g><g id="layer-points"></g>`;
+    s += `<g id="layer-strokes"></g><g id="layer-ideal"></g><g id="layer-preview"></g><g id="layer-points"></g>`;
     s += `<circle id="hover-dot" cx="-100" cy="-100" r="${POINT_R + 1}" fill="rgba(255,112,67,0.30)"/>`;
     svg.innerHTML = s;
 
@@ -941,8 +950,8 @@ function hideHoverDot() {
     if (h) { h.setAttribute('cx', -100); h.setAttribute('cy', -100); }
 }
 function resetGraphState() {
-    plotted = []; strokes = []; strokeColor = 'normal'; drawing = false;
-    ['layer-strokes', 'layer-ideal', 'layer-points'].forEach(id => {
+    plotted = []; segments = []; dragRaw = null; strokeColor = 'normal'; drawing = false;
+    ['layer-strokes', 'layer-ideal', 'layer-preview', 'layer-points'].forEach(id => {
         const l = document.getElementById(id);
         if (l) l.innerHTML = '';
     });
@@ -956,7 +965,7 @@ function afterGraphEdit() {
     strokeColor = 'normal';
     document.getElementById('graph-frame').classList.remove('error-shake');
     renderPlotted();
-    renderStrokes();
+    renderSegments();
     updateControlKeysState('playing');
 }
 
@@ -995,10 +1004,11 @@ function renderPlotted(badSet) {
     layer.innerHTML = s;
 }
 function checkPlot(q) {
-    const exp = new Set(q.points.map(keyOf));
+    const target = q.plotPoints || q.points;   // 比例：枠内のすべての格子点／反比例：表の点
+    const exp = new Set(target.map(keyOf));
     const got = new Set(plotted.map(keyOf));
     const extra = plotted.filter(p => !exp.has(keyOf(p)));
-    const missing = q.points.filter(p => !got.has(keyOf(p)));
+    const missing = target.filter(p => !got.has(keyOf(p)));
     if (!extra.length && !missing.length) { advanceToDraw(); return; }
     renderPlotted(new Set(extra.map(keyOf)));
     let hint;
@@ -1030,52 +1040,87 @@ function advanceToDraw() {
     startQuestionTimer();
 }
 
-/* --- 手順3：線をなぞる（ドラッグ） --- */
+/* --- 手順3：線を引く ---
+   比例  ＝定規：始点→終点をドラッグ。正解の線に近ければ吸着、はなれていれば揺れて消える
+   反比例＝フリーハンド：なぞった線が曲線に近ければ、なめらかな正解の曲線に自動で直る */
 function onPointerDown(e) {
     if (!canDraw()) return;
     e.preventDefault();
     const svg = document.getElementById('graph-svg');
     try { svg.setPointerCapture(e.pointerId); } catch (err) { /* 無視 */ }
-    strokes.push([pointFromEvent(e)]);
+    dragRaw = [pointFromEvent(e)];
     drawing = true;
     judgeLocked = false;
     strokeColor = 'normal';
     document.getElementById('graph-frame').classList.remove('error-shake');
-    renderStrokes();
+    renderSegments();
+    renderPreview();
     updateControlKeysState('playing');
 }
 function onPointerMove(e) {
-    if (!drawing || !canDraw()) return;
-    const s = strokes[strokes.length - 1];
+    if (!drawing || !dragRaw || !canDraw()) return;
     const p = pointFromEvent(e);
-    const last = s[s.length - 1];
-    if (Math.hypot(p.x - last.x, p.y - last.y) < 0.04) return;
-    s.push(p);
-    renderStrokes();
+    if (IS_INV) {
+        const last = dragRaw[dragRaw.length - 1];
+        if (Math.hypot(p.x - last.x, p.y - last.y) < 0.04) return;
+        dragRaw.push(p);
+    } else {
+        dragRaw[1] = p;   // 定規は始点と今の位置だけ
+    }
+    renderPreview();
 }
 function endStroke(e) {
     if (!drawing) return;
     drawing = false;
     try { document.getElementById('graph-svg').releasePointerCapture(e.pointerId); } catch (err) { /* 無視 */ }
+    const raw = dragRaw;
+    dragRaw = null;
+    const prev = document.getElementById('layer-preview');
+    if (prev) prev.innerHTML = '';
+    if (raw && e.type !== 'pointercancel' && canDraw()) {
+        const q = quizData[currentQuestionIndex];
+        const res = IS_INV ? snapFreehand(raw, q) : snapRuler(raw, q);
+        if (res.ok) { segments.push(res.seg); renderSegments(); }
+        else if (res.key !== 'tiny') rejectRaw(raw, res.key);
+    }
     updateControlKeysState('playing');
 }
 function undoStroke() {
-    if (!canDraw() || !strokes.length) return;
-    strokes.pop();
+    if (!canDraw() || !segments.length) return;
+    segments.pop();
     afterGraphEdit();
 }
-function renderStrokes() {
+function rawSvg(raw, col, cls) {
+    const P = p => `${toPx(p.x).toFixed(1)},${toPy(p.y).toFixed(1)}`;
+    const pts = IS_INV ? raw.map(P).join(' ') : P(raw[0]) + ' ' + P(raw[raw.length - 1]);
+    return `<polyline class="${cls}" points="${pts}" fill="none" stroke="${col}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity=".85"/>`;
+}
+function renderPreview() {
+    const layer = document.getElementById('layer-preview');
+    if (!layer) return;
+    if (!dragRaw || dragRaw.length < 2) { layer.innerHTML = ''; return; }
+    layer.innerHTML = rawSvg(dragRaw, '#90caf9', 'graph-ruler-preview');
+}
+function rejectRaw(raw, key) {   // 吸着・補正できなかった線：揺れて消える（ミス1回）
+    const layer = document.getElementById('layer-preview');
+    if (layer && raw.length >= 2) {
+        layer.innerHTML = rawSvg(raw, '#e53935', 'graph-wrong-line-reject');
+        setTimeout(() => {
+            const l = document.getElementById('layer-preview');
+            if (l && !drawing) l.innerHTML = '';
+        }, 500);
+    }
+    setHint(HINT_DATA[key]);
+    showStepError(document.getElementById('graph-frame'));
+}
+function renderSegments() {
     const layer = document.getElementById('layer-strokes');
     if (!layer) return;
-    const col = strokeColor === 'bad' ? '#e53935' : (strokeColor === 'ok' ? '#43a047' : '#1e88e5');
+    const col = strokeColor === 'bad' ? '#e53935' : (strokeColor === 'ok' ? '#2e7d32' : '#1e88e5');
     let s = '';
-    strokes.forEach(st => {
-        if (st.length === 1) {
-            s += `<circle cx="${toPx(st[0].x).toFixed(1)}" cy="${toPy(st[0].y).toFixed(1)}" r="3" fill="${col}" opacity=".5"/>`;
-            return;
-        }
-        const pts = st.map(p => `${toPx(p.x).toFixed(1)},${toPy(p.y).toFixed(1)}`).join(' ');
-        s += `<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity=".45"/>`;
+    segments.forEach(sg => {
+        const pts = sg.pts.map(p => `${toPx(p.x).toFixed(1)},${toPy(p.y).toFixed(1)}`).join(' ');
+        s += `<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>`;
     });
     layer.innerHTML = s;
 }
@@ -1085,9 +1130,58 @@ function renderIdeal(q) {
     let s = '';
     q.idealPaths.forEach(path => {
         const pts = path.map(p => `${toPx(p.x).toFixed(1)},${toPy(p.y).toFixed(1)}`).join(' ');
-        s += `<polyline points="${pts}" fill="none" stroke="#2e7d32" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+        s += `<polyline points="${pts}" fill="none" stroke="#2e7d32" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/>`;
     });
     layer.innerHTML = s;
+}
+
+/* --- 比例：定規の吸着 --- */
+function snapRuler(raw, q) {
+    if (raw.length < 2) return { ok: false, key: 'tiny' };
+    const a = q.a, p = raw[0], r = raw[raw.length - 1];
+    if (Math.hypot(r.x - p.x, r.y - p.y) < 0.6) return { ok: false, key: 'tiny' };
+    const n = Math.sqrt(1 + a * a);
+    const d = pt => Math.abs(a * pt.x - pt.y) / n;
+    if (d(p) > RULER_SNAP || d(r) > RULER_SNAP) return { ok: false, key: 'drawFar' };
+    let s0 = (p.x + a * p.y) / n, s1 = (r.x + a * r.y) / n;   // 正解の線に沿った位置（正解の線へ垂直に落とす）
+    if (s0 > s1) { const t = s0; s0 = s1; s1 = t; }
+    const sMax = q.spans[0][1];
+    s0 = Math.max(-sMax, s0); s1 = Math.min(sMax, s1);
+    if (s0 < -sMax + EDGE_SNAP) s0 = -sMax;   // 端の近くで止めたら端までのばす
+    if (s1 > sMax - EDGE_SNAP) s1 = sMax;
+    if (s1 - s0 < 0.3) return { ok: false, key: 'tiny' };
+    const pt = s => ({ x: s / n, y: a * s / n });
+    return { ok: true, seg: { g: 0, lo: s0, hi: s1, pts: [pt(s0), pt(s1)] } };
+}
+
+/* --- 反比例：フリーハンドの自動補正 --- */
+function snapFreehand(raw, q) {
+    if (raw.length < 2) return { ok: false, key: 'tiny' };
+    const dens = densify([raw]);
+    if (dens.length < 8) return { ok: false, key: 'tiny' };   // 短すぎるなぞり
+    const px = raw.some(p => p.x > 0.15), nx = raw.some(p => p.x < -0.15);
+    const py = raw.some(p => p.y > 0.15), ny = raw.some(p => p.y < -0.15);
+    if ((px && nx) || (py && ny)) return { ok: false, key: 'drawCross' };
+    let near = 0;
+    dens.forEach(p => { if (distToIdeal(p, q) <= AUTO_TOL) near++; });
+    if (near / dens.length < AUTO_RATIO) return { ok: false, key: 'drawFar' };
+    const mx = dens.reduce((s, p) => s + p.x, 0) / dens.length;
+    const g = mx > 0 ? 0 : 1;                  // 0＝x>0側、1＝x<0側
+    const path = q.idealPaths[g], cum = q.cum[g], total = cum[cum.length - 1];
+    const nearest = pt => {
+        let bi = 0, bd = 1e9;
+        for (let k = 0; k < path.length; k++) {
+            const dd = Math.hypot(path[k].x - pt.x, path[k].y - pt.y);
+            if (dd < bd) { bd = dd; bi = k; }
+        }
+        return bi;
+    };
+    let i = nearest(raw[0]), j = nearest(raw[raw.length - 1]);
+    if (i > j) { const t = i; i = j; j = t; }
+    if (cum[i] < EDGE_SNAP) i = 0;                       // 端の近くで止めたら端までのばす
+    if (cum[j] > total - EDGE_SNAP) j = path.length - 1;
+    if (cum[j] - cum[i] < 0.5) return { ok: false, key: 'tiny' };
+    return { ok: true, seg: { g: g, lo: cum[i], hi: cum[j], pts: path.slice(i, j + 1) } };
 }
 
 /* --- 判定に使う計算 --- */
@@ -1122,31 +1216,24 @@ function minDistTo(e, pts) {
     }
     return m;
 }
-/* --- 線の判定：{ok:true} または {ok:false, key:ヒントの種類} --- */
+/* --- 線の判定：引いた線が、端から端まで（すき間なく）つながっているか --- */
 function judgeDraw(q) {
-    const pts = densify(strokes);
-    if (!pts.length) return { ok: false, key: 'drawFar' };
-    if (IS_INV) {   // 反比例：軸をこえていないか
-        let cross = false;
-        strokes.forEach(s => {
-            const px = s.some(p => p.x > 0.15), nx = s.some(p => p.x < -0.15);
-            const py = s.some(p => p.y > 0.15), ny = s.some(p => p.y < -0.15);
-            if ((px && nx) || (py && ny)) cross = true;
+    let missing = false, gap = false, short = false;
+    q.spans.forEach((span, gi) => {
+        const iv = segments.filter(s => s.g === gi).map(s => [s.lo, s.hi]).sort((x, y) => x[0] - y[0]);
+        if (!iv.length) { missing = true; return; }
+        const merged = [];
+        iv.forEach(v => {
+            const last = merged[merged.length - 1];
+            if (last && v[0] <= last[1] + GAP_TOL) last[1] = Math.max(last[1], v[1]);
+            else merged.push([v[0], v[1]]);
         });
-        if (cross) return { ok: false, key: 'drawCross' };
-    }
-    let near = 0;
-    pts.forEach(p => { if (distToIdeal(p, q) <= DRAW_TOL) near++; });
-    if (near / pts.length < ACC_RATIO) return { ok: false, key: 'drawFar' };
-    // 端から端まで描けているか（点をつないだだけになっていないか）
-    let missingGroup = false, short = false;
-    q.endGroups.forEach(g => {
-        const reached = g.map(e => minDistTo(e, pts) <= END_TOL);
-        if (!reached[0] && !reached[1]) missingGroup = true;
-        else if (!(reached[0] && reached[1])) short = true;
+        if (merged.length > 1) gap = true;
+        else if (merged[0][0] > span[0] + 0.01 || merged[0][1] < span[1] - 0.01) short = true;
     });
-    if (IS_INV && missingGroup) return { ok: false, key: 'drawBranch' };
-    if (missingGroup || short) return { ok: false, key: 'drawShort' };
+    if (missing) return { ok: false, key: IS_INV ? 'drawBranch' : 'drawShort' };
+    if (gap) return { ok: false, key: 'drawGap' };
+    if (short) return { ok: false, key: 'drawShort' };
     return { ok: true };
 }
 function checkDraw(q) {
@@ -1154,7 +1241,7 @@ function checkDraw(q) {
     const frame = document.getElementById('graph-frame');
     if (!r.ok) {
         strokeColor = 'bad';
-        renderStrokes();
+        renderSegments();
         setHint(HINT_DATA[r.key]);
         showStepError(frame);
         judgeLocked = true;
@@ -1167,7 +1254,7 @@ function checkDraw(q) {
     document.getElementById('countdown-timer').style.display = 'none';
     stageProgress = 3;
     strokeColor = 'ok';
-    renderStrokes();
+    renderSegments();
     renderIdeal(q);
     frame.classList.remove('error-shake');
     frame.classList.add('locked-correct', 'inactive');
@@ -1329,37 +1416,50 @@ const shuffle = arr => {
 };
 const coefText = a => (a === 1 ? '' : (a === -1 ? '-' : String(a)));
 
-/* --- 比例 y=ax：x=-2〜2、aは ±1,±2,±3 から5つ --- */
+/* --- 比例 y=ax：x=-2〜2、aは ±1,±2,±3 --- */
 function buildPropQuestion(a) {
     const xs = [-2, -1, 0, 1, 2];
     const xr = Math.min(GRAPH.range, GRAPH.range / Math.abs(a));   // 枠の端（x=±6 または y=±6）
     const eR = { x: xr, y: a * xr }, eL = { x: -xr, y: -a * xr };
+    const plotPoints = [];   // グラフの枠内で直線が通るすべての格子点（表にない点も含む）
+    for (let x = -GRAPH.range; x <= GRAPH.range; x++) {
+        const y = a * x;
+        if (Math.abs(y) <= GRAPH.range) plotPoints.push({ x: x, y: y });
+    }
     return {
         a: a, xs: xs,
         ys: xs.map(x => String(a * x)),
         points: xs.map(x => ({ x: x, y: a * x })),
+        plotPoints: plotPoints,
         html: `<div class="problem-inner">関数 $y=${coefText(a)}x$ のグラフをかきなさい。</div>`,
-        endGroups: [[eL, eR]],
+        spans: [[-xr * Math.sqrt(1 + a * a), xr * Math.sqrt(1 + a * a)]],
         idealPaths: [[eL, eR]]
     };
 }
 /* --- 反比例 y=a/x：x=0 は「×」。表のxは枠内（|x|≦6, |y|≦6）に収まる約数の±と0 --- */
 function buildInvQuestion(a) {
     const A = Math.abs(a), R = GRAPH.range;
-    const ds = [1, 2, 3, 4, 5, 6].filter(d => A % d === 0 && A / d <= R);
+    const ds = [1, 2, 3, 4, 5, 6].filter(d => A % d === 0 && A / d <= R).slice(0, 3);   // 表は0を含めて左右対称、最大7点（約数は小さい順に3つまで）
     const xs = [...ds.slice().reverse().map(d => -d), 0, ...ds];
     const sign = a > 0 ? 1 : -1;
-    const endGroups = [], idealPaths = [], sample = [];
+    const plotPoints = [];   // グラフの枠内で曲線が通るすべての格子点（表にない点も含む）
+    for (let x = -R; x <= R; x++) {
+        if (x === 0 || a % x !== 0) continue;
+        const y = a / x;
+        if (Math.abs(y) <= R) plotPoints.push({ x: x, y: y });
+    }
+    const cums = [], idealPaths = [], sample = [];
     [1, -1].forEach(sx => {
-        const sy = sign * sx;
-        endGroups.push([{ x: R * sx, y: a / (R * sx) }, { x: a / (R * sy), y: R * sy }]);
-        const path = [];   // 枠内の曲線（x を対数的に刻む）
-        const x0 = A / R, N = 120;
+                const path = [];   // 枠内の曲線（x を対数的に刻む）
+        const x0 = A / R, N = 200;
         for (let k = 0; k <= N; k++) {
             const x = sx * x0 * Math.pow(R / x0, k / N);
             path.push({ x: x, y: a / x });
         }
         idealPaths.push(path);
+        const cm = [0];   // 曲線に沿った長さ
+        for (let k = 1; k < path.length; k++) cm.push(cm[k - 1] + Math.hypot(path[k].x - path[k - 1].x, path[k].y - path[k - 1].y));
+        cums.push(cm);
         const xmin = A / 7, M = 600;   // 判定用の細かい点列（枠の少し外まで）
         for (let k = 0; k <= M; k++) {
             const x = sx * xmin * Math.pow(7 / xmin, k / M);
@@ -1370,15 +1470,18 @@ function buildInvQuestion(a) {
         a: a, xs: xs,
         ys: xs.map(x => (x === 0 ? '×' : String(a / x))),
         points: xs.filter(x => x !== 0).map(x => ({ x: x, y: a / x })),
+        plotPoints: plotPoints,
         html: `<div class="problem-inner">関数 $y=${a < 0 ? '-' : ''}\\dfrac{${A}}{x}$ のグラフをかきなさい。</div>`,
-        endGroups: endGroups, idealPaths: idealPaths, sample: sample
+        cum: cums, spans: cums.map(c => [0, c[c.length - 1]]), idealPaths: idealPaths, sample: sample
     };
 }
-function generateQuizData() {
-    if (!IS_INV) return shuffle([1, -1, 2, -2, 3, -3]).slice(0, QUESTION_COUNT).map(buildPropQuestion);
-    const abs = shuffle([3, 4, 5, 6, 12]);
-    const signs = shuffle([1, 1, -1, -1, Math.random() < 0.5 ? 1 : -1]);
-    return abs.map((v, i) => buildInvQuestion(v * signs[i]));
+function generateQuizData() {   // 1問目は a>0、2問目は a<0（絶対値は別の値）
+    if (!IS_INV) {
+        const v = shuffle([1, 2, 3]);
+        return [buildPropQuestion(v[0]), buildPropQuestion(-v[1])];
+    }
+    const v = shuffle([3, 4, 5, 6, 12]);
+    return [buildInvQuestion(v[0]), buildInvQuestion(-v[1])];
 }
 
 
@@ -1394,17 +1497,18 @@ const HINTS = {
         tableZero: "",
         tableSign: "符号を確かめよう。<br>（正の数）×（負の数）は負の数、（負の数）×（負の数）は正の数だよ。",
         timeoutTable: "時間切れ！<br>$y=ax$ の $x$ に、表の $x$ の値を代入しよう。",
-        plotInit: "表の $x$, $y$ の組が点の座標 $(x, y)$ だよ。<br>グラフをタップして、すべての点をとろう。もう一度タップすると消えるよ。",
-        plotMissing: n => `点があと ${n} 個たりないよ。<br>表の $x$, $y$ の組すべてを点にしよう。`,
-        plotExtra: "表にない点があるよ（赤い点）。<br>$x$ は左右、$y$ は上下に進もう。",
+        plotInit: "表の $x$, $y$ の組が点の座標 $(x, y)$ だよ。<br>表にない点も、グラフの中で直線が通る<b>すべての点</b>をタップしてとろう。もう一度タップすると消えるよ。",
+        plotMissing: n => `点があと ${n} 個たりないよ。<br>表にない点もあるよ。グラフの中で直線が通る点を、すべてとろう。`,
+        plotExtra: "直線が通らない点があるよ（赤い点）。<br>$x$ が1ふえると $y$ がいくつふえるか、表から確かめよう。",
         plotSwap: "$x$ 座標と $y$ 座標が入れかわっていないかな？<br>$(x, y)$ の順に読もう。",
         plotZero: "",
         timeoutPlot: "時間切れ！<br>表の $x$, $y$ の組を $(x, y)$ として、点をとろう。",
-        drawInit: "比例のグラフは<b>原点を通る直線</b>だよ。<br>点を通るように、グラフの<b>端から端まで</b>指（マウス）でなぞろう。点をつなぐだけではだめだよ。",
-        drawFar: "線が点を通っていないよ。<br>原点ととった点を通るように、まっすぐなぞろう。「消す」で描き直せるよ。",
-        drawShort: "線が端まで届いていないよ。<br>グラフは点の外側にもずっと続くよ。グラフの端から端までのばそう。",
+        drawInit: "比例のグラフは<b>原点を通る直線</b>だよ。<br>定規のように、始点から終点までドラッグして線を引こう。<b>グラフの端から端まで</b>引いてね（何回かに分けてもOK）。",
+        drawFar: "その線は、とった点を通る直線からはなれているよ。<br>点の上に始点と終点を合わせて、もう一度引こう。",
+        drawShort: "線が端まで届いていないよ。<br>グラフは点の外側にもずっと続くよ。グラフの端から端まで引こう。",
+        drawGap: "線がとぎれているよ。<br>すき間も引いて、ひと続きの直線にしよう。",
         drawCross: "", drawBranch: "",
-        timeoutDraw: "時間切れ！<br>原点を通る直線を、グラフの端から端までなぞろう。",
+        timeoutDraw: "時間切れ！<br>原点を通る直線を、グラフの端から端まで引こう。",
         nextQuestion: "正解！<br>『次の問題』を押そう。",
         allFinished: "全問終了！<br>『送信』ボタンを押そう。"
     },
@@ -1416,15 +1520,16 @@ const HINTS = {
         tableZero: "$x=0$ のときは、0でわれないので「×」を入れよう。",
         tableSign: "符号を確かめよう。<br>$x$ と $y$ をかけると、いつも式の数になるよ。",
         timeoutTable: "時間切れ！<br>$x \\times y$ の値が、いつも式の数になることに注目しよう。",
-        plotInit: "表の $x$, $y$ の組が点の座標 $(x, y)$ だよ。<br>「×」の点はとれないよ。グラフをタップして、すべての点をとろう。もう一度タップすると消えるよ。",
-        plotMissing: n => `点があと ${n} 個たりないよ。<br>表の「×」以外の $x$, $y$ の組すべてを点にしよう。`,
-        plotExtra: "表にない点があるよ（赤い点）。<br>$x$ は左右、$y$ は上下に進もう。",
+        plotInit: "表の $x$, $y$ の組が点の座標 $(x, y)$ だよ。<br>表にない点も、グラフの中で曲線が通る<b>すべての点</b>をタップしてとろう。もう一度タップすると消えるよ。",
+        plotMissing: n => `点があと ${n} 個たりないよ。<br>表にない点もあるよ。グラフの中で曲線が通る点を、すべてとろう。`,
+        plotExtra: "曲線が通らない点があるよ（赤い点）。<br>$x$ と $y$ をかけた数が、式の数になる点だけをとろう。",
         plotSwap: "$x$ 座標と $y$ 座標が入れかわっていないかな？<br>$(x, y)$ の順に読もう。",
         plotZero: "$x=0$ のときは「×」だったね。<br>$y$ 軸の上に点はとれないよ。",
         timeoutPlot: "時間切れ！<br>表の $x$, $y$ の組を $(x, y)$ として、点をとろう。",
-        drawInit: "反比例のグラフは、軸と交わらない<b>2つのなめらかな曲線</b>だよ。<br>点を通るように、<b>端から端まで</b>1本ずつなぞろう。点をつなぐだけではだめだよ。",
-        drawFar: "曲線が点を通っていないよ。<br>直線ではなく、点をなめらかな曲線でつなごう。「消す」で描き直せるよ。",
+        drawInit: "反比例のグラフは、軸と交わらない<b>2つのなめらかな曲線</b>だよ。<br>点を通るように指でなぞろう。少しずれてもなめらかな曲線に直るよ。<b>端から端まで</b>、1本ずつ描こう（何回かに分けてもOK）。",
+        drawFar: "なぞった線が、点を通る曲線からはなれているよ。<br>直線ではなく、点をなめらかにつなぐ曲線をなぞり直そう。",
         drawShort: "曲線が端まで届いていないよ。<br>点をつないだだけにしないで、軸に近づくところまで、グラフの端までのばそう。",
+        drawGap: "曲線がとぎれているよ。<br>すき間もなぞって、ひと続きの曲線にしよう。",
         drawCross: "曲線は $x$ 軸や $y$ 軸とは交わらないよ。<br>軸に近づいても、軸をこえないように描こう。",
         drawBranch: "曲線は2つあるよ。<br>もう1つの曲線も、端から端まで描こう。",
         timeoutDraw: "時間切れ！<br>点をなめらかな曲線でつないで、端から端までなぞろう。",
@@ -1439,6 +1544,13 @@ const HINT_DATA = HINTS[MODE];
    12. イベントリスナー・初期化【共通】
    ========================================================================== */
 window.addEventListener('resize', resizeApp);
+/* iPad（Safari）：なぞったとき画面が引っ張られたり拡大されたりしないようにする（ヒント欄のスクロールだけは許可） */
+document.addEventListener('touchmove', function (e) {
+    if (!(e.target.closest && e.target.closest('.hint-container'))) e.preventDefault();
+}, { passive: false });
+['gesturestart', 'gesturechange', 'gestureend'].forEach(function (t) {
+    document.addEventListener(t, function (e) { e.preventDefault(); });
+});
 window.addEventListener('DOMContentLoaded', () => {
     resizeApp();
     initValidationControls();
