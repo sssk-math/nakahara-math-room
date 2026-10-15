@@ -190,7 +190,7 @@ footer { width:100%; text-align:center; font-size:12px; color:#000; font-weight:
         <header>
             <div class="title-bar">
                 <button class="title-hand-btn" id="hand-left-btn" onclick="changeHandedness('left')">👈 左利き</button>
-                <h1> 比例のグラフ（表 → 点 → 線）</h1>
+                <h1> 比例のグラフをかく</h1>
                 <button class="title-hand-btn active" id="hand-right-btn" onclick="changeHandedness('right')">右利き 👉</button>
             </div>
         </header>
@@ -266,30 +266,31 @@ footer { width:100%; text-align:center; font-size:12px; color:#000; font-weight:
                         <div class="hint-body" id="hint-text">目指せ！パーフェクト！</div>
                     </div>
                     <div class="keypad">
-                        <button class="key num-btn" data-k="7" onmousedown="event.preventDefault()" onclick="pressKey('7')">$7$</button>
-                        <button class="key num-btn" data-k="8" onmousedown="event.preventDefault()" onclick="pressKey('8')">$8$</button>
-                        <button class="key num-btn" data-k="9" onmousedown="event.preventDefault()" onclick="pressKey('9')">$9$</button>
-                        <button class="key op-btn" data-k="neg" onmousedown="event.preventDefault()" onclick="pressKey('-')">$-$</button>
-                        <button class="key var-btn" disabled></button>
+                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('7')">$7$</button>
+                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('8')">$8$</button>
+                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('9')">$9$</button>
+                        <button class="key op-btn" onmousedown="event.preventDefault()" onclick="pressKey('+')" disabled>$+$</button>
+                        <button class="key op-btn" onmousedown="event.preventDefault()" onclick="pressKey('-')">$-$</button>
 
-                        <button class="key num-btn" data-k="4" onmousedown="event.preventDefault()" onclick="pressKey('4')">$4$</button>
-                        <button class="key num-btn" data-k="5" onmousedown="event.preventDefault()" onclick="pressKey('5')">$5$</button>
-                        <button class="key num-btn" data-k="6" onmousedown="event.preventDefault()" onclick="pressKey('6')">$6$</button>
-                        <button class="key arrow-btn" data-k="prev" onmousedown="event.preventDefault()" onclick="pressKey('prev')">←</button>
-                        <button class="key arrow-btn" data-k="next" onmousedown="event.preventDefault()" onclick="pressKey('next')">→</button>
+                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('4')">$4$</button>
+                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('5')">$5$</button>
+                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('6')">$6$</button>
+                        <button class="key op-btn" onmousedown="event.preventDefault()" onclick="pressKey('×')" disabled>$×$</button>
+                        <button class="key op-btn" onmousedown="event.preventDefault()" onclick="pressKey('÷')" disabled>$÷$</button>
 
-                        <button class="key num-btn" data-k="1" onmousedown="event.preventDefault()" onclick="pressKey('1')">$1$</button>
-                        <button class="key num-btn" data-k="2" onmousedown="event.preventDefault()" onclick="pressKey('2')">$2$</button>
-                        <button class="key num-btn" data-k="3" onmousedown="event.preventDefault()" onclick="pressKey('3')">$3$</button>
-                        <button class="key var-btn" disabled></button>
-                        <button class="key var-btn" disabled></button>
+                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('1')">$1$</button>
+                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('2')">$2$</button>
+                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('3')">$3$</button>
+                        <button class="key arrow-btn" id="key-prev" onmousedown="event.preventDefault()" onclick="pressKey('prev')">←</button>
+                        <button class="key arrow-btn" id="key-next" onmousedown="event.preventDefault()" onclick="pressKey('next')">→</button>
 
-                        <button class="key num-btn" data-k="0" onmousedown="event.preventDefault()" onclick="pressKey('0')">$0$</button>
-                        <button class="key var-btn" disabled></button>
-                        <button class="key var-btn" disabled></button>
-                        <button class="key var-btn" disabled></button>
-                        <button class="key var-btn" disabled></button>
+                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('0')">$0$</button>
+                        <button class="key paren-btn" onmousedown="event.preventDefault()" onclick="pressKey('(')" disabled>$($</button>
+                        <button class="key paren-btn" onmousedown="event.preventDefault()" onclick="pressKey(')')" disabled>$)$</button>
+                        <button class="key var-btn" onmousedown="event.preventDefault()" onclick="pressKey('x')" disabled>$x$</button>
+                        <button class="key op-btn" onmousedown="event.preventDefault()" onclick="pressKey('=')" disabled>$=$</button>
                     </div>
+
                     <div class="control-keys">
                         <button class="key action-btn" id="action-btn" onclick="handleAction()">スタート</button>
                         <button class="key clear-btn" id="clear-btn" onmousedown="event.preventDefault()" onclick="handleCenterBtn()">消す</button>
