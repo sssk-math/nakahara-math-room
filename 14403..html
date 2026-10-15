@@ -1296,6 +1296,7 @@
                                 <span class="step-badge" id="badge-expression">入力中</span>
                             </div>
                             <div id="math-preview-expression" class="mathjax-render-zone"></div>
+                            <div id="math-editor-expression-left" class="math-editor-container"></div>
                             <div id="math-editor-expression-right" class="math-editor-container"></div>
                         </div>
 
@@ -1979,6 +1980,10 @@
             const b = document.getElementById(id);
             if (b) b.disabled = !(state === 'playing' && currentStage === 'expression');
         });
+        // 「(」「)」ボタンはidがないので、クラス名で探して有効・無効を切り替える
+        document.querySelectorAll('.paren-btn').forEach(b => {
+            b.disabled = !(state === 'playing' && currentStage === 'expression');
+        });
         const keyX = document.getElementById('key-x');
         if (keyX) keyX.disabled = !(state === 'playing' && currentStage === 'answer');
         actionBtn.className = "key action-btn";
@@ -2104,7 +2109,7 @@ function isCurrentStageEmpty() {
     /* --- ステージ一覧のヘルパー（STAGE_ORDER / ACTIVE_STAGES から ID・次のステージ・ヒントのキーを返す） --- */
     function stageGroupId(stage)     { return `group-${stage}`; }
     function stageBadgeId(stage)     { return `badge-${stage}`; }
-    function isRightOnlyStage(stage) { return stage === 'answer' || stage === 'expression'; }   // 右辺だけ入力するステージ
+    function isRightOnlyStage(stage) { return stage === 'answer'; }   // 右辺だけ入力するステージ
     function stageEditorIds(stage) {
         return isRightOnlyStage(stage)
             ? [`math-editor-${stage}-right`]
@@ -2590,7 +2595,7 @@ function isCurrentStageEmpty() {
     function openExpressionStep(auto) {
         isStepMode = true;
         currentStage = 'expression';
-        activeEditorId = 'math-editor-expression-right';
+        activeEditorId = 'math-editor-expression-left';
 
         const gExpr = document.getElementById('group-expression');
         gExpr.style.display = 'flex';
@@ -2600,7 +2605,7 @@ function isCurrentStageEmpty() {
         // 答えの枠は、途中式が正解するまでロックして中身を空にする
         document.getElementById('group-answer').className = "input-box-group locked-disabled";
         document.getElementById('badge-answer').textContent = "ロック中";
-        ['math-editor-answer-right', 'math-editor-expression-right'].forEach(id => {
+        ['math-editor-answer-right', 'math-editor-expression-left', 'math-editor-expression-right'].forEach(id => {
             const ed = document.getElementById(id);
             if (ed) { ed.innerHTML = ''; ed.classList.remove('wide-fraction-mode'); createTextBlock(ed, ""); }
         });
@@ -2610,7 +2615,7 @@ function isCurrentStageEmpty() {
         updateMathJax([hintEl]);
 
         updateControlKeysState('playing');
-        setTimeout(() => { focusDefaultNode('math-editor-expression-right'); refreshMathJaxPreview(); }, 50);
+        setTimeout(() => { focusDefaultNode('math-editor-expression-left'); refreshMathJaxPreview(); }, 50);
     }
 
     /* --- 答えの判定（checkAnswer）：途中式の枠 → yの値の枠 の順 --- */
@@ -2619,9 +2624,10 @@ function isCurrentStageEmpty() {
 
         // ① 途中式の判定
         if (currentStage === 'expression') {
-            const userExpr = getUserAnswerBySide('expression', 'right');
-            if (!userExpr) return;
-            if (exprCandidates(q).has(userExpr)) {
+            const userExprL = getUserAnswerBySide('expression', 'left');
+            const userExprR = getUserAnswerBySide('expression', 'right');
+            if (!userExprL && !userExprR) return;
+            if (exprCandidates(q).has(userExprL) && userExprR === String(q.a)) {   // 左：x×y の式／右：その計算の答え
                 document.getElementById('group-expression').className = "input-box-group locked-correct";
                 document.getElementById('badge-expression').textContent = "正解！";
                 currentStage = 'answer';
@@ -2709,7 +2715,7 @@ function isCurrentStageEmpty() {
                                 const top = n.querySelector('.frac-top') ? n.querySelector('.frac-top').value : "";
                                 const bottom = n.querySelector('.frac-bottom') ? n.querySelector('.frac-bottom').value : "";
                                 if (top !== "" || bottom !== "") {
-                                    val += `\\frac{${top}}{${bottom}}`;
+                                    val += `\\dfrac{${top}}{${bottom}}`;
                                 }
                             } else if (n.value) {
                                 val += n.value; 
@@ -2742,7 +2748,37 @@ function isCurrentStageEmpty() {
                     </div>`;
             };
 
-            buildPreview('expression', null, 'math-editor-expression-right', 'a', '比例定数を求める式を入力', true);
+            // 途中式：「a ＝ [式の枠] ＝ [計算結果の枠]」の形で表示する
+            (() => {
+                const preview = document.getElementById('math-preview-expression');
+                const group = document.getElementById('group-expression');
+                if (!preview) return;
+                const getVal = ed => {
+                    let val = "";
+                    if (ed) {
+                        ed.childNodes.forEach(n => {
+                            if (n.classList && n.classList.contains('editor-fraction-node')) {
+                                const top = n.querySelector('.frac-top') ? n.querySelector('.frac-top').value : "";
+                                const bottom = n.querySelector('.frac-bottom') ? n.querySelector('.frac-bottom').value : "";
+                                if (top !== "" || bottom !== "") val += `\\dfrac{${top}}{${bottom}}`;
+                            } else if (n.value) {
+                                val += n.value;
+                            }
+                        });
+                    }
+                    return val;
+                };
+                const isCorrect = group && group.classList.contains('locked-correct');
+                const box = (edId, defaultText) => {
+                    const v = getVal(document.getElementById(edId));
+                    if (isCorrect) return v ? `$${v}$` : '';
+                    const active = activeEditorId === edId ? 'active-side' : '';
+                    const inner = v ? `$${v}$` : `<span class="placeholder-text">${defaultText}</span>`;
+                    return `<span class="step-box-small ${active}" style="height:auto; min-height:34px;">${inner}</span>`;
+                };
+                preview.innerHTML = `<div style="display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap;">
+                    <span>$a=$</span>${box('math-editor-expression-left', '数式')}<span>$=$</span>${box('math-editor-expression-right', '答え')}</div>`;
+            })();
             buildPreview('answer', null, 'math-editor-answer-right', (currentKentei === 2 ? 'x' : 'y'), '答えを入力', true);
 
             updateMathJax([document.getElementById('math-preview-expression'), document.getElementById('math-preview-answer')]);
@@ -2811,12 +2847,11 @@ function isCurrentStageEmpty() {
         init: "「$y$ は $x$ に反比例する」とき、$y=\\dfrac{a}{x}$ と表せるよ。$x$ と $y$ の値から、比例定数 $a$ を求めて式にしよう。",
         err: "式は「$y=\\dfrac{a}{x}$」の形だよ。比例定数 $a$ は $x \\times y$ で求められるよ。符号にも気をつけよう。",
         timeoutAnswer: "時間切れ！<br>比例定数 $a$ は $x \\times y$ で求めよう。式は $y=\\dfrac{a}{x}$ の形だよ。",
-        timeoutExpression: "時間切れ！<br>比例定数 $a$ を求める式は「$x \\times y$」だよ。負の数はかっこをつけてね。",
-        stepIntro: "2回間違えたので、途中式を書こう！<br>比例定数 $a$ を求める式を「$x \\times y$」の形で書いてね。負の数はかっこをつけよう。",
-        stepManual: "途中式を書こう！<br>比例定数 $a$ は $x \\times y$ で求められるよ。$x$ と $y$ の値を使って書いてね。負の数はかっこをつけよう。",
-        stepSuccess: "途中式バッチリ！<br>計算して $a$ を求め、$y=\\dfrac{a}{x}$ の形で答えよう。「−」（負の数のとき）→『x』→『分の』→分子の順に入力するよ。",
-        exprError: "途中式が違うよ！<br>「$x$ の値 × $y$ の値」の形で書こう。負の数はかっこをつけてね。",
-        nextQuestion: "正解！<br>『次の問題』を押そう。",
+        timeoutExpression: "時間切れ！<br>左の枠に「$x \\times y$」、右の枠にその計算の答え（比例定数 $a$）を書こう。「=」キーで左右の枠を移動できるよ。",
+        stepIntro: "2回間違えたので、途中式を書こう！<br>$a=$（$x$ の値）×（$y$ の値）$=$（計算の答え）の形だよ。負の数にはかっこをつけてね。「=」キーで左右の枠を移動できるよ。",
+        stepManual: "途中式を書こう！<br>比例定数 $a$ は $x \\times y$ で求められるよ。左の枠に $x \\times y$ の式、右の枠に計算の答えを書いてね。負の数にはかっこをつけよう。「=」キーで左右の枠を移動できるよ。",
+        stepSuccess: "途中式バッチリ！<br>$a$ の値が求まったね。$y=\\dfrac{a}{x}$ の形で答えよう。「−」（負の数のとき）→『x』→『分の』→分子の順に入力するよ。",
+        exprError: "途中式が違うよ！<br>左の枠は「$x$ の値 × $y$ の値」（負の数はかっこ付き）、右の枠はその計算の答えだよ。",        nextQuestion: "正解！<br>『次の問題』を押そう。",
         allFinished: "全問終了！<br>『送信』ボタンを押そう。"
     };
 
