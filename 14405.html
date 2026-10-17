@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>14405.反比例のグラフを読む</title>
+<title>14405.反比例：グラフを読む</title>
 <script>
 window.MathJax = { tex: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']] }, options: { enableMenu: false } };
 </script>
@@ -113,7 +113,8 @@ h1 { font-size:24px; color:#333; margin-bottom:5px; }
 .svg-axis-label { font-size:22px; font-style:italic; fill:#333; }
 .svg-tick-label { font-size:21px; fill:#555; }
 .side-col { flex:1; min-width:0; display:flex; flex-direction:column; gap:5px; }
-.step-tabs { display:flex; flex-direction:column; gap:5px; }
+.step-tabs { display:flex; flex-direction:row; gap:5px; }
+.step-tabs .step-tab { flex:1; }
 .step-tab { text-align:left; font-size:18px; font-weight:bold; padding:9px 14px; border-radius:10px; background:#e9ecef; color:#868e96; }
 .step-tab.active { background:#007bff; color:#fff; }
 .step-tab.done { background:#28a745; color:#fff; }
@@ -169,8 +170,8 @@ footer { width:100%; text-align:center; font-size:12px; color:#000; font-weight:
 <div id="app-container">
     <div id="screen-start" class="app-screen start-screen">
         <div class="start-title" style="text-align:center;">
-            <div class="start-title-main">比例・反比例</div>
-            <div class="start-title-sub">グラフから式を読もう</div>
+            <div class="start-title-main">４章　変化と対応</div>
+            <div class="start-title-sub">反比例：グラフを読む</div>
         </div>
         <div class="start-menu">
             <button class="start-menu-btn" onclick="enterKenteiScreen()">📝 検定</button>
@@ -211,7 +212,7 @@ footer { width:100%; text-align:center; font-size:12px; color:#000; font-weight:
         <header>
             <div class="title-bar">
                 <button class="title-hand-btn" id="hand-left-btn" onclick="changeHandedness('left')">👈 左利き</button>
-                <h1> グラフから式を読む（反比例）</h1>
+                <h1>４章　変化と対応（反比例：グラフを読む）</h1>
                 <button class="title-hand-btn active" id="hand-right-btn" onclick="changeHandedness('right')">右利き 👉</button>
             </div>
         </header>
@@ -221,7 +222,7 @@ footer { width:100%; text-align:center; font-size:12px; color:#000; font-weight:
                 <div id="timer-display">⏱️ 00:00.0</div>
                 <div class="record-box">
                     <div id="best-update-message"></div>
-                    <div class="best-label-container"><div id="best-normal-display">ベストタイム(2問): --:--.-</div></div>
+                    <div class="best-label-container"><div id="best-normal-display">ベストタイム(5問): --:--.-</div></div>
                 </div>
             </div>
             <div style="display:flex; align-items:center; gap:8px;">
@@ -378,7 +379,7 @@ const FORM_STAGE_COUNT_ID = 'entry.2033679053';  // 正解数
 const KENTEI_TIME_LIMIT_MS    = 4 * 60 * 1000;   // 検定の制限時間（4分）
 const QUESTION_TIME_LIMIT_SEC = 45;              // 表・点の1手順の制限秒数
 const DRAW_TIME_LIMIT_SEC     = 60;              // 線を引く手順の制限秒数
-const QUESTION_COUNT          = 2;   // 1問目＝a>0、2問目＝a<0
+const QUESTION_COUNT          = 5;   // 1,2問目＝a>0、3,4問目＝a<0、5問目＝符号ランダム
 let questionTimeLeft = QUESTION_TIME_LIMIT_SEC;
 
 const KENTEI_RECORDS_KEY = 'hanpirei_yomu_kentei_records_v1';
@@ -1654,9 +1655,10 @@ function buildInvQuestion(a) {
         idealPaths: idealPaths
     };
 }
-function generateQuizData() {   // 1問目は a>0、2問目は a<0（絶対値は別の値）
-    const v = shuffle([6, 12, 18, 24]);
-    return [buildInvQuestion(v[0]), buildInvQuestion(-v[1])];
+function generateQuizData() {   // 1,2問目は a>0、3,4問目は a<0、5問目は符号ランダム（絶対値は全問ちがう）
+    const v = shuffle([4, 6, 8, 12, 18, 24]);
+    return [buildInvQuestion(v[0]), buildInvQuestion(v[1]), buildInvQuestion(-v[2]), buildInvQuestion(-v[3]),
+            buildInvQuestion(Math.random() < 0.5 ? v[4] : -v[4])];
 }
 
 
