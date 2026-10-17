@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>14402.yの値・xの値を求める</title>
+    <title>14402.反比例：値を求める</title>
     <script>
         /* ==========================================================================
            1. MathJaxの基本設定
@@ -865,7 +865,6 @@
             justify-content: center;
             position: relative;
             cursor: pointer;
-            transition: all 0.2s;
             margin-bottom: 2px;
         }
         /* --- 入力グループのフォーカス状態スタイル --- */
@@ -1138,8 +1137,8 @@
     <div id="app-container">
         <div id="screen-start" class="app-screen start-screen">
             <div class="start-title" style="text-align:center;">
-                <div class="start-title-main">反比例</div>
-                <div class="start-title-sub">y の値・x の値を求めよう</div>
+                <div class="start-title-main">４章　変化と対応</div>
+                <div class="start-title-sub">反比例：値を求める</div>
             </div>
             <div class="start-menu">
                 <button class="start-menu-btn" onclick="showScreen('screen-select')">📝 検定</button>
@@ -1210,7 +1209,7 @@
         <header>
             <div class="title-bar">
                 <button class="title-hand-btn" id="hand-left-btn" onclick="changeHandedness('left')">👈 左利き</button>
-                <h1 id="kentei-title"> 反比例（検定①：yの値を求める）</h1>
+                <h1>４章　変化と対応（反比例：値を求める）</h1>
                 <button class="title-hand-btn active" id="hand-right-btn" onclick="changeHandedness('right')">右利き 👉</button>
             </div>
         </header>
@@ -1344,27 +1343,28 @@
                         <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('7')">$7$</button>
                         <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('8')">$8$</button>
                         <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('9')">$9$</button>
-                        <button class="key var-btn" disabled></button>
-                        <button class="key var-btn" disabled></button>
+                        <button class="key op-btn" onmousedown="event.preventDefault()" onclick="pressKey('+')" disabled>$+$</button>
+                        <button class="key op-btn" onmousedown="event.preventDefault()" onclick="pressKey('-')">$-$</button>
 
                         <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('4')">$4$</button>
                         <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('5')">$5$</button>
                         <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('6')">$6$</button>
-                        <button class="key var-btn" disabled></button>
-                        <button class="key op-btn" onmousedown="event.preventDefault()" onclick="pressKey('-')">$-$</button>
+                        <button class="key op-btn" onmousedown="event.preventDefault()" onclick="pressKey('×')">$×$</button>
+                        <button class="key frac-btn" onmousedown="event.preventDefault()" onclick="convertDenominatorToFraction()">分の</button>
 
                         <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('1')">$1$</button>
                         <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('2')">$2$</button>
                         <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('3')">$3$</button>
-                        <button class="key op-btn" id="key-times" onmousedown="event.preventDefault()" onclick="pressKey('×')" disabled>$×$</button>
-                        <button class="key frac-btn" onmousedown="event.preventDefault()" onclick="convertDenominatorToFraction()">分の</button>
+                        <button class="key arrow-btn" id="key-prev" onmousedown="event.preventDefault()" onclick="pressKey('prev')" disabled>←</button>
+                        <button class="key arrow-btn" id="key-next" onmousedown="event.preventDefault()" onclick="pressKey('next')" disabled>→</button>
 
                         <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('0')">$0$</button>
-                        <button class="key paren-btn" id="key-lparen" onmousedown="event.preventDefault()" onclick="pressKey('(')" disabled>$($</button>
-                        <button class="key paren-btn" id="key-rparen" onmousedown="event.preventDefault()" onclick="pressKey(')')" disabled>$)$</button>
-                        <button class="key var-btn" disabled></button>
-                        <button class="key var-btn" disabled></button>
+                        <button class="key paren-btn" onmousedown="event.preventDefault()" onclick="pressKey('(')">$($</button>
+                        <button class="key paren-btn" onmousedown="event.preventDefault()" onclick="pressKey(')')">$)$</button>
+                        <button class="key var-btn" onmousedown="event.preventDefault()" onclick="pressKey('x')" disabled>$x$</button>
+                        <button class="key op-btn" onmousedown="event.preventDefault()" onclick="pressKey('.')" disabled>$.$</button>
                     </div>
+
                     <div class="control-keys">
                         <button class="key action-btn" id="action-btn" onclick="handleAction()">スタート</button>
                         <button class="key clear-btn" id="clear-btn" onmousedown="event.preventDefault()" onclick="handleCenterBtn()">消す</button>
@@ -1895,9 +1895,6 @@
     function enterKenteiScreen(k = 1) {
         currentKentei = k;
         loadKenteiRecords();
-        document.getElementById('kentei-title').textContent = (k === 2)
-            ? ' 反比例（検定②：xの値を求める）'
-            : ' 反比例（検定①：yの値を求める）';
         document.getElementById('label-answer').textContent = (k === 2) ? 'x の値' : 'y の値';
         const bestDisplayEl = document.getElementById('best-normal-display');
         if (bestDisplayEl) bestDisplayEl.innerText = bestTimeText(bestNormalTimeMs !== null ? formatMs(bestNormalTimeMs) : '--:--.-');
@@ -2773,7 +2770,7 @@ function isCurrentStageEmpty() {
                                 const top = n.querySelector('.frac-top') ? n.querySelector('.frac-top').value : "";
                                 const bottom = n.querySelector('.frac-bottom') ? n.querySelector('.frac-bottom').value : "";
                                 if (top !== "" || bottom !== "") {
-                                    val += `\\frac{${top}}{${bottom}}`;
+                                    val += `\\dfrac{${top}}{${bottom}}`;
                                 }
                             } else if (n.value) {
                                 val += n.value; 
