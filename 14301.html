@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>14301.比例の表と式</title>
+    <title>14301.比例：表と式</title>
     <script>
         /* ==========================================================================
            1. MathJaxの基本設定
@@ -865,7 +865,6 @@
             justify-content: center;
             position: relative;
             cursor: pointer;
-            transition: all 0.2s;
             margin-bottom: 2px;
         }
         /* --- 入力グループのフォーカス状態スタイル --- */
@@ -1160,30 +1159,52 @@
     <div id="app-container">
         <div id="screen-start" class="app-screen start-screen">
             <div class="start-title" style="text-align:center;">
-                <div class="start-title-main">比例・反比例</div>
-                <div class="start-title-sub">比例の表と式</div>
+                <div class="start-title-main">４章　変化と対応</div>
+                <div class="start-title-sub">比例：表と式</div>
             </div>
             <div class="start-menu">
-                <button class="start-menu-btn" onclick="enterKenteiScreen()">📝 検定</button>
+                <button class="start-menu-btn" onclick="showScreen('screen-select')">📝 検定</button>
                 <button class="start-menu-btn" onclick="showScreen('screen-kiroku'); renderKirokuScreen();">🏆 記録</button>
                 <button class="start-menu-btn" onclick="showScreen('screen-settei')">⚙️ 設定</button>
             </div>
+        </div>
+
+        <!-- ===== 検定の選択画面 ===== -->
+        <div id="screen-select" class="app-screen" style="display:none; align-items:center; justify-content:center; gap:20px;">
+            <div class="sub-screen-header"><h1>📝 検定を選ぶ</h1></div>
+            <div class="start-menu">
+                <button class="start-menu-btn" onclick="enterKenteiScreen(1)">検定① 表を完成させる</button>
+                <button class="start-menu-btn" onclick="enterKenteiScreen(2)">検定② 空欄を埋める</button>
+            </div>
+            <button class="btn-tutorial-hud-secondary" onclick="showScreen('screen-start')">←開始画面へ</button>
         </div>
 
         <div id="screen-kiroku" class="app-screen" style="display:none; align-items:center; justify-content:center; gap:16px;">
             <div class="sub-screen-header"><h1>🏆 記録</h1></div>
             <div class="kiroku-cards">
                 <div class="kiroku-card">
-                    <div class="kiroku-card-label">検定：受検回数</div>
-                    <div class="kiroku-card-value" id="kiroku-attempts">0回</div>
+                    <div class="kiroku-card-label">検定①：受検回数</div>
+                    <div class="kiroku-card-value" id="kiroku-attempts-1">0回</div>
                 </div>
                 <div class="kiroku-card">
-                    <div class="kiroku-card-label">検定：ベストタイム</div>
-                    <div class="kiroku-card-value" id="kiroku-best-time">--:--.-</div>
+                    <div class="kiroku-card-label">検定②：受検回数</div>
+                    <div class="kiroku-card-value" id="kiroku-attempts-2">0回</div>
                 </div>
                 <div class="kiroku-card">
-                    <div class="kiroku-card-label">検定：連続正解記録</div>
-                    <div class="kiroku-card-value" id="kiroku-streak">現在：0問／最高：0問</div>
+                    <div class="kiroku-card-label">検定①：ベストタイム</div>
+                    <div class="kiroku-card-value" id="kiroku-best-time-1">--:--.-</div>
+                </div>
+                <div class="kiroku-card">
+                    <div class="kiroku-card-label">検定②：ベストタイム</div>
+                    <div class="kiroku-card-value" id="kiroku-best-time-2">--:--.-</div>
+                </div>
+                <div class="kiroku-card">
+                    <div class="kiroku-card-label">検定①：連続正解記録</div>
+                    <div class="kiroku-card-value" id="kiroku-streak-1">現在：0問／最高：0問</div>
+                </div>
+                <div class="kiroku-card">
+                    <div class="kiroku-card-label">検定②：連続正解記録</div>
+                    <div class="kiroku-card-value" id="kiroku-streak-2">現在：0問／最高：0問</div>
                 </div>
             </div>
             <button class="btn-tutorial-hud-secondary" onclick="showScreen('screen-start')">←開始画面へ</button>
@@ -1211,7 +1232,7 @@
         <header>
             <div class="title-bar">
                 <button class="title-hand-btn" id="hand-left-btn" onclick="changeHandedness('left')">👈 左利き</button>
-                <h1> 比例（表を完成させ、式を求めよう）</h1>
+                <h1 id="kentei-title">４章　変化と対応（比例：表と式）</h1>
                 <button class="title-hand-btn active" id="hand-right-btn" onclick="changeHandedness('right')">右利き 👉</button>
             </div>
         </header>
@@ -1290,7 +1311,7 @@
                             </div>
                             <div class="expr-row">
                                 <span class="expr-y">$y$</span><span>$=$</span>
-                                <div class="cell cell-expr" data-i="6" onclick="selectCell(6)"></div>
+                                <div class="cell cell-expr" data-i="14" onclick="selectCell(14)"></div>
                             </div>
                         </div>
                     </div>
@@ -1305,30 +1326,31 @@
                     </div>
 
                     <div class="keypad">
-                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('7')">7</button>
-                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('8')">8</button>
-                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('9')">9</button>
-                        <button class="key var-btn" disabled></button>
-                        <button class="key var-btn" disabled></button>
+                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('7')">$7$</button>
+                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('8')">$8$</button>
+                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('9')">$9$</button>
+                        <button class="key op-btn" onmousedown="event.preventDefault()" onclick="pressKey('+')" disabled>$+$</button>
+                        <button class="key op-btn" onmousedown="event.preventDefault()" onclick="pressKey('-')">$-$</button>
 
-                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('4')">4</button>
-                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('5')">5</button>
-                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('6')">6</button>
-                        <button class="key var-btn" disabled></button>
-                        <button class="key var-btn" disabled></button>
+                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('4')">$4$</button>
+                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('5')">$5$</button>
+                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('6')">$6$</button>
+                        <button class="key op-btn" onmousedown="event.preventDefault()" onclick="pressKey('×')" disabled>$×$</button>
+                        <button class="key op-btn" onmousedown="event.preventDefault()" onclick="pressKey('÷')" disabled>$÷$</button>
 
-                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('1')">1</button>
-                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('2')">2</button>
-                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('3')">3</button>
-                        <button class="key var-btn" disabled></button>
-                        <button class="key var-btn" disabled></button>
-
-                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('0')">0</button>
+                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('1')">$1$</button>
+                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('2')">$2$</button>
+                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('3')">$3$</button>
                         <button class="key arrow-btn" id="key-prev" onmousedown="event.preventDefault()" onclick="pressKey('prev')">←</button>
                         <button class="key arrow-btn" id="key-next" onmousedown="event.preventDefault()" onclick="pressKey('next')">→</button>
-                        <button class="key var-btn" id="key-x" onmousedown="event.preventDefault()" onclick="pressKey('x')">$x$</button>
-                        <button class="key var-btn" disabled></button>
+
+                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('0')">$0$</button>
+                        <button class="key paren-btn" onmousedown="event.preventDefault()" onclick="pressKey('(')" disabled>$($</button>
+                        <button class="key paren-btn" onmousedown="event.preventDefault()" onclick="pressKey(')')" disabled>$)$</button>
+                        <button class="key var-btn" onmousedown="event.preventDefault()" onclick="pressKey('x')">$x$</button>
+                        <button class="key op-btn" onmousedown="event.preventDefault()" onclick="pressKey('=')" disabled>$=$</button>
                     </div>
+
                     <div class="control-keys">
                         <button class="key action-btn" id="action-btn" onclick="handleAction()">スタート</button>
                         <button class="key clear-btn" id="clear-btn" onmousedown="event.preventDefault()" onclick="handleCenterBtn()">消す</button>
@@ -1405,13 +1427,17 @@
     const QUESTION_COUNT = 5;                     // 検定の問題数（generateQuizData の出題数と一致させる）
     let questionTimeLeft       = QUESTION_TIME_LIMIT_SEC;
 
-    const KENTEI_RECORDS_KEY = 'hirei_table_shiki_kentei_records_v1';
+    const KENTEI_RECORDS_KEYS = { 1: 'hirei_table_shiki_kentei_records_v1', 2: 'hirei_table_shiki_kentei2_records_v1' };
+    let currentKentei = 1;   // 1＝検定①（表を完成させる）／2＝検定②（空欄を埋める）
 
-    /* --- 固有：入力マスの管理（0〜5＝表のyの欄 / 6＝式の欄） --- */
-    const TABLE_X       = [0, 1, 2, 3, 4, 5];
-    const TABLE_CELLS   = [0, 1, 2, 3, 4, 5];
-    const EXPR_CELL     = 6;
-    const CELL_COUNT    = 7;
+    /* --- 固有：入力マスの管理（0〜6＝表のyの欄 / 7〜13＝検定②の表のxの欄 / 14＝式の欄） --- */
+    const DEFAULT_TABLE_X   = [0, 1, 2, 3, 4, 5];          // 検定①の表のx
+    const DEFAULT_TABLE_X_2 = [-3, -2, -1, 0, 1, 2, 3];    // 検定②の表のx
+    let TABLE_X         = DEFAULT_TABLE_X.slice();
+    let TABLE_CELLS     = [0, 1, 2, 3, 4, 5];
+    const XCELL_BASE    = 7;    // 検定②：xの空欄は 7〜13（yの空欄は 0〜6）
+    const EXPR_CELL     = 14;
+    const CELL_COUNT    = 15;
     let cellVals        = new Array(CELL_COUNT).fill('');
     let cellState       = new Array(CELL_COUNT).fill('');   // ''＝未判定 / 'ok'＝正解 / 'ng'＝不正解
     let activeIdx       = 0;
@@ -1765,29 +1791,35 @@
        5. 記録の保存・読み込み・記録画面【共通】
        ========================================================================== */
 
-    /* --- 検定記録の読み込み（loadKenteiRecords） --- */
-    function loadKenteiRecords() {
+    /* --- 検定ごとの記録の読み取り（readKenteiRecord） --- */
+    function readKenteiRecord(k) {
+        const rec = { bestTimeMs: null, streak: 0, maxStreak: 0, attempts: 0 };
         try {
-            const raw = localStorage.getItem(KENTEI_RECORDS_KEY);
+            const raw = localStorage.getItem(KENTEI_RECORDS_KEYS[k]);
             if (raw) {
                 const parsed = JSON.parse(raw);
-                bestNormalTimeMs = (typeof parsed.bestTimeMs === 'number') ? parsed.bestTimeMs : null;
-                correctStreakCount = (typeof parsed.streak === 'number') ? parsed.streak : 0;
-                maxStreakCount = (typeof parsed.maxStreak === 'number') ? parsed.maxStreak : 0;
-                kenteiAttemptCount = (typeof parsed.attempts === 'number') ? parsed.attempts : 0;
-                return;
+                if (typeof parsed.bestTimeMs === 'number') rec.bestTimeMs = parsed.bestTimeMs;
+                if (typeof parsed.streak === 'number') rec.streak = parsed.streak;
+                if (typeof parsed.maxStreak === 'number') rec.maxStreak = parsed.maxStreak;
+                if (typeof parsed.attempts === 'number') rec.attempts = parsed.attempts;
             }
-        } catch (e) { /* 読み込み失敗時は初期化 */ }
-        bestNormalTimeMs = null;
-        correctStreakCount = 0;
-        maxStreakCount = 0;
-        kenteiAttemptCount = 0;
+        } catch (e) { /* 読み込み失敗時は初期値 */ }
+        return rec;
     }
 
-    /* --- 検定記録の保存（saveKenteiRecords） --- */
+    /* --- 検定記録の読み込み（loadKenteiRecords）：いま選んでいる検定の記録 --- */
+    function loadKenteiRecords() {
+        const rec = readKenteiRecord(currentKentei);
+        bestNormalTimeMs = rec.bestTimeMs;
+        correctStreakCount = rec.streak;
+        maxStreakCount = rec.maxStreak;
+        kenteiAttemptCount = rec.attempts;
+    }
+
+    /* --- 検定記録の保存（saveKenteiRecords）：いま選んでいる検定の記録 --- */
     function saveKenteiRecords() {
         try {
-            localStorage.setItem(KENTEI_RECORDS_KEY, JSON.stringify({ bestTimeMs: bestNormalTimeMs, streak: correctStreakCount, maxStreak: maxStreakCount, attempts: kenteiAttemptCount }));
+            localStorage.setItem(KENTEI_RECORDS_KEYS[currentKentei], JSON.stringify({ bestTimeMs: bestNormalTimeMs, streak: correctStreakCount, maxStreak: maxStreakCount, attempts: kenteiAttemptCount }));
         } catch (e) { /* 保存失敗時は何もしない */ }
     }
 
@@ -1813,7 +1845,12 @@
        ========================================================================== */
 
     /* --- 検定画面への移行（enterKenteiScreen） --- */
-    function enterKenteiScreen() {
+    function enterKenteiScreen(k = 1) {
+        currentKentei = k;
+        loadKenteiRecords();
+        const name = '比例';
+        const bestDisplayEl = document.getElementById('best-normal-display');
+        if (bestDisplayEl) bestDisplayEl.innerText = bestTimeText(bestNormalTimeMs !== null ? formatMs(bestNormalTimeMs) : '--:--.-');
         restartQuiz();
         showScreen('screen-kentei');
     }
@@ -1824,24 +1861,27 @@
         clearInterval(questionTimerId);
         gameStarted = false;
         isCompleted = false;
-        showScreen('screen-start');
+        showScreen('screen-select');
     }
 
-    /* --- 記録画面の描画（renderKirokuScreen） --- */
+    /* --- 記録画面の描画（renderKirokuScreen）：検定①②の両方 --- */
     function renderKirokuScreen() {
-        const bestTimeEl = document.getElementById('kiroku-best-time');
-        if (bestTimeEl) bestTimeEl.textContent = (bestNormalTimeMs !== null) ? formatMs(bestNormalTimeMs) : '--:--.-';
-        const streakEl = document.getElementById('kiroku-streak');
-        if (streakEl) streakEl.textContent = `現在：${correctStreakCount}問／最高：${maxStreakCount}問`;
-        const attemptsEl = document.getElementById('kiroku-attempts');
-        if (attemptsEl) attemptsEl.textContent = `${kenteiAttemptCount}回`;
+        [1, 2].forEach(k => {
+            const rec = readKenteiRecord(k);
+            const bestTimeEl = document.getElementById('kiroku-best-time-' + k);
+            if (bestTimeEl) bestTimeEl.textContent = (rec.bestTimeMs !== null) ? formatMs(rec.bestTimeMs) : '--:--.-';
+            const streakEl = document.getElementById('kiroku-streak-' + k);
+            if (streakEl) streakEl.textContent = `現在：${rec.streak}問／最高：${rec.maxStreak}問`;
+            const attemptsEl = document.getElementById('kiroku-attempts-' + k);
+            if (attemptsEl) attemptsEl.textContent = `${rec.attempts}回`;
+        });
     }
 
     /* --- リセット確認を開く（openResetConfirm） --- */
     function openResetConfirm(type) {
         pendingResetType = type;
         const msgEl = document.getElementById('reset-confirm-message');
-        if (msgEl) msgEl.textContent = '検定のベストタイム・連続正解記録・受検回数がリセットされます。よろしいですか？';
+        if (msgEl) msgEl.textContent = '検定①・検定②のベストタイム・連続正解記録・受検回数がリセットされます。よろしいですか？';
         const modal = document.getElementById('reset-confirm-modal');
         if (modal) modal.style.display = 'flex';
     }
@@ -1855,13 +1895,17 @@
 
     /* --- リセットの実行（confirmReset） --- */
     function confirmReset() {
-        bestNormalTimeMs = null;
-        correctStreakCount = 0;
-        maxStreakCount = 0;
-        kenteiAttemptCount = 0;
-        saveKenteiRecords();
-        const bestDisplayEl = document.getElementById('best-normal-display');
-        if (bestDisplayEl) bestDisplayEl.innerText = bestTimeText('--:--.-');
+        if (pendingResetType === 'kiroku') {
+            bestNormalTimeMs = null;
+            correctStreakCount = 0;
+            maxStreakCount = 0;
+            kenteiAttemptCount = 0;
+            [1, 2].forEach(k => {
+                try { localStorage.setItem(KENTEI_RECORDS_KEYS[k], JSON.stringify({ bestTimeMs: null, streak: 0, maxStreak: 0, attempts: 0 })); } catch (e) { /* 保存失敗時は何もしない */ }
+            });
+            const bestDisplayEl = document.getElementById('best-normal-display');
+            if (bestDisplayEl) bestDisplayEl.innerText = bestTimeText('--:--.-');
+        }
         closeResetConfirm();
     }
 
@@ -1941,7 +1985,7 @@
         updateKeypadState();
     }
 
-    /* --- キーパッドの有効・無効の更新（updateKeypadState）：表では「x」不可、式では「←→」不可 --- */
+    /* --- キーパッドの有効・無効の更新（updateKeypadState）：表では「x」不可、式では「←→」不可、「−」は検定②の表だけ --- */
     function updateKeypadState() {
         const playing = gameStarted && !isCompleted;
         const inTable = (currentStage === 'table');
@@ -1951,6 +1995,8 @@
         if (xKey)  xKey.disabled  = !(playing && !inTable);
         if (prev)  prev.disabled  = !(playing && inTable);
         if (next)  next.disabled  = !(playing && inTable);
+        const minus = document.getElementById('key-minus');
+        if (minus) minus.disabled = !(playing && inTable && currentKentei === 2);   // 検定②の表の入力中だけ「−」を使える
     }
 
 
@@ -1965,13 +2011,30 @@
         updateMathJax([el]);
     }
 
-    /* --- 表の組み立て（buildTable） --- */
+    /* --- 表の組み立て（buildTable）：検定②の出題中は、空欄と書かれた値を混ぜて表示 --- */
     function buildTable() {
+        const q = (currentKentei === 2 && gameStarted) ? quizData[currentQuestionIndex] : null;
+        const fmt = v => String(v).replace('-', '−');
         let h = '<tr><th>$x$</th>';
-        TABLE_X.forEach(x => { h += `<td class="xv">${x < 0 ? '−' + Math.abs(x) : x}</td>`; });
-        h += '</tr><tr><th>$y$</th>';
-        TABLE_CELLS.forEach(i => { h += `<td><div class="cell" data-i="${i}" onclick="selectCell(${i})"></div></td>`; });
-        h += '</tr>';
+        if (q) {
+            q.xs.forEach((x, k) => {
+                h += q.blankX[k]
+                    ? `<td><div class="cell" data-i="${XCELL_BASE + k}" onclick="selectCell(${XCELL_BASE + k})"></div></td>`
+                    : `<td class="xv">${fmt(x)}</td>`;
+            });
+            h += '</tr><tr><th>$y$</th>';
+            q.ys.forEach((y, k) => {
+                h += q.blankY[k]
+                    ? `<td><div class="cell" data-i="${k}" onclick="selectCell(${k})"></div></td>`
+                    : `<td class="xv">${fmt(y)}</td>`;
+            });
+            h += '</tr>';
+        } else {
+            TABLE_X.forEach(x => { h += `<td class="xv">${x < 0 ? '−' + Math.abs(x) : x}</td>`; });
+            h += '</tr><tr><th>$y$</th>';
+            TABLE_CELLS.forEach(i => { h += `<td><div class="cell" data-i="${i}" onclick="selectCell(${i})"></div></td>`; });
+            h += '</tr>';
+        }
         document.getElementById('prop-table').innerHTML = h;
         updateMathJax([document.getElementById('prop-table')]);
     }
@@ -1993,7 +2056,7 @@
                     if (val) updateMathJax([el]);
                 }
             } else {
-                el.innerHTML = val;
+                el.innerHTML = val.replace('-', '−');
             }
             el.className = 'cell' + (i === EXPR_CELL ? ' cell-expr' : '') + (cellState[i] ? ' ' + cellState[i] : '') + (isActive ? ' active' : '');
         });
@@ -2048,6 +2111,9 @@
         } else if (key === 'x') {
             if (inTable || val.includes('x') || val.length >= 4) return;
             val = val + 'x';
+        } else if (key === '-') {   // 検定②の表の入力：符号の切り替え
+            if (!inTable || currentKentei !== 2 || val.includes('x')) return;
+            val = val.startsWith('-') ? val.slice(1) : '-' + val;
         } else if (/^[0-9]$/.test(key)) {
             if (val.includes('x') || val.length >= 5) return;
             if (val === '0' || val === '-0') val = val.slice(0, -1);   // 先頭の0は置き換える
@@ -2090,6 +2156,9 @@
         formulaBox.innerHTML = `<span style="color:#aaa; font-size:24px;">生徒番号を入力→【スタート】</span>`;
         setHint(HINT_DATA.start);
 
+        TABLE_X = (currentKentei === 2 ? DEFAULT_TABLE_X_2 : DEFAULT_TABLE_X).slice();
+        TABLE_CELLS = TABLE_X.map((_, i) => i);
+        buildTable();
         currentStage = 'table';
         cellVals = new Array(CELL_COUNT).fill('');
         cellState = new Array(CELL_COUNT).fill('');
@@ -2138,10 +2207,16 @@
         setStageUI('expr', 'locked-disabled', 'ロック中');
 
         const q = quizData[currentQuestionIndex];
+        if (currentKentei === 2) {
+            TABLE_X = q.xs.slice();
+            TABLE_CELLS = q.cells.slice();
+            activeIdx = TABLE_CELLS[0];
+            buildTable();
+        }
         progressEl.textContent = `第 ${currentQuestionIndex + 1} 問 / 全 ${QUESTION_COUNT} 問`;
         formulaBox.innerHTML = q.html;
         updateMathJax([formulaBox]);
-        setHint(HINT_DATA.tableInit);
+        setHint(hintKey('tableInit'));
 
         renderCells();
         updateControlKeysState('playing');
@@ -2166,7 +2241,7 @@
         const q = quizData[currentQuestionIndex];
         if (!q) return;
         const targetGroup = document.getElementById('group-' + currentStage);
-        setHint((currentStage === 'table') ? HINT_DATA.timeoutTable : HINT_DATA.timeoutExpr);
+        setHint((currentStage === 'table') ? hintKey('timeoutTable') : HINT_DATA.timeoutExpr);
         showStepError(targetGroup);
         startQuestionTimer();
     }
@@ -2203,6 +2278,12 @@
        10. 判定【固有】
        ========================================================================== */
 
+    /* --- 表のマスの正解（expectedCell）：0〜6＝yの欄、7〜13＝xの欄（検定②） --- */
+    function expectedCell(q, i) {
+        if (currentKentei === 2) return String(i >= XCELL_BASE ? q.xs[i - XCELL_BASE] : q.ys[i]);
+        return String(q.ys[i]);
+    }
+
     /* --- 判定（checkAnswer） --- */
     function checkAnswer() {
         const q = quizData[currentQuestionIndex];
@@ -2219,7 +2300,7 @@
             }
             let allOk = true;
             TABLE_CELLS.forEach(i => {
-                if (cellVals[i] === String(q.ys[i])) cellState[i] = 'ok';
+                if (cellVals[i] === expectedCell(q, i)) cellState[i] = 'ok';
                 else { cellState[i] = 'ng'; allOk = false; }
             });
             if (allOk) {
@@ -2229,7 +2310,7 @@
                 activeIdx = firstNg;
                 renderCells();
                 showStepError(document.getElementById('group-table'));
-                setHint(HINT_DATA.tableError);
+                setHint(hintKey('tableError'));
             }
             return;
         }
@@ -2297,7 +2378,7 @@
         return {
             html: `<div class="problem-inner">${html}</div>`,
             a: a,
-            ys: TABLE_X.map(x => a * x),
+            ys: DEFAULT_TABLE_X.map(x => a * x),
             exprAnswers: (a === 1) ? ['x'] : [`${a}x`]
         };
     }
@@ -2333,8 +2414,30 @@
         return makeQuestion(`1 本 ${a} 円の${item}を ${X} 本買ったときの代金を ${Y} 円とします。`, a);
     }
 
+    /* --- 検定②の1問（buildQuestion2）：y = a x。1列だけ x・y の両方を表示し、ほかの列は一方を空欄にする --- */
+    function buildQuestion2() {
+        const a = randInt(2, 9);
+        const xs = DEFAULT_TABLE_X_2.slice();
+        const ys = xs.map(x => a * x);
+        const nz = [0, 1, 2, 4, 5, 6];                       // x が 0 でない列
+        const clue = pick(nz);                                // x も y も書かれている列
+        const others = nz.filter(k => k !== clue);
+        const xBlankSet = new Set(shuffle(others).slice(0, randInt(2, 3)));   // xが空欄の列（2〜3個）
+        const blankX = xs.map((_, k) => xBlankSet.has(k));
+        const blankY = xs.map((_, k) => k !== clue && !xBlankSet.has(k));      // x=0 の列は y が空欄
+        const cells = [];                                     // 入力マスの順番：xの空欄 → yの空欄
+        xs.forEach((_, k) => { if (blankX[k]) cells.push(XCELL_BASE + k); });
+        xs.forEach((_, k) => { if (blankY[k]) cells.push(k); });
+        return {
+            html: `<div class="problem-inner">${Y} は ${X} に比例しています。</div>`,
+            a: a, xs: xs, ys: ys, blankX: blankX, blankY: blankY, cells: cells,
+            exprAnswers: [`${a}x`]
+        };
+    }
+
     /* --- 検定の問題セットの生成（generateQuizData）：1〜3問目は①②③をランダム順、4問目は④、5問目は⑤ --- */
     function generateQuizData() {
+        if (currentKentei === 2) return [0, 1, 2, 3, 4].map(() => buildQuestion2());
         const first = shuffle([1, 2, 3]);
         return [...first, 4, 5].map(buildType);
     }
@@ -2343,6 +2446,11 @@
     /* ==========================================================================
        12. ヒント【固有】
        ========================================================================== */
+    /* --- ヒント文の取得（hintKey）：検定②は「キー名+2」があればそちらを使う --- */
+    function hintKey(k) {
+        return (currentKentei === 2 && HINT_DATA[k + '2']) ? HINT_DATA[k + '2'] : HINT_DATA[k];
+    }
+
     const HINT_DATA = {
         start: "目指せ！パーフェクト！",
         tableInit: "文章から $x$ と $y$ の関係を考えて、$y$ の値を求めよう。<br>マスをタップするか、← → で移動できるよ。",
@@ -2352,6 +2460,9 @@
         exprInit: "表が完成したね！<br>最後に、$y$ = の右側を「$6x$」のように入力しよう。",
         exprError: "$x$ = 1 のときの $y$ の値に注目しよう。<br>$y$ = (決まった数) × $x$ の形になるよ。",
         timeoutExpr: "時間切れ！<br>表の $x$ = 1 のときの $y$ の値が、$x$ の前につく数だよ。",
+        tableInit2: "$x$ と $y$ が両方書かれている列を探そう。<br>$y$ ÷ $x$ の値（比例定数）がわかれば、ほかの空欄も求められるよ。<br>負の数は「−」キーで入力しよう。",
+        tableError2: "比例では、$y$ ÷ $x$ の値がいつも同じになるよ。<br>$x$ と $y$ が両方書かれている列から、比例定数を求めよう。",
+        timeoutTable2: "時間切れ！<br>$x$ と $y$ が両方書かれている列から、$y$ ÷ $x$（比例定数）を求めよう。",
         nextQuestion: "正解！<br>『次の問題』を押そう。",
         allFinished: "全問終了！<br>『送信』ボタンを押そう。"
     };
