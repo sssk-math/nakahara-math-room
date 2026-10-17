@@ -2281,7 +2281,9 @@ function isCurrentStageEmpty() {
             }
 
             if (active.classList.contains('editor-fraction-field')) {
-                if (!/^[0-9]$/.test(key)) {
+                // 検定②の途中式の枠だけ、分子の先頭に「−」を入れられる
+                const minusInExprNumerator = (key === '-' && currentKentei === 2 && currentStage === 'expression' && active.classList.contains('frac-top') && active.value === '');
+                if (!/^[0-9]$/.test(key) && !minusInExprNumerator) {
                     const fracNode = active.closest('.editor-fraction-node');
                     if (fracNode && fracNode.nextSibling) {
                         active = fracNode.nextSibling;
@@ -2343,6 +2345,11 @@ function isCurrentStageEmpty() {
             if (active.classList.contains('editor-text-node')) {
                 let val = active.value;
                 let match = val.match(/[0-9a-zA-Z]+$/);
+                // 検定②の途中式の枠では、分母の前の「−」も分母に含める（「(−」の「−」は除く）
+                if (currentStage === 'expression' && currentKentei === 2) {
+                    const mMinus = val.match(/-[0-9]+$/);
+                    if (mMinus && !(mMinus.index > 0 && val[mMinus.index - 1] === '(')) match = mMinus;
+                }
                 
                 if (match && match.index > 0) {
                     let preStr = val.substring(0, match.index);
@@ -2632,6 +2639,7 @@ function isCurrentStageEmpty() {
         const Ys = q.yNeg ? [q.yStr, `(${q.yStr})`] : [q.yStr];   // yが負のときは、かっこ付き・なしの両方
         if (q.aQ === 1) {
             set.add(`${xNeg ? '-' : ''}${q.yAbs}/${q.aP}`);                          // 縦型分数（符号は前に出す）
+            set.add(`${q.yStr}/${q.aSign < 0 ? '-' : ''}${q.aP}`);                   // 代入したままの縦型分数（例：-12/-3）
             const Rs = q.aSign < 0 ? [`(-1/${q.aP})`] : [`(1/${q.aP})`, `1/${q.aP}`];   // 逆数をかける形
             Ys.forEach(Y => Rs.forEach(R => set.add(`${Y}×${R}`)));
             if (q.aP === 1) { set.add(String(q.ansN)); if (xNeg) set.add(`(${q.ansN})`); }   // 式の数が1・-1のとき
@@ -2983,10 +2991,10 @@ function isCurrentStageEmpty() {
         stepSuccess: "途中式バッチリ！<br>計算して $y$ の値を求めよう。",
         timeoutAnswer2: "時間切れ！<br>$y$ を式の数でわって、もう一度計算しよう。",
         timeoutExpression2: "時間切れ！<br>$y$ を式の数でわる式を書こう。整数どうしは分数、分数がからむときは逆数をかけるよ。",
-        stepIntro2: "2回間違えたので、途中式を書こう！<br>$y$ を式の数でわる式を書くよ。整数どうしは縦型分数で、分数がからむときは逆数をかける形で書いてね。",
-        stepManual2: "途中式を書こう！<br>$y$ を式の数でわる式を書くよ。整数どうしは縦型分数で、分数がからむときは逆数をかける形で書いてね。",
+        stepIntro2: "2回間違えたので、途中式を書こう！<br>$y$ を式の数でわる式を書くよ。整数どうしは縦型分数で、負の数は「−」をつけたまま分子・分母に入れてね。分数がからむときは逆数をかける形で書いてね。",
+        stepManual2: "途中式を書こう！<br>$y$ を式の数でわる式を書くよ。整数どうしは縦型分数で、負の数は「−」をつけたまま分子・分母に入れてね。分数がからむときは逆数をかける形で書いてね。",
         stepSuccess2: "途中式バッチリ！<br>計算して $x$ の値を求めよう。",
-        exprError2: "途中式が違うよ！<br>整数どうしは「$y$ ÷ 式の数」を縦型分数で（符号は分数の前に）。分数がからむときは、$y$ に式の数の逆数をかけよう。",
+        exprError2: "途中式が違うよ！<br>整数どうしは「$y$ ÷ 式の数」を縦型分数で、負の数は「−」をつけたまま書いてね。分数がからむときは、$y$ に式の数の逆数をかけよう。",
         init21: "$y$ を、式の $x$ の前の数でわって $x$ を求めよう。",
         err21: "$x$ の前の数でわり算をしてみよう。$y$ をその数でわった答えが $x$ だよ。",
         init22: "$x$ は負の数になることもあるよ。符号に気をつけて、わり算で求めよう。",
