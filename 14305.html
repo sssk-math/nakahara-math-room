@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>14305.グラフから式を読む</title>
+<title>14305.比例：グラフを読む</title>
 <script>
 window.MathJax = { tex: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']] }, options: { enableMenu: false } };
 </script>
@@ -123,7 +123,8 @@ h1 { font-size:24px; color:#333; margin-bottom:5px; }
 .hint-body { font-size:15px; font-weight:bold; color:#495057; line-height:1.4; }
 footer { width:100%; text-align:center; font-size:12px; color:#000; font-weight:bold; padding:4px 0; border-top:1px solid #cfd8dc; position:absolute; bottom:0; left:0; background:#fff; border-radius:0 0 10px 10px; }
 .side-col { flex:1; min-width:0; display:flex; flex-direction:column; gap:5px; }
-.step-tabs { display:flex; flex-direction:column; gap:5px; }
+.step-tabs { display:flex; flex-direction:row; gap:5px; }
+.step-tabs .step-tab { flex:1; }
 .step-tab { text-align:left; font-size:16px; font-weight:bold; padding:6px 12px; border-radius:10px; background:#e9ecef; color:#868e96; }
 .step-tab.active { background:#007bff; color:#fff; }
 .step-tab.done { background:#28a745; color:#fff; }
@@ -169,8 +170,8 @@ footer { width:100%; text-align:center; font-size:12px; color:#000; font-weight:
 <div id="app-container">
     <div id="screen-start" class="app-screen start-screen">
         <div class="start-title" style="text-align:center;">
-            <div class="start-title-main">比例・反比例</div>
-            <div class="start-title-sub">グラフから式を読もう</div>
+            <div class="start-title-main">４章　変化と対応</div>
+            <div class="start-title-sub">比例：グラフを読む</div>
         </div>
         <div class="start-menu">
             <button class="start-menu-btn" onclick="enterKenteiScreen()">📝 検定</button>
@@ -211,7 +212,7 @@ footer { width:100%; text-align:center; font-size:12px; color:#000; font-weight:
         <header>
             <div class="title-bar">
                 <button class="title-hand-btn" id="hand-left-btn" onclick="changeHandedness('left')">👈 左利き</button>
-                <h1> グラフから式を読む</h1>
+                <h1>４章　変化と対応（比例：グラフを読む）</h1>
                 <button class="title-hand-btn active" id="hand-right-btn" onclick="changeHandedness('right')">右利き 👉</button>
             </div>
         </header>
@@ -221,7 +222,7 @@ footer { width:100%; text-align:center; font-size:12px; color:#000; font-weight:
                 <div id="timer-display">⏱️ 00:00.0</div>
                 <div class="record-box">
                     <div id="best-update-message"></div>
-                    <div class="best-label-container"><div id="best-normal-display">ベストタイム(2問): --:--.-</div></div>
+                    <div class="best-label-container"><div id="best-normal-display">ベストタイム(5問): --:--.-</div></div>
                 </div>
             </div>
             <div style="display:flex; align-items:center; gap:8px;">
@@ -375,7 +376,7 @@ const FORM_STAGE_COUNT_ID = 'entry.2033679053';  // 正解数
 const KENTEI_TIME_LIMIT_MS     = 4 * 60 * 1000;   // 検定の制限時間（4分）
 const POINT_TIME_LIMIT_SEC     = 45;              // 手順①（点→座標）の制限秒数
 const FORMULA_TIME_LIMIT_SEC   = 60;              // 手順②（式）の制限秒数
-const QUESTION_COUNT           = 2;   // 1問目＝a>0、2問目＝a<0
+const QUESTION_COUNT           = 5;   // 1,2問目＝a>0、3,4問目＝a<0、5問目＝符号ランダム
 let questionTimeLeft = POINT_TIME_LIMIT_SEC;
 
 const KENTEI_RECORDS_KEY = 'hirei_yomu_kentei_records_v1';
@@ -1650,10 +1651,10 @@ function buildQuestion(a) {
     };
 }
 function generateQuizData() {
-    const v = shuffle([1, 2, 3]);
-    return [buildQuestion(v[0]), buildQuestion(-v[1])];
+    const v = shuffle([1, 2, 3, 4, 5]);
+    return [buildQuestion(v[0]), buildQuestion(v[1]), buildQuestion(-v[2]), buildQuestion(-v[3]),
+            buildQuestion(Math.random() < 0.5 ? v[4] : -v[4])];
 }
-
 
 /* ==========================================================================
    12. ヒント【固有】
