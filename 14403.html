@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>14403.反比例の式を求める</title>
+    <title>14403.反比例：式を求める</title>
     <script>
         /* ==========================================================================
            1. MathJaxの基本設定
@@ -865,7 +865,6 @@
             justify-content: center;
             position: relative;
             cursor: pointer;
-            transition: all 0.2s;
             margin-bottom: 2px;
         }
         /* --- 入力グループのフォーカス状態スタイル --- */
@@ -1138,8 +1137,8 @@
     <div id="app-container">
         <div id="screen-start" class="app-screen start-screen">
             <div class="start-title" style="text-align:center;">
-                <div class="start-title-main">反比例の式を求める</div>
-                <div class="start-title-sub">y を x の式で表そう</div>
+                <div class="start-title-main">４章　変化と対応</div>
+                <div class="start-title-sub">反比例：式で表す</div>
             </div>
             <div class="start-menu">
                 <button class="start-menu-btn" onclick="enterKenteiScreen(1)">📝 検定</button>
@@ -1189,7 +1188,7 @@
         <header>
             <div class="title-bar">
                 <button class="title-hand-btn" id="hand-left-btn" onclick="changeHandedness('left')">👈 左利き</button>
-                <h1 id="kentei-title"> 反比例の式を求める（検定）</h1>
+                <h1>４章　変化と対応（反比例：式を求める）</h1>
                 <button class="title-hand-btn active" id="hand-right-btn" onclick="changeHandedness('right')">右利き 👉</button>
             </div>
         </header>
@@ -1876,7 +1875,6 @@
     function enterKenteiScreen(k = 1) {
         currentKentei = k;
         loadKenteiRecords();
-        document.getElementById('kentei-title').textContent = ' 反比例の式を求める（検定）';
         document.getElementById('label-answer').textContent = 'y を x の式で';
         const bestDisplayEl = document.getElementById('best-normal-display');
         if (bestDisplayEl) bestDisplayEl.innerText = bestTimeText(bestNormalTimeMs !== null ? formatMs(bestNormalTimeMs) : '--:--.-');
