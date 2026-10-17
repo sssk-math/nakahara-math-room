@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>14305.グラフから式を読む</title>
+<script>
+window.MathJax = { tex: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']] }, options: { enableMenu: false } };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+<style>
+/* ===== 1. 全体 ===== */
+* { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+html { height:100%; overflow:hidden; overscroll-behavior:none; }
+body { position:fixed; top:0; left:0; width:100%; height:100%; overscroll-behavior:none; touch-action:manipulation; background:#fff; font-family:'Helvetica Neue',Arial,'Hiragino Kaku Gothic ProN','Hiragino Sans',Meiryo,sans-serif; display:flex; justify-content:center; align-items:flex-start; -webkit-touch-callout:none; min-height:100vh; overflow:hidden; }
+#app-container { width:960px; height:640px; flex-shrink:0; min-width:960px; min-height:640px; background:#fff; border:2px solid #333; border-radius:12px; position:relative; transform-origin:top center; display:flex; flex-direction:column; justify-content:flex-start; padding:10px 20px; }
+
+/* ===== 2. ヘッダー ===== */
+header { text-align:center; }
+h1 { font-size:24px; color:#333; margin-bottom:5px; }
+.title-bar { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:15px; }
+.title-hand-btn { padding:6px 14px; font-size:.85rem; font-weight:bold; background:#e0e0e0; border:none; border-radius:6px; cursor:pointer; white-space:nowrap; }
+.title-hand-btn.active { background:#1a73e8; color:#fff; }
+.game-layout.left-handed { flex-direction:row-reverse; }
+
+/* ===== 3. キー・ボタン ===== */
+.keypad { display:grid; grid-template-columns:repeat(5,56px); gap:1px; margin-bottom:8px; }
+.key { height:46px; font-size:24px; font-weight:bold; background:#f1f3f5; border:1px solid #ced4da; border-radius:6px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .1s; }
+.key:active:not(:disabled) { background:#dee2e6; transform:scale(.95); }
+.key.num-btn { font-family:'MathJax_Main','Times New Roman',Times,serif; }
+.key.op-btn { background:#e7f5ff; border-color:#a5d8ff; color:#007bff; font-size:20px; }
+.key.var-btn { background:#f3f0ff; border-color:#d0bfff; color:#6f42c1; }
+.key.arrow-btn { background:#fff3e0; border-color:#ffe0b2; color:#e65100; font-weight:bold; }
+.keypad button:disabled { background:#d1d5db !important; color:#9ca3af !important; border-color:#cbd5e1 !important; cursor:not-allowed; opacity:.6; transform:none !important; }
+.control-keys { display:grid; grid-template-columns:repeat(3,92px); gap:4px; width:100%; justify-content:center; }
+.key.action-btn { background:#28a745; color:#fff; font-size:18px; height:46px; border-color:#1e7e34; width:100%; }
+.key.action-btn.judge-mode { background:#007bff; border-color:#0069d9; }
+.key.clear-btn { background:#e9ecef; font-size:16px; height:46px; width:100%; color:#333; }
+.key.action-btn-back { background:#fb8c00; color:#fff; border:none; font-size:18px; height:46px; width:100%; }
+.key.action-btn:disabled, .key.clear-btn:disabled, .key.action-btn-back:disabled { opacity:.55; cursor:not-allowed; }
+.key-mini { height:40px; font-size:18px; font-weight:bold; background:#f1f3f5; border:1px solid #ced4da; border-radius:6px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.key-mini:active { background:#dee2e6; }
+.key-mini.btn-clear { grid-column:span 2; background:#ffebee; border-color:#ffcdd2; color:#c62828; font-size:14px; }
+#send-btn { padding:6px 12px; font-size:15px; background:#1a73e8; color:#fff; border:none; border-radius:5px; cursor:pointer; height:34px; min-width:76px; font-weight:bold; }
+#send-btn:disabled { background:#ccc; color:#888; cursor:not-allowed; }
+
+/* ===== 4. 画面・開始・記録・設定 ===== */
+.app-screen { display:flex; flex-direction:column; flex:1; min-height:0; background:#eceff1; }
+#screen-kentei { background:#fff; }
+.start-screen { justify-content:center; align-items:center; gap:28px; }
+.start-title-main { font-size:18px; color:#333; }
+.start-title-sub { font-size:28px; font-weight:bold; color:#333; margin-top:4px; }
+.start-menu { display:flex; flex-direction:column; gap:16px; width:320px; }
+.start-menu-btn { height:64px; font-size:20px; font-weight:bold; color:#fff; background:#1a73e8; border:none; border-radius:10px; cursor:pointer; }
+.start-menu-btn:active { transform:scale(.97); }
+.sub-screen-header { text-align:center; margin-bottom:10px; }
+.sub-screen-header h1 { font-size:22px; margin-bottom:0; }
+.btn-tutorial-hud-secondary { padding:10px 18px; font-size:15px; font-weight:bold; background:#e3f2fd; color:#1565c0; border:1px solid #90caf9; border-radius:8px; cursor:pointer; }
+.kiroku-cards { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; width:560px; margin:0 auto; }
+.kiroku-card { background:#fff; border:1px solid #dee2e6; border-radius:10px; padding:10px 18px; text-align:center; }
+.kiroku-card-label { font-size:13px; color:#666; margin-bottom:4px; }
+.kiroku-card-value { font-size:18px; font-weight:bold; color:#1a73e8; }
+.placeholder-screen { justify-content:center; align-items:center; gap:24px; }
+.settei-reset-buttons { display:flex; flex-direction:column; align-items:center; gap:16px; }
+.settei-reset-btn { width:280px; height:52px; font-size:16px; font-weight:bold; color:#c0392b; background:#fdecea; border:1px solid #f1a9a0; border-radius:10px; cursor:pointer; }
+.reset-confirm-overlay { position:absolute; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:100; border-radius:12px; }
+.reset-confirm-box { width:340px; background:#fff; border-radius:12px; padding:24px 20px; text-align:center; box-shadow:0 6px 20px rgba(0,0,0,.25); }
+.reset-confirm-message { font-size:15px; color:#333; line-height:1.6; margin-bottom:20px; }
+.reset-confirm-buttons { display:flex; gap:12px; justify-content:center; }
+.reset-confirm-cancel, .reset-confirm-ok { flex:1; height:44px; font-size:15px; font-weight:bold; border-radius:8px; cursor:pointer; border:none; }
+.reset-confirm-cancel { background:#e9ecef; color:#333; }
+.reset-confirm-ok { background:#e74c3c; color:#fff; }
+
+/* ===== 5. タイマー・生徒番号 ===== */
+.timer-container { display:flex; justify-content:space-between; align-items:center; background:#f1f3f4; padding:8px 16px; border-radius:6px; margin-top:8px; font-weight:bold; height:52px; }
+#timer-display { font-size:20px; color:#1a73e8; font-variant-numeric:tabular-nums; min-width:110px; }
+.record-box { display:flex; flex-direction:column; align-items:flex-start; justify-content:center; border-left:2px solid #ccc; padding-left:12px; height:100%; }
+#best-update-message { font-size:12px; font-weight:bold; color:#1a73e8; white-space:nowrap; height:1.2em; margin-bottom:1px; }
+.best-label-container { display:flex; gap:15px; font-size:12px; color:#5f6368; white-space:nowrap; }
+.number-field-wrapper { position:relative; display:inline-block; }
+.login-input { font-size:15px; padding:4px 8px; border:2px solid #ccc; border-radius:6px; outline:none; font-weight:normal; width:80px; }
+.login-input:focus { border-color:#1a73e8; }
+.input-tooltip { display:none; position:absolute; top:120%; left:50%; transform:translateX(-50%); background:#fff; border:2px solid #333; color:#333; padding:12px; border-radius:10px; box-shadow:0 4px 15px rgba(0,0,0,.15); z-index:100; width:210px; }
+.input-tooltip::before { content:""; position:absolute; bottom:100%; left:50%; transform:translateX(-50%); border:8px solid transparent; border-bottom-color:#333; }
+.input-tooltip.show { display:block; }
+.tooltip-hint { font-size:11px; font-weight:bold; color:#5f6368; margin-bottom:8px; text-align:center; line-height:1.4; white-space:nowrap; }
+.keypad-mini { display:grid; grid-template-columns:repeat(3,56px); gap:6px; justify-content:center; }
+.error-msg { color:#d32f2f; font-size:12px; margin-top:8px; font-weight:bold; display:none; text-align:center; white-space:nowrap; }
+
+/* ===== 6. ゲーム画面 ===== */
+.game-layout { display:flex; flex-grow:1; width:100%; align-items:flex-start; justify-content:space-between; gap:20px; margin-top:8px; }
+.left-panel { flex:1; min-width:0; display:flex; flex-direction:column; align-items:stretch; }
+.right-panel { width:285px; display:flex; flex-direction:column; align-items:center; }
+.question-wrapper { display:flex; flex-direction:row; align-items:center; justify-content:space-between; gap:8px; width:100%; height:26px; }
+.question-text { font-size:19px; color:#333; font-weight:bold; white-space:nowrap; }
+.q-status { display:flex; align-items:center; gap:12px; white-space:nowrap; }
+.progress { font-size:16px; color:#666; }
+.formula-display { font-size:22px; text-align:center; color:#000; margin:3px 0 5px; background:#f8f9fa; padding:1px 10px; border-radius:8px; border:2px solid #ccc; height:65px; width:100%; display:flex; align-items:center; justify-content:center; }
+.formula-display mjx-container { display:inline !important; }
+.problem-inner { display:block; width:100%; }
+.graph-row { display:flex; gap:8px; width:100%; align-items:flex-start; }
+.graph-frame { touch-action:none; flex:none; width:370px; height:370px; background:#fff; border:2px solid #ced4da; border-radius:8px; overflow:hidden; transition:opacity .2s, border-color .2s, background-color .2s; }
+#graph-svg { display:block; width:100%; height:100%; cursor:crosshair; touch-action:none; }
+.graph-frame.inactive { opacity:.5; pointer-events:none; }
+.graph-frame.locked-correct { border-color:#81c784; background:#e8f5e9; }
+.graph-frame.locked-correct.inactive { opacity:1; }
+.graph-frame.error-shake { border-color:#e57373; background:#ffebee; animation:graph-shake .35s; }
+@keyframes graph-shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-6px)} 40%,80%{transform:translateX(6px)} }
+.svg-axis-label { font-size:22px; font-style:italic; fill:#333; }
+.svg-tick-label { font-size:21px; fill:#555; }
+.step-tab.active { background:#007bff; color:#fff; }
+.step-tab.done { background:#28a745; color:#fff; }
+.input-box-group.active-focus { border-color:#007bff; background:#f0f7ff; box-shadow:0 0 0 3px rgba(0,123,255,.15); }
+.input-box-group.locked-correct { border-color:#81c784; background:#e8f5e9; }
+.input-box-group.locked-disabled { border-color:#e9ecef; background:#f8f9fa; opacity:.6; }
+.input-box-group.error-shake { border-color:#e57373; background:#ffebee; }
+@keyframes caret-blink { 50% { opacity:0; } }
+.result-message { font-size:15px; font-weight:bold; min-height:40px; margin-top:6px; text-align:center; display:flex; align-items:center; justify-content:center; white-space:pre-wrap; width:100%; }
+.correct { color:#28a745; }
+.incorrect { color:#e67e22; }
+.hint-container { width:100%; height:205px; background:#fff9db; border:1px dashed #f59f00; border-radius:8px; padding:10px 12px; display:flex; flex-direction:column; overflow-y:auto; margin-bottom:8px; }
+.hint-title { font-size:13px; font-weight:bold; color:#f59f00; margin-bottom:4px; }
+.hint-body { font-size:15px; font-weight:bold; color:#495057; line-height:1.4; }
+footer { width:100%; text-align:center; font-size:12px; color:#000; font-weight:bold; padding:4px 0; border-top:1px solid #cfd8dc; position:absolute; bottom:0; left:0; background:#fff; border-radius:0 0 10px 10px; }
+.side-col { flex:1; min-width:0; display:flex; flex-direction:column; gap:5px; }
+.step-tabs { display:flex; flex-direction:column; gap:5px; }
+.step-tab { text-align:left; font-size:16px; font-weight:bold; padding:6px 12px; border-radius:10px; background:#e9ecef; color:#868e96; }
+.step-tab.active { background:#007bff; color:#fff; }
+.step-tab.done { background:#28a745; color:#fff; }
+.input-box-group { background:#fff; border:2px solid #ced4da; border-radius:8px; padding:4px 6px; transition:all .2s; position:relative; display:flex; flex-direction:column; justify-content:center; }
+.grp-head { display:flex; align-items:center; justify-content:space-between; min-height:26px; margin:0 2px 3px; font-size:14px; font-weight:bold; color:#495057; }
+.field-row { display:flex; align-items:center; justify-content:center; gap:5px; font-family:'Times New Roman',Times,serif; font-size:20px; color:#000; }
+.field-row .lbl { font-family:'Helvetica Neue',Arial,'Hiragino Kaku Gothic ProN','Hiragino Sans',Meiryo,sans-serif; font-size:14px; font-weight:bold; color:#495057; margin-right:4px; }
+.fbox { min-width:50px; height:34px; padding:0 6px; border:2px solid #ced4da; border-radius:6px; background:transparent; display:flex; align-items:center; justify-content:center; font-size:20px; font-family:'Times New Roman',Times,serif; cursor:default; pointer-events:none; }
+.fbox.wide { min-width:104px; }
+.fbox i { font-style:italic; }
+.fbox.active { outline:3px solid #007bff; outline-offset:-3px; background:#fff; }
+.fbox.active::after { content:''; display:inline-block; width:2px; height:18px; background:#007bff; margin-left:1px; animation:caret-blink 1s step-end infinite; }
+.fbox.ok { border-color:#81c784; background:#e8f5e9; cursor:default; }
+.fbox.ng { border-color:#e57373; background:#ffebee; }
+@keyframes caret-blink { 50% { opacity:0; } }
+.graph-frame.frozen { pointer-events:none; }
+.problem-inner { font-size:20px; line-height:1.35; }
+.key.frac-btn { background-color:#fff9db; border-color:#fff3bf; color:#f59f00; font-size:18px; }
+.input-label { font-size:13px; color:#495057; font-weight:bold; margin-bottom:0; display:flex; justify-content:space-between; align-items:center; }
+.step-badge { font-size:11px; padding:1px 6px; border-radius:4px; background-color:#dee2e6; color:#495057; }
+.locked-correct .step-badge { background-color:#28a745; color:#fff; }
+.mathjax-render-zone { min-height:34px; font-size:22px; color:#212529; display:flex; align-items:center; justify-content:center; overflow:hidden; width:100%; }
+.equation-grid { display:grid; grid-template-columns:1fr 40px 1fr; align-items:center; width:100%; }
+.eq-left { text-align:right; display:flex; align-items:center; justify-content:flex-end; white-space:nowrap; }
+.eq-equal { text-align:center; display:flex; align-items:center; justify-content:center; white-space:nowrap; }
+.eq-right { text-align:left; display:flex; align-items:center; justify-content:flex-start; white-space:nowrap; }
+.math-editor-container { position:absolute; opacity:0; pointer-events:none; z-index:-1; width:0; height:0; overflow:hidden; }
+.math-editor-container.wide-fraction-mode { height:60px; padding:4px 14px; flex-wrap:wrap; overflow:visible; border:none !important; background-color:transparent !important; }
+.placeholder-text { font-size:16px; color:#adb5bd; }
+.editor-text-node { border:none; outline:none; font-size:24px; text-align:left; min-width:20px; height:32px; background:transparent; color:#000; pointer-events:none; }
+.editor-text-node::placeholder { font-size:16px; color:#adb5bd; }
+.step-box-small { display:inline-flex; align-items:center; justify-content:center; min-width:50px; height:34px; border:2px solid #ced4da; border-radius:6px; background-color:#f0f7ff; color:#000; font-weight:bold; font-size:20px; margin:0; padding:0 8px; }
+.step-box-small.active-side { border-color:#007bff; background-color:#f8f9fa; box-shadow:0 0 0 3px rgba(0,123,255,0.15); }
+.locked-correct .step-box-small { border:none !important; background-color:transparent !important; box-shadow:none !important; padding:0; margin:0; }
+.editor-fraction-node { display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; min-width:40px; margin:0 4px; }
+.editor-fraction-line { width:100%; height:2px; background-color:#333; margin:2px 0; }
+.editor-fraction-field { width:40px; height:24px; font-size:20px; text-align:center; border:none !important; background-color:transparent !important; outline:none; color:#000; pointer-events:none; font-family:'Times New Roman',Times,serif !important; font-style:italic !important; }
+#group-formula.active-focus:not(.error-shake) { background:#fff; }
+</style>
+</head>
+
+<body>
+<div id="app-container">
+    <div id="screen-start" class="app-screen start-screen">
+        <div class="start-title" style="text-align:center;">
+            <div class="start-title-main">比例・反比例</div>
+            <div class="start-title-sub">グラフから式を読もう</div>
+        </div>
+        <div class="start-menu">
+            <button class="start-menu-btn" onclick="enterKenteiScreen()">📝 検定</button>
+            <button class="start-menu-btn" onclick="showScreen('screen-kiroku'); renderKirokuScreen();">🏆 記録</button>
+            <button class="start-menu-btn" onclick="showScreen('screen-settei')">⚙️ 設定</button>
+        </div>
+    </div>
+
+    <div id="screen-kiroku" class="app-screen" style="display:none; align-items:center; justify-content:center; gap:16px;">
+        <div class="sub-screen-header"><h1>🏆 記録</h1></div>
+        <div class="kiroku-cards">
+            <div class="kiroku-card"><div class="kiroku-card-label">検定：受検回数</div><div class="kiroku-card-value" id="kiroku-attempts">0回</div></div>
+            <div class="kiroku-card"><div class="kiroku-card-label">検定：ベストタイム</div><div class="kiroku-card-value" id="kiroku-best-time">--:--.-</div></div>
+            <div class="kiroku-card"><div class="kiroku-card-label">検定：連続正解記録</div><div class="kiroku-card-value" id="kiroku-streak">現在：0問／最高：0問</div></div>
+        </div>
+        <button class="btn-tutorial-hud-secondary" onclick="showScreen('screen-start')">←開始画面へ</button>
+    </div>
+
+    <div id="screen-settei" class="app-screen placeholder-screen" style="display:none;">
+        <div class="sub-screen-header"><h1>⚙️ 設定</h1></div>
+        <div class="settei-reset-buttons">
+            <button class="settei-reset-btn" onclick="openResetConfirm('kiroku')">🗑️ 記録をリセットする</button>
+        </div>
+        <button class="btn-tutorial-hud-secondary" onclick="showScreen('screen-start')">←開始画面へ</button>
+    </div>
+
+    <div id="reset-confirm-modal" class="reset-confirm-overlay" style="display:none;">
+        <div class="reset-confirm-box">
+            <div class="reset-confirm-message" id="reset-confirm-message"></div>
+            <div class="reset-confirm-buttons">
+                <button class="reset-confirm-cancel" onclick="closeResetConfirm()">キャンセル</button>
+                <button class="reset-confirm-ok" onclick="confirmReset()">リセットする</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-kentei" class="app-screen" style="display:none;">
+        <header>
+            <div class="title-bar">
+                <button class="title-hand-btn" id="hand-left-btn" onclick="changeHandedness('left')">👈 左利き</button>
+                <h1> グラフから式を読む</h1>
+                <button class="title-hand-btn active" id="hand-right-btn" onclick="changeHandedness('right')">右利き 👉</button>
+            </div>
+        </header>
+
+        <div class="timer-container" id="timer-container-area">
+            <div style="display:flex; align-items:center; gap:15px;">
+                <div id="timer-display">⏱️ 00:00.0</div>
+                <div class="record-box">
+                    <div id="best-update-message"></div>
+                    <div class="best-label-container"><div id="best-normal-display">ベストタイム(2問): --:--.-</div></div>
+                </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <div class="number-field-wrapper" id="wrapper-area">
+                    <input type="text" id="number-field" class="login-input" placeholder="生徒番号" readonly autocomplete="off">
+                    <div class="input-tooltip" id="number-tooltip">
+                        <div class="tooltip-hint">
+                            💡 1年2組34番 → 「1234」<br>
+                            <span style="font-size:10px; color:#888;">クラス: 1〜5組 / 番号: 01〜35</span>
+                        </div>
+                        <div class="keypad-mini">
+                            <button class="key-mini" onclick="pressNum('7')">7</button>
+                            <button class="key-mini" onclick="pressNum('8')">8</button>
+                            <button class="key-mini" onclick="pressNum('9')">9</button>
+                            <button class="key-mini" onclick="pressNum('4')">4</button>
+                            <button class="key-mini" onclick="pressNum('5')">5</button>
+                            <button class="key-mini" onclick="pressNum('6')">6</button>
+                            <button class="key-mini" onclick="pressNum('1')">1</button>
+                            <button class="key-mini" onclick="pressNum('2')">2</button>
+                            <button class="key-mini" onclick="pressNum('3')">3</button>
+                            <button class="key-mini" onclick="pressNum('0')">0</button>
+                            <button class="key-mini btn-clear" onclick="pressClear()">⌫ 消す</button>
+                        </div>
+                        <div class="error-msg" id="error-display">存在しない番号です</div>
+                    </div>
+                </div>
+                <button id="send-btn" onclick="manualSendToGoogleForm()" disabled>送信</button>
+            </div>
+        </div>
+
+        <div class="main-content" id="quiz-screen">
+            <div class="game-layout">
+                <div class="left-panel">
+                    <div class="question-wrapper">
+                        <div class="question-text">次の問いに答えなさい。</div>
+                        <div class="q-status">
+                            <span id="countdown-timer" style="display:none; color:#e57373; font-weight:bold; font-size:18px;"></span>
+                            <span class="progress" id="progress">スタートボタンを押してください。</span>
+                        </div>
+                    </div>
+                    <div class="formula-display" id="formula-box"></div>
+                    <div class="graph-row">
+                        <div class="graph-frame inactive" id="graph-frame">
+                            <svg id="graph-svg" viewBox="0 0 480 480" xmlns="http://www.w3.org/2000/svg"></svg>
+                        </div>
+                        <div class="side-col">
+                            <div class="step-tabs">
+                                <span class="step-tab" id="tab-point">① 点→座標</span>
+                                <span class="step-tab" id="tab-formula">② 式</span>
+                            </div>
+                            <div class="input-box-group locked-disabled" id="group-point">
+                                <div class="grp-head"><span>とった点の座標</span></div>
+                                <div class="field-row">
+                                    <span>(</span><div class="fbox" id="box-cx"></div><span>,</span><div class="fbox" id="box-cy"></div><span>)</span>
+                                </div>
+                            </div>
+                            <div class="input-box-group locked-disabled" id="group-a" style="display:none;">
+                                <div class="input-label"><span>比例定数 a を求める式</span><span class="step-badge" id="badge-expression">入力中</span></div>
+                                <div id="math-preview-expression" class="mathjax-render-zone"></div>
+                                <div id="math-editor-expression-left" class="math-editor-container"></div>
+                                <div id="math-editor-expression-right" class="math-editor-container"></div>
+                            </div>
+                            <div class="input-box-group locked-disabled" id="group-formula">
+                                <div class="input-label"><span>比例の式</span><span class="step-badge" id="badge-answer">ロック中</span></div>
+                                <div id="math-preview-answer" class="mathjax-render-zone"></div>
+                                <div id="math-editor-answer-right" class="math-editor-container"></div>
+                            </div>
+                            <div id="result-message" class="result-message"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="right-panel">
+                    <div class="hint-container" id="hint-container">
+                        <div class="hint-title">💡 考え方のヒント</div>
+                        <div class="hint-body" id="hint-text">目指せ！パーフェクト！</div>
+                    </div>
+                    <div class="keypad">
+                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('7')" data-k="7">$7$</button>
+                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('8')" data-k="8">$8$</button>
+                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('9')" data-k="9">$9$</button>
+                        <button class="key op-btn" onmousedown="event.preventDefault()" onclick="pressKey('+')" disabled>$+$</button>
+                        <button class="key op-btn" onmousedown="event.preventDefault()" onclick="pressKey('-')" data-k="-">$-$</button>
+
+                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('4')" data-k="4">$4$</button>
+                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('5')" data-k="5">$5$</button>
+                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('6')" data-k="6">$6$</button>
+                        <button class="key op-btn" onmousedown="event.preventDefault()" onclick="pressKey('×')" disabled>$×$</button>
+                        <button class="key frac-btn" onmousedown="event.preventDefault()" onclick="convertDenominatorToFraction()" data-k="frac">分の</button>
+
+                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('1')" data-k="1">$1$</button>
+                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('2')" data-k="2">$2$</button>
+                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('3')" data-k="3">$3$</button>
+                        <button class="key arrow-btn" id="key-prev" onmousedown="event.preventDefault()" onclick="pressKey('prev')" data-k="prev">←</button>
+                        <button class="key arrow-btn" id="key-next" onmousedown="event.preventDefault()" onclick="pressKey('next')" data-k="next">→</button>
+
+                        <button class="key num-btn" onmousedown="event.preventDefault()" onclick="pressKey('0')" data-k="0">$0$</button>
+                        <button class="key paren-btn" onmousedown="event.preventDefault()" onclick="pressKey('(')" disabled>$($</button>
+                        <button class="key paren-btn" onmousedown="event.preventDefault()" onclick="pressKey(')')" disabled>$)$</button>
+                        <button class="key var-btn" onmousedown="event.preventDefault()" onclick="pressKey('x')" data-k="x">$x$</button>
+                        <button class="key op-btn" onmousedown="event.preventDefault()" onclick="pressKey('=')" data-k="=">$=$</button>
+                    </div>
+
+                    <div class="control-keys">
+                        <button class="key action-btn" id="action-btn" onclick="handleAction()">スタート</button>
+                        <button class="key clear-btn" id="clear-btn" onmousedown="event.preventDefault()" onclick="handleCenterBtn()">消す</button>
+                        <button class="key clear-btn" id="clear-all-btn" onmousedown="event.preventDefault()" onclick="handleRightBtn()">全消去</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>© 中原先生の数学部屋</footer>
+</div>
+
+<iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
+
+<script>
+/* ==========================================================================
+   1. グローバル変数・設定【共通・固有】
+   ========================================================================== */
+let startTime = 0, timerInterval = null, bestNormalTimeMs = null, kenteiAttemptCount = 0;
+let lastClearTimeText = "", elapsedBeforeResume = 0;
+let gameStarted = false, isCompleted = false, isCorrectState = false;
+let quizData = [], currentQuestionIndex = 0, score = 0, currentQuestionWrongCount = 0;
+let questionTimerId = null, currentControlState = 'start';
+let practiceMode = false;   // このアプリには練習モードはない（共通関数が参照するため残している）
+
+const container   = document.getElementById('app-container');
+const formulaBox  = document.getElementById('formula-box');
+const actionBtn   = document.getElementById('action-btn');
+const clearBtn    = document.getElementById('clear-btn');
+const clearAllBtn = document.getElementById('clear-all-btn');
+const resultMsgEl = document.getElementById('result-message');
+const progressEl  = document.getElementById('progress');
+let mathjaxPromise = Promise.resolve();
+
+const numberField  = document.getElementById('number-field');
+const tooltip      = document.getElementById('number-tooltip');
+const errorDisplay = document.getElementById('error-display');
+let isConfirmed = false;
+
+let correctStreakCount = 0, maxStreakCount = 0, pendingResetType = null;
+
+const GOOGLE_FORM_URL = 'https://docs.google.com/forms/d/e/*****変更箇所*****/formResponse';
+const FORM_NUM_ID         = 'entry.351767117';   // 問題番号
+const FORM_TIME_ID        = 'entry.1218861448';  // クリアタイム
+const FORM_STAGE_COUNT_ID = 'entry.2033679053';  // 正解数
+
+const KENTEI_TIME_LIMIT_MS     = 4 * 60 * 1000;   // 検定の制限時間（4分）
+const POINT_TIME_LIMIT_SEC     = 45;              // 手順①（点→座標）の制限秒数
+const FORMULA_TIME_LIMIT_SEC   = 60;              // 手順②（式）の制限秒数
+const QUESTION_COUNT           = 2;   // 1問目＝a>0、2問目＝a<0
+let questionTimeLeft = POINT_TIME_LIMIT_SEC;
+
+const KENTEI_RECORDS_KEY = 'hirei_yomu_kentei_records_v1';
+
+/* --- 座標平面（viewBox 480×480、原点は中央、1目盛り34px、表示範囲 -6〜6） --- */
+const GRAPH = { size: 480, center: 240, unit: 34, range: 6 };
+const POINT_R = 9;
+
+/* --- 入力状態 --- */
+let currentStage = 'point';      // 'point'（点→座標）→ 'formula'（式）
+let stageProgress = 0;           // 完了した手順の数（0〜2）
+let fieldVals  = { cx: '', cy: '' };   // cx,cy＝とった点の座標（比例定数・式の入力枠は数式エディタ）
+let fieldState = { cx: '', cy: '' };   // ''＝未判定 / 'ok' / 'ng'
+let activeEditorId = 'math-editor-answer-right';   // 数式エディタで入力中の枠
+let activeField = 'cx';
+let picked = null;               // とった点 {x,y}（1点だけ）
+let pickedState = '';            // ''＝未判定 / 'ng' / 'ok'
+let stepsShown = false;          // 途中式（比例定数の枠）を表示したか
+let stepsDone = false;           // 途中式（比例定数）が正解になり、式の枠に進んだか
+let judgeLocked = false;         // 不正解後、入力を直すまで判定できない
+
+
+/* ==========================================================================
+   2. 画面・表示【共通】
+   ========================================================================== */
+function resizeApp() {
+    const scale = Math.min(window.innerWidth / 960, window.innerHeight / 640, 1);
+    container.style.transform = `scale(${scale})`;
+}
+function showScreen(screenId) {
+    document.querySelectorAll('.app-screen').forEach(el => { el.style.display = 'none'; });
+    const target = document.getElementById(screenId);
+    if (target) target.style.display = 'flex';
+}
+function updateMathJax(elements) {
+    if (window.MathJax && MathJax.typesetPromise) {
+        if (MathJax.typesetClear) MathJax.typesetClear(elements);
+        mathjaxPromise = mathjaxPromise.then(() => MathJax.typesetPromise(elements))
+            .catch((err) => console.log("MathJax typesetting failed: " + err.message));
+    }
+}
+function setHint(html) {
+    const el = document.getElementById('hint-text');
+    el.innerHTML = html;
+    updateMathJax([el]);
+}
+
+
+/* ==========================================================================
+   3. タイマー【共通】
+   ========================================================================== */
+function startTimerClock() {
+    isCorrectState = false;
+    lastClearTimeText = "";
+    elapsedBeforeResume = 0;
+    startTime = Date.now();
+    clearInterval(timerInterval);
+    timerInterval = setInterval(updateTimer, 100);
+    document.getElementById('best-update-message').innerText = "";
+    const sendBtn = document.getElementById('send-btn');
+    if (sendBtn) { sendBtn.disabled = true; sendBtn.textContent = "送信"; }
+    if (numberField) numberField.disabled = false;
+}
+function updateTimer() {
+    const diff = (Date.now() - startTime) + elapsedBeforeResume;
+    if (diff >= KENTEI_TIME_LIMIT_MS) { handleKenteiTimeUp(); return; }
+    const min = Math.floor(diff / 60000);
+    const sec = Math.floor((diff % 60000) / 1000);
+    const msec = Math.floor((diff % 1000) / 100);
+    document.getElementById('timer-display').innerText = `⏱️ ${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}.${msec}`;
+}
+function handleKenteiTimeUp() {
+    if (!gameStarted || isCompleted) return;
+    clearInterval(timerInterval);
+    clearInterval(questionTimerId);
+    isCompleted = true;
+    document.getElementById('timer-display').innerText = `⏱️ ${formatMs(KENTEI_TIME_LIMIT_MS)}`;
+    correctStreakCount = 0;
+    saveKenteiRecords();
+    if (document.activeElement) document.activeElement.blur();
+    stopTimerClockAndEvaluate(true);
+    resultMsgEl.textContent = `時間切れ！全 ${quizData.length} 問中 ${score} 問ノーミス正解`;
+    resultMsgEl.className = "result-message incorrect";
+    progressEl.textContent = "時間切れ！";
+    setGraphActive(false);
+    setHint(HINT_DATA.allFinished);
+    updateStageTabs();
+    updateControlKeysState('finished'); updateSendButtonState();
+}
+function stopTimerClockAndEvaluate(isTimeUp = false) {
+    clearInterval(timerInterval);
+    isCorrectState = true;
+    clearInterval(questionTimerId);
+    document.getElementById('countdown-timer').style.display = 'none';
+    const finalTimeStr = document.getElementById('timer-display').innerText.replace('⏱️ ', '');
+    lastClearTimeText = finalTimeStr;
+
+    const totalElapsedTimeMs = isTimeUp ? KENTEI_TIME_LIMIT_MS : ((Date.now() - startTime) + elapsedBeforeResume);
+    elapsedBeforeResume = totalElapsedTimeMs;
+
+    kenteiAttemptCount++;
+    saveKenteiRecords();
+
+    if (bestNormalTimeMs === null || totalElapsedTimeMs < bestNormalTimeMs) {
+        bestNormalTimeMs = totalElapsedTimeMs;
+        document.getElementById('best-normal-display').innerText = bestTimeText(finalTimeStr);
+        document.getElementById('best-update-message').innerText = isTimeUp ? "" : "🎉 ベスト更新！";
+        saveKenteiRecords();
+    }
+
+    const numInput = numberField ? numberField.value.trim() : "";
+    const isValidNum = (isConfirmed && /^\d{4}$/.test(numInput));
+    if (isValidNum && !window.isAlreadySubmitted) {
+        executeFormSubmit(numInput, lastClearTimeText, score);
+        window.isAlreadySubmitted = true;
+        const sendBtnTop = document.getElementById('send-btn');
+        const sendBtnBottom = document.getElementById('action-btn');
+        if (sendBtnTop) { sendBtnTop.textContent = "完了"; sendBtnTop.disabled = true; }
+        if (sendBtnBottom) { sendBtnBottom.textContent = "完了"; sendBtnBottom.disabled = true; sendBtnBottom.className = "key clear-btn"; }
+        if (numberField) numberField.disabled = true;
+    } else {
+        window.isAlreadySubmitted = false;
+        if (numberField) numberField.disabled = false;
+    }
+    updateSendButtonState();
+}
+function startQuestionTimer() {
+    clearInterval(questionTimerId);
+    const cd = document.getElementById('countdown-timer');
+    if (!gameStarted || isCompleted) { cd.style.display = 'none'; return; }
+    if (currentQuestionWrongCount >= 2) {
+        cd.style.display = 'inline-block';
+        cd.textContent = "じっくりタイム";
+        return;
+    }
+    questionTimeLeft = (currentStage === 'formula') ? FORMULA_TIME_LIMIT_SEC : POINT_TIME_LIMIT_SEC;
+    updateQuestionTimerUI();
+    cd.style.display = 'inline-block';
+    questionTimerId = setInterval(() => {
+        questionTimeLeft--;
+        updateQuestionTimerUI();
+        if (questionTimeLeft <= 0) handleQuestionTimeout();
+    }, 1000);
+}
+function updateQuestionTimerUI() {
+    const el = document.getElementById('countdown-timer');
+    if (el) el.textContent = `残り ${questionTimeLeft}秒`;
+}
+function formatMs(ms) {
+    const totalMs = Math.max(0, Math.round(ms));
+    const min = Math.floor(totalMs / 60000);
+    const sec = Math.floor((totalMs % 60000) / 1000);
+    const msec = Math.floor((totalMs % 1000) / 100);
+    return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}.${msec}`;
+}
+function bestTimeText(timeStr) { return `ベストタイム(${QUESTION_COUNT}問): ${timeStr}`; }
+
+
+/* ==========================================================================
+   4. 生徒番号入力・記録送信【共通】
+   ========================================================================== */
+function initValidationControls() {
+    if (!numberField) return;
+    numberField.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (isConfirmed || numberField.value !== '') {
+            numberField.value = '';
+            isConfirmed = false;
+            errorDisplay.style.display = 'none';
+            updateSendButtonState();
+        }
+        tooltip.classList.add('show');
+        numberField.focus();
+    });
+    tooltip.addEventListener('click', (e) => { e.stopPropagation(); });
+    document.addEventListener('click', () => {
+        if (tooltip.classList.contains('show') && !isConfirmed) {
+            numberField.value = '';
+            errorDisplay.style.display = 'none';
+            tooltip.classList.remove('show');
+            numberField.blur();
+            updateSendButtonState();
+        }
+    });
+}
+function pressNum(num) {
+    if (!numberField) return;
+    let currentVal = numberField.value;
+    if (currentVal.length === 4) { currentVal = ''; errorDisplay.style.display = 'none'; }
+    currentVal += num;
+    numberField.value = currentVal;
+    updateSendButtonState();
+    if (currentVal.length === 4) {
+        const isValid = /^(9999|[1-3][1-5](0[1-9]|[1-2][0-9]|3[0-5]))$/.test(currentVal);
+        if (isValid) completeInput(currentVal);
+        else errorDisplay.style.display = 'block';
+    }
+}
+function completeInput() {
+    isConfirmed = true;
+    tooltip.classList.remove('show');
+    numberField.blur();
+    updateSendButtonState();
+}
+function pressClear() {
+    if (!numberField) return;
+    const currentVal = numberField.value;
+    if (currentVal.length > 0) numberField.value = currentVal.slice(0, -1);
+    errorDisplay.style.display = 'none';
+    isConfirmed = false;
+    updateSendButtonState();
+}
+function updateSendButtonState() {
+    if (window.isAlreadySubmitted) return;
+    const numVal = numberField ? numberField.value.trim() : "";
+    const sendBtnTop = document.getElementById('send-btn');
+    const sendBtnBottom = document.getElementById('action-btn');
+    if (sendBtnTop && sendBtnTop.textContent === "完了") return;
+    const canSend = (isCorrectState && numVal !== "" && /^\d{4}$/.test(numVal) && isConfirmed);
+    if (sendBtnTop) sendBtnTop.disabled = !canSend;
+    if (currentControlState === 'finished' && sendBtnBottom) {
+        sendBtnBottom.disabled = !canSend;
+        sendBtnBottom.className = canSend ? "key action-btn judge-mode" : "key clear-btn";
+    }
+}
+function executeFormSubmit(num, timeText, stageCount) {
+    const form = document.createElement('form');
+    form.action = GOOGLE_FORM_URL;
+    form.method = 'POST';
+    form.target = 'hidden_iframe';
+    const fields = { [FORM_NUM_ID]: num, [FORM_TIME_ID]: timeText, [FORM_STAGE_COUNT_ID]: stageCount };
+    for (const key in fields) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = fields[key];
+        form.appendChild(input);
+    }
+    document.body.appendChild(form);
+    try { form.submit(); } catch (e) { console.error('送信エラー', e); }
+    setTimeout(() => { document.body.removeChild(form); }, 1000);
+}
+function manualSendToGoogleForm() {
+    const numInput = numberField ? numberField.value.trim() : "";
+    if (numInput === "" || !isConfirmed || !/^\d{4}$/.test(numInput) || !isCorrectState || window.isAlreadySubmitted) return;
+    const sendBtnTop = document.getElementById('send-btn');
+    const sendBtnBottom = document.getElementById('action-btn');
+    if (sendBtnTop) { sendBtnTop.textContent = "送信中"; sendBtnTop.disabled = true; }
+    if (currentControlState === 'finished' && sendBtnBottom) {
+        sendBtnBottom.textContent = "送信中"; sendBtnBottom.disabled = true; sendBtnBottom.className = "key clear-btn";
+    }
+    const currentTimerText = document.getElementById('timer-display').innerText.replace('⏱️ ', '');
+    executeFormSubmit(numInput, lastClearTimeText || currentTimerText, score);
+    window.isAlreadySubmitted = true;
+    if (numberField) numberField.disabled = true;
+    if (tooltip) tooltip.classList.remove('show');
+    setTimeout(() => {
+        if (sendBtnTop) sendBtnTop.textContent = "完了";
+        if (currentControlState === 'finished' && sendBtnBottom) { sendBtnBottom.textContent = "完了"; sendBtnBottom.className = "key clear-btn"; }
+    }, 1000);
+}
+
+
+/* ==========================================================================
+   5. 記録の保存・読み込み・記録画面【共通】
+   ========================================================================== */
+function loadKenteiRecords() {
+    try {
+        const raw = localStorage.getItem(KENTEI_RECORDS_KEY);
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed.qc !== QUESTION_COUNT) throw new Error('問題数がちがう古い記録');
+            bestNormalTimeMs = (typeof parsed.bestTimeMs === 'number') ? parsed.bestTimeMs : null;
+            correctStreakCount = (typeof parsed.streak === 'number') ? parsed.streak : 0;
+            maxStreakCount = (typeof parsed.maxStreak === 'number') ? parsed.maxStreak : 0;
+            kenteiAttemptCount = (typeof parsed.attempts === 'number') ? parsed.attempts : 0;
+            return;
+        }
+    } catch (e) { /* 読み込み失敗時は初期化 */ }
+    bestNormalTimeMs = null; correctStreakCount = 0; maxStreakCount = 0; kenteiAttemptCount = 0;
+}
+function saveKenteiRecords() {
+    try {
+        localStorage.setItem(KENTEI_RECORDS_KEY, JSON.stringify({ bestTimeMs: bestNormalTimeMs, streak: correctStreakCount, maxStreak: maxStreakCount, attempts: kenteiAttemptCount, qc: QUESTION_COUNT }));
+    } catch (e) { /* 保存失敗時は何もしない */ }
+}
+function changeHandedness(hand) {
+    const workspace = document.querySelector('.game-layout');
+    const rightBtn = document.getElementById('hand-right-btn');
+    const leftBtn = document.getElementById('hand-left-btn');
+    if (hand === 'left') { workspace.classList.add('left-handed'); leftBtn.classList.add('active'); rightBtn.classList.remove('active'); }
+    else { workspace.classList.remove('left-handed'); rightBtn.classList.add('active'); leftBtn.classList.remove('active'); }
+}
+function enterKenteiScreen() { restartQuiz(); showScreen('screen-kentei'); }
+function goBackFromKentei() {
+    clearInterval(timerInterval);
+    clearInterval(questionTimerId);
+    gameStarted = false;
+    isCompleted = false;
+    showScreen('screen-start');
+}
+function renderKirokuScreen() {
+    const bestTimeEl = document.getElementById('kiroku-best-time');
+    if (bestTimeEl) bestTimeEl.textContent = (bestNormalTimeMs !== null) ? formatMs(bestNormalTimeMs) : '--:--.-';
+    const streakEl = document.getElementById('kiroku-streak');
+    if (streakEl) streakEl.textContent = `現在：${correctStreakCount}問／最高：${maxStreakCount}問`;
+    const attemptsEl = document.getElementById('kiroku-attempts');
+    if (attemptsEl) attemptsEl.textContent = `${kenteiAttemptCount}回`;
+}
+function openResetConfirm(type) {
+    pendingResetType = type;
+    const msgEl = document.getElementById('reset-confirm-message');
+    if (msgEl) msgEl.textContent = '検定のベストタイム・連続正解記録・受検回数がリセットされます。よろしいですか？';
+    const modal = document.getElementById('reset-confirm-modal');
+    if (modal) modal.style.display = 'flex';
+}
+function closeResetConfirm() {
+    pendingResetType = null;
+    const modal = document.getElementById('reset-confirm-modal');
+    if (modal) modal.style.display = 'none';
+}
+function confirmReset() {
+    bestNormalTimeMs = null; correctStreakCount = 0; maxStreakCount = 0; kenteiAttemptCount = 0;
+    saveKenteiRecords();
+    const bestDisplayEl = document.getElementById('best-normal-display');
+    if (bestDisplayEl) bestDisplayEl.innerText = bestTimeText('--:--.-');
+    closeResetConfirm();
+}
+
+
+/* ==========================================================================
+   6. 操作ボタン・キー状態【共通・固有】
+   ========================================================================== */
+function handleAction() {
+    if (!gameStarted) { startQuizGame(); return; }
+    if (isCompleted) {
+        if (currentControlState === 'finished') { manualSendToGoogleForm(); return; }
+        nextQuestion();
+        return;
+    }
+    checkAnswer();
+}
+function handleRightBtn() {
+    if (currentControlState === 'start' || currentControlState === 'finished') goBackFromKentei();
+    else clearAllInput();
+}
+function handleCenterBtn() {
+    if (currentControlState === 'finished') { restartQuiz(); return; }
+    if (!gameStarted || isCompleted) return;
+    if (currentStage === 'formula' && !stepsShown && !hasStageInput()) { startStepMode(false); return; }   // 式が空のとき、このボタンは「途中式」
+    pressKey('Backspace');
+}
+function stageFields() {   // 手順①で入力する枠
+    return ['cx', 'cy'];
+}
+function hasStageInput() {
+    if (currentStage === 'point') {
+        return FIELD_IDS.some(id => fieldState[id] !== 'ok' && fieldVals[id] !== '') || picked !== null;
+    }
+    return !isCurrentStageEmpty();
+}
+function updateControlKeysState(state) {
+    currentControlState = state;
+    actionBtn.className = "key action-btn";
+    clearBtn.className = "key clear-btn";
+    clearAllBtn.className = "key clear-btn";
+    if (state === 'start') {
+        actionBtn.textContent = "スタート"; actionBtn.disabled = false;
+        clearBtn.textContent = "消す"; clearBtn.disabled = true;
+        clearAllBtn.textContent = "戻る"; clearAllBtn.className = "key action-btn-back"; clearAllBtn.disabled = false;
+    } else if (state === 'playing') {
+        const has = hasStageInput();
+        actionBtn.textContent = "判定する"; actionBtn.className = "key action-btn judge-mode";
+        actionBtn.disabled = (!has || judgeLocked);
+        if (currentStage === 'formula' && !stepsShown && !has) {   // 手順②で途中式を開く前・式が空：[消す]を[途中式]に入れかえ
+            clearBtn.textContent = "途中式"; clearBtn.className = "key action-btn"; clearBtn.disabled = false;
+        } else {
+            clearBtn.textContent = "消す"; clearBtn.disabled = !has;
+        }
+        clearAllBtn.textContent = "全消去"; clearAllBtn.disabled = !has;
+    } else if (state === 'cleared') {
+        actionBtn.textContent = "次の問題"; actionBtn.className = "key action-btn judge-mode"; actionBtn.disabled = false;
+        clearBtn.textContent = "消す"; clearBtn.disabled = true;
+        clearAllBtn.textContent = "全消去"; clearAllBtn.disabled = true;
+    } else if (state === 'finished') {
+        actionBtn.textContent = "送信"; actionBtn.className = "key action-btn judge-mode"; actionBtn.disabled = false;
+        clearBtn.textContent = "もう一回"; clearBtn.className = "key action-btn"; clearBtn.disabled = false;
+        clearAllBtn.textContent = "戻る"; clearAllBtn.className = "key action-btn-back"; clearAllBtn.disabled = false;
+    }
+    updateKeypadState();
+}
+/* --- テンキー：ゲーム中だけ使える。「x」キーは式の枠を選んでいるときだけ --- */
+function updateKeypadState() {
+    const on = gameStarted && !isCompleted;
+    const inPoint = (currentStage === 'point');
+    document.querySelectorAll('.keypad button[data-k]').forEach(b => {
+        const k = b.getAttribute('data-k');
+        let dis = !on;
+        if (on) {
+            if (k === 'prev' || k === 'next') dis = !inPoint;       // 矢印：手順①の座標の枠の移動だけ
+            else if (k === 'frac') dis = inPoint;                    // 分の：手順②だけ
+            else if (k === 'x') dis = inPoint || inExpression();     // x：比例の式の枠だけ
+            else if (k === '=') dis = !inExpression();               // ＝：途中式の左右の枠の移動だけ
+        }
+        b.disabled = dis;
+    });
+}
+function updateStageTabs() {
+    ['point', 'formula'].forEach((s, i) => {
+        const el = document.getElementById('tab-' + s);
+        if (!el) return;
+        let cls = 'step-tab';
+        if (i < stageProgress) cls += ' done';
+        else if (gameStarted && !isCompleted && i === stageProgress) cls += ' active';
+        el.className = cls;
+    });
+}
+function clearAllInput() {
+    if (!gameStarted || isCompleted) return;
+    pressKey('clear');
+}
+
+
+/* ==========================================================================
+   7. 入力枠（座標・比例定数・式）【固有】
+   ========================================================================== */
+const fmtNum = n => (n < 0 ? '−' + (-n) : String(n));
+const FIELD_IDS = ['cx', 'cy'];
+
+function setGroup(id, cls) {
+    const el = document.getElementById(id);
+    if (el) el.className = 'input-box-group ' + cls;
+}
+function clearGroupShake() {
+    ['group-point', 'group-a', 'group-formula'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('error-shake');
+    });
+}
+function resetFields() {
+    fieldVals  = { cx: '', cy: '' };
+    fieldState = { cx: '', cy: '' };
+    activeField = 'cx';
+    resetEditors();
+}
+function renderFields() {
+    FIELD_IDS.forEach(id => {
+        const el = document.getElementById('box-' + id);
+        if (!el) return;
+        const isActive = gameStarted && !isCompleted && currentStage === 'point' && id === activeField && fieldState[id] !== 'ok';
+        el.innerHTML = fieldVals[id].replace('-', '−');
+        el.className = 'fbox' + (fieldState[id] ? ' ' + fieldState[id] : '') + (isActive ? ' active' : '');
+    });
+    updateKeypadState();
+}
+function moveActive(dir) {
+    const list = stageFields().filter(id => fieldState[id] !== 'ok');
+    if (list.length === 0) return;
+    let pos = list.indexOf(activeField);
+    pos = (pos < 0) ? 0 : (pos + dir + list.length) % list.length;
+    activeField = list[pos];
+}
+function pressKey(key) {
+    if (!gameStarted || isCompleted) return;
+    if (currentStage === 'point') pressKeyCoord(key);
+    else pressKeyEditor(key);
+}
+function pressKeyCoord(key) {   // 手順①：座標の枠（x座標・y座標）
+    clearGroupShake();
+
+    if (key === 'prev') { moveActive(-1); renderFields(); return; }
+    if (key === 'next') { moveActive(1); renderFields(); return; }
+
+    if (key === 'clear') {   // 全消去：未正解の枠をすべて空にして、とった点も消す
+        FIELD_IDS.forEach(id => { if (fieldState[id] !== 'ok') { fieldVals[id] = ''; fieldState[id] = ''; } });
+        picked = null; pickedState = ''; renderPicked();
+        const list = FIELD_IDS.filter(id => fieldState[id] !== 'ok');
+        if (list.length) activeField = list[0];
+        judgeLocked = false;
+        renderFields(); updateControlKeysState('playing');
+        return;
+    }
+
+    const id = activeField;
+    if (fieldState[id] === 'ok') return;
+    let val = fieldVals[id];
+    if (key === 'Backspace') {
+        if (val === '' && picked) {   // 枠が空のときの「消す」は、とった点を消す
+            picked = null;
+            afterGraphEdit();
+            return;
+        }
+        val = val.slice(0, -1);
+    } else if (key === '-') {
+        if (val !== '') return;
+        val = '-';
+    } else if (/^[0-9]$/.test(key)) {
+        if (val === '-' && key === '0') return;
+        if (val === '0') val = '';
+        if (val.replace('-', '').length >= 2) return;
+        val = val + key;
+    } else {
+        return;
+    }
+    fieldVals[id] = val;
+    fieldState[id] = '';
+    judgeLocked = false;
+    renderFields();
+    updateControlKeysState('playing');
+}
+
+
+/* ==========================================================================
+   7-b. 数式エディタ（「比例定数 a を求める式」「比例の式」の入力枠）【14303から移植】
+   ========================================================================== */
+function inExpression() {   // いま「比例定数 a を求める式」（途中式）を入力する段階か
+    return currentStage === 'formula' && stepsShown && !stepsDone;
+}
+function editorGroupId(editorId) {
+    return editorId.includes('expression') ? 'group-a' : 'group-formula';
+}
+function editorHasInput(id) {
+    const ed = document.getElementById(id);
+    if (!ed) return false;
+    return Array.from(ed.querySelectorAll('.editor-text-node, .editor-fraction-field'))
+        .some(el => el.value.replace(/\s+/g, '') !== '');
+}
+function isCurrentStageEmpty() {
+    if (inExpression()) return !editorHasInput('math-editor-expression-left') && !editorHasInput('math-editor-expression-right');
+    return !editorHasInput('math-editor-answer-right');
+}
+function createTextBlock(containerEl, initialValue = "") {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'editor-text-node';
+    input.value = initialValue;
+    input.autocomplete = 'off';
+    input.inputMode = 'none';
+    input.readOnly = true;
+    input.addEventListener('keydown', (e) => e.preventDefault());
+    containerEl.appendChild(input);
+    return input;
+}
+function resetEditors() {
+    ['math-editor-expression-left', 'math-editor-expression-right', 'math-editor-answer-right'].forEach(id => {
+        const ed = document.getElementById(id);
+        if (ed) { ed.innerHTML = ''; ed.classList.remove('wide-fraction-mode'); createTextBlock(ed, ""); }
+    });
+    activeEditorId = 'math-editor-answer-right';
+    const be = document.getElementById('badge-expression'), ba = document.getElementById('badge-answer');
+    if (be) be.textContent = "入力中";
+    if (ba) ba.textContent = "ロック中";
+}
+function updateInputWidths() {
+    const ed = document.getElementById(activeEditorId);
+    if (!ed) return;
+    ed.querySelectorAll('.editor-text-node').forEach(node => {
+        let displayStr = node.value || "";
+        let w = displayStr.length * 15 + 12;
+        if (displayStr === "") w = 150;
+        node.style.width = `${Math.max(20, w)}px`;
+    });
+}
+function focusDefaultNode(editorId = activeEditorId) {
+    if (!gameStarted || isCompleted) return;
+    const targetGroup = document.getElementById(editorGroupId(editorId));
+    if (targetGroup && targetGroup.classList.contains('locked-disabled')) return;
+    activeEditorId = editorId;
+    ['group-a', 'group-formula'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('active-focus');
+    });
+    if (targetGroup) targetGroup.classList.add('active-focus');
+    const ed = document.getElementById(editorId);
+    if (ed) {
+        const input = ed.querySelector('.editor-text-node') || ed.querySelector('input');
+        if (input) input.focus();
+    }
+    refreshMathJaxPreview();
+}
+/* --- 入力された式の取得（getUserAnswerBySide）：分数は「分子/分母」の文字列にする --- */
+function getUserAnswerBySide(stage, side) {
+    const ed = document.getElementById(`math-editor-${stage}-${side}`);
+    if (!ed) return "";
+    let result = "";
+    ed.childNodes.forEach(node => {
+        if (node.classList && node.classList.contains('editor-fraction-node')) {
+            const top = node.querySelector('.frac-top') ? node.querySelector('.frac-top').value : "";
+            const bottom = node.querySelector('.frac-bottom') ? node.querySelector('.frac-bottom').value : "";
+            if (top !== "" || bottom !== "") result += `${top}/${bottom}`;
+        } else if (node.classList && node.classList.contains('editor-text-node')) {
+            result += node.value;
+        }
+    });
+    let s = result.replace(/\s+/g, "");
+    if (s.startsWith("+")) s = s.substring(1);
+    return s;
+}
+/* --- 途中式の左の枠の読み取り：分数がちょうど1つだけで、分数の外に文字がなければ 'top/bottom'、それ以外は null --- */
+function getExprFractionString() {
+    const ed = document.getElementById('math-editor-expression-left');
+    if (!ed) return null;
+    let fracCount = 0, str = null, stray = false;
+    ed.childNodes.forEach(node => {
+        if (node.classList && node.classList.contains('editor-fraction-node')) {
+            const topEl = node.querySelector('.frac-top');
+            const bottomEl = node.querySelector('.frac-bottom');
+            fracCount++;
+            str = `${topEl ? topEl.value : ''}/${bottomEl ? bottomEl.value : ''}`;
+        } else if (node.classList && node.classList.contains('editor-text-node')) {
+            if (node.value.replace(/\s+/g, '') !== '') stray = true;
+        }
+    });
+    return (fracCount === 1 && !stray) ? str : null;
+}
+/* --- 「分の」キー：直前の数を分母にして、縦型の分数を作る --- */
+function convertDenominatorToFraction() {
+    if (!gameStarted || isCompleted || currentStage !== 'formula') return;
+    const currentEd = document.getElementById(activeEditorId);
+    if (!currentEd) return;
+
+    let active = document.activeElement;
+    if (!active || !currentEd.contains(active)) {
+        const inputs = currentEd.querySelectorAll('input');
+        active = inputs[inputs.length - 1];
+    }
+    if (!active || active.classList.contains('editor-fraction-field')) return;
+
+    clearGroupShake();
+    currentEd.classList.add('wide-fraction-mode');
+
+    const fracNode = document.createElement('div');
+    fracNode.className = 'editor-fraction-node';
+
+    const topField = document.createElement('input');
+    topField.type = 'text';
+    topField.className = 'editor-fraction-field frac-top';
+    topField.readOnly = true;
+    topField.addEventListener('keydown', (e) => e.preventDefault());
+
+    const line = document.createElement('div');
+    line.className = 'editor-fraction-line';
+
+    const bottomField = document.createElement('input');
+    bottomField.type = 'text';
+    bottomField.className = 'editor-fraction-field frac-bottom';
+    bottomField.readOnly = true;
+    bottomField.addEventListener('keydown', (e) => e.preventDefault());
+
+    fracNode.appendChild(topField);
+    fracNode.appendChild(line);
+    fracNode.appendChild(bottomField);
+
+    if (active.classList.contains('editor-text-node')) {
+        let val = active.value;
+        // 途中式の枠では、分母の前の「−」も分母に含める（答えの枠では、「−」は分数の前に残る）
+        let match = inExpression() ? val.match(/-?[0-9]+$/) : val.match(/[0-9a-zA-Z]+$/);
+
+        if (match && match.index > 0) {
+            let preStr = val.substring(0, match.index);
+            const preNode = document.createElement('input');
+            preNode.type = 'text';
+            preNode.className = 'editor-text-node';
+            preNode.value = preStr;
+            preNode.readOnly = true;
+            preNode.addEventListener('keydown', (e) => e.preventDefault());
+            currentEd.insertBefore(preNode, active);
+            bottomField.value = match[0];
+        } else if (match && match.index === 0) {
+            bottomField.value = match[0];
+        } else {
+            bottomField.value = val;
+        }
+
+        active.value = "";
+        currentEd.insertBefore(fracNode, active);
+        topField.focus();
+    } else {
+        currentEd.appendChild(fracNode);
+        topField.focus();
+    }
+
+    judgeLocked = false;
+    updateInputWidths();
+    refreshMathJaxPreview();
+    updateControlKeysState(currentControlState);
+}
+/* --- キー入力（数式エディタ用） --- */
+function pressKeyEditor(key) {
+    if (key === '=') {   // 「＝」キー：途中式の左の枠と右の枠を行き来する
+        if (!inExpression()) return;
+        if (activeEditorId.endsWith('-left')) activeEditorId = activeEditorId.replace('-left', '-right');
+        else if (activeEditorId.endsWith('-right')) activeEditorId = activeEditorId.replace('-right', '-left');
+        focusDefaultNode(activeEditorId);
+        return;
+    }
+    if (key === 'prev' || key === 'next') return;
+    if (key === 'x' && inExpression()) return;
+
+    const currentEd = document.getElementById(activeEditorId);
+    if (!currentEd) return;
+    let active = document.activeElement;
+    if (!active || !currentEd.contains(active) || (!active.classList.contains('editor-text-node') && !active.classList.contains('editor-fraction-field'))) {
+        const inputs = currentEd.querySelectorAll('input');
+        active = inputs[inputs.length - 1];
+        if (active) active.focus();
+    }
+    if (!active) return;
+
+    clearGroupShake();
+    const afterEdit = () => {
+        judgeLocked = false;
+        updateInputWidths();
+        refreshMathJaxPreview();
+        updateControlKeysState(currentControlState);
+    };
+
+    if (key === 'clear') {
+        currentEd.innerHTML = '';
+        createTextBlock(currentEd, "").focus();
+        currentEd.classList.remove('wide-fraction-mode');
+        afterEdit();
+        return;
+    }
+
+    if (key === 'Backspace') {
+        const isFrac = active.classList.contains('editor-fraction-field');
+        if (isFrac) {
+            const fracNode = active.closest('.editor-fraction-node');
+            const fields = fracNode.querySelectorAll('.editor-fraction-field');
+            if (fields[0].value.length === 0 && fields[1].value.length === 0) {
+                let prev = fracNode.previousSibling;
+                fracNode.remove();
+                if (prev) {
+                    if (prev.classList.contains('editor-fraction-node')) prev.querySelectorAll('.editor-fraction-field')[1].focus();
+                    else prev.focus();
+                } else {
+                    createTextBlock(currentEd, "").focus();
+                }
+                if (currentEd.querySelectorAll('.editor-fraction-node').length === 0) currentEd.classList.remove('wide-fraction-mode');
+            } else {
+                if (active.value.length > 0) {
+                    const start = active.selectionStart;
+                    const end = active.selectionEnd;
+                    const val = active.value;
+                    if (start !== end) {
+                        active.value = val.substring(0, start) + val.substring(end);
+                        active.selectionStart = active.selectionEnd = start;
+                    } else if (start > 0) {
+                        active.value = val.substring(0, start - 1) + val.substring(start);
+                        active.selectionStart = active.selectionEnd = start - 1;
+                    }
+                }
+            }
+        } else {
+            if (active.value.length > 0) {
+                active.value = active.value.slice(0, -1);
+            } else {
+                const allNodes = currentEd.querySelectorAll('.editor-text-node, .editor-fraction-node');
+                if (allNodes.length > 1) {
+                    let prev = active.previousSibling;
+                    active.remove();
+                    if (prev) {
+                        if (prev.classList.contains('editor-fraction-node')) prev.querySelectorAll('.editor-fraction-field')[1].focus();
+                        else prev.focus();
+                    }
+                }
+            }
+        }
+        if (document.activeElement) document.activeElement.focus();
+        afterEdit();
+        return;
+    }
+
+    if (active.classList.contains('editor-fraction-field')) {
+        // 途中式の枠だけ、分子の先頭に「−」を入れられる（答えの枠では入れられない）
+        const minusInExprNumerator = (key === '-' && inExpression() && active.classList.contains('frac-top') && active.value === '');
+        if (!/^[0-9]$/.test(key) && !minusInExprNumerator) {
+            const fracNode = active.closest('.editor-fraction-node');
+            if (fracNode && fracNode.nextSibling) {
+                active = fracNode.nextSibling;
+                active.focus();
+            }
+        }
+    }
+
+    const start = active.selectionStart;
+    const end = active.selectionEnd;
+    const val = active.value;
+    active.value = val.substring(0, start) + key + val.substring(end);
+    active.selectionStart = active.selectionEnd = start + key.length;
+    active.focus();
+    afterEdit();
+}
+/* --- 入力枠の表示（refreshMathJaxPreview）：「a ＝ [分数] ＝ [答え]」と「y ＝ [式]」 --- */
+function refreshMathJaxPreview() {
+    const getVal = ed => {
+        let val = "";
+        if (ed) {
+            ed.childNodes.forEach(n => {
+                if (n.classList && n.classList.contains('editor-fraction-node')) {
+                    const top = n.querySelector('.frac-top') ? n.querySelector('.frac-top').value : "";
+                    const bottom = n.querySelector('.frac-bottom') ? n.querySelector('.frac-bottom').value : "";
+                    if (top !== "" || bottom !== "") val += `\\dfrac{${top}}{${bottom}}`;
+                } else if (n.value) {
+                    val += n.value;
+                }
+            });
+        }
+        return val;
+    };
+    const previewExpr = document.getElementById('math-preview-expression');
+    const previewAns = document.getElementById('math-preview-answer');
+    if (previewExpr) {
+        const group = document.getElementById('group-a');
+        const isCorrect = group && group.classList.contains('locked-correct');
+        const box = (edId, defaultText) => {
+            const v = getVal(document.getElementById(edId));
+            if (isCorrect) return v ? `$${v}$` : '';
+            const active = activeEditorId === edId ? 'active-side' : '';
+            const inner = v ? `$${v}$` : `<span class="placeholder-text">${defaultText}</span>`;
+            return `<span class="step-box-small ${active}" style="height:auto; min-height:34px;">${inner}</span>`;
+        };
+        previewExpr.innerHTML = `<div style="display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap;">
+            <span>$a=$</span>${box('math-editor-expression-left', '分数')}<span>$=$</span>${box('math-editor-expression-right', '答え')}</div>`;
+    }
+    if (previewAns) {
+        const rightVal = getVal(document.getElementById('math-editor-answer-right'));
+        const rightHtml = rightVal ? `$${rightVal}$` : `<span class="placeholder-text">答えを入力</span>`;
+        previewAns.innerHTML = `
+            <div class="equation-grid">
+                <div class="eq-left">$y$</div>
+                <div class="eq-equal">$=$</div>
+                <div class="eq-right">${rightHtml}</div>
+            </div>`;
+    }
+    updateMathJax([previewExpr, previewAns].filter(Boolean));
+}
+
+
+/* ==========================================================================
+   8. グラフ（直線の表示・点をとる）【固有】
+   ========================================================================== */
+const toPx = x => GRAPH.center + x * GRAPH.unit;
+const toPy = y => GRAPH.center - y * GRAPH.unit;
+
+function buildGraph() {
+    const svg = document.getElementById('graph-svg');
+    const c = GRAPH.center, u = GRAPH.unit, r = GRAPH.range;
+    const lo = c - r * u, hi = c + r * u;
+    let s = '';
+    for (let i = -r; i <= r; i++) {
+        if (i === 0) continue;
+        const p = c + i * u;
+        s += `<line x1="${p}" y1="${lo}" x2="${p}" y2="${hi}" stroke="#cfd8dc" stroke-width="1"/>`;
+        s += `<line x1="${lo}" y1="${p}" x2="${hi}" y2="${p}" stroke="#cfd8dc" stroke-width="1"/>`;
+    }
+    s += `<line x1="${lo - 14}" y1="${c}" x2="${hi + 14}" y2="${c}" stroke="#333" stroke-width="2"/>`;
+    s += `<line x1="${c}" y1="${hi + 14}" x2="${c}" y2="${lo - 14}" stroke="#333" stroke-width="2"/>`;
+    s += `<polygon points="${hi + 26},${c} ${hi + 12},${c - 6} ${hi + 12},${c + 6}" fill="#333"/>`;
+    s += `<polygon points="${c},${lo - 26} ${c - 6},${lo - 12} ${c + 6},${lo - 12}" fill="#333"/>`;
+    s += `<text class="svg-axis-label" x="${hi + 22}" y="${c + 22}">x</text>`;
+    s += `<text class="svg-axis-label" x="${c + 12}" y="${lo - 18}">y</text>`;
+    s += `<text class="svg-axis-label" x="${c - 8}" y="${c + 17}" text-anchor="end" style="font-style:normal;">O</text>`;
+    for (let i = -r; i <= r; i++) {
+        if (i === 0) continue;
+        s += `<text class="svg-tick-label" x="${c + i * u}" y="${c + 20}" text-anchor="middle">${fmtNum(i)}</text>`;
+        s += `<text class="svg-tick-label" x="${c - 7}" y="${c - i * u + 6}" text-anchor="end">${fmtNum(i)}</text>`;
+    }
+    s += `<g id="layer-ideal"></g><g id="layer-points"></g>`;
+    s += `<circle id="hover-dot" cx="-100" cy="-100" r="${POINT_R + 1}" fill="rgba(255,112,67,0.30)"/>`;
+    svg.innerHTML = s;
+
+    svg.addEventListener('click', onGraphClick);
+    svg.addEventListener('mousemove', onGraphHover);
+    svg.addEventListener('mouseleave', hideHoverDot);
+}
+function pointFromEvent(e) {   // 画面上の位置 → グラフの座標（連続値）
+    const svg = document.getElementById('graph-svg');
+    const pt = svg.createSVGPoint();
+    pt.x = e.clientX; pt.y = e.clientY;
+    const p = pt.matrixTransform(svg.getScreenCTM().inverse());
+    return { x: (p.x - GRAPH.center) / GRAPH.unit, y: (GRAPH.center - p.y) / GRAPH.unit };
+}
+function eventToLattice(e) {
+    const p = pointFromEvent(e);
+    const x = Math.round(p.x), y = Math.round(p.y);
+    if (Math.abs(x) > GRAPH.range || Math.abs(y) > GRAPH.range) return null;
+    return { x: x, y: y };
+}
+const canPick = () => gameStarted && !isCompleted && currentStage === 'point' && currentControlState === 'playing';
+
+function setGraphActive(active) {
+    document.getElementById('graph-frame').classList.toggle('inactive', !active);
+    if (!active) hideHoverDot();
+}
+function hideHoverDot() {
+    const h = document.getElementById('hover-dot');
+    if (h) { h.setAttribute('cx', -100); h.setAttribute('cy', -100); }
+}
+function resetGraphState() {
+    picked = null; pickedState = '';
+    ['layer-ideal', 'layer-points'].forEach(id => {
+        const l = document.getElementById(id);
+        if (l) l.innerHTML = '';
+    });
+    const frame = document.getElementById('graph-frame');
+    frame.classList.remove('error-shake', 'locked-correct', 'frozen');
+    hideHoverDot();
+}
+function renderLine(q) {   // 問題の直線（グラフの端から端まで）
+    const layer = document.getElementById('layer-ideal');
+    if (!layer) return;
+    const xr = Math.min(GRAPH.range, GRAPH.range / Math.abs(q.a));
+    layer.innerHTML = `<line x1="${toPx(-xr)}" y1="${toPy(-q.a * xr)}" x2="${toPx(xr)}" y2="${toPy(q.a * xr)}" stroke="#1a73e8" stroke-width="3" stroke-linecap="round"/>`;
+}
+function renderPicked() {
+    const layer = document.getElementById('layer-points');
+    if (!layer) return;
+    if (!picked) { layer.innerHTML = ''; return; }
+    const fill = (pickedState === 'ok') ? '#2e7d32' : (pickedState === 'ng' ? '#d32f2f' : '#ff7043');
+    layer.innerHTML = `<circle cx="${toPx(picked.x)}" cy="${toPy(picked.y)}" r="${POINT_R}" fill="${fill}" stroke="#ffffff" stroke-width="2"/>`;
+}
+function afterGraphEdit() {   // 点をとり直した・消したとき
+    judgeLocked = false;
+    pickedState = '';
+    ['cx', 'cy'].forEach(id => { if (fieldState[id] === 'ng') fieldState[id] = ''; });
+    document.getElementById('graph-frame').classList.remove('error-shake');
+    renderPicked();
+    renderFields();
+    updateControlKeysState('playing');
+}
+function onGraphClick(e) {
+    if (!canPick()) return;
+    const pt = eventToLattice(e);
+    if (!pt) return;
+    if (picked && picked.x === pt.x && picked.y === pt.y) picked = null;   // 同じ点をもう一度タップで消す
+    else picked = pt;                                                      // 点は1つだけ（別の点をタップすると移る）
+    afterGraphEdit();
+}
+function onGraphHover(e) {
+    const h = document.getElementById('hover-dot');
+    if (!h) return;
+    if (!canPick()) { hideHoverDot(); return; }
+    const pt = eventToLattice(e);
+    if (!pt) { hideHoverDot(); return; }
+    h.setAttribute('cx', toPx(pt.x)); h.setAttribute('cy', toPy(pt.y));
+}
+
+
+/* ==========================================================================
+   9. 判定：手順①（点→座標）・手順②（式）【固有】
+   ========================================================================== */
+function checkPoint(q) {
+    const frame = document.getElementById('graph-frame');
+    if (!picked) { setHint(HINT_DATA.ptNone); return; }                    // 点がないときは不正解に数えない
+    const empties = ['cx', 'cy'].filter(id => fieldVals[id] === '');
+    if (empties.length > 0) {                                              // 空きの枠も不正解に数えない
+        empties.forEach(id => { fieldState[id] = 'ng'; });
+        activeField = empties[0];
+        renderFields();
+        setHint(HINT_DATA.coordEmpty);
+        return;
+    }
+    if (picked.x === 0 && picked.y === 0) {
+        pickedState = 'ng'; renderPicked();
+        showStepError(frame); judgeLocked = true;
+        setHint(HINT_DATA.ptOrigin); updateControlKeysState('playing');
+        return;
+    }
+    if (picked.y !== q.a * picked.x) {
+        pickedState = 'ng'; renderPicked();
+        showStepError(frame); judgeLocked = true;
+        setHint(HINT_DATA.ptOff); updateControlKeysState('playing');
+        return;
+    }
+    const okX = (fieldVals.cx === String(picked.x));
+    const okY = (fieldVals.cy === String(picked.y));
+    if (okX && okY) { advanceToFormula(q); return; }
+    fieldState.cx = okX ? '' : 'ng';
+    fieldState.cy = okY ? '' : 'ng';
+    activeField = okX ? 'cy' : 'cx';
+    renderFields();
+    const swapped = (fieldVals.cx === String(picked.y) && fieldVals.cy === String(picked.x) && picked.x !== picked.y);
+    showStepError(document.getElementById('group-point'));
+    judgeLocked = true;
+    setHint(swapped ? HINT_DATA.coordSwap : HINT_DATA.coordWrong);
+    updateControlKeysState('playing');
+}
+function advanceToFormula(q) {
+    ['cx', 'cy'].forEach(id => { fieldState[id] = 'ok'; });
+    pickedState = 'ok'; renderPicked();
+    setGroup('group-point', 'locked-correct');
+    document.getElementById('graph-frame').classList.add('frozen');
+    hideHoverDot();
+    currentStage = 'formula';
+    stageProgress = 1;
+    judgeLocked = false;
+    setGroup('group-formula', 'active-focus');
+    document.getElementById('badge-answer').textContent = "入力中";
+    activeEditorId = 'math-editor-answer-right';
+    resultMsgEl.textContent = '① 点→座標：正解！';
+    resultMsgEl.className = 'result-message correct';
+    setHint(HINT_DATA.formulaInit);
+    renderFields(); updateStageTabs();
+    updateControlKeysState('playing');
+    refreshMathJaxPreview();
+    focusDefaultNode();
+    startQuestionTimer();
+}
+function startStepMode(auto) {   // 途中式モード：「比例定数 a を求める式」を先に書く（手動＝[途中式]ボタン／自動＝2回ミス）
+    if (!gameStarted || isCompleted || currentStage !== 'formula' || stepsShown) return;
+    stepsShown = true;
+    stepsDone = false;
+    judgeLocked = false;
+    activeEditorId = 'math-editor-expression-left';
+
+    const gExpr = document.getElementById('group-a');
+    gExpr.style.display = 'flex';
+    setGroup('group-a', 'active-focus');
+    document.getElementById('badge-expression').textContent = "入力中";
+
+    // 比例の式の枠は、途中式が正解するまでロックして中身を空にする
+    setGroup('group-formula', 'locked-disabled');
+    document.getElementById('badge-answer').textContent = "ロック中";
+    ['math-editor-answer-right', 'math-editor-expression-left', 'math-editor-expression-right'].forEach(id => {
+        const ed = document.getElementById(id);
+        if (ed) { ed.innerHTML = ''; ed.classList.remove('wide-fraction-mode'); createTextBlock(ed, ""); }
+    });
+
+    setHint(auto ? HINT_DATA.stepIntro : HINT_DATA.stepManual);
+    updateControlKeysState('playing');
+    refreshMathJaxPreview();
+    setTimeout(() => { focusDefaultNode('math-editor-expression-left'); }, 50);
+}
+function parseFormula(s) {   // 「-2x」「x」「3x」などを読みとる
+    const m = /^(-?)(\d*)x$/.exec(s);
+    if (!m) return { hasX: false };
+    const sign = m[1] ? -1 : 1;
+    if (m[2] === '') return { hasX: true, coef: sign, explicitOne: false };
+    const n = parseInt(m[2], 10);
+    return { hasX: true, coef: sign * n, explicitOne: (n === 1) };
+}
+function checkSteps(q) {   // 途中式：「a ＝ 分数 ＝ 計算結果」を判定
+    const userLeft = getUserAnswerBySide('expression', 'left');
+    const userRight = getUserAnswerBySide('expression', 'right');
+    if (!userLeft || !userRight) { setHint(HINT_DATA.exprEmpty); return; }   // 空の枠は不正解に数えない
+    const exprFrac = getExprFractionString();   // 左の枠は、分数1つだけの形のときだけ判定する
+    const fracOk = (exprFrac !== null && picked && exprFrac === `${picked.y}/${picked.x}`);
+    if (fracOk && userRight === String(q.a)) {
+        stepsDone = true;
+        judgeLocked = false;
+        setGroup('group-a', 'locked-correct');
+        document.getElementById('badge-expression').textContent = "正解！";
+        activeEditorId = 'math-editor-answer-right';
+        setGroup('group-formula', 'active-focus');
+        document.getElementById('badge-answer').textContent = "入力中";
+        setHint(HINT_DATA.stepSuccess);
+        refreshMathJaxPreview();
+        focusDefaultNode();
+        updateControlKeysState('playing');
+    } else {
+        showStepError(document.getElementById('group-a'));
+        judgeLocked = true;
+        setHint(fracOk ? HINT_DATA.exprValueError : HINT_DATA.exprError);
+        updateControlKeysState('playing');
+    }
+}
+function checkFormula(q) {   // 手順②：「比例の式」を判定
+    if (inExpression()) { checkSteps(q); return; }
+    const userAns = getUserAnswerBySide('answer', 'right');
+    if (!userAns) return;
+    const r = parseFormula(userAns);
+    if (r.hasX && r.coef === q.a && !r.explicitOne) { completeQuestion(); return; }
+    let hint;
+    if (!r.hasX) hint = HINT_DATA.formNoX;
+    else if (r.coef === q.a && r.explicitOne) hint = HINT_DATA.formOne;
+    else if (Math.abs(r.coef) === Math.abs(q.a)) hint = HINT_DATA.formSign;
+    else if (stepsShown) hint = HINT_DATA.formDiffA;
+    else hint = HINT_DATA.formWrong;
+    const wasShown = stepsShown;
+    showStepError(document.getElementById('group-formula'));
+    if (!wasShown && stepsShown) return;                           // 2回ミスで途中式が自動で開いた：ヒントはそのまま
+    judgeLocked = true;
+    setHint(hint);
+    updateControlKeysState('playing');
+}
+function completeQuestion() {
+    isCompleted = true;
+    clearInterval(questionTimerId);
+    document.getElementById('countdown-timer').style.display = 'none';
+    stageProgress = 2;
+    setGroup('group-formula', 'locked-correct');
+    document.getElementById('badge-answer').textContent = "正解！";
+    const frame = document.getElementById('graph-frame');
+    frame.classList.remove('error-shake', 'frozen');
+    frame.classList.add('locked-correct', 'inactive');
+    renderFields();
+    updateStageTabs();
+    refreshMathJaxPreview();
+
+    if (currentQuestionWrongCount === 0) {
+        score++;
+        correctStreakCount++;
+        if (correctStreakCount > maxStreakCount) maxStreakCount = correctStreakCount;
+        saveKenteiRecords();
+    }
+    if (document.activeElement) document.activeElement.blur();
+
+    if (currentQuestionIndex === QUESTION_COUNT - 1) {
+        stopTimerClockAndEvaluate();
+        resultMsgEl.textContent = `全 ${QUESTION_COUNT} 問中 ${score} 問ノーミス正解！`;
+        resultMsgEl.className = "result-message correct";
+        progressEl.textContent = (score === QUESTION_COUNT) ? "全問ノーミスパーフェクト！" : "全問終了！";
+        setHint(HINT_DATA.allFinished);
+        updateControlKeysState('finished'); updateSendButtonState();
+    } else {
+        resultMsgEl.textContent = '② 式：正解！';
+        resultMsgEl.className = 'result-message correct';
+        setHint(HINT_DATA.nextQuestion);
+        updateControlKeysState('cleared');
+    }
+}
+
+
+/* ==========================================================================
+   10. 出題の進行【共通・固有】
+   ========================================================================== */
+function showStartLayout() {
+    window.isAlreadySubmitted = false;
+    const sendBtnTop = document.getElementById('send-btn');
+    if (sendBtnTop) { sendBtnTop.textContent = "送信"; sendBtnTop.disabled = true; }
+    if (numberField) numberField.disabled = false;
+
+    clearInterval(timerInterval);
+    clearInterval(questionTimerId);
+    elapsedBeforeResume = 0;
+    isCorrectState = false;
+    document.getElementById('timer-display').innerText = "⏱️ 00:00.0";
+    document.getElementById('best-update-message').innerText = "";
+    document.getElementById('countdown-timer').style.display = 'none';
+
+    gameStarted = false;
+    isCompleted = false;
+    progressEl.textContent = "スタートボタンを押してください";
+    formulaBox.innerHTML = `<span style="color:#aaa; font-size:22px;">生徒番号を入力→【スタート】</span>`;
+    setHint(HINT_DATA.start);
+
+    currentStage = 'point';
+    stageProgress = 0;
+    judgeLocked = false;
+    stepsShown = false;
+    resetFields();
+    resetGraphState();
+    setGraphActive(false);
+    setGroup('group-point', 'locked-disabled');
+    setGroup('group-a', 'locked-disabled');
+    setGroup('group-formula', 'locked-disabled');
+    document.getElementById('group-a').style.display = 'none';
+    stepsDone = false;
+    updateStageTabs();
+    renderFields();
+    updateControlKeysState('start');
+    refreshMathJaxPreview();
+    resultMsgEl.textContent = "";
+    resultMsgEl.className = "result-message";
+}
+function startQuizGame() {
+    window.isAlreadySubmitted = false;
+    gameStarted = true;
+    score = 0;
+    currentQuestionIndex = 0;
+    startTimerClock();
+    if (numberField) numberField.disabled = true;
+    if (tooltip) tooltip.classList.remove('show');
+    loadQuestion();
+}
+function loadQuestion() {
+    isCompleted = false;
+    currentQuestionWrongCount = 0;
+    judgeLocked = false;
+    resultMsgEl.textContent = "";
+    resultMsgEl.className = "result-message";
+
+    const q = quizData[currentQuestionIndex];
+    currentStage = 'point';
+    stageProgress = 0;
+    stepsShown = false;
+    resetFields();
+    resetGraphState();
+    renderLine(q);
+    renderPicked();
+    setGraphActive(true);
+    setGroup('group-point', 'active-focus');
+    setGroup('group-a', 'locked-disabled');
+    setGroup('group-formula', 'locked-disabled');
+    document.getElementById('group-a').style.display = 'none';
+    stepsDone = false;
+
+    progressEl.textContent = `第 ${currentQuestionIndex + 1} 問 / 全 ${QUESTION_COUNT} 問`;
+    formulaBox.innerHTML = q.html;
+    updateMathJax([formulaBox]);
+    setHint(HINT_DATA.pointInit);
+
+    renderFields();
+    updateStageTabs();
+    updateControlKeysState('playing');
+    refreshMathJaxPreview();
+    startQuestionTimer();
+}
+function nextQuestion() {
+    currentQuestionIndex++;
+    if (currentQuestionIndex < quizData.length) loadQuestion();
+}
+function restartQuiz() {
+    quizData = generateQuizData();
+    showStartLayout();
+}
+function handleQuestionTimeout() {
+    clearInterval(questionTimerId);
+    const q = quizData[currentQuestionIndex];
+    if (!q || isCompleted) return;
+    let el, hint;
+    if (currentStage === 'point') { el = document.getElementById('group-point'); hint = HINT_DATA.timeoutPoint; }
+    else if (inExpression()) { el = document.getElementById('group-a'); hint = HINT_DATA.timeoutExpression; }
+    else { el = document.getElementById('group-formula'); hint = HINT_DATA.timeoutFormula; }
+    setHint(hint);
+    showStepError(el);
+}
+function showStepError(groupEl) {
+    currentQuestionWrongCount++;
+    if (correctStreakCount !== 0) {
+        correctStreakCount = 0;
+        saveKenteiRecords();
+    }
+    startQuestionTimer();
+    if (currentQuestionWrongCount >= 2 && currentStage === 'formula' && !stepsShown) {   // 2回ミスで途中式モード発動
+        startStepMode(true);
+        return;
+    }
+    if (groupEl) {
+        groupEl.classList.remove('error-shake');
+        void groupEl.offsetWidth;
+        groupEl.classList.add('error-shake');
+    }
+}
+function checkAnswer() {
+    const q = quizData[currentQuestionIndex];
+    if (!q || judgeLocked) return;
+    if (currentStage === 'point') checkPoint(q);
+    else checkFormula(q);
+}
+
+
+/* ==========================================================================
+   11. 問題の生成【固有】
+   ========================================================================== */
+const shuffle = arr => {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+};
+
+/* --- 比例 y=ax：aは ±1,±2,±3。1問目は a>0、2問目は a<0（絶対値は別の値） --- */
+function buildQuestion(a) {
+    return {
+        a: a,
+        html: `<div class="problem-inner">下のグラフは比例のグラフです。<br>$y$ を $x$ の式で表しなさい。</div>`
+    };
+}
+function generateQuizData() {
+    const v = shuffle([1, 2, 3]);
+    return [buildQuestion(v[0]), buildQuestion(-v[1])];
+}
+
+
+/* ==========================================================================
+   12. ヒント【固有】
+   ========================================================================== */
+const paren = n => (n < 0 ? `(${n})` : String(n));
+const HINT_DATA = {
+    start: "目指せ！パーフェクト！",
+    pointInit: "直線が<b>マス目の交点（格子点）</b>を通っているところを1つ見つけて、グラフをタップして点をとろう。<br>原点以外の点をとって、その座標を右の枠に入れよう。",
+    ptNone: "まず、グラフをタップして、直線が通る格子点を1つとろう。",
+    coordEmpty: "座標の枠が空いているよ。<br>$x$ 座標と $y$ 座標を入れよう。",
+    ptOrigin: "原点以外の点をとろう。<br>直線が通るほかの格子点を選ぼう。",
+    ptOff: "とった点（赤い点）が直線の上にないよ。<br>直線が、マス目の交点を通っているところを選ぼう。",
+    coordSwap: "$x$ 座標と $y$ 座標が入れかわっていないかな？<br>$(x, y)$ の順に読もう。",
+    coordWrong: "とった点の座標を読み直そう。<br>$x$ 座標は左右、$y$ 座標は上下の位置だよ。原点から数えてみよう。",
+    timeoutPoint: "時間切れ！<br>直線が通る格子点をとって、その座標を入れよう。",
+    formulaInit: "「$y$ は $x$ に比例する」とき、$y=ax$ と表せるよ。<br>とった点の座標から比例定数 $a$ を求めて式にしよう。<br>むずかしいときは『途中式』ボタンを押そう。",
+    stepManual: "途中式を書こう！<br>比例定数 $a$ は $y \\div x$ で求められるよ。左の枠に分数（分子は $y$、分母は $x$）、『＝』キーで右の枠に移って計算結果を書いてね。",
+    stepIntro: "2回間違えたので、途中式を書こう！<br>左の枠に、とった点の $y$ 座標を分子、$x$ 座標を分母にした分数を書いてね。『＝』キーで右の枠に移って、計算結果を書こう。",
+    stepSuccess: "途中式バッチリ！<br>計算して $a$ を求め、$y=ax$ の形で答えよう。「x」キーは $a$ のあとに使うよ。",
+    exprEmpty: "左の枠と右の枠、どちらも書こう。<br>『＝』キーで枠を移動できるよ。",
+    exprError: "途中式が違うよ！<br>とった点の「$y$ 座標」を分子、「$x$ 座標」を分母にした分数で書こう。約分や符号の整理はまだしないでね。",
+    exprValueError: "分数はバッチリ！<br>計算結果（$a$ の値）をもう一度確かめよう。符号に気をつけてね。",
+    formNoX: "式には $x$ を入れよう。<br>$y=ax$ の形で、$a$ に比例定数が入るよ。",
+    formOne: "$1x$ や $-1x$ とは書かないよ。<br>$1$ は省略して、$x$ や $-x$ と書こう。",
+    formSign: "符号を確かめよう。<br>グラフが右上がりなら $a$ は正、右下がりなら $a$ は負だよ。",
+    formWrong: "式の $a$ は、$y\\div x$ で求められる比例定数だよ。<br>とった点の座標から計算し直そう。",
+    formDiffA: "途中式で求めた比例定数 $a$ と、式の数がちがうよ。<br>式の $a$ に、求めた比例定数を入れよう。",
+    timeoutFormula: "時間切れ！<br>$a=y\\div x$ で比例定数を求めて、$y=ax$ の式にしよう。",
+    timeoutExpression: "時間切れ！<br>$a=$（$y$ を分子、$x$ を分母にした分数）＝（計算結果）の形で書こう。『＝』キーで枠を移動できるよ。",
+    nextQuestion: "正解！<br>『次の問題』を押そう。",
+    allFinished: "全問終了！<br>『送信』ボタンを押そう。"
+};
+
+
+/* ==========================================================================
+   13. イベントリスナー・初期化【共通】
+   ========================================================================== */
+window.addEventListener('resize', resizeApp);
+/* iPad（Safari）：なぞったとき画面が引っ張られたり拡大されたりしないようにする（ヒント欄のスクロールだけは許可） */
+document.addEventListener('touchmove', function (e) {
+    if (!(e.target.closest && e.target.closest('.hint-container'))) e.preventDefault();
+}, { passive: false });
+['gesturestart', 'gesturechange', 'gestureend'].forEach(function (t) {
+    document.addEventListener(t, function (e) { e.preventDefault(); });
+});
+window.addEventListener('DOMContentLoaded', () => {
+    resizeApp();
+    initValidationControls();
+    buildGraph();
+    quizData = generateQuizData();
+    loadKenteiRecords();
+    const bestDisplayEl = document.getElementById('best-normal-display');
+    if (bestDisplayEl) bestDisplayEl.innerText = bestTimeText(bestNormalTimeMs !== null ? formatMs(bestNormalTimeMs) : '--:--.-');
+    showStartLayout();
+    showScreen('screen-start');
+});
+
+</script>
+</body>
+</html>
