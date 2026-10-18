@@ -1313,14 +1313,8 @@
                                 <span>式</span>
                                 <span class="step-badge" id="badge-expr">ロック中</span>
                             </div>
-                            <div class="expr-row">
-                                <span class="expr-y">$y$</span><span>$=$</span>
-                                <div class="frac-input is-single" id="frac-input">
-                                    <div class="cell cell-expr" data-i="7" onclick="selectCell(7)"></div>
-                                    <div class="frac-bar"></div>
-                                    <div class="cell cell-expr" data-i="8" onclick="selectCell(8)"></div>
-                                </div>
-                            </div>
+                            <div id="math-preview-expr" class="mathjax-render-zone"></div>
+                            <div id="math-editor-expr-right" class="math-editor-container"></div>
                         </div>
                     </div>
 
@@ -1437,17 +1431,13 @@
     const KENTEI_RECORDS_KEYS = { 1: 'hanpirei_table_shiki_kentei_records_v1', 2: 'hanpirei_table_shiki_kentei2_records_v1' };
     let currentKentei = 1;   // 1＝検定①（表を完成させる）／2＝検定②（空欄を埋める）
 
-    /* --- 固有：入力マスの管理（0〜6＝表のyの欄(問題ごとに列数が変わる) / 7＝式の分子 / 8＝式の分母 / 9〜15＝検定②の表のxの欄） --- */
+    /* --- 固有：入力マスの管理（0〜6＝表のyの欄(問題ごとに列数が変わる) / 7・8＝未使用（式は専用の入力枠） / 9〜15＝検定②の表のxの欄） --- */
     const DEFAULT_TABLE_X = [0, 1, 2, 3, 4, 6, 12];   // 開始前に表示する表のx（検定①）
     const DEFAULT_TABLE_X_2 = [-4, -2, -1, 0, 1, 2, 4];   // 検定②の表のx
     let TABLE_X         = DEFAULT_TABLE_X.slice();
     let TABLE_CELLS     = DEFAULT_TABLE_X.map((_, i) => i);
-    const EXPR_NUM      = 7;
-    const EXPR_DEN      = 8;
-    const EXPR_CELLS    = [EXPR_NUM, EXPR_DEN];
     const XCELL_BASE    = 9;    // 検定②：xの空欄は 9〜15（yの空欄は 0〜6）
     const CELL_COUNT    = 16;
-    let exprFrac        = false;   // 式の欄が分数表示（「分の」を押した後）かどうか
     let cellVals        = new Array(CELL_COUNT).fill('');
     let cellState       = new Array(CELL_COUNT).fill('');   // ''＝未判定 / 'ok'＝正解 / 'ng'＝不正解
     let activeIdx       = 0;
@@ -2004,10 +1994,10 @@
         const next  = document.getElementById('key-next');
         const timesKey = document.getElementById('key-times');
         const fracKey  = document.getElementById('key-frac');
-        const canMove  = playing && (inTable || exprFrac);   // 式では分数になってから分子⇔分母を移動
+        const canMove  = playing && inTable;   // 式の入力枠では←→は使わない
         if (xKey)  xKey.disabled  = !(playing && !inTable);
         if (timesKey) timesKey.disabled = !(playing && inTable);
-        if (fracKey)  fracKey.disabled  = !(playing && !inTable && !exprFrac);
+        if (fracKey)  fracKey.disabled  = !(playing && !inTable && !exprHasFraction());
         if (prev)  prev.disabled  = !canMove;
         if (next)  next.disabled  = !canMove;
         const minus = document.getElementById('key-minus');
@@ -2055,27 +2045,17 @@
     }
 
     /* --- どのステージのマスか／ステージのマス一覧 --- */
-    function stageCells(stage) { return stage === 'table' ? TABLE_CELLS : (exprFrac ? EXPR_CELLS : [EXPR_NUM]); }
+    function stageCells(stage) { return stage === 'table' ? TABLE_CELLS : []; }
 
     /* --- 入力マスの再描画（renderCells） --- */
     function renderCells() {
-        const fi = document.getElementById('frac-input');
-        if (fi) fi.classList.toggle('is-single', !exprFrac);
         document.querySelectorAll('.cell[data-i]').forEach(el => {
             const i = parseInt(el.getAttribute('data-i'), 10);
             const val = cellVals[i];
             const isActive = gameStarted && !isCompleted && i === activeIdx
                              && stageCells(currentStage).includes(i) && cellState[i] !== 'ok';
-            if (EXPR_CELLS.includes(i)) {
-                if (el.dataset.v !== val) {   // 値が変わったときだけMathJaxで描画し直す
-                    el.dataset.v = val;
-                    el.innerHTML = val ? `$${val}$` : '';
-                    if (val) updateMathJax([el]);
-                }
-            } else {
-                el.innerHTML = val.replace('-', '−');
-            }
-            el.className = 'cell' + (EXPR_CELLS.includes(i) ? ' cell-expr' : '') + (cellState[i] ? ' ' + cellState[i] : '') + (isActive ? ' active' : '');
+            el.innerHTML = val.replace('-', '−');
+            el.className = 'cell' + (cellState[i] ? ' ' + cellState[i] : '') + (isActive ? ' active' : '');
         });
     }
 
@@ -2098,8 +2078,232 @@
 
     /* --- 現在のステージの入力が空かどうか（isCurrentStageEmpty） --- */
     function isCurrentStageEmpty() {
+        if (currentStage === 'expr') {   // 式の入力枠：文字が1つも入っていなければ空
+            const ed = exprEditor();
+            if (!ed) return true;
+            return !Array.from(ed.querySelectorAll('.editor-text-node, .editor-fraction-field'))
+                .some(el => el.value.replace(/\s+/g, '') !== '');
+        }
         return stageCells(currentStage).filter(i => cellState[i] !== 'ok').every(i => cellVals[i] === '');
     }
+
+    /* ==========================================================================
+       式の入力枠（14303_比例_式を求める.html から移植）
+       非表示のエディタ（#math-editor-expr-right）に入力し、MathJaxのプレビュー（#math-preview-expr）に「y = ○」と表示する
+       ========================================================================== */
+
+    /* --- 式のエディタ要素の取得（exprEditor） --- */
+    function exprEditor() { return document.getElementById('math-editor-expr-right'); }
+
+    /* --- エディタの文字ブロックの作成（createTextBlock） --- */
+    function createTextBlock(containerEl, initialValue = "") {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'editor-text-node';
+        input.value = initialValue;
+        input.autocomplete = 'off';
+        input.inputMode = 'none';
+        input.readOnly = true;
+        input.addEventListener('keydown', (e) => e.preventDefault());
+        containerEl.appendChild(input);
+        return input;
+    }
+
+    /* --- 文字ブロックの幅の調整（updateInputWidths） --- */
+    function updateInputWidths() {
+        const ed = exprEditor();
+        if (!ed) return;
+        ed.querySelectorAll('.editor-text-node').forEach(node => {
+            let displayStr = node.value || "";
+            let w = displayStr.length * 15 + 12;
+            if (displayStr === "") w = 150;
+            node.style.width = `${Math.max(20, w)}px`;
+        });
+    }
+
+    /* --- 式のエディタを空に戻す（resetExprEditor） --- */
+    function resetExprEditor() {
+        const ed = exprEditor();
+        if (!ed) return;
+        ed.innerHTML = '';
+        ed.classList.remove('wide-fraction-mode');
+        createTextBlock(ed, "");
+        updateInputWidths();
+        refreshMathJaxPreview();
+    }
+
+    /* --- 式のエディタの入力欄にフォーカスを当てる（focusExprEditor） --- */
+    function focusExprEditor() {
+        if (!gameStarted || isCompleted) return;
+        const ed = exprEditor();
+        if (!ed) return;
+        const input = ed.querySelector('.editor-text-node') || ed.querySelector('input');
+        if (input) input.focus();
+    }
+
+    /* --- 式の入力内容を文字列で取得（getExprUserAnswer）：分数は「分子/分母」の形 --- */
+    function getExprUserAnswer() {
+        const ed = exprEditor();
+        if (!ed) return "";
+        let result = "";
+        ed.childNodes.forEach(node => {
+            if (node.classList && node.classList.contains('editor-fraction-node')) {
+                const top = node.querySelector('.frac-top') ? node.querySelector('.frac-top').value : "";
+                const bottom = node.querySelector('.frac-bottom') ? node.querySelector('.frac-bottom').value : "";
+                if (top !== "" || bottom !== "") {
+                    result += `${top}/${bottom}`;
+                }
+            } else if (node.classList && node.classList.contains('editor-text-node')) {
+                result += node.value;
+            }
+        });
+        let s = result.replace(/\s+/g, "");
+        if (s.startsWith("+")) s = s.substring(1);
+        return s;
+    }
+
+    /* --- 式のエディタに分数が入っているか（exprHasFraction） --- */
+    function exprHasFraction() {
+        const ed = exprEditor();
+        return !!(ed && ed.querySelector('.editor-fraction-node'));
+    }
+
+    /* --- 式のプレビューの更新（refreshMathJaxPreview）：「y ＝ 入力内容」を「＝」の位置をそろえて表示 --- */
+    function refreshMathJaxPreview() {
+        const preview = document.getElementById('math-preview-expr');
+        const ed = exprEditor();
+        if (!preview) return;
+        let val = "";
+        if (ed) {
+            ed.childNodes.forEach(n => {
+                if (n.classList && n.classList.contains('editor-fraction-node')) {
+                    const top = n.querySelector('.frac-top') ? n.querySelector('.frac-top').value : "";
+                    const bottom = n.querySelector('.frac-bottom') ? n.querySelector('.frac-bottom').value : "";
+                    if (top !== "" || bottom !== "") {
+                        val += `\\dfrac{${top}}{${bottom}}`;
+                    }
+                } else if (n.value) {
+                    val += n.value;
+                }
+            });
+        }
+        const rightHtml = val ? `$${val}$` : `<span class="placeholder-text">答えを入力</span>`;
+        preview.innerHTML = `
+            <div class="equation-grid">
+                <div class="eq-left">$y$</div>
+                <div class="eq-equal">$=$</div>
+                <div class="eq-right">${rightHtml}</div>
+            </div>`;
+        updateMathJax([preview]);
+    }
+
+    /* --- 式の入力枠でのキー入力の処理（exprPressKey） --- */
+    function exprPressKey(key) {
+        if (key === 'prev' || key === 'next' || key === '=') return;
+        const currentEd = exprEditor();
+        if (!currentEd) return;
+        let active = document.activeElement;
+
+        if (!active || !currentEd.contains(active) || (!active.classList.contains('editor-text-node') && !active.classList.contains('editor-fraction-field'))) {
+            const inputs = currentEd.querySelectorAll('input');
+            active = inputs[inputs.length - 1];
+            if (active) active.focus();
+        }
+        if (!active) return;
+
+        if (key === 'clear') {
+            currentEd.innerHTML = '';
+            createTextBlock(currentEd, "").focus();
+            currentEd.classList.remove('wide-fraction-mode');
+            updateInputWidths();
+            refreshMathJaxPreview();
+            updateControlKeysState('playing');
+            return;
+        }
+
+        if (key === 'Backspace') {
+            const isFrac = active.classList.contains('editor-fraction-field');
+
+            if (isFrac) {
+                const fracNode = active.closest('.editor-fraction-node');
+                const fields = fracNode.querySelectorAll('.editor-fraction-field');
+
+                if (fields[0].value.length === 0 && fields[1].value.length === 0) {
+                    let prev = fracNode.previousSibling;
+                    fracNode.remove();
+
+                    if (prev) {
+                        if (prev.classList.contains('editor-fraction-node')) {
+                            prev.querySelectorAll('.editor-fraction-field')[1].focus();
+                        } else {
+                            prev.focus();
+                        }
+                    } else {
+                        createTextBlock(currentEd, "").focus();
+                    }
+
+                    if (currentEd.querySelectorAll('.editor-fraction-node').length === 0) {
+                        currentEd.classList.remove('wide-fraction-mode');
+                    }
+                } else {
+                    if (active.value.length > 0) {
+                        const start = active.selectionStart;
+                        const end = active.selectionEnd;
+                        const val = active.value;
+                        if (start !== end) {
+                            active.value = val.substring(0, start) + val.substring(end);
+                            active.selectionStart = active.selectionEnd = start;
+                        } else if (start > 0) {
+                            active.value = val.substring(0, start - 1) + val.substring(start);
+                            active.selectionStart = active.selectionEnd = start - 1;
+                        }
+                    }
+                }
+            } else {
+                if (active.value.length > 0) {
+                    active.value = active.value.slice(0, -1);
+                } else {
+                    const allNodes = currentEd.querySelectorAll('.editor-text-node, .editor-fraction-node');
+                    if (allNodes.length > 1) {
+                        let prev = active.previousSibling;
+                        active.remove();
+                        if (prev) {
+                            if (prev.classList.contains('editor-fraction-node')) {
+                                prev.querySelectorAll('.editor-fraction-field')[1].focus();
+                            } else {
+                                prev.focus();
+                            }
+                        }
+                    }
+                }
+            }
+            updateInputWidths();
+            if (document.activeElement) document.activeElement.focus();
+            refreshMathJaxPreview();
+            updateControlKeysState('playing');
+            return;
+        }
+
+        /* 式に入力できるのは数字と「x」だけ（枠が空のときだけ「x」、「x」の後ろに数字は入れない） */
+        const val = active.value;
+        let nv;
+        if (key === 'x') {
+            if (val !== '') return;
+            nv = 'x';
+        } else if (/^[0-9]$/.test(key)) {
+            if (val.includes('x') || val.length >= 5) return;
+            nv = (val === '0' ? '' : val) + key;   // 先頭の0は置き換える
+        } else {
+            return;
+        }
+
+        active.value = nv;
+        updateInputWidths();
+        active.focus();
+        refreshMathJaxPreview();
+        updateControlKeysState('playing');
+    }
+
 
     /* --- キー入力の処理（pressKey） --- */
     function pressKey(key) {
@@ -2107,14 +2311,12 @@
         const group = document.getElementById('group-' + currentStage);
         if (group) group.classList.remove('error-shake');
 
+        if (currentStage === 'expr') { exprPressKey(key); return; }   // 式の入力枠はエディタ側で処理する
+
         if (key === 'prev') { moveActive(-1); renderCells(); return; }
         if (key === 'next') { moveActive(1);  renderCells(); return; }
 
         if (key === 'clear') {   // 全消去：現在のステージの未正解マスをすべて空にする
-            if (currentStage === 'expr' && cellState[EXPR_NUM] !== 'ok' && cellState[EXPR_DEN] !== 'ok') {
-                exprFrac = false;   // 式は最初の1つの枠に戻す
-                cellVals[EXPR_DEN] = ''; cellState[EXPR_DEN] = '';
-            }
             stageCells(currentStage).forEach(i => { if (cellState[i] !== 'ok') { cellVals[i] = ''; cellState[i] = ''; } });
             const list = stageCells(currentStage).filter(i => cellState[i] !== 'ok');
             if (list.length) activeIdx = list[0];
@@ -2128,17 +2330,6 @@
         const inTable = (currentStage === 'table');
 
         if (key === 'Backspace') {
-            if (!inTable && exprFrac && val === '') {
-                if (i === EXPR_NUM) {   // 分子が空のときに消すと、分数を1つの枠（分母の文字を残す）に戻す
-                    cellVals[EXPR_NUM] = cellVals[EXPR_DEN]; cellVals[EXPR_DEN] = '';
-                    cellState[EXPR_NUM] = ''; cellState[EXPR_DEN] = '';
-                    exprFrac = false; activeIdx = EXPR_NUM;
-                    renderCells(); updateControlKeysState('playing');
-                } else {                // 分母が空のときは分子へ移動する
-                    activeIdx = EXPR_NUM; renderCells();
-                }
-                return;
-            }
             val = val.slice(0, -1);
         } else if (key === 'x') {
             if (inTable || val !== '') return;
@@ -2162,17 +2353,75 @@
         updateControlKeysState('playing');
     }
 
-    /* --- 「分の」ボタン：入力済みの文字を分母にして分数表示に切り替え、分子へ移る --- */
+    /* --- 「分の」ボタン：入力済みの文字を分母にして縦分数に切り替え、分子へ移る（14303から移植） --- */
     function convertDenominatorToFraction() {
-        if (!gameStarted || isCompleted || currentStage !== 'expr' || exprFrac) return;
-        const den = cellVals[EXPR_NUM];
-        if (den === '') return;   // 分母が空のときは何もしない
-        cellVals[EXPR_DEN] = den;
-        cellVals[EXPR_NUM] = '';
-        cellState[EXPR_NUM] = ''; cellState[EXPR_DEN] = '';
-        exprFrac = true;
-        activeIdx = EXPR_NUM;
-        renderCells();
+        if (!gameStarted || isCompleted || currentStage !== 'expr' || exprHasFraction()) return;
+        const currentEd = exprEditor();
+        if (!currentEd) return;
+
+        let active = document.activeElement;
+        if (!active || !currentEd.contains(active)) {
+            const inputs = currentEd.querySelectorAll('input');
+            active = inputs[inputs.length - 1];
+        }
+        if (!active || active.classList.contains('editor-fraction-field')) return;
+        if (active.value === '') return;   // 分母が空のときは何もしない
+
+        currentEd.classList.add('wide-fraction-mode');
+
+        const fracNode = document.createElement('div');
+        fracNode.className = 'editor-fraction-node';
+
+        const topField = document.createElement('input');
+        topField.type = 'text';
+        topField.className = 'editor-fraction-field frac-top';
+        topField.readOnly = true;
+        topField.addEventListener('keydown', (e) => e.preventDefault());
+
+        const line = document.createElement('div');
+        line.className = 'editor-fraction-line';
+
+        const bottomField = document.createElement('input');
+        bottomField.type = 'text';
+        bottomField.className = 'editor-fraction-field frac-bottom';
+        bottomField.readOnly = true;
+        bottomField.addEventListener('keydown', (e) => e.preventDefault());
+
+        fracNode.appendChild(topField);
+        fracNode.appendChild(line);
+        fracNode.appendChild(bottomField);
+
+        if (active.classList.contains('editor-text-node')) {
+            let val = active.value;
+            let match = val.match(/[0-9a-zA-Z]+$/);
+
+            if (match && match.index > 0) {
+                let preStr = val.substring(0, match.index);
+                const preNode = document.createElement('input');
+                preNode.type = 'text';
+                preNode.className = 'editor-text-node';
+                preNode.value = preStr;
+                preNode.readOnly = true;
+                preNode.addEventListener('keydown', (e) => e.preventDefault());
+                currentEd.insertBefore(preNode, active);
+
+                bottomField.value = match[0];
+            } else if (match && match.index === 0) {
+                bottomField.value = match[0];
+            } else {
+                bottomField.value = val;
+            }
+
+            active.value = "";
+            currentEd.insertBefore(fracNode, active);
+            topField.focus();
+        } else {
+            currentEd.appendChild(fracNode);
+            topField.focus();
+        }
+
+        updateInputWidths();
+        refreshMathJaxPreview();
         updateControlKeysState('playing');
     }
 
@@ -2209,7 +2458,7 @@
         TABLE_CELLS = TABLE_X.map((_, i) => i);
         buildTable();
         currentStage = 'table';
-        exprFrac = false;
+        resetExprEditor();
         cellVals = new Array(CELL_COUNT).fill('');
         cellState = new Array(CELL_COUNT).fill('');
         activeIdx = 0;
@@ -2250,7 +2499,7 @@
         resultMsgEl.className = "result-message";
 
         currentStage = 'table';
-        exprFrac = false;
+        resetExprEditor();
         cellVals = new Array(CELL_COUNT).fill('');
         cellState = new Array(CELL_COUNT).fill('');
         activeIdx = 0;
@@ -2314,10 +2563,11 @@
     function advanceStage() {
         setStageUI('table', 'locked-correct', '正解！');
         currentStage = 'expr';
-        activeIdx = EXPR_NUM;
+        resetExprEditor();
         setStageUI('expr', 'active-focus', '入力中');
         setHint(HINT_DATA.exprInit);
         renderCells();
+        focusExprEditor();
         updateControlKeysState('playing');
         startQuestionTimer();
     }
@@ -2359,28 +2609,24 @@
         }
 
         /* --- 式の判定（y = a/x：分子が a、分母が x） --- */
-        if (!exprFrac) {   // 「分の」を使わず分数にしていないとき
-            if (cellVals[EXPR_NUM] === '') return;
-            cellState[EXPR_NUM] = 'ng';
-            renderCells();
+        const fracNode = exprHasFraction() ? exprEditor().querySelector('.editor-fraction-node') : null;
+        if (!fracNode) {   // 「分の」を使わず分数にしていないとき
+            if (getExprUserAnswer() === '') return;
             showStepError(document.getElementById('group-expr'));
             setHint(HINT_DATA.exprNeedFrac);
             return;
         }
-        const emptyExpr = EXPR_CELLS.filter(i => cellVals[i] === '');
-        if (emptyExpr.length === EXPR_CELLS.length) return;
-        if (emptyExpr.length > 0) {   // 空きマスがあるときは不正解に数えない
-            emptyExpr.forEach(i => { cellState[i] = 'ng'; });
-            activeIdx = emptyExpr[0];
-            renderCells();
+        const numVal = fracNode.querySelector('.frac-top').value;
+        const denVal = fracNode.querySelector('.frac-bottom').value;
+        if (numVal === '' && denVal === '') return;
+        if (numVal === '' || denVal === '') {   // 空きマスがあるときは不正解に数えない
             setHint(HINT_DATA.exprEmpty);
             return;
         }
-        const numOk = (cellVals[EXPR_NUM] === String(q.a));
-        const denOk = (cellVals[EXPR_DEN] === 'x');
+        const numOk = (numVal === String(q.a));
+        const denOk = (denVal === 'x');
 
         if (numOk && denOk) {
-            EXPR_CELLS.forEach(i => { cellState[i] = 'ok'; });
             isCompleted = true;
             clearInterval(questionTimerId);
             document.getElementById('countdown-timer').style.display = 'none';
@@ -2393,7 +2639,7 @@
                 saveKenteiRecords();
             }
             if (document.activeElement) document.activeElement.blur();
-            renderCells();
+            refreshMathJaxPreview();
 
             if (currentQuestionIndex === QUESTION_COUNT - 1) {
                 stopTimerClockAndEvaluate();
@@ -2408,10 +2654,6 @@
                 updateControlKeysState('cleared');
             }
         } else {
-            cellState[EXPR_NUM] = numOk ? 'ok' : 'ng';
-            cellState[EXPR_DEN] = denOk ? 'ok' : 'ng';
-            activeIdx = numOk ? EXPR_DEN : EXPR_NUM;
-            renderCells();
             showStepError(document.getElementById('group-expr'));
             setHint(HINT_DATA.exprError);
         }
