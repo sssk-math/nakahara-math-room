@@ -98,6 +98,12 @@ svg.graph{flex:1;min-height:0;width:100%;cursor:crosshair;display:block}
 #score{font-size:12px;color:#0d3b66;flex:none}
 #log{flex:1;min-height:0;overflow:hidden;font-size:12px;line-height:1.35;color:#333;border-top:1px dashed #9cc3e0;padding-top:3px}
 #log div:first-child{font-weight:bold}
+/* リプレイ */
+#replayView{display:none;flex:1;min-height:0;flex-direction:column;gap:5px}
+#replayView.active{display:flex}
+#rpHead{font-size:15px;font-weight:bold;flex:none;line-height:1.3}
+#rpText{flex:1;min-height:0;font-size:13px;line-height:1.5;color:#333;overflow:hidden}
+#replayRow{display:none;margin-bottom:12px}
 
 /* 結果オーバーレイ */
 #over{position:absolute;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:10}
@@ -209,7 +215,7 @@ svg.graph{flex:1;min-height:0;width:100%;cursor:crosshair;display:block}
     <section id="game" class="screen">
       <div id="left" class="col">
         <div class="panel top">
-          <div class="ph"><span>プレイ画面（相手の点を予想してとろう）</span>
+          <div class="ph"><span id="hdL">プレイ画面（相手の点を予想してとろう）</span>
             <span class="legend"><span><i style="background:#2e9e44"></i>ヒット</span><span><i style="background:#1e88e5"></i>ニア</span><span><i style="background:#e53935"></i>ミス</span><span><i style="background:#222"></i>ロック</span></span></div>
           <svg id="gLeft" class="graph" viewBox="0 0 384 384"></svg>
           <div id="banner"><span id="bannerText"></span></div>
@@ -231,13 +237,13 @@ svg.graph{flex:1;min-height:0;width:100%;cursor:crosshair;display:block}
           <div id="pad">
             <button data-k="4">4</button><button data-k="5">5</button><button data-k="bs">⌫</button>
             <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
-            <button data-k="0">0</button><button data-k="neg">−</button><button class="nx" id="padNext" data-k="next">OK</button>
+            <button data-k="0">0</button><button data-k="neg">−</button>
           </div>
         </div>
       </div>
       <div id="right" class="col">
         <div class="panel top">
-          <div class="ph"><span>自分の画面（■ = 自分の点）</span></div>
+          <div class="ph"><span id="hdR">自分の画面（■ = 自分の点）</span></div>
           <svg id="gRight" class="graph" viewBox="0 0 384 384"></svg>
         </div>
         <div class="panel bottom">
@@ -260,11 +266,16 @@ svg.graph{flex:1;min-height:0;width:100%;cursor:crosshair;display:block}
             <div id="score"></div>
             <div id="log"></div>
           </div>
+          <div id="replayView">
+            <div id="rpHead"></div>
+            <div id="rpText"></div>
+            <div class="btnrow"><button class="sbtn" id="rpPrev">◀ 戻る</button><button class="sbtn go" id="rpNext">進む ▶</button><button class="sbtn" id="rpEnd">リプレイを終わる</button></div>
+          </div>
         </div>
       </div>
     </section>
 
-    <div id="over"><div id="overCard"><h2 id="overTitle"></h2><p id="overText"></p><button class="bigbtn" id="againBtn">もう一度あそぶ</button><button class="sbtn" id="homeBtn">はじめにもどる</button></div></div>
+    <div id="over"><div id="overCard"><h2 id="overTitle"></h2><p id="overText"></p><div id="replayRow"><button class="bigbtn blue" id="replayBtn">リプレイ</button></div><button class="bigbtn" id="againBtn">もう一度あそぶ</button><button class="sbtn" id="homeBtn">はじめにもどる</button></div></div>
 <div id="quit"><div id="quitCard"><h2>ゲームを中断しますか？</h2><p>スタート画面にもどります。<br>いまの対戦は終了します。</p><button class="sbtn go" id="quitYes">もどる</button><button class="sbtn" id="quitNo">つづける</button></div></div>
   </main>
   <footer>©中原先生の数学部屋</footer>
@@ -284,6 +295,7 @@ const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()
 const inRange=c=>Math.abs(c.x)<=R&&Math.abs(c.y)<=R;
 
 let st={};
+let rp=null;
 
 /* ---------- 画面の拡縮（小さい画面のみ縮小） ---------- */
 function fit(){const s=Math.min(window.innerWidth/960,window.innerHeight/640,1);$('app').style.setProperty('--s',s);}
@@ -410,6 +422,9 @@ function updateTurn(){
 }
 function updatePick(){updateAtk();}
 function updateScore(){
+  const cnt={hit:0,near:0,miss:0,lock:0};
+  st.pAttacks.forEach(a=>{cnt[a.kind]++;});
+  ['hit','near','miss','lock'].forEach(k=>{$('b-'+k).textContent=JP[k]+'/'+cnt[k];});
   const a=st.cpuShips.filter(s=>s.hit).length,b=st.myShips.filter(s=>s.hit).length;
   $('score').textContent=`あなたのヒット：${a} / ${NS} 点　　${st.mode==='pvp'?'相手':'CPU'}のヒット：${b} / ${NS} 点`;
 }
@@ -447,9 +462,10 @@ function randomShips(){
 }
 function resetGame(mode){
   const pv=(mode==='pvp');
-  st={mode:pv?'pvp':'cpu',phase:'setup',myShips:[],cpuShips:pv?[]:randomShips(),pAttacks:[],cAttacks:[],pick:null,log:[],vals:{x:'',y:''},field:null,blocked:new Set(),xmarks:[],omarks:[],
+  st={mode:pv?'pvp':'cpu',phase:'setup',myShips:[],cpuShips:pv?[]:randomShips(),pAttacks:[],cAttacks:[],hist:[],pick:null,log:[],vals:{x:'',y:''},field:null,blocked:new Set(),xmarks:[],omarks:[],
       cpu:{queue:[],exact:new Set()},meReady:false,oppReady:false,pending:null};
   $('over').classList.remove('active');
+  $('replayRow').style.display='none';rp=null;$('replayView').classList.remove('active');setHeads(false);
   $('clearBtn').disabled=false;
   $('toStart').style.display=pv?'none':'block';
   $('againBtn').style.display='';$('againBtn').disabled=false;$('againBtn').textContent='もう一度あそぶ';$('homeBtn').style.display='none';
@@ -516,6 +532,7 @@ function playerAttack(){
   const res=judge(st.cpuShips,P,Rd);
   if(res.kind==='hit')res.ship.hit=true;
   st.pAttacks.push({P,R:Rd,kind:res.kind});
+  st.hist.push({who:'p',P,R:Rd,kind:res.kind});
   if(res.kind!=='lock')st.blocked.add(key(P));
   if(res.kind==='miss')nbrs(P).forEach(c=>{st.blocked.add(key(c));st.xmarks.push(c);});
   if(res.kind==='near')nbrs(P).forEach(c=>{st.omarks.push(c);});
@@ -574,6 +591,7 @@ function cpuTurn(){
   const res=judge(st.myShips,P,Rd);
   if(res.kind==='hit')res.ship.hit=true;
   st.cAttacks.push({P,R:Rd,kind:res.kind});
+  st.hist.push({who:'c',P,R:Rd,kind:res.kind});
   if(same(P,Rd)&&res.kind!=='hit')cpu.exact.add(key(P));
   if(res.kind==='near'){
     const seen=new Set();const add=[];
@@ -596,8 +614,94 @@ function gameOver(win){
   $('overTitle').style.color=win?'#e53935':'#0d3b66';
   $('overText').textContent=win?(pv?'相手の5点をすべてヒットさせました！':'CPUの5点をすべてヒットさせました！'):'あなたの5点がすべてヒットされました。もう一度挑戦しよう！';
   $('homeBtn').style.display=pv?'inline-block':'none';
+  $('replayRow').style.display=pv?'none':'block';
   setTimeout(()=>{if(st.phase==='over')$('over').classList.add('active');},900);
 }
+
+/* ---------- リプレイ（対CPU戦のみ） ---------- */
+const HEAD_L='プレイ画面（相手の点を予想してとろう）',HEAD_R='自分の画面（■ = 自分の点）';
+function setHeads(on){
+  $('hdL').textContent=on?'リプレイ：あなたの攻撃（□=CPUの点）':HEAD_L;
+  $('hdR').textContent=on?'リプレイ：CPUの攻撃（■=自分の点）':HEAD_R;
+}
+function rpHitSet(who,n){
+  const s=new Set();
+  for(let k=0;k<n;k++){const h=st.hist[k];if(h.who===who&&h.kind==='hit')s.add(key(h.P));}
+  return s;
+}
+function drawReplay(){
+  const N=st.hist.length,i=rp.i;
+  const cur=i>0?st.hist[i-1]:null;
+  const pHit=rpHitSet('p',i),cHit=rpHitSet('c',i);
+  let ex='',nb=[];
+  if(cur){
+    const P=cur.P,Rd=cur.R,cx=X(P.x),cy=Y(P.y);
+    if(cur.kind==='near'||cur.kind==='miss'){
+      ex+=`<rect x="${cx-45}" y="${cy-45}" width="90" height="90" fill="${COL[cur.kind]}" fill-opacity=".12" stroke="${COL[cur.kind]}" stroke-width="1.5" stroke-dasharray="5 3"/>`;
+    }
+    if(cur.kind==='near'){
+      const before=rpHitSet(cur.who,i-1);
+      nb=(cur.who==='p'?st.cpuShips:st.myShips).filter(s=>!before.has(key(s))&&Math.max(Math.abs(s.x-P.x),Math.abs(s.y-P.y))===1);
+      nb.forEach(s=>{ex+=`<rect x="${X(s.x)-12}" y="${Y(s.y)-12}" width="24" height="24" rx="4" fill="none" stroke="#1e88e5" stroke-width="3"/>`;});
+    }
+    if(cur.kind==='lock'){
+      ex+=`<circle cx="${X(Rd.x)}" cy="${Y(Rd.y)}" r="12" fill="none" stroke="#222" stroke-width="2" stroke-dasharray="3 2"/><text x="${X(Rd.x)}" y="${Y(Rd.y)-15}" text-anchor="middle" font-size="11" font-weight="bold" fill="#222">読み</text>`;
+    }
+  }
+  let L=baseGrid();
+  st.cpuShips.forEach(c=>{
+    L+=`<rect x="${X(c.x)-9}" y="${Y(c.y)-9}" width="18" height="18" rx="3" fill="none" stroke="#0d3b66" stroke-width="2" stroke-dasharray="3 2"/>`;
+  });
+  if(cur&&cur.who==='p')L+=ex;
+  st.hist.slice(0,i).forEach((h,k)=>{if(h.who==='p')L+=mark(h.P,h.kind,k===i-1);});
+  let Rg=baseGrid();
+  st.myShips.forEach(c=>{
+    const h=cHit.has(key(c));
+    Rg+=`<rect x="${X(c.x)-9}" y="${Y(c.y)-9}" width="18" height="18" rx="3" fill="${h?'#7b1f1f':'#0d3b66'}" stroke="${h?'#e53935':'#fff'}" stroke-width="1.5"/>`;
+  });
+  if(cur&&cur.who==='c')Rg+=ex;
+  st.hist.slice(0,i).forEach((h,k)=>{if(h.who==='c')Rg+=mark(h.P,h.kind,k===i-1);});
+  $('gLeft').innerHTML=L;$('gRight').innerHTML=Rg;
+  let head,txt,col='#0d3b66';
+  if(!cur){
+    head=`はじまり（全${N}手）`;
+    txt='両方の点の位置を表示しています。「進む」で1手ずつ見てみよう。';
+  }else{
+    const subj=cur.who==='p'?'あなた':'CPU',P=cur.P,Rd=cur.R,ps=`(${P.x}, ${P.y})`;
+    col=COL[cur.kind];
+    head=`${i} / ${N}手目　${subj}の攻撃 → ${JP[cur.kind]}`;
+    txt=`とった点${ps}、読み(${Rd.x}, ${Rd.y})。`;
+    if(cur.kind==='hit')txt+='点の位置も読みも合っていて、そこに点があったのでヒット！';
+    else if(cur.kind==='near')txt+=`${ps}には点がありませんが、まわり8マスの${nb.map(s=>`(${s.x}, ${s.y})`).join('、')}に点があるのでニア。`;
+    else if(cur.kind==='miss')txt+=`${ps}にも、まわり8マスにも点がないのでミス。この9マスには点がないとわかります。`;
+    else txt+='とった点と読みがちがうので、ロック（攻撃失敗）。';
+    if(i===N)txt+='　これで終わりです。';
+  }
+  $('rpHead').textContent=head;$('rpHead').style.color=col;
+  $('rpText').textContent=txt;
+  $('rpPrev').disabled=(i===0);
+  $('rpNext').disabled=(i===N);
+}
+function startReplay(){
+  if(!st||st.mode!=='cpu'||st.phase!=='over')return;
+  rp={i:0};
+  $('over').classList.remove('active');
+  $('resultView').classList.remove('active');$('replayView').classList.add('active');
+  setHeads(true);$('turn').textContent='リプレイ中';
+  drawReplay();
+}
+function endReplay(){
+  if(!rp)return;
+  rp=null;
+  $('replayView').classList.remove('active');$('resultView').classList.add('active');
+  setHeads(false);
+  renderLeft();renderRight();updateTurn();
+  $('over').classList.add('active');
+}
+$('replayBtn').addEventListener('click',startReplay);
+$('rpPrev').addEventListener('click',()=>{if(rp&&rp.i>0){rp.i--;drawReplay();}});
+$('rpNext').addEventListener('click',()=>{if(rp&&rp.i<st.hist.length){rp.i++;drawReplay();}});
+$('rpEnd').addEventListener('click',endReplay);
 
 /* ---------- 対人戦（Firebase Realtime Database） ---------- */
 const firebaseConfig={
