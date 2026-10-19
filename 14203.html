@@ -383,7 +383,7 @@ function updateAtk(){
   $('atk').disabled=!ok;
 }
 function renderInput(){
-  const on=st.phase==='player';
+  const on=st.phase==='player'&&!!st.pick;
   [['x','bx'],['y','by']].forEach(([f,id])=>{
     const b=$(id),v=st.vals[f];
     b.disabled=!on;
