@@ -355,6 +355,9 @@
         .start-menu-btn:active {
             transform: scale(0.97);
         }
+        /* --- 問題選択画面（6つのパターンボタン）のスタイル --- */
+        .mondai-menu { width: 400px; gap: 10px; }
+        .mondai-menu .start-menu-btn { height: 50px; font-size: 17px; }
 
         /* ==========================================================================
            5. サブ画面・問題選択画面【共通】
@@ -1163,6 +1166,7 @@
                 <div class="start-title-sub">比例：表と式</div>
             </div>
             <div class="start-menu">
+                <button class="start-menu-btn" onclick="showScreen('screen-mondai')">📚 問題選択</button>
                 <button class="start-menu-btn" onclick="showScreen('screen-select')">📝 検定</button>
                 <button class="start-menu-btn" onclick="showScreen('screen-kiroku'); renderKirokuScreen();">🏆 記録</button>
                 <button class="start-menu-btn" onclick="showScreen('screen-settei')">⚙️ 設定</button>
@@ -1175,6 +1179,20 @@
             <div class="start-menu">
                 <button class="start-menu-btn" onclick="enterKenteiScreen(1)">検定① 表を完成させる</button>
                 <button class="start-menu-btn" onclick="enterKenteiScreen(2)">検定② 空欄を埋める</button>
+            </div>
+            <button class="btn-tutorial-hud-secondary" onclick="showScreen('screen-start')">←開始画面へ</button>
+        </div>
+
+        <!-- ===== 問題選択画面（時間制限なしの練習） ===== -->
+        <div id="screen-mondai" class="app-screen" style="display:none; align-items:center; justify-content:center; gap:14px;">
+            <div class="sub-screen-header"><h1>📚 問題選択（パターンを選ぼう）</h1></div>
+            <div class="start-menu mondai-menu">
+                <button class="start-menu-btn" onclick="startPractice(1)">① 正多角形の周の長さ</button>
+                <button class="start-menu-btn" onclick="startPractice(2)">② 分速で走る乗り物の距離</button>
+                <button class="start-menu-btn" onclick="startPractice(3)">③ 水そうにたまる水の量</button>
+                <button class="start-menu-btn" onclick="startPractice(4)">④ 底辺と高さから面積</button>
+                <button class="start-menu-btn" onclick="startPractice(5)">⑤ 品物の代金</button>
+                <button class="start-menu-btn" onclick="startPractice(6)">⑥ 表を埋める</button>
             </div>
             <button class="btn-tutorial-hud-secondary" onclick="showScreen('screen-start')">←開始画面へ</button>
         </div>
@@ -1407,7 +1425,9 @@
     const errorDisplay = document.getElementById('error-display');
     let isConfirmed = false;
 
-    let practiceMode           = false;   // このアプリには練習モードはない（共通関数が参照するため残している）
+    let practiceMode           = false;   // 問題選択（練習）モード：true の間はタイマー・記録・送信を使わない
+    let practiceType           = null;    // 練習中のパターン（1〜5＝文章題の表と式／6＝表を埋める）
+    const PRACTICE_NAMES       = { 1: '①周の長さ', 2: '②乗り物', 3: '③水そう', 4: '④面積', 5: '⑤代金', 6: '⑥表を埋める' };
 
     let correctStreakCount = 0;
     let maxStreakCount = 0;
@@ -1858,7 +1878,43 @@
         clearInterval(questionTimerId);
         gameStarted = false;
         isCompleted = false;
+        if (practiceMode) {
+            exitPracticeMode();
+            showScreen('screen-mondai');
+            return;
+        }
         showScreen('screen-select');
+    }
+
+    /* --- 練習用の問題を1問つくる（buildPracticeQuestion）：6＝検定②形式、1〜5＝検定①形式のタイプ別 --- */
+    function buildPracticeQuestion(type) {
+        return (type === 6) ? buildQuestion2() : buildType(type);
+    }
+
+    /* --- 練習モードの開始（startPractice）：タイマー・生徒番号・送信は使えない --- */
+    function startPractice(type) {
+        practiceMode = true;
+        practiceType = type;
+        currentKentei = (type === 6) ? 2 : 1;
+        quizData = [buildPracticeQuestion(type)];
+        currentQuestionIndex = 0;
+        showStartLayout();
+        document.getElementById('timer-display').innerText = '⏱️ --:--.-';
+        document.getElementById('best-normal-display').innerText = bestTimeText('--:--.-');
+        document.getElementById('timer-container-area').classList.add('practice-disabled');
+        document.getElementById('kentei-title').textContent = '４章　変化と対応（比例：表と式・練習）';
+        showScreen('screen-kentei');
+        startQuizGame();
+    }
+
+    /* --- 練習モードの終了（exitPracticeMode）：検定画面の表示を元に戻す --- */
+    function exitPracticeMode() {
+        practiceMode = false;
+        practiceType = null;
+        document.getElementById('timer-container-area').classList.remove('practice-disabled');
+        document.getElementById('kentei-title').textContent = '４章　変化と対応（比例：表と式）';
+        document.getElementById('timer-display').innerText = '⏱️ 00:00.0';
+        showStartLayout();
     }
 
     /* --- 記録画面の描画（renderKirokuScreen）：検定①②の両方 --- */
@@ -1932,6 +1988,8 @@
     function handleRightBtn() {
         if (currentControlState === 'start' || currentControlState === 'finished') {
             goBackFromKentei();
+        } else if (practiceMode && (currentControlState === 'cleared' || (currentControlState === 'playing' && isCurrentStageEmpty()))) {
+            goBackFromKentei();
         } else {
             pressKey('clear');
         }
@@ -1968,12 +2026,22 @@
             if (isCurrentStageEmpty()) {
                 actionBtn.disabled = true;
                 clearBtn.disabled = true;
-                clearAllBtn.disabled = true;
+                if (practiceMode) {   // 練習中は、入力が空のとき右ボタンが「戻る」になる
+                    clearAllBtn.textContent = "戻る";
+                    clearAllBtn.className = "key action-btn-back";
+                    clearAllBtn.disabled = false;
+                } else {
+                    clearAllBtn.disabled = true;
+                }
             }
         } else if (state === 'cleared') {
             actionBtn.textContent = "次の問題"; actionBtn.className = "key action-btn judge-mode"; actionBtn.disabled = false;
             clearBtn.textContent = "消す"; clearBtn.disabled = true;
-            clearAllBtn.textContent = "全消去"; clearAllBtn.disabled = true;
+            if (practiceMode) {   // 練習：「次の問題」と「戻る」
+                clearAllBtn.textContent = "戻る"; clearAllBtn.className = "key action-btn-back"; clearAllBtn.disabled = false;
+            } else {
+                clearAllBtn.textContent = "全消去"; clearAllBtn.disabled = true;
+            }
         } else if (state === 'finished') {
             actionBtn.textContent = "送信"; actionBtn.className = "key action-btn judge-mode"; actionBtn.disabled = false;
             clearBtn.textContent = "もう一回"; clearBtn.className = "key action-btn"; clearBtn.disabled = false;
@@ -2430,7 +2498,9 @@
             activeIdx = TABLE_CELLS[0];
             buildTable();
         }
-        progressEl.textContent = `第 ${currentQuestionIndex + 1} 問 / 全 ${QUESTION_COUNT} 問`;
+        progressEl.textContent = practiceMode
+            ? `練習：${PRACTICE_NAMES[practiceType]}`
+            : `第 ${currentQuestionIndex + 1} 問 / 全 ${QUESTION_COUNT} 問`;
         formulaBox.innerHTML = q.html;
         updateMathJax([formulaBox]);
         setHint(hintKey('tableInit'));
@@ -2442,6 +2512,12 @@
 
     /* --- 次の問題への移動（nextQuestion） --- */
     function nextQuestion() {
+        if (practiceMode) {   // 練習：同じパターンの新しい問題を出す
+            quizData = [buildPracticeQuestion(practiceType)];
+            currentQuestionIndex = 0;
+            loadQuestion();
+            return;
+        }
         currentQuestionIndex++;
         if (currentQuestionIndex < quizData.length) { loadQuestion(); }
     }
@@ -2545,14 +2621,16 @@
 
             if (currentQuestionWrongCount === 0) {
                 score++;
-                correctStreakCount++;
-                if (correctStreakCount > maxStreakCount) maxStreakCount = correctStreakCount;
-                saveKenteiRecords();
+                if (!practiceMode) {
+                    correctStreakCount++;
+                    if (correctStreakCount > maxStreakCount) maxStreakCount = correctStreakCount;
+                    saveKenteiRecords();
+                }
             }
             if (document.activeElement) document.activeElement.blur();
             refreshMathJaxPreview();
 
-            if (currentQuestionIndex === QUESTION_COUNT - 1) {
+            if (!practiceMode && currentQuestionIndex === QUESTION_COUNT - 1) {
                 stopTimerClockAndEvaluate();
                 resultMsgEl.textContent = `全 ${QUESTION_COUNT} 問中 ${score} 問ノーミス正解！`;
                 resultMsgEl.className = "result-message correct";
@@ -2561,7 +2639,7 @@
                 updateControlKeysState('finished'); updateSendButtonState();
             } else {
                 resultMsgEl.textContent = "";
-                setHint(HINT_DATA.nextQuestion);
+                setHint(practiceMode ? HINT_DATA.practiceNext : HINT_DATA.nextQuestion);
                 updateControlKeysState('cleared');
             }
         } else {
@@ -2679,6 +2757,7 @@
         tableError2: "比例では、$y$ ÷ $x$ の値がいつも同じになるよ。<br>$x$ と $y$ が両方書かれている列から、比例定数を求めよう。",
         timeoutTable2: "時間切れ！<br>$x$ と $y$ が両方書かれている列から、$y$ ÷ $x$（比例定数）を求めよう。",
         nextQuestion: "正解！<br>『次の問題』を押そう。",
+        practiceNext: "正解！<br>『次の問題』で続けるか、『戻る』でパターン選択へ。",
         allFinished: "全問終了！<br>『送信』ボタンを押そう。"
     };
 
