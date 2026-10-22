@@ -1433,7 +1433,7 @@
         .cbox {
             width: 48px; height: 38px; padding: 0;
             font-size: 20px; font-weight: bold; font-family: inherit; color: #1b2a3a;
-            background: #fff; border: 2px solid #9cc3e0; border-radius: 6px; cursor: pointer;
+            background: #fff; border: 2px solid #9cc3e0; border-radius: 6px; cursor: default;
         }
         .cbox.ph { font-size: 18px; font-weight: normal; color: #8a97a3; }
         .cbox.sel { border-color: #1e88e5; background: #f1f8ff; box-shadow: 0 0 0 2px #a9d1f7; }
@@ -2323,9 +2323,9 @@
         POINT_LABELS.forEach((L, i) => {
             h += `<div class="answer-row pending" id="row-${i}">` +
                  `<span class="a-label">$${L}$</span><span class="a-par">$($</span>` +
-                 `<button type="button" class="cbox ph" id="cb-${i}-x" data-v="ph:x" onclick="selectField(${i}, 'x')">$x$</button>` +
+                 `<button type="button" class="cbox ph" id="cb-${i}-x" data-v="ph:x"">$x$</button>` +
                  `<span class="a-par">$,$</span>` +
-                 `<button type="button" class="cbox ph" id="cb-${i}-y" data-v="ph:y" onclick="selectField(${i}, 'y')">$y$</button>` +
+                 `<button type="button" class="cbox ph" id="cb-${i}-y" data-v="ph:y"">$y$</button>` +
                  `<span class="a-par">$)$</span></div>`;
         });
         const wrap = document.getElementById('answer-rows');
