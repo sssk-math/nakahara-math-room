@@ -1,0 +1,2451 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>15001.平面図形</title>
+    <script>
+        /* ==========================================================================
+           1. MathJaxの基本設定
+           ========================================================================== */
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$']],
+                displayMath: [['$$', '$$']]
+            },
+            options: {
+                enableMenu: false
+            }
+        };
+    </script>
+    
+    <style>
+        /* ==========================================================================
+           1. 全体の基本設定【共通】
+           ========================================================================== */
+        /* --- 全称要素の基本設定 --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* --- ボディの基本スタイル --- */
+        body {
+            background-color: #ffffff;
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        /* --- アプリコンテナのレイアウト設定 --- */
+        #app-container {
+            width: 960px;
+            height: 640px;
+            flex-shrink: 0;
+            min-width: 960px;
+            min-height: 640px;
+            background-color: #ffffff;
+            border: 2px solid #333333;
+            border-radius: 12px;
+            position: relative;
+            transform-origin: top center;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding: 10px 20px;
+        }
+
+        /* ==========================================================================
+           2. ヘッダー・タイトル・利き手切り替えボタン【共通】
+           ========================================================================== */
+        /* --- ヘッダー領域のレイアウト設定 --- */
+        header { 
+            text-align: center; 
+        }
+        /* --- タイトル見出しのスタイル --- */
+        h1 { 
+            font-size: 24px; 
+            color: #333; 
+            margin-bottom: 5px; 
+        }
+        /* --- タイトルバーのグリッドレイアウト --- */
+        .title-bar {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 0px;
+        }
+        /* --- 利き手設定ボタンの共通スタイル --- */
+        .title-hand-btn {
+            padding: 6px 14px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            background-color: #e0e0e0;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        /* --- 利き手設定ボタンの活性状態スタイル --- */
+        .title-hand-btn.active { 
+            background-color: #1a73e8;
+            color: white;
+        }
+        /* --- 左利きレイアウト（反転配置）のスタイル --- */
+        .game-layout.left-handed {
+            flex-direction: row-reverse;
+        }
+
+        /* ==========================================================================
+           3. キー・ボタン類（キーパッド・ミニキー・送信ボタン）【共通】
+           ========================================================================== */
+        /* --- キーパッドのグリッド配置 --- */
+        .keypad { 
+            display: grid; 
+            grid-template-columns: repeat(5, 56px); 
+            gap: 1px; 
+            margin-bottom: 8px; 
+        }
+        /* --- キー（ボタン）の共通スタイル --- */
+        .key {
+            height: 46px;
+            font-size: 24px;
+            font-weight: bold;
+            background-color: #f1f3f5;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.1s;
+        }
+        /* --- キーが押下された時のスタイル --- */
+        .key:active:not(:disabled) { 
+            background-color: #dee2e6; 
+            transform: scale(0.95); 
+        }
+        /* --- 数字キーのスタイル --- */
+        .key.num-btn { 
+            font-family: 'MathJax_Main', 'Times New Roman', Times, serif; 
+        }
+        /* --- 演算子キーのスタイル --- */
+        .key.op-btn { 
+            background-color: #e7f5ff; 
+            border-color: #a5d8ff; 
+            color: #007bff; 
+            font-size: 20px; 
+        }
+        /* --- 文字キーのスタイル --- */
+        .key.var-btn { 
+            background-color: #f3f0ff; 
+            border-color: #d0bfff; 
+            color: #6f42c1; 
+            font-family: 'MathJax_Math', 'Times New Roman', Times, serif; 
+            font-style: italic; 
+            font-weight: normal; 
+            font-size: 26px; 
+        }
+        /* --- 単位キーのスタイル --- */
+        .key.unit-btn { 
+            background-color: #fff0f6; 
+            border-color: #ffdeeb; 
+            color: #d6336c; 
+            font-size: 18px; 
+            font-weight: bold; 
+        }
+        /* --- 分数キーのスタイル --- */
+        .key.frac-btn { 
+            background-color: #fff9db; 
+            border-color: #fff3bf; 
+            color: #f59f00; 
+            font-size: 18px; 
+        }
+        /* --- かっこキーのスタイル --- */
+        .key.paren-btn { 
+            background-color: #ebfbee; 
+            border-color: #b2f2bb; 
+            color: #2b8a3e; 
+            font-size: 20px; 
+        }
+        /* --- 矢印キーのスタイル --- */
+        .key.arrow-btn { 
+            background-color: #fff3e0; 
+            border-color: #ffe0b2; 
+            color: #e65100; 
+            font-weight: bold; 
+        }
+        /* --- キーパッド内ボタンの無効化状態スタイル --- */
+        .keypad button:disabled { 
+            background-color: #d1d5db !important; 
+            color: #9ca3af !important; 
+            border-color: #cbd5e1 !important; 
+            cursor: not-allowed; 
+            opacity: 0.6; 
+            box-shadow: none !important; 
+            transform: none !important; 
+        }
+        /* --- コントロールキー群のレイアウト --- */
+        .control-keys { 
+            display: grid; 
+            grid-template-columns: repeat(3, 92px); 
+            gap: 4px; 
+            width: 100%; 
+            justify-content: center; 
+        }
+        /* --- アクションボタンのスタイル --- */
+        .key.action-btn { 
+            background-color: #28a745; 
+            color: #fff; 
+            font-size: 18px; 
+            height: 46px; 
+            border-color: #1e7e34; 
+            width: 100%; 
+        }
+        /* --- アクションボタンの判定モード時スタイル --- */
+        .key.action-btn.judge-mode { 
+            background-color: #007bff; 
+            border-color: #0069d9; 
+        }
+        /* --- アクションボタンの待機中(グレーアウト)スタイル --- */
+        .key.action-btn.act-off {
+            background-color: #adb5bd;
+            border-color: #9aa1a8;
+            cursor: not-allowed;
+        }
+        /* --- クリアキーのスタイル --- */
+        .key.clear-btn { 
+            background-color: #e9ecef; 
+            font-size: 16px; 
+            height: 46px; 
+            width: 100%; 
+            color: #333; 
+        }
+        /* --- 戻るボタンのスタイル --- */
+        .key.action-btn-back {
+            background-color: #fb8c00;
+            color: #fff;
+            border: none;
+            font-size: 18px;
+            height: 46px;
+            width: 100%;
+        }
+        /* --- 戻るボタンの無効化状態スタイル --- */
+        .key.action-btn-back:disabled {
+            background-color: #ffcc80;
+            color: #fff;
+            cursor: not-allowed;
+        }
+        /* --- 小さなボタンやキーのスタイル --- */
+        .key-mini {
+            height: 40px;
+            font-size: 18px;
+            font-weight: bold;
+            background-color: #f1f3f5;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+        /* --- 小さなボタンが押下された時のスタイル --- */
+        .key-mini:active {
+            background-color: #dee2e6;
+        }
+        /* --- クリアボタン(小)のスタイル --- */
+        .key-mini.btn-clear {
+            grid-column: span 2;
+            background-color: #ffebee;
+            border-color: #ffcdd2;
+            color: #c62828;
+            font-size: 14px;
+        }
+        /* --- クリアボタン(小)が押下された時のスタイル --- */
+        .key-mini.btn-clear:active {
+            background-color: #ffcdd2;
+        }
+        /* --- 送信ボタンのスタイル --- */
+        #send-btn {
+            padding: 6px 12px;
+            font-size: 15px;
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            height: 34px;
+            min-width: 76px;
+            text-align: center;
+            font-weight: bold;
+        }
+        /* --- 送信ボタンが無効化された時のスタイル --- */
+        #send-btn:disabled {
+            background-color: #ccc;
+            color: #888;
+            cursor: not-allowed;
+        }
+
+        /* ==========================================================================
+           4. 画面の共通設定・開始画面【共通】
+           ========================================================================== */
+        /* --- 画面（app-screen）の共通レイアウト --- */
+        .app-screen {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+            background-color: #eceff1;
+        }
+        /* --- 検定画面の背景色 --- */
+        #screen-kentei {
+            background-color: #ffffff;
+        }
+        /* --- グループ選択画面のレイアウト --- */
+        #screen-mondai-groups {
+            justify-content: center;
+            align-items: center;
+        }
+        /* --- 開始画面のレイアウト --- */
+        .start-screen {
+            justify-content: center;
+            align-items: center;
+            gap: 28px;
+        }
+        /* --- 開始画面のメインタイトル --- */
+        .start-title-main {
+            font-size: 18px;
+            font-weight: normal;
+            color: #333;
+        }
+        /* --- 開始画面のサブタイトル --- */
+        .start-title-sub {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+            margin-top: 4px;
+        }
+        /* --- 開始メニューのレイアウト --- */
+        .start-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 320px;
+        }
+        /* --- 開始メニューボタンのスタイル --- */
+        .start-menu-btn {
+            height: 64px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #fff;
+            background-color: #1a73e8;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        /* --- 開始メニューボタンが押下された時のスタイル --- */
+        .start-menu-btn:active {
+            transform: scale(0.97);
+        }
+
+        /* ==========================================================================
+           5. サブ画面・問題選択画面【共通】
+           ========================================================================== */
+        /* --- サブ画面ヘッダーのレイアウト --- */
+        .sub-screen-header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        /* --- サブ画面ヘッダーの見出しスタイル --- */
+        .sub-screen-header h1 {
+            font-size: 22px;
+            color: #333;
+            margin-bottom: 0;
+        }
+        /* --- チュートリアル風サブボタンのスタイル --- */
+        .btn-tutorial-hud-secondary {
+            padding: 10px 18px;
+            font-size: 15px;
+            font-weight: bold;
+            background-color: #e3f2fd;
+            color: #1565c0;
+            border: 1px solid #90caf9;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        /* --- チュートリアル風サブボタンが押下された時のスタイル --- */
+        .btn-tutorial-hud-secondary:active {
+            background-color: #bbdefb;
+        }
+        /* --- 準備中画面のレイアウト --- */
+        .placeholder-screen {
+            justify-content: center;
+            align-items: center;
+            gap: 24px;
+        }
+        /* --- 練習モード無効化時のスタイル --- */
+        .practice-disabled {
+            opacity: 0.4;
+            pointer-events: none;
+            filter: grayscale(60%);
+        }
+        /* --- 問題選択グリッドのレイアウト --- */
+        .mondai-grid {
+            flex: 1;
+            min-height: 0;
+            max-height: 495px;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 3px;
+            padding: 4px;
+            background-color: #ffffff;
+            border-radius: 8px;
+        }
+        /* --- 問題選択セルの基本スタイル --- */
+        .grid-cell {
+            position: relative;
+            height: 50px;
+            font-size: 11px;
+            background-color: #e7f5ff;
+            border: 1px solid #a5d8ff;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            padding: 1px;
+        }
+        /* --- 問題選択セル（ロック中）のスタイル --- */
+        .grid-cell.locked {
+            background-color: #e9ecef;
+            border-color: #ced4da;
+            color: #adb5bd;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        /* --- 問題選択セル（選択可能）が押下された時のスタイル --- */
+        .grid-cell.available:active {
+            transform: scale(0.95);
+        }
+        /* --- 問題選択セル（満点）のスタイル --- */
+        .grid-cell.star-perfect {
+            background-color: #fff9db;
+            border-color: #ffe066;
+        }
+        /* --- 問題選択セル（ミスあり）のスタイル --- */
+        .grid-cell.star-mistake {
+            background-color: #f1f3f5;
+            border-color: #ced4da;
+        }
+        /* --- 問題選択セルの星マーク配置 --- */
+        .grid-cell-star {
+            position: absolute;
+            top: 1px;
+            right: 3px;
+            font-size: 12px;
+        }
+        /* --- 満点マークの色 --- */
+        .star-perfect-mark { color: #f5a623; }
+        /* --- ミスありマークの色 --- */
+        .star-mistake-mark { color: #999; }
+        /* --- 問題選択セルの式表示スタイル --- */
+        .grid-cell-formula {
+            font-size: 12px;
+            line-height: 1.1;
+        }
+        /* --- 問題選択セルの番号表示スタイル --- */
+        .grid-cell-num {
+            font-size: 9px;
+            color: #999;
+            margin-top: 1px;
+        }
+        /* --- 記録画面の区分(問題選択/検定) --- */
+        .kiroku-section { width: 560px; margin: 0 auto; }
+        .kiroku-section-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 6px;
+            text-align: left;
+        }
+
+        /* ==========================================================================
+           6. 記録画面【共通】
+           ========================================================================== */
+        /* --- 記録カード群のレイアウト --- */
+        .kiroku-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            width: 560px;
+            margin: 0 auto;
+        }
+        /* --- 記録カードのスタイル --- */
+        .kiroku-card {
+            background-color: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 10px 18px;
+            text-align: center;
+        }
+        /* --- 記録カードのラベルスタイル --- */
+        .kiroku-card-label {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        /* --- 記録カードの値スタイル --- */
+        .kiroku-card-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1a73e8;
+        }
+
+        /* ==========================================================================
+           7. 設定画面・リセット確認ダイアログ【共通】
+           ========================================================================== */
+        /* --- 設定画面のリセットボタン群のレイアウト --- */
+        .settei-reset-buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+        /* --- リセットボタンのスタイル --- */
+        .settei-reset-btn {
+            width: 280px;
+            height: 52px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #c0392b;
+            background-color: #fdecea;
+            border: 1px solid #f1a9a0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        /* --- リセットボタンが押下された時のスタイル --- */
+        .settei-reset-btn:active {
+            background-color: #f8d3ce;
+        }
+        /* --- リセット確認ダイアログのオーバーレイ --- */
+        .reset-confirm-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            border-radius: 12px;
+        }
+        /* --- リセット確認ダイアログのボックス --- */
+        .reset-confirm-box {
+            width: 340px;
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 24px 20px;
+            text-align: center;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+        }
+        /* --- リセット確認ダイアログのメッセージ --- */
+        .reset-confirm-message {
+            font-size: 15px;
+            color: #333;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        /* --- リセット確認ダイアログのボタン群のレイアウト --- */
+        .reset-confirm-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        /* --- リセット確認ボタン（キャンセル・OK）の共通スタイル --- */
+        .reset-confirm-cancel, .reset-confirm-ok {
+            flex: 1;
+            height: 44px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            border: none;
+        }
+        /* --- リセット確認キャンセルボタンの色 --- */
+        .reset-confirm-cancel {
+            background-color: #e9ecef;
+            color: #333;
+        }
+        /* --- リセット確認OKボタンの色 --- */
+        .reset-confirm-ok {
+            background-color: #e74c3c;
+            color: #fff;
+        }
+
+        /* ==========================================================================
+           8. グループ選択画面【共通】
+           ========================================================================== */
+        /* --- グループ選択リストのレイアウト --- */
+        .group-select-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 250px;
+            margin: 0 auto;
+        }
+        /* --- グループ選択ボタンのスタイル --- */
+        .group-select-btn {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 60px;
+            padding: 0 20px;
+            font-size: 15px;
+            font-weight: bold;
+            color: #fff;
+            background-color: #1a73e8;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+            width: 100%;
+        }
+        /* --- グループ選択ボタンが押下された時のスタイル --- */
+        .group-select-btn:active:not(:disabled) {
+            transform: scale(0.97);
+        }
+        /* --- グループ選択ボタンの無効化状態スタイル --- */
+        .group-select-btn:disabled {
+            background-color: #cfd8dc;
+            color: #90a4ae;
+            cursor: not-allowed;
+        }
+        /* --- グループ選択ボタンのサブテキストスタイル --- */
+        .group-select-btn .group-select-sub {
+            font-size: 12px;
+            font-weight: normal;
+        }
+        /* --- グループ選択ボタンの1行目テキストスタイル --- */
+        .group-select-btn > span:first-child {
+           white-space: nowrap;
+       }
+
+        /* ==========================================================================
+           9. メインゲーム画面・左右パネル【共通】
+           ========================================================================== */
+        /* --- ゲームメインレイアウトの構造設定 --- */
+        .game-layout {
+            display: flex;
+            flex-grow: 1;
+            width: 100%;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 20px;
+            margin-top: 8px;
+        }
+        /* --- 左パネル（問題表示エリア）のレイアウト --- */
+        .left-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            height: 100%;
+        }
+        /* --- 右パネル（操作・キーパッドエリア）のレイアウト --- */
+        .right-panel {
+            width: 285px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ==========================================================================
+           10. タイマー・自己ベスト・記録表示【共通】
+           ========================================================================== */
+        /* --- タイマーコンテナのレイアウト設定 --- */
+        .timer-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f1f3f4;
+            padding: 8px 16px;
+            border-radius: 6px;
+            margin-top: 8px;
+            margin-bottom: 0px;
+            font-weight: bold;
+            box-sizing: border-box;
+            height: 52px;
+        }
+        /* --- タイマー表示のスタイル --- */
+        #timer-display {
+            font-size: 20px;
+            color: #1a73e8;
+            font-variant-numeric: tabular-nums;
+            min-width: 110px;
+        }
+        /* --- 記録表示ボックスのスタイル --- */
+        .record-box {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            border-left: 2px solid #ccc;
+            padding-left: 12px;
+            height: 100%;
+        }
+        /* --- ベスト記録更新メッセージのスタイル --- */
+        #best-update-message {
+            font-size: 12px;
+            font-weight: bold;
+            color: #1a73e8;
+            white-space: nowrap;
+            height: 1.2em;
+            margin-bottom: 1px;
+        }
+        /* --- ベスト記録ラベルのコンテナスタイル --- */
+        .best-label-container {
+            display: flex;
+            gap: 15px;
+            font-size: 12px;
+            color: #5f6368;
+            white-space: nowrap;
+        }
+
+        /* ==========================================================================
+           11. 生徒番号入力・ツールチップ【共通】
+           ========================================================================== */
+        /* --- 生徒番号入力エリアのスタイル --- */
+        .number-field-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+        /* --- ログイン入力フィールドの共通スタイル --- */
+        .login-input {
+            font-size: 15px;
+            padding: 4px 8px;
+            border: 2px solid #ccc;
+            border-radius: 6px;
+            outline: none;
+            box-sizing: border-box;
+            font-weight: normal;
+            width: 80px;
+        }
+        /* --- 入力フィールドのフォーカス時スタイル --- */
+        .login-input:focus {
+            border-color: #1a73e8;
+        }
+        /* --- 専用テンキー付き吹き出しのスタイル --- */
+        .input-tooltip {
+            display: none;
+            position: absolute;
+            top: 120%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #ffffff;
+            border: 2px solid #333333;
+            color: #333333;
+            padding: 12px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            z-index: 100;
+            width: 210px;
+        }
+        /* --- input-tooltipのツールチップ表示用スタイル --- */
+        .input-tooltip::before {
+            content: "";
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 8px;
+            border-style: solid;
+            border-color: transparent transparent #333333 transparent;
+        }
+        /* --- ツールチップを表示状態にするスタイル --- */
+        .input-tooltip.show {
+            display: block;
+        }
+        /* --- ヒント表示用のツールチップスタイル --- */
+        .tooltip-hint {
+            font-size: 11px;
+            font-weight: bold;
+            color: #5f6368;
+            margin-bottom: 8px;
+            text-align: center;
+            line-height: 1.4;
+            white-space: nowrap;
+        }
+        /* --- ミニテンキーのグリッド配置 --- */
+        .keypad-mini {
+            display: grid;
+            grid-template-columns: repeat(3, 56px);
+            gap: 6px;
+            justify-content: center;
+        }
+        /* --- エラーメッセージ表示用のスタイル --- */
+        .error-msg {
+            color: #d32f2f;
+            font-size: 12px;
+            margin-top: 8px;
+            font-weight: bold;
+            display: none;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        /* ==========================================================================
+           12. 問題文・出題数式表示エリア【共通】
+           ========================================================================== */
+        /* --- 問題表示のレイアウト --- */
+        .question-wrapper {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+        /* --- 問題文のテキスト表示スタイル --- */
+        .question-text { 
+            font-size: 20px; 
+            color: #333; 
+            font-weight: bold; 
+        }
+        /* --- 進捗表示のスタイル --- */
+        .progress { 
+            font-size: 16px; 
+            color: #666; 
+        }
+        /* --- 数式表示エリアのスタイル設定 --- */
+        .formula-display {
+            font-size: 26px;
+            line-height: 1.4;
+            text-align: center;
+            color: #000;
+            margin-bottom: 8px;
+            background-color: #f8f9fa;
+            padding: 5px 10px;
+            border-radius: 8px;
+            border: 2px solid #ccc;
+            height: auto;
+            min-height: 75px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        /* --- 数式表示コンテナのレイアウト設定 --- */
+        .formula-display mjx-container { 
+            display: inline !important; 
+            white-space: normal; 
+        }
+
+        /* ==========================================================================
+           13. 入力枠・ステップバッジ【共通】
+           ========================================================================== */
+        /* --- 入力ブロックコンテナのレイアウト設定 --- */
+        .input-block-container { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 0px; 
+            width: 100%; 
+            margin-bottom: 4px; 
+        }
+        /* --- 入力グループの基本レイアウト設定 --- */
+        .input-box-group {
+            background: #ffffff;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            padding: 4px 10px;
+            height: auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 2px;
+        }
+        /* --- 入力グループのフォーカス状態スタイル --- */
+        .input-box-group.active-focus { 
+            border-color: #007bff; 
+            background-color: #f0f7ff; 
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.15); 
+        }
+        /* --- 入力グループの正解確定時スタイル --- */
+        .input-box-group.locked-correct { 
+            border-color: #81c784; 
+            background-color: #e8f5e9; 
+            cursor: default; 
+        }
+        /* --- 入力グループの無効化状態スタイル --- */
+        .input-box-group.locked-disabled { 
+            border-color: #e9ecef; 
+            background-color: #f8f9fa; 
+            opacity: 0.6; 
+            cursor: not-allowed; 
+        }
+        /* --- 入力グループの入力エラー時スタイル --- */
+        .input-box-group.error-shake { 
+            border-color: #e57373; 
+            background-color: #ffebee; 
+        }
+        /* --- 入力ラベルのスタイル --- */
+        .input-label { 
+            font-size: 13px; 
+            color: #495057; 
+            font-weight: bold; 
+            margin-bottom: 0px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        /* --- ステップバッジのスタイル --- */
+        .step-badge { 
+            font-size: 11px; 
+            padding: 1px 6px; 
+            border-radius: 4px; 
+            background-color: #dee2e6; 
+            color: #495057; 
+        }
+        /* --- 正解確定時のステップバッジスタイル --- */
+        .locked-correct .step-badge { 
+            background-color: #28a745; 
+            color: white; 
+        }
+
+        /* ==========================================================================
+           14. 数式エディタ・「＝」の縦揃えCSS Gridレイアウト【共通】
+           ========================================================================== */
+        /* --- 数式レンダリング領域のスタイル --- */
+        .mathjax-render-zone {
+            min-height: 34px;
+            font-size: 22px; 
+            color: #212529; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            overflow: hidden; 
+            width: 100%;
+        }
+        /* --- 💡 「＝」を揃えるための3列のCSS Grid設定 --- */
+        .equation-grid {
+            display: grid;
+            grid-template-columns: 1fr 40px 1fr;
+            align-items: center;
+            width: 100%;
+        }
+        /* --- 数式の左寄せスタイル --- */
+        .eq-left {
+            text-align: right;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            white-space: nowrap;
+        }
+        /* --- 数式の中央寄せスタイル --- */
+        .eq-equal {
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+        }
+        /* --- 数式の右寄せスタイル --- */
+        .eq-right {
+            text-align: left;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            white-space: nowrap;
+        }
+        /* --- 数式エディタのコンテナスタイル --- */
+        .math-editor-container {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+            z-index: -1;
+            width: 0;
+            height: 0;
+            overflow: hidden;
+        }
+        /* --- ワイド分数モード時のコンテナスタイル --- */
+        .math-editor-container.wide-fraction-mode {
+            height: 60px;
+            padding: 4px 14px;
+            flex-wrap: wrap;
+            overflow: visible;
+            border: none !important; 
+            background-color: transparent !important; 
+        }
+        /* --- プレースホルダーのスタイル --- */
+        .placeholder-text {
+            font-size: 16px;
+            color: #adb5bd;
+        }
+        /* --- エディタのテキストノードスタイル --- */
+        .editor-text-node {
+            border: none;
+            outline: none;
+            font-size: 24px; 
+            text-align: left;
+            min-width: 20px;
+            height: 32px;
+            background: transparent;
+            color: #000000;
+            pointer-events: none; 
+        }
+        /* --- エディタのテキストノードのプレースホルダー --- */
+        .editor-text-node::placeholder {
+            font-size: 16px;
+            color: #adb5bd; 
+        }
+        /* --- 小さなステップボックスのスタイル --- */
+        .step-box-small {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 50px;
+            height: 34px;
+            border: 2px solid #ced4da;
+             border-radius: 6px;
+            background-color: #f0f7ff;
+            color: #000;
+            font-weight: bold;
+            font-size: 20px;
+            margin: 0 0px;
+            padding: 0 8px;
+        }
+        /* --- アクティブな小さなステップボックスのスタイル --- */
+        .step-box-small.active-side {
+            border-color: #007bff;
+            background-color: #f8f9fa;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.15);
+        }
+        /* --- 正解確定時の小さなステップボックスのスタイル --- */
+        .locked-correct .step-box-small {
+            border: none !important;
+            background-color: transparent !important;
+            box-shadow: none !important;
+            padding: 0;
+            margin: 0;
+        }
+        /* --- エディタの分数ノードスタイル --- */
+        .editor-fraction-node {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: middle;
+            min-width: 40px;
+            margin: 0 4px;
+        }
+        /* --- @エディタの分数線スタイル --- */
+        .editor-fraction-line {
+            width: 100%;
+            height: 2px;
+            background-color: #333;
+            margin: 2px 0;
+        }
+        /* --- エディタの分数入力欄のスタイル --- */
+        .editor-fraction-field {
+            width: 40px;
+            height: 24px;
+            font-size: 20px; 
+            text-align: center;
+            border: none !important; 
+            background-color: transparent !important; 
+            outline: none;
+            color: #000000;
+            pointer-events: none; 
+            font-family: 'Times New Roman', Times, serif !important; 
+            font-style: italic !important; 
+        }
+
+        /* ==========================================================================
+           15. 正解・不正解メッセージ・ヒント・フッター【共通】
+           ========================================================================== */
+        /* --- 結果メッセージの共通スタイル --- */
+        .result-message { 
+            font-size: 17px; 
+            font-weight: bold; 
+            min-height: 40px; 
+            text-align: center; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            margin-left: auto; 
+            margin-right: auto; 
+            white-space: pre-wrap; 
+            width: 100%; 
+        }
+        /* --- 正解メッセージの文字色 --- */
+        .correct { color: #28a745; }
+        /* --- 不正解メッセージの文字色 --- */
+        .incorrect { color: #e67e22; }
+        /* --- ヒント表示エリアのスタイル --- */
+        .hint-container { 
+            width: 100%; 
+            height: 205px; 
+            background-color: #fff9db; 
+            border: 1px dashed #f59f00; 
+            border-radius: 8px; 
+            padding: 10px 12px; 
+            box-sizing: border-box; 
+            display: flex; 
+            flex-direction: column; 
+            overflow-y: auto; 
+            margin-bottom: 8px; 
+        }
+        /* --- ヒントのタイトルのスタイル --- */
+        .hint-title { 
+            font-size: 13px; 
+            font-weight: bold; 
+            color: #f59f00; 
+            margin-bottom: 4px; 
+            text-align: left; 
+        }
+        /* --- ヒント本文のスタイル --- */
+        .hint-body { 
+            font-size: 16px; 
+            font-weight: bold;
+            color: #495057; 
+            line-height: 1.4; 
+            text-align: left; 
+        }
+        /* --- フッターのスタイル --- */
+        footer {
+            width: 100%;
+            text-align: center;
+            font-size: 12px;
+            color: #000000;
+            font-weight: bold;
+            padding-top: 4px;
+            border-top: 1px solid #cfd8dc;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            background-color: #ffffff;
+            border-radius: 0 0 10px 10px;
+            padding-bottom: 4px;
+        }
+
+
+        /* --- 図形表示（SVG）の外枠 --- */
+        .fg {
+            width: 100%;
+            max-height: 200px;
+        }
+        /* --- 図形の線・点の基本スタイル --- */
+        .fg .pt {
+            stroke: #8a94a6;
+            stroke-width: 3;
+            fill: none;
+            stroke-linecap: round;
+        }
+        /* --- 点（●）の塗り --- */
+        .fg .dot {
+            fill: #8a94a6;
+            stroke: none;
+        }
+        /* --- 強調表示（赤） --- */
+        .fg .hl {
+            stroke: #e53935;
+        }
+        /* --- 強調表示（点） --- */
+        .fg .dot.hl {
+            fill: #e53935;
+        }
+        /* --- タップ判定用の太い透明線 --- */
+        .fg .hit {
+            stroke: transparent;
+            stroke-width: 18;
+            fill: none;
+            pointer-events: stroke;
+        }
+        /* --- 面（塗りつぶし）の基本スタイル --- */
+        .fg .fl {
+            fill: rgba(0,0,0,.001);
+            stroke: none;
+        }
+        /* --- 強調表示（面） --- */
+        .fg .fl.hl {
+            fill: rgba(229,57,53,.2);
+        }
+        /* --- タップできる部分 --- */
+        .fg .part {
+            cursor: pointer;
+        }
+               /* --- 選択中の線（赤） --- */
+        .fg .sel .pt {
+            stroke: #e53935;
+        }
+        /* --- 選択中の点（赤） --- */
+        .fg .sel .dot {
+            fill: #e53935;
+        }
+        /* --- 選択中の面（赤） --- */
+        .fg .sel .fl {
+            fill: rgba(229, 57, 53, .2);
+        }
+        .fg .sel polygon.fl {
+            stroke: #e53935 !important;
+        }
+        /* --- タップ判定用の透明線は選択中も透明のまま --- */
+        .fg .sel .hit {
+            stroke: transparent;
+        }
+        /* --- 図中のラベル文字 --- */
+        .fg text {
+            font-size: 15px;
+            fill: #455;
+        }
+        /* --- 出題文のスタイル --- */
+        .qprompt {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 6px 0;
+        }
+       /* --- 選択肢ボタンの配置（テンキーの位置・縦4つ） --- */
+        .chs {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            width: 100%;
+            height: 187px;
+            margin-bottom: 8px;
+        }
+        /* --- 選択肢ボタン（テンキーと同じ高さ） --- */
+        .chs .chb {
+            height: 46px;
+            padding: 0 8px;
+            font-size: 18px;
+        }
+        /* --- 出題画面の図を大きく表示 --- */
+        #qa {
+            width: 100%;
+        }
+        #qa .fg {
+            max-height: 330px;
+        }
+        /* --- 「ヒント」ボタンの無効化状態 --- */
+        .key.clear-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        /* --- 選択肢ボタンのスタイル --- */
+        .chb {
+            padding: 10px;
+            font-size: 19px;
+            border: 2px solid #cfd8dc;
+            border-radius: 8px;
+            background: #fff;
+            cursor: pointer;
+        }
+        /* --- 選択肢ボタンのホバー時スタイル --- */
+        .chb:hover {
+            background: #eef6ff;
+        }
+        /* --- 弧ABの記号（⌒）用ラッパー --- */
+        .arcab {
+            position: relative;
+            display: inline-block;
+        }
+        /* --- 弧ABの記号（⌒）の表示 --- */
+        .arcab::before {
+            content: '\2312';
+            position: absolute;
+            top: -.6em;
+            left: 0;
+            right: 0;
+            text-align: center;
+        }
+        /* --- 用語カード一覧のグリッド（問題選択のグリッドと同じ高さに固定） --- */
+        .ygrid {
+            display: grid;
+            grid-template-columns: repeat(4,1fr);
+            gap: 8px;
+            flex: 1;
+            min-height: 0;
+            max-height: 495px;
+            overflow: auto;
+            padding: 4px;
+        }
+        /* --- 用語カード一覧グリッドの行の配置 --- */
+        #ycards {
+            align-content: start;
+        }
+        /* --- 用語カードのスタイル --- */
+        .ycard {
+            background: #fff;
+            border: 2px solid #cfd8dc;
+            border-radius: 10px;
+            padding: 4px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        /* --- 用語カードの用語名 --- */
+        .ycard b {
+            font-size: 17px;
+            display: block;
+        }
+        /* --- 問題選択グリッドの行の配置 --- */
+        #mondai-grid-wrap {
+            align-content: start;
+        }
+        /* --- 問題選択セルの番号表示 --- */
+        #mondai-grid-wrap .grid-cell-num {
+            font-size: 18px;
+            font-weight: bold;
+            color: #444;
+        }
+        /* --- 用語一覧（分野選択）画面のレイアウト --- */
+        #screen-yougo {
+            justify-content: center;
+            align-items: center;
+        }
+        /* --- 用語一覧（分野選択）ボタンの配置 --- */
+        #yougo-wrap {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            width: 470px;
+            gap: 12px;
+        }
+
+    </style>
+</head>
+
+<body>
+<div id="app-container">
+<div id="screen-start" class="app-screen start-screen">
+<div class="start-title" style="text-align:center;"><div class="start-title-main">平面図形</div><div class="start-title-sub">Step1：基本用語</div></div>
+<div class="start-menu">
+<button class="start-menu-btn" onclick="showYougo()">📖 用語一覧</button>
+<button class="start-menu-btn" onclick="openMondaiSelect()">📚 問題選択</button>
+<button class="start-menu-btn" onclick="enterKenteiScreen()">📝 検定</button>
+<button class="start-menu-btn" onclick="showScreen('screen-kiroku'); renderKiroku();">🏆 記録</button>
+<button class="start-menu-btn" onclick="showScreen('screen-settei')">⚙️ 設定</button></div></div>
+<div id="screen-mondai-groups" class="app-screen" style="display:none;"><div class="sub-screen-header"><h1>📚 問題選択（出題形式を選ぼう）</h1></div>
+<div id="group-select-wrap" class="group-select-list"></div>
+<div style="text-align:center;margin-top:16px;"><button class="btn-tutorial-hud-secondary" onclick="showScreen('screen-start')">←開始画面へ</button></div></div>
+<div id="screen-mondai" class="app-screen" style="display:none;"><div class="sub-screen-header"><h1 id="mondai-group-title">📚 問題選択</h1></div>
+<div id="mondai-grid-wrap" class="mondai-grid"></div>
+<div style="text-align:center;margin-top:8px;"><button class="btn-tutorial-hud-secondary" onclick="openMondaiSelect()">←出題形式選択へ</button></div></div>
+<div id="screen-yougo" class="app-screen" style="display:none;"><div class="sub-screen-header"><h1>📖 用語一覧（分野を選ぼう）</h1></div>
+<div id="yougo-wrap" class="group-select-list"></div>
+<div style="text-align:center;margin-top:16px;"><button class="btn-tutorial-hud-secondary" onclick="showScreen('screen-start')">←開始画面へ</button></div></div>
+<div id="screen-yougo-cards" class="app-screen" style="display:none;"><div class="sub-screen-header"><h1 id="yougo-title">📖 用語一覧</h1></div>
+<div id="ycards" class="ygrid"></div>
+<div style="text-align:center;margin-top:8px;"><button class="btn-tutorial-hud-secondary" onclick="showYougo()">←分野選択へ</button></div></div>
+<div id="zoom-modal" class="reset-confirm-overlay" style="display:none;" onclick="this.style.display='none'"><div class="reset-confirm-box" id="zoom-box" style="width:560px"></div></div>
+<div id="screen-kiroku" class="app-screen" style="display:none;align-items:center;justify-content:center;gap:16px;"><div class="sub-screen-header"><h1>🏆 記録</h1></div>
+<div class="kiroku-section"><div class="kiroku-section-title">📝 問題選択</div><div class="kiroku-cards" id="kiroku-cards-mondai"></div></div>
+<div class="kiroku-section"><div class="kiroku-section-title">🎯 検定</div><div class="kiroku-cards" id="kiroku-cards-kentei"></div></div>
+<button class="btn-tutorial-hud-secondary" onclick="showScreen('screen-start')">←開始画面へ</button></div>
+<div id="screen-settei" class="app-screen placeholder-screen" style="display:none;"><div class="sub-screen-header"><h1>⚙️ 設定</h1></div>
+<div class="settei-reset-buttons"><button class="settei-reset-btn" onclick="openResetConfirm('mondai')">🗑️ 問題選択をリセットする</button>
+<button class="settei-reset-btn" onclick="openResetConfirm('kiroku')">🗑️ 記録をリセットする</button></div>
+<button class="btn-tutorial-hud-secondary" onclick="showScreen('screen-start')">←開始画面へ</button></div>
+<div id="reset-confirm-modal" class="reset-confirm-overlay" style="display:none;"><div class="reset-confirm-box"><div class="reset-confirm-message" id="reset-confirm-message"></div>
+<div class="reset-confirm-buttons"><button class="reset-confirm-cancel" onclick="closeResetConfirm()">キャンセル</button><button class="reset-confirm-ok" onclick="confirmReset()">リセットする</button></div></div></div>
+        <div id="screen-kentei" class="app-screen" style="display:none;">
+        <header>
+            <div class="title-bar">
+                <button class="title-hand-btn" id="hand-left-btn" onclick="changeHandedness('left')">👈 左利き</button>
+                <h1> 平面図形（Step1：基本用語）</h1>
+                <button class="title-hand-btn active" id="hand-right-btn" onclick="changeHandedness('right')">右利き 👉</button>
+            </div>
+        </header>
+
+        <div class="timer-container" id="timer-container-area">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div id="timer-display">⏱️ 00:00.0</div>
+                <div class="record-box">
+                    <div id="best-update-message"></div>
+                    <div class="best-label-container">
+                        <div id="best-normal-display">ベストタイム(6問): --:--.-</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="number-field-wrapper" id="wrapper-area">
+                    <input type="text" id="number-field" class="login-input" placeholder="生徒番号" readonly autocomplete="off">
+                    
+                    <div class="input-tooltip" id="number-tooltip">
+                        <div class="tooltip-hint">
+                            💡 1年2組34番 → 「1234」<br>
+                            <span style="font-size: 10px; color: #888;">クラス: 1〜5組 / 番号: 01〜35</span>
+                        </div>
+                        
+                        <div class="keypad-mini">
+                            <button class="key-mini" onclick="pressNum('7')">7</button>
+                            <button class="key-mini" onclick="pressNum('8')">8</button>
+                            <button class="key-mini" onclick="pressNum('9')">9</button>
+                            
+                            <button class="key-mini" onclick="pressNum('4')">4</button>
+                            <button class="key-mini" onclick="pressNum('5')">5</button>
+                            <button class="key-mini" onclick="pressNum('6')">6</button>
+                            
+                            <button class="key-mini" onclick="pressNum('1')">1</button>
+                            <button class="key-mini" onclick="pressNum('2')">2</button>
+                            <button class="key-mini" onclick="pressNum('3')">3</button>
+                            
+                            <button class="key-mini" onclick="pressNum('0')">0</button>
+                            <button class="key-mini btn-clear" onclick="pressClear()">⌫ 消す</button>
+                        </div>
+                        
+                        <div class="error-msg" id="error-display">存在しない番号です</div>
+                    </div>
+                </div>
+                <button id="send-btn" onclick="manualSendToGoogleForm()" disabled>送信</button>
+            </div>
+        </div>
+        
+<div class="main-content" id="quiz-screen"><div class="game-layout">
+<div class="left-panel"><div class="question-wrapper"><span class="progress" id="progress"></span></div><div id="qa"></div><div id="result-message" class="result-message"></div></div>
+<div class="right-panel"><div class="hint-container" id="hint-container"><div class="hint-title">💡 用語の説明</div><div class="hint-body" id="hint-text"></div></div>
+<div class="chs" id="chs"></div>
+<div class="control-keys"><button class="key action-btn" id="action-btn" onclick="handleAction()">スタート</button><button class="key clear-btn" id="hint-btn" onclick="showHint()" disabled>ヒント</button><button class="key clear-btn" onclick="goBackQ()">戻る</button></div></div></div></div>
+</div>
+<footer>© 中原先生の数学部屋</footer>
+</div>
+<iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
+<script>
+
+    const container = document.getElementById('app-container'),
+        numberField = document.getElementById('number-field'),
+        tooltip = document.getElementById('number-tooltip'),
+        errorDisplay = document.getElementById('error-display');
+    let isConfirmed = false,
+        isCorrectState = false,
+        lastClearTimeText = '',
+        score = 0,
+        currentControlState = 'x',
+        bestNormalTimeMs = null,
+        kenteiAttemptCount = 0,
+        correctStreakCount = 0,
+        maxStreakCount = 0,
+        pendingResetType = null;
+    const QUESTION_COUNT = 6,
+        KENTEI_RECORDS_KEY = 'heimen_kentei_v1';
+
+    const GOOGLE_FORM_URL = 'https://docs.google.com/forms/d/e/*****変更箇所*****/formResponse';
+    const FORM_NUM_ID         = 'entry.351767117';   // 問題番号
+    const FORM_TIME_ID        = 'entry.1218861448';  // クリアタイム
+    const FORM_STAGE_COUNT_ID = 'entry.2033679053';  // 正解数
+    function resizeApp() {
+        const scale = Math.min(window.innerWidth / 960, window.innerHeight / 640, 1);
+        container.style.transform = `scale(${scale})`;
+    }
+    function showScreen(screenId) {
+        document.querySelectorAll('.app-screen').forEach(el => {
+            el.style.display = 'none';
+        });
+        const target = document.getElementById(screenId);
+        if (target) target.style.display = 'flex';
+    }
+    function formatMs(ms) {
+        const totalMs = Math.max(0, Math.round(ms));
+        const min = Math.floor(totalMs / 60000);
+        const sec = Math.floor((totalMs % 60000) / 1000);
+        const msec = Math.floor((totalMs % 1000) / 100);
+        return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}.${msec}`;
+    }
+    function bestTimeText(timeStr) {
+        return `ベストタイム(${QUESTION_COUNT}問): ${timeStr}`;
+    }
+    function initValidationControls() {
+        if (!numberField) return;
+
+        numberField.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (isConfirmed || numberField.value !== '') {
+                numberField.value = '';
+                isConfirmed = false;
+                errorDisplay.style.display = 'none';
+                updateSendButtonState();
+            }
+            tooltip.classList.add('show');
+            numberField.focus();
+        });
+
+        tooltip.addEventListener('click', (e) => { e.stopPropagation(); });
+
+        document.addEventListener('click', (e) => {
+            if (tooltip.classList.contains('show') && !isConfirmed) {
+                numberField.value = '';
+                errorDisplay.style.display = 'none';
+                tooltip.classList.remove('show');
+                numberField.blur();
+                updateSendButtonState();
+            }
+        });
+    }
+    function pressNum(num) {
+        if (!numberField) return;
+        let currentVal = numberField.value;
+
+        if (currentVal.length === 4) {
+            currentVal = '';
+            errorDisplay.style.display = 'none';
+        }
+
+        currentVal += num;
+        numberField.value = currentVal;
+        updateSendButtonState();
+
+        if (currentVal.length === 4) {
+            const isValid = /^(9999|[1-3][1-5](0[1-9]|[1-2][0-9]|3[0-5]))$/.test(currentVal);
+            if (isValid) completeInput(currentVal); 
+            else errorDisplay.style.display = 'block';
+        }
+    }
+    function completeInput(value) {
+        isConfirmed = true;
+        tooltip.classList.remove('show');
+        numberField.blur();
+        updateSendButtonState();
+    }
+    function pressClear() {
+        if (!numberField) return;
+        let currentVal = numberField.value;
+        if (currentVal.length > 0) {
+            numberField.value = currentVal.slice(0, -1);
+        }
+        errorDisplay.style.display = 'none';
+        isConfirmed = false;
+        updateSendButtonState();
+    }
+    function updateSendButtonState() {
+        if (window.isAlreadySubmitted) return;
+
+        const numVal = numberField ? numberField.value.trim() : "";
+        const sendBtnTop = document.getElementById('send-btn');       
+        const sendBtnBottom = document.getElementById('action-btn');   
+    
+        if (sendBtnTop && sendBtnTop.textContent === "完了") return;
+        const canSend = (isCorrectState && numVal !== "" && /^\d{4}$/.test(numVal) && isConfirmed);
+        
+        if (sendBtnTop) sendBtnTop.disabled = !canSend;
+        if (currentControlState === 'finished') {
+            if (sendBtnBottom) {
+                sendBtnBottom.disabled = !canSend;
+                if (!canSend) sendBtnBottom.className = "key clear-btn"; 
+                else sendBtnBottom.className = "key action-btn judge-mode"; 
+            }
+        }
+    }
+    function executeFormSubmit(num, timeText, stageCount) {
+
+        const form = document.createElement('form');
+        form.action = GOOGLE_FORM_URL;
+        form.method = 'POST';
+        form.target = 'hidden_iframe';
+        
+        const fields = {
+            [FORM_NUM_ID]:         num,                               
+            [FORM_TIME_ID]:        timeText,    
+            [FORM_STAGE_COUNT_ID]: stageCount                  
+        };
+        for (const key in fields) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = fields[key];
+            form.appendChild(input);
+        }
+        document.body.appendChild(form);
+        try { form.submit(); } catch (e) { console.error('送信エラー', e); }
+        
+        setTimeout(() => { document.body.removeChild(form); }, 1000);
+    }
+    function manualSendToGoogleForm() {
+        const numInput = numberField ? numberField.value.trim() : "";
+        if (numInput === "" || !isConfirmed || !/^\d{4}$/.test(numInput) || !isCorrectState || window.isAlreadySubmitted) {
+            return;
+        }
+        
+        const sendBtnTop = document.getElementById('send-btn');
+        const sendBtnBottom = document.getElementById('action-btn'); 
+        
+        if (sendBtnTop) {
+            sendBtnTop.textContent = "送信中";
+            sendBtnTop.disabled = true; 
+        }
+        if (currentControlState === 'finished' && sendBtnBottom) {
+            sendBtnBottom.textContent = "送信中";
+            sendBtnBottom.disabled = true;
+            sendBtnBottom.className = "key clear-btn"; 
+        }
+        
+        const currentTimerText = document.getElementById('timer-display').innerText.replace('⏱️ ', '');
+        const timeToSend = lastClearTimeText || currentTimerText;
+        executeFormSubmit(numInput, timeToSend, score);
+        window.isAlreadySubmitted = true;
+        
+        if (numberField) numberField.disabled = true;
+        if (tooltip) tooltip.classList.remove('show');
+    
+        setTimeout(() => { 
+            if (sendBtnTop) sendBtnTop.textContent = "完了"; 
+            if (currentControlState === 'finished' && sendBtnBottom) {
+                sendBtnBottom.textContent = "完了";
+                sendBtnBottom.className = "key clear-btn"; 
+            }
+        }, 1000);
+    }
+    function loadKenteiRecords() {
+        try {
+            const raw = localStorage.getItem(KENTEI_RECORDS_KEY);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                bestNormalTimeMs = (typeof parsed.bestTimeMs === 'number') ? parsed.bestTimeMs : null;
+                correctStreakCount = (typeof parsed.streak === 'number') ? parsed.streak : 0;
+                maxStreakCount = (typeof parsed.maxStreak === 'number') ? parsed.maxStreak : 0;
+                kenteiAttemptCount = (typeof parsed.attempts === 'number') ? parsed.attempts : 0;
+                return;
+            }
+        } catch (e) { /* 読み込み失敗時は初期化 */ }
+        bestNormalTimeMs = null;
+        correctStreakCount = 0;
+        maxStreakCount = 0;
+        kenteiAttemptCount = 0;
+    }
+    function saveKenteiRecords() {
+        try {
+            localStorage.setItem(KENTEI_RECORDS_KEY, JSON.stringify({ bestTimeMs: bestNormalTimeMs, streak: correctStreakCount, maxStreak: maxStreakCount, attempts: kenteiAttemptCount }));
+        } catch (e) { /* 保存失敗時は何もしない */ }
+    }
+    function closeResetConfirm() {
+        pendingResetType = null;
+        const modal = document.getElementById('reset-confirm-modal');
+        if (modal) modal.style.display = 'none';
+    }
+    function changeHandedness(hand) {
+        const workspace = document.querySelector('.game-layout');
+        const rightBtn = document.getElementById('hand-right-btn');
+        const leftBtn = document.getElementById('hand-left-btn');
+        if (hand === 'left') {
+            workspace.classList.add('left-handed');
+            leftBtn.classList.add('active');
+            rightBtn.classList.remove('active');
+        } else {
+            workspace.classList.remove('left-handed');
+            rightBtn.classList.add('active');
+            leftBtn.classList.remove('active');
+        }
+    }
+
+    const ld = (k, d) => {
+            try {
+                const r = localStorage.getItem(k);
+                return r ? JSON.parse(r) : d;
+            } catch (e) {
+                return d;
+            }
+        },
+        sv = (k, v) => {
+            try {
+                localStorage.setItem(k, JSON.stringify(v));
+            } catch (e) {}
+        };
+    const shuf = (a) => {
+        a = a.slice();
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = (Math.random() * (i + 1)) | 0;
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    };
+    const pt = (t, r = 80, cx = 160, cy = 110) =>
+        [cx + r * Math.cos((t * Math.PI) / 180), cy - r * Math.sin((t * Math.PI) / 180)].map((v) => +v.toFixed(1));
+    const ar = (cx, cy, r, a, b) => {
+        const p = pt(a, r, cx, cy),
+            q = pt(b, r, cx, cy);
+        return `M${p[0]} ${p[1]}A${r} ${r} 0 0 0 ${q[0]} ${q[1]}`;
+    };
+    const ln = (id, a, b) => [id, 'l', ...a, ...b],
+        O = [160, 110];
+    const arAt = (c, r, R) => {
+        const a = (Math.atan2(c[1] - R[1], R[0] - c[0]) * 180) / Math.PI;
+        return ar(c[0], c[1], r, a - 14, a + 14);
+    };
+    const R3 = pt(21.25, 138.2, 60, 180),
+        Q3 = pt(42.5, 80, 60, 180),
+        P3 = [140, 180],
+        FA = pt(0, 120, 100, 160),
+        FB = pt(60, 120, 100, 160);
+
+    const SC = {
+        S1: {
+            p: [['P', 'p', 50, 50], ln('ell', [20, 115], [300, 90]), ln('seg', [60, 175], [160, 195]), ln('ray', [190, 150], [310, 170]), ['d', 'd', 190, 150]],
+            L: [
+                [62, 48, 'P'],
+                [290, 82, 'ℓ']
+            ]
+        },
+        S1p: { p: [['P', 'p', 160, 110]], L: [[172, 104, 'P']] },
+        S1l: {
+            p: [ln('ell', [0, 110], [320, 110]), ['d', 'd', 110, 110], ['d', 'd', 210, 110]],
+            L: [
+                [98, 130, 'A'],
+                [206, 130, 'B'],
+                [290, 102, 'ℓ']
+            ]
+        },
+        S1s: {
+            p: [ln('seg', [70, 110], [250, 110]), ['d', 'd', 70, 110], ['d', 'd', 250, 110]],
+            L: [
+                [58, 130, 'A'],
+                [246, 130, 'B']
+            ]
+        },
+        S1r: {
+            p: [ln('ray', [80, 110], [310, 110]), ['d', 'd', 80, 110], ['d', 'd', 200, 110]],
+            L: [
+                [70, 130, 'A'],
+                [194, 130, 'B']
+            ]
+        },
+        D1: {
+            p: [ln('dseg', [60, 110], [260, 110]), ['d', 'd', 60, 110], ['d', 'd', 260, 110]],
+            L: [
+                [48, 130, 'A'],
+                [256, 130, 'B']
+            ]
+        },
+        D2: {
+            p: [ln('ell', [20, 160], [300, 160]), ['P', 'p', 160, 50], ln('perp', [160, 50], [160, 160]), ['rt', 'a', 'M160 146H174V160']],
+            L: [
+                [172, 46, 'P'],
+                [286, 152, 'ℓ']
+            ]
+        },
+        D3: {
+            p: [ln('ell', [20, 70], [300, 70]), ln('m', [20, 150], [300, 150]), ln('dist', [160, 70], [160, 150]), ['rt', 'a', 'M160 136H174V150']],
+            L: [
+                [286, 62, 'ℓ'],
+                [286, 142, 'm']
+            ]
+        },
+        F: { p: [['sarea', 'q', `M100 160L${FA[0]} ${FA[1]}A120 120 0 0 0 ${FB[0]} ${FB[1]}Z`], ln('sr1', [100, 160], FA), ln('sr2', [100, 160], FB), ['sarc', 'a', ar(100, 160, 120, 0, 60)], ['sang', 'a', ar(100, 160, 34, 0, 60)]], L: [[84, 180, 'O']] },
+        K0: {
+            p: [['g1', 'g', '40 150 280 150 280 178 40 178'], ln('g2', [160, 40], [125, 140]), ln('g3', [160, 40], [195, 140]), ['g4', 'p', 160, 40]],
+            L: [
+                [120, 196, '定規'],
+                [176, 36, 'コンパス']
+            ]
+        },
+        K1: {
+            p: [ln('kab', [60, 120], [260, 120]), ['M', 'p', 160, 120], ['d', 'd', 60, 120], ['d', 'd', 260, 120]],
+            L: [
+                [48, 140, 'A'],
+                [256, 140, 'B'],
+                [154, 108, 'M']
+            ]
+        },
+        K2: {
+            p: [ln('kab', [60, 140], [260, 140]), ['ka1', 'a', ar(60, 140, 110, 10, 40)], ['ka2', 'a', ar(60, 140, 110, -40, -10)], ['kb1', 'a', ar(260, 140, 110, 140, 170)], ['kb2', 'a', ar(260, 140, 110, -170, -140)], ln('kpq', [160, 70], [160, 210]), ['d', 'd', 60, 140], ['d', 'd', 260, 140]],
+            L: [
+                [48, 160, 'A'],
+                [256, 160, 'B']
+            ]
+        },
+        K3: { p: [ln('koa', [60, 180], [300, 180]), ln('koc', [60, 180], pt(42.5, 240, 60, 180)), ['ko', 'a', ar(60, 180, 80, 0, 42.5)], ['kp', 'a', arAt(P3, 70, R3)], ['kq', 'a', arAt(Q3, 70, R3)], ln('kbis', [60, 180], pt(21.25, 220, 60, 180))], L: [[44, 196, 'O']] },
+        K4: {
+            p: [ln('ell', [20, 150], [300, 150]), ['kP', 'p', 160, 150], ['k0', 'a', ar(160, 150, 50, 0, 180)], ['ka', 'a', ar(110, 150, 80, 40, 62)], ['kb', 'a', ar(210, 150, 80, 118, 140)], ln('kperp', [160, 40], [160, 150])],
+            L: [
+                [154, 170, 'P'],
+                [286, 142, 'ℓ']
+            ]
+        },
+        M0: {
+            p: [
+                ['t1', 'g', '40 150 110 150 70 90'],
+                ['t2', 'g', '210 110 280 110 240 50'],
+                ['arw', 'a', 'M110 80Q160 30 200 70'],
+                ['ah', 'g', '200 70 188 66 194 80']
+            ],
+            L: [
+                [50, 172, '前'],
+                [230, 132, '後']
+            ]
+        },
+        M1: { p: [['t1', 'g', '40 150 110 150 70 90'], ['t2', 'g', '210 110 280 110 240 50'], ln('mv', [75, 130], [245, 90])], L: [] },
+        M2: {
+            p: [
+                ['t1', 'g', '180 135 240 135 200 85'],
+                ['t2', 'g', '130 125 130 65 80 105'],
+                ['rar', 'a', ar(150, 155, 30, 34, 124)],
+                ['ctr', 'p', 150, 155]
+            ],
+            L: [[156, 173, 'O']]
+        },
+        M3: { p: [['t1', 'g', '60 150 130 150 100 90'], ['t2', 'g', '260 150 190 150 220 90'], ln('axis', [160, 20], [160, 200])], L: [[168, 32, 'ℓ']] },
+        M4: {
+            p: [
+                ['t1', 'g', '200 60 280 60 240 20'],
+                ['t2', 'g', '120 160 40 160 80 200'],
+                ['ctr', 'p', 160, 110]
+            ],
+            L: [[168, 104, 'O']]
+        },
+        M5: {
+            p: [['t1', 'g', '40 150 110 150 70 90'], ['t2', 'g', '210 110 280 110 240 50'], ['pa', 'p', 40, 150], ['pa2', 'p', 210, 110], ln('sa', [40, 150], [110, 150]), ln('sa2', [210, 110], [280, 110]), ['ga', 'a', ar(40, 150, 22, 0, 63)], ['ga2', 'a', ar(210, 110, 22, 0, 63)]],
+            L: [
+                [26, 168, 'A'],
+                [104, 168, 'B'],
+                [60, 82, 'C'],
+                [196, 128, "A'"],
+                [274, 128, "B'"],
+                [234, 42, "C'"]
+            ]
+        },
+        S2: { p: [ln('base', [20, 110], [300, 110]), ln('perp', [120, 30], [120, 190]), ln('par', [20, 160], [300, 160]), ln('ob1', [180, 60], [270, 190]), ln('ob2', [30, 40], [90, 190])], L: [[285, 102, 'ℓ']] },
+        S3: {
+            p: [['tri', 'g', '260 180 70 180 210 40'], ln('sAB', [260, 180], [70, 180]), ln('sBC', [70, 180], [210, 40]), ln('sCA', [210, 40], [260, 180]), ['angB', 'a', ar(70, 180, 34, 0, 45)], ['vB', 'p', 70, 180]],
+            L: [
+                [264, 196, 'A'],
+                [54, 200, 'B'],
+                [214, 34, 'C']
+            ]
+        },
+        S4: { p: [['area', 'f', 160, 110, 80], ['circ', 'o', 160, 110, 80], ln('rad', O, pt(90)), ln('dia', pt(135), pt(315)), ln('chord', pt(215), pt(255)), ['arc', 'a', ar(160, 110, 80, 20, 60)], ln('tan', [240, 55], [240, 165]), ['tpt', 'p', 240, 110], ln('cr1', O, pt(155)), ln('cr2', O, pt(185)), ['cang', 'a', ar(160, 110, 28, 155, 185)], ['cen', 'p', 160, 110]], L: [[168, 128, 'O']] },
+        Cark: {
+            p: [
+                ['circ', 'o', 160, 110, 80],
+                ['arc', 'a', ar(160, 110, 80, 210, 330)]
+            ],
+            L: []
+        },
+        Cchd: { p: [['circ', 'o', 160, 110, 80], ln('chord', pt(210), pt(330))], L: [] },
+        Cperp: { p: [ln('base', [20, 110], [300, 110]), ln('perp', [120, 30], [120, 190]), ['rt', 'a', 'M136 110 L136 94 L120 94']], L: [] },
+        Cpar: { p: [ln('base', [20, 110], [300, 110]), ln('par', [20, 160], [300, 160]), ['ar1', 'a', 'M152 102 L162 110 L152 118'], ['ar2', 'a', 'M152 152 L162 160 L152 168']], L: [] },
+        Cmid: { p: [ln('kab', [60, 120], [260, 120]), ['M', 'p', 160, 120], ['d', 'd', 60, 120], ['d', 'd', 260, 120], ['tk1', 'a', 'M106 110 L106 130 M114 110 L114 130'], ['tk2', 'a', 'M206 110 L206 130 M214 110 L214 130']], L: [] },
+        Ccen: { p: [['circ', 'o', 160, 110, 80], ln('cr1', O, pt(230)), ln('cr2', O, pt(310)), ['cang', 'a', ar(160, 110, 28, 230, 310)]], L: [] },
+        Ctan: { p: [['circ', 'o', 160, 110, 80], ln('tan', [60, 190], [260, 190])], L: [] },
+        Ctpt: { p: [['circ', 'o', 160, 110, 80], ln('tan', [60, 190], [260, 190]), ['tpt', 'p', 160, 190]], L: [] },
+        b1: {
+            p: [ln('g', [60, 150], [260, 70])],
+            L: [
+                [44, 160, 'A'],
+                [266, 66, 'B']
+            ]
+        },
+        b2: {
+            p: [ln('g', [0, 162], [320, 46]), ['d', 'd', 60, 150], ['d', 'd', 260, 70]],
+            L: [
+                [44, 170, 'A'],
+                [266, 92, 'B']
+            ]
+        },
+        b3: {
+            p: [ln('g', [60, 150], [310, 50]), ['d', 'd', 60, 150], ['d', 'd', 260, 70]],
+            L: [
+                [44, 170, 'A'],
+                [266, 92, 'B']
+            ]
+        },
+        b4: {
+            p: [ln('g', [260, 70], [10, 170]), ['d', 'd', 60, 150], ['d', 'd', 260, 70]],
+            L: [
+                [44, 170, 'A'],
+                [266, 92, 'B']
+            ]
+        },
+        b5: {
+            p: [
+                ['c0', 'o', 160, 110, 80],
+                ['g', 'a', ar(160, 110, 80, 25, 75)],
+                ['d', 'd', ...pt(25)],
+                ['d', 'd', ...pt(75)]
+            ],
+            L: [
+                [...pt(25, 98), 'A'],
+                [...pt(75, 98), 'B']
+            ]
+        },
+        b6: {
+            p: [ln('g1', [80, 170], [250, 170]), ln('g2', [80, 170], [200, 60]), ['g3', 'a', ar(80, 170, 36, 0, 42.5)]],
+            L: [
+                [255, 188, 'A'],
+                [64, 190, 'B'],
+                [204, 54, 'C']
+            ]
+        },
+        b7: {
+            p: [['g', 'g', '60 180 250 180 110 60']],
+            L: [
+                [44, 196, 'A'],
+                [252, 200, 'B'],
+                [100, 52, 'C']
+            ]
+        },
+        b8: {
+            p: [ln('g1', [40, 150], [280, 150]), ln('g2', [160, 30], [160, 190])],
+            L: [
+                [24, 156, 'A'],
+                [284, 156, 'B'],
+                [150, 24, 'C'],
+                [150, 206, 'D']
+            ]
+        },
+        b9: {
+            p: [ln('g1', [40, 80], [280, 80]), ln('g2', [40, 150], [280, 150])],
+            L: [
+                [24, 86, 'A'],
+                [284, 86, 'B'],
+                [24, 156, 'C'],
+                [284, 156, 'D']
+            ]
+        }
+    };
+    const CTX = {
+        '垂線': ['base'],
+        '角': ['sAB', 'sBC'],
+        '頂点': ['sAB', 'sBC'],
+        '辺': ['sAB'],
+        '面積': ['circ'],
+        '中心': ['circ'],
+        '半径': ['circ'],
+        '直径': ['circ'],
+        '弧': ['circ'],
+        '弦': ['circ'],
+        '接線': ['circ'],
+        '接点': ['circ', 'tan'],
+        '中心角': ['cr1', 'cr2', 'circ'],
+        '点と直線の距離': ['ell', 'P', 'rt'],
+        '平行な2直線間の距離': ['ell', 'm', 'rt'],
+        'おうぎ形の半径': ['sarc'],
+        'おうぎ形の中心角': ['sr1', 'sr2', 'sarc'],
+        'おうぎ形の弧の長さ': ['sr1', 'sr2'],
+        'おうぎ形の面積': ['sr1', 'sr2', 'sarc'],
+        '中点': ['kab'],
+        '垂直二等分線の作図': ['kab'],
+        '角の二等分線の作図': ['koa', 'koc'],
+        '垂線の作図': ['ell', 'kP'],
+        '移動': ['t1'],
+        '平行移動': ['t1'],
+        '回転移動': ['t1', 'ctr'],
+        '対称移動': ['t1', 'axis'],
+        '点対称移動': ['t1', 'ctr'],
+        '回転の中心': ['t1', 't2'],
+        '対称の軸': ['t1', 't2'],
+        '対応する点': ['t1', 't2'],
+        '対応する辺': ['t1', 't2'],
+        '対応する角': ['t1', 't2']
+    };
+
+    function svgOf(sc, hl, tap, only) {
+        const S = SC[sc];
+        let h = '<svg class="fg" viewBox="0 0 320 220">';
+        S.p.forEach((p) => {
+            const [id, k, ...a] = p;
+            if (only && k !== 'd' && !hl.includes(id) && !(CTX[only] || []).includes(id)) return;
+            const on = hl.includes(id) ? ' hl' : '';
+            let e,
+                hit = '';
+            if (k === 'p' || k === 'd') e = `<circle cx="${a[0]}" cy="${a[1]}" r="6" class="pt dot${on}"/>`;
+            else if (k === 'l') e = `<line x1="${a[0]}" y1="${a[1]}" x2="${a[2]}" y2="${a[3]}" class="pt${on}"/>`;
+            else if (k === 'a') e = `<path d="${a[0]}" class="pt${on}"/>`;
+            else if (k === 'o') e = `<circle cx="${a[0]}" cy="${a[1]}" r="${a[2]}" class="pt${on}"/>`;
+            else if (k === 'f') e = `<circle cx="${a[0]}" cy="${a[1]}" r="${a[2]}" class="fl${on}"/>`;
+            else if (k === 'q') e = `<path d="${a[0]}" class="fl${on}"/>`;
+            else
+                e = `<polygon points="${a[0]}" class="fl${on}" style="stroke:${on ? '#e53935' : '#8a94a6'};stroke-width:3"/>`;
+            if (tap && k !== 'd') {
+                if (k !== 'f' && k !== 'g' && k !== 'q') hit = e.replace('class="pt', 'class="hit pt');
+                h += `<g class="part" data-id="${id}" onclick="tapPart('${id}',this)">${e}${hit.replace(/ dot| hl/g, '')}</g>`;
+            } else h += e;
+        });
+        if (!only) S.L.forEach((l) => (h += `<text x="${l[0]}" y="${l[1]}">${l[2]}</text>`));
+        return h + '</svg>';
+    }
+
+    const TD = [
+        ['基本', '点', '位置だけを表すもので、大きさはない。', 'S1', ['P'], null, 0, 'S1p'],
+        ['基本', '直線', '両方向に限りなくまっすぐのびた線。2点を通る直線は1本だけ。', 'S1', ['ell'], null, 0, 'S1l'],
+        ['基本', '線分', '直線の一部で、両端がある線。', 'S1', ['seg'], null, 0, 'S1s'],
+        ['基本', '半直線', '直線の一部で、一方の端があり、もう一方には限りなくのびた線。', 'S1', ['ray'], null, 0, 'S1r'],
+ ['位置関係', '垂直', '2直線が直角に交わるとき、「垂直である」という。記号は⊥。', 'S2', ['base', 'perp'], ['base', 'perp', 'rt'], 1, 'Cperp'],
+        ['位置関係', '垂線', '直線ℓに垂直に交わる直線を、ℓの垂線という。', 'S2', ['perp'], ['perp', 'rt'], 0, 'Cperp'],
+        ['位置関係', '平行', '交わらない2直線を「平行である」という。記号は//。', 'S2', ['base', 'par'], ['base', 'par', 'ar1', 'ar2'], 1, 'Cpar'],
+        ['図形と距離', '2点間の距離', '2点を結ぶ線のうち最短のものが線分で、その長さが2点間の距離。', 'D1', ['dseg'], null, 0, null, null],
+        ['図形と距離', '点と直線の距離', '点Pから直線ℓに垂線を引いたとき、Pと垂線の足の間の長さ。', 'D2', ['perp'], null, 0, null, null],
+        ['図形と距離', '平行な2直線間の距離', '平行な2直線ℓ、mについて、ℓ上の1点からmに下ろした垂線の長さ。どこで測っても同じ。', 'D3', ['dist'], null, 0, null, null],
+        ['角と三角形', '角', '1点から出る2つの半直線がつくる図形。記号は∠。', 'S3', ['angB']],
+        ['角と三角形', '頂点', '角をつくる2つの半直線が出る点。', 'S3', ['vB']],
+        ['角と三角形', '辺', '角をつくる2つの半直線。', 'S3', ['sAB', 'sBC'], ['sBC']],
+        ['角と三角形', '三角形', '3つの線分で囲まれた図形。記号は△。', 'S3', ['tri']],
+        ['円', '円', '1つの点Oから等しい距離にある点の集まり。', 'S4', ['circ', 'cen'], null, 1],
+        ['円', '中心', '円の真ん中の点。円周上のどの点までも、同じ距離になる。', 'S4', ['cen']],
+        ['円', '円周', '円のまわり全体の線。円周の長さ = 直径 × 円周率。', 'S4', ['circ']],
+        ['円', '面積', '円の内側の広さ。面積 = 半径 × 半径 × 円周率。', 'S4', ['area']],
+        ['円', '半径', '円の中心と円周上の点を結ぶ線分。', 'S4', ['rad']],
+        ['円', '直径', '円の中心を通り、両端が円周上にある線分。長さは半径の2倍。', 'S4', ['dia']],
+        ['円', '弧', '円周上の2点で分けられた円周の一部。記号は⌒を使い、弧ABと書く。', 'S4', ['arc'], null, 0, 'Cark'],
+        ['円', '弦', '円周上の2点を結ぶ線分。直径は、最も長い弦。', 'S4', ['chord'], null, 0, 'Cchd'],
+        ['円', '中心角', '弧ABに対して、中心Oと弧の両端を結んでできる角。', 'S4', ['cang'], null, 0, 'Ccen'],
+        ['円', '接線', '円と1点だけで接する直線。', 'S4', ['tan'], null, 0, 'Ctan'],
+        ['円', '接点', '接線と円が接している点。接線は、接点を通る半径に垂直になる。', 'S4', ['tpt'], null, 0, 'Ctpt'],
+        ['おうぎ形', 'おうぎ形', '円の2つの半径と、その間の弧で囲まれた図形。', 'F', ['sr1', 'sr2', 'sarc'], null, 1, null, null],
+        ['おうぎ形', 'おうぎ形の半径', 'おうぎ形で、中心と弧の両端を結ぶ線分。', 'F', ['sr1', 'sr2'], null, 0, null, null],
+        ['おうぎ形', 'おうぎ形の中心角', 'おうぎ形で、2つの半径がつくる角。', 'F', ['sang'], null, 0, null, null],
+        ['おうぎ形', 'おうぎ形の弧の長さ', 'おうぎ形の弧の長さ。中心角に比例する。', 'F', ['sarc'], null, 0, null, null],
+        ['おうぎ形', 'おうぎ形の面積', 'おうぎ形の面積。中心角に比例する。', 'F', ['sarea'], null, 0, null, null],
+        ['作図', '作図', '定規とコンパスだけを使って図をかくこと。定規は直線を引くためだけに使い、長さは測らない。', 'K0', [], ['g1', 'g2', 'g3', 'g4'], 0, null, null],
+        ['作図', '中点', '線分を2等分する点。', 'K1', ['M'], null, 0, 'Cmid', null],
+        ['作図', '垂直二等分線の作図', '垂直二等分線は、線分の中点を通り、その線分に垂直な直線。', 'K2', [], ['ka1', 'ka2', 'kb1', 'kb2', 'kpq'], 0, null, null],
+        ['作図', '角の二等分線の作図', '角の二等分線は、角を2等分する半直線。', 'K3', [], ['ko', 'kp', 'kq', 'kbis'], 0, null, null],
+        ['作図', '垂線の作図', '直線上の点からの作図(図)と、直線上にない点からの作図の2種類がある。', 'K4', [], ['k0', 'ka', 'kb', 'kperp'], 0, null, null],
+        ['移動', '移動', '図形を、その形を変えずに別の位置へ動かすこと。', 'M0', [], ['t2', 'arw', 'ah'], 0, null, null],
+        ['移動', '平行移動', '図形を、一定の方向に一定の距離だけ動かす移動。', 'M1', [], ['t2', 'mv'], 0, null, null],
+        ['移動', '回転移動', '図形を、1つの点を中心に、一定の角度だけ回す移動。', 'M2', [], ['t2', 'rar'], 0, null, null],
+        ['移動', '対称移動', '図形を、1つの直線を軸として折り返す移動。', 'M3', [], ['t2'], 0, null, null],
+        ['移動', '点対称移動', '図形を、1つの点を中心に180°回す移動。回転移動の特別な場合。', 'M4', [], ['t2'], 0, null, null],
+        ['移動', '回転の中心', '回転移動で、中心にする点。', 'M2', ['ctr'], null, 0, null, null],
+        ['移動', '対称の軸', '対称移動で、折り返しの軸にする直線。', 'M3', ['axis'], null, 0, null, null],
+        ['移動', '対応する点', '移動前と移動後で、重なり合う点。', 'M5', ['pa2'], ['pa', 'pa2'], 0, null, '点Aに対応する点'],
+        ['移動', '対応する辺', '移動前と移動後で、重なり合う辺。', 'M5', ['sa2'], ['sa', 'sa2'], 0, null, '辺ABに対応する辺'],
+        ['移動', '対応する角', '移動前と移動後で、重なり合う角。', 'M5', ['ga2'], ['ga', 'ga2'], 0, null, '∠Aに対応する角']
+    ];
+    const TERMS = TD.map((a) => ({ g: a[0], n: a[1], d: a[2], s: a[3], t: a[4], h: a[5] || a[4], m: a[6], cs: a[7], q: a[8] }));
+    const SD = [
+        ['L', '線分AB', '点A、Bを両端とする線分は、線分ABと書く。', 'b1', ['g']],
+        ['L', '直線AB', '点A、Bを通る直線は、直線ABと書く。', 'b2', ['g']],
+        ['L', '半直線AB', '点Aから始まり、点Bを通ってのびる半直線は、半直線ABと書く。始まりの点を先に書く。', 'b3', ['g']],
+        ['L', '半直線BA', '点Bから始まり、点Aを通ってのびる半直線は、半直線BAと書く。半直線ABとは向きが逆。', 'b4', ['g']],
+        ['L', '<span class="arcab">AB</span>', '円周上の2点A、Bの間の弧は、ABの上に⌒をつけて書く。ふつうは短い方の弧を指す。', 'b5', ['g']],
+        ['O', '∠ABC', '辺BAと辺BCがつくる角は、∠ABCと書く。真ん中の文字が頂点。', 'b6', ['g1', 'g2', 'g3']],
+        ['O', '△ABC', '点A、B、Cを頂点とする三角形は、△ABCと書く。', 'b7', ['g']],
+        ['O', 'AB⊥CD', '直線ABと直線CDが垂直に交わるとき、AB⊥CDと書く。', 'b8', ['g1', 'g2']],
+        ['O', 'AB//CD', '直線ABと直線CDが平行であるとき、AB//CDと書く。', 'b9', ['g1', 'g2']]
+    ];
+
+    const SYM = SD.map((a) => ({ g: a[0], n: a[1], d: a[2], s: a[3], t: a[4], h: a[4] }));
+    const ITEMS = { 1: TERMS, 2: TERMS.filter((t) => t.t.length), 3: SYM },
+        FN = { 1: '①図を見て用語を選ぶ', 2: '②用語を見て図をタップ', 3: '③表し方を選ぶ' };
+    const sg = (a, b) =>
+        a.g === b.g ||
+        (a.g === '図形と距離' && (b.g === '基本' || b.g === '位置関係')) ||
+        (b.g === '図形と距離' && (a.g === '基本' || a.g === '位置関係'));
+    const plain = (s) => s.replace(/<[^>]+>/g, '');
+    let PR = ld('hm_pr', {}),
+        CNT = ld('hm_cnt', {}),
+        CLR = ld('hm_clr', 0),
+        SETS = ld('hm_sets', {});
+
+    function chunks(f, k) {
+        const N = ITEMS[f].length;
+        if (!SETS[f] || SETS[f].n !== N) {
+            SETS[f] = { n: N, o: Array.from({ length: 9 }, () => shuf([...Array(N).keys()])) };
+            sv('hm_sets', SETS);
+        }
+        const od = k === 1 ? [...Array(N).keys()] : SETS[f].o[k - 2],
+            r = [];
+        for (let i = 0; i < od.length; i += 9) r.push(od.slice(i, i + 9));
+        return r;
+    }
+
+    function openMondaiSelect() {
+        showScreen('screen-mondai-groups');
+        document.getElementById('group-select-wrap').innerHTML = [1, 2, 3]
+            .map(
+                (f) =>
+                    `<button type="button" class="group-select-btn" onclick="enterMondaiGrid(${f})"><span>${FN[f]}</span><span class="group-select-sub">${ITEMS[f].length}問</span></button>`
+            )
+            .join('');
+    }
+
+    function enterMondaiGrid(f) {
+        document.getElementById('mondai-group-title').textContent = '📚 ' + FN[f];
+        showScreen('screen-mondai');
+        let h = '',
+            prev = 1;
+        for (let k = 1; k <= 10; k++)
+            chunks(f, k).forEach((c, j) => {
+                const s = PR[f + '-' + k + '-' + j] || 0,
+                    un = prev >= 1;
+                prev = s;
+                h += `<button type="button" class="grid-cell ${!un ? 'locked' : s == 2 ? 'star-perfect' : s == 1 ? 'star-mistake' : 'available'}" ${un ? `onclick="startSet(${f},${k},${j})"` : 'disabled'}>${un && s ? `<span class="grid-cell-star ${s == 2 ? 'star-perfect-mark' : 'star-mistake-mark'}">${s == 2 ? '★' : '☆'}</span>` : ''}<span class="grid-cell-num">${k}-${j + 1}</span></button>`;
+            });
+        document.getElementById('mondai-grid-wrap').innerHTML = h;
+    }
+    let Q = [],
+        qi = 0,
+        wrong = 0,
+        mode = '',
+        cur = null,
+        sel = [],
+        seen = {},
+        locked = false,
+        anyWrong = false,
+        CH = [],
+        tmr = null,
+        t0 = 0,
+        actFn = null;
+
+    function setAct(t, f) {
+        const b = document.getElementById('action-btn');
+        b.textContent = t;
+        actFn = f;
+        b.classList.toggle('act-off', !f);
+        document.getElementById('hint-btn').disabled = locked;
+    }
+
+    function handleAction() {
+        if (actFn) actFn();
+    }
+
+    function startSet(f, k, j) {
+        mode = 'p';
+        cur = { f, k, j };
+        Q = chunks(f, k)[j].map((i) => ({ f, i }));
+        seen = {};
+        anyWrong = false;
+        beginQuiz();
+    }
+
+    function beginQuiz() {
+        qi = 0;
+        showScreen('screen-kentei');
+        document.getElementById('timer-container-area').classList.toggle('practice-disabled', mode === 'p');
+        loadQ();
+    }
+
+    function bump(n) {
+        CNT[n] = (CNT[n] || 0) + 1;
+        sv('hm_cnt', CNT);
+    }
+
+    function loadQ() {
+        wrong = 0;
+        sel = [];
+        locked = false;
+        const q = Q[qi],
+            it = ITEMS[q.f][q.i],
+            key = q.f + '_' + q.i;
+        if (mode === 'k' || !seen[key]) {
+            seen[key] = 1;
+            bump(plain(it.n));
+        }
+        document.getElementById('progress').textContent = `${qi + 1} / ${Q.length}問　${FN[q.f]}`;
+        document.getElementById('result-message').textContent = '';
+        document.getElementById('result-message').className = 'result-message';
+        document.getElementById('hint-text').textContent = '';
+       const qa = document.getElementById('qa');
+        const chs = document.getElementById('chs');
+        setAct('次へ', null);
+        chs.innerHTML = '';
+        if (q.f === 2) {
+            setAct('判定する', null);
+            qa.innerHTML =
+                `<div class="qprompt">「${it.q || it.n}」を${it.m ? 'すべて' : ''}タップして「判定する」を押そう</div>` +
+                svgOf(it.s, [], true);
+        } else {
+            const same = shuf(ITEMS[q.f].filter((x) => x !== it && sg(x, it))).slice(0, 2),
+                diff = shuf(ITEMS[q.f].filter((x) => !sg(x, it))).slice(0, 1);
+            CH = shuf([it, ...same, ...diff]);
+            qa.innerHTML =
+                `<div class="qprompt">${q.f === 1 ? '赤い部分は何ですか？' : 'この図の表し方は？'}</div>` +
+                svgOf(it.s, it.h, false);
+            chs.innerHTML = CH.map((c, i) => `<button class="chb" onclick="choose(${i})">${c.n}</button>`).join('');
+        }
+    }
+
+   function showHint() {
+        if (locked) return;
+        document.getElementById('hint-text').innerHTML = cq().d;
+    }
+
+    function cq() {
+        const q = Q[qi];
+        return ITEMS[q.f][q.i];
+    }
+
+    function choose(i) {
+        if (locked) return;
+        const it = cq();
+        if (CH[i] === it) ok();
+        else miss(!sg(CH[i], it));
+    }
+
+    function tapPart(id, el) {
+        if (locked) return;
+        const it = cq();
+        const x = sel.indexOf(id);
+        if (x >= 0) {
+            sel.splice(x, 1);
+            el.classList.remove('sel');
+        } else {
+            if (!it.m) {
+                sel = [];
+                document.querySelectorAll('.fg .sel').forEach((e) => e.classList.remove('sel'));
+            }
+            sel.push(id);
+            el.classList.add('sel');
+        }
+        setAct('判定する', sel.length ? decide : null);
+    }
+
+    function decide() {
+        if (locked) return;
+        const it = cq();
+        const hit = it.m ? it.t.every((x) => sel.includes(x)) && sel.length === it.t.length : sel.length === 1 && it.t.includes(sel[0]);
+        if (hit) ok();
+        else {
+            sel = [];
+            document.querySelectorAll('.fg .sel').forEach((e) => e.classList.remove('sel'));
+            setAct('判定する', null);
+            miss(false);
+        }
+    }
+
+    function msg(t, c) {
+        const r = document.getElementById('result-message');
+        r.textContent = t;
+        r.className = 'result-message ' + c;
+    }
+
+    function ok() {
+        locked = true;
+        const it = cq();
+        msg('正解！', 'correct');
+        document.getElementById('hint-text').innerHTML = `<b>${it.n}</b>：${it.d}`;
+        if (mode === 'k') ksc++;
+        if (mode === 'p' && qi + 1 >= Q.length) {
+            const pk = cur.f + '-' + cur.k + '-' + cur.j;
+            PR[pk] = Math.max(PR[pk] || 0, anyWrong ? 1 : 2);
+            sv('hm_pr', PR);
+        }
+        setAct(qi + 1 >= Q.length ? '終了' : '次へ', next);
+    }
+
+    function miss(fatal) {
+        anyWrong = true;
+        wrong++;
+        if (fatal || wrong >= 3) return force();
+        msg('不正解。もう一度！', 'incorrect');
+    }
+
+    function force() {
+        locked = true;
+        const it = cq();
+        document.getElementById('hint-text').innerHTML = `<b>${it.n}</b>：${it.d}`;
+        if (mode === 'p') {
+            msg('強制終了。答えは「' + plain(it.n) + '」。このセットを最初からやり直します。', 'incorrect');
+            setAct('やり直す', () => {
+                seen = {};
+                anyWrong = false;
+                beginQuiz();
+            });
+        } else {
+            clearInterval(tmr);
+            kenteiAttemptCount++;
+            correctStreakCount = 0;
+            saveKenteiRecords();
+            msg('ここで検定終了。答えは「' + plain(it.n) + '」。', 'incorrect');
+            setAct('もう一度', startKentei);
+        }
+    }
+
+    function next() {
+        qi++;
+        if (qi < Q.length) return loadQ();
+        if (mode === 'p') {
+            const k = cur.f + '-' + cur.k + '-' + cur.j,
+                s = anyWrong ? 1 : 2;
+            PR[k] = Math.max(PR[k] || 0, s);
+            sv('hm_pr', PR);
+            msg('セット完了！' + (s == 2 ? '★' : '☆'), 'correct');
+            setAct('問題選択へ', () => enterMondaiGrid(cur.f));
+        } else {
+            clearInterval(tmr);
+            const ms = Date.now() - t0,
+                tx = formatMs(ms);
+            lastClearTimeText = tx;
+            score = ksc;
+            isCorrectState = true;
+            kenteiAttemptCount++;
+            CLR++;
+            sv('hm_clr', CLR);
+            correctStreakCount++;
+            maxStreakCount = Math.max(maxStreakCount, correctStreakCount);
+            if (bestNormalTimeMs === null || ms < bestNormalTimeMs) {
+                bestNormalTimeMs = ms;
+                document.getElementById('best-normal-display').innerText = bestTimeText(tx);
+                document.getElementById('best-update-message').innerText = '🎉 ベスト更新！';
+            }
+            saveKenteiRecords();
+            updateSendButtonState();
+            msg(`検定クリア！ タイム ${tx}`, 'correct');
+            setAct('もう一度', startKentei);
+        }
+    }
+
+    function enterKenteiScreen() {
+        mode = 'k';
+        showScreen('screen-kentei');
+        document.getElementById('timer-container-area').classList.remove('practice-disabled');
+        document.getElementById('timer-display').innerText = '⏱️ 00:00.0';
+        document.getElementById('qa').innerHTML = '<div class="qprompt">スタートを押すと、6問の検定が始まります。</div>';
+        document.getElementById('chs').innerHTML = '';
+        locked = true;
+        ['progress', 'result-message', 'hint-text'].forEach((i) => (document.getElementById(i).textContent = ''));
+        setAct('スタート', startKentei);
+    }
+
+    function startKentei() {
+        mode = 'k';
+        clearInterval(tmr);
+        const used = new Set(),
+            out = [];
+        [1, 2, 3].forEach((f) => {
+            ITEMS[f]
+                .map((it, i) => ({ f, i, n: plain(it.n) }))
+                .filter((x) => !used.has(x.n))
+                .sort((a, b) => (CNT[a.n] || 0) - (CNT[b.n] || 0) || Math.random() - 0.5)
+                .slice(0, 2)
+                .forEach((x) => {
+                    used.add(x.n);
+                    out.push({ f: x.f, i: x.i });
+                });
+        });
+        Q = shuf(out);
+        ksc = 0;
+        isCorrectState = false;
+        window.isAlreadySubmitted = false;
+        numberField.disabled = false;
+        const sb = document.getElementById('send-btn');
+        sb.textContent = '送信';
+        sb.disabled = true;
+        document.getElementById('best-update-message').innerText = '';
+        t0 = Date.now();
+        tmr = setInterval(() => {
+            document.getElementById('timer-display').innerText = '⏱️ ' + formatMs(Date.now() - t0);
+        }, 100);
+        beginQuiz();
+    }
+    let ksc = 0;
+
+    function goBackQ() {
+        clearInterval(tmr);
+        if (mode === 'p') enterMondaiGrid(cur.f);
+        else showScreen('screen-start');
+    }
+
+    function showYougo() {
+        showScreen('screen-yougo');
+        document.getElementById('yougo-wrap').innerHTML = [...new Set(TERMS.map((t) => t.g))]
+            .map(
+                (g) =>
+                    `<button type="button" class="group-select-btn" onclick="openCards('${g}')"><span>${g}</span><span class="group-select-sub">${TERMS.filter((t) => t.g === g).length}用語</span></button>`
+            )
+            .join('');
+    }
+
+    function openCards(g) {
+        document.getElementById('yougo-title').textContent = '📖 ' + g;
+        document.getElementById('ycards').innerHTML = TERMS.map((t, i) =>
+            t.g === g
+                ? `<div class="ycard" onclick="zoomCard(${i})"><b>${t.n}</b>${t.cs ? svgOf(t.cs, t.h, false) : svgOf(t.s, t.h, false, t.n)}<small>${CNT[t.n] || 0}回出題</small></div>`
+                : ''
+        ).join('');
+        showScreen('screen-yougo-cards');
+    }
+
+    function zoomCard(i) {
+        const t = TERMS[i];
+        document.getElementById('zoom-box').innerHTML =
+            `<div style="font-size:24px;font-weight:bold">${t.n}</div>${t.cs ? svgOf(t.cs, t.h, false) : svgOf(t.s, t.h, false, t.n)}<div style="font-size:18px;margin:8px 0">${t.d}</div><div style="color:#789">${CNT[t.n] || 0}回出題</div>`;
+        document.getElementById('zoom-modal').style.display = 'flex';
+    }
+
+    function renderKiroku() {
+        const c = [];
+        [1, 2, 3].forEach((f) => {
+            let n = 0,
+                tot = 0;
+            for (let k = 1; k <= 10; k++)
+                chunks(f, k).forEach((x, j) => {
+                    tot++;
+                    if (PR[f + '-' + k + '-' + j] == 2) n++;
+                });
+            c.push([FN[f], `★：${n}セット／全${tot}セット`]);
+        });
+        const d = [];
+        d.push(
+            ['検定：受検回数', kenteiAttemptCount + '回'],
+            ['検定：クリア回数', CLR + '回'],
+            ['検定：ベストタイム', bestNormalTimeMs !== null ? formatMs(bestNormalTimeMs) : '--:--.-'],
+            ['検定：連続クリア記録', `現在：${correctStreakCount}回／最高：${maxStreakCount}回`]
+        );
+        const h = (r) =>
+            r
+                .map(
+                    (a) =>
+                        `<div class="kiroku-card"><div class="kiroku-card-label">${a[0]}</div><div class="kiroku-card-value">${a[1]}</div></div>`
+                )
+                .join('');
+        document.getElementById('kiroku-cards-mondai').innerHTML = h(c);
+        document.getElementById('kiroku-cards-kentei').innerHTML = h(d);
+    }
+
+    function openResetConfirm(t) {
+        pendingResetType = t;
+        document.getElementById('reset-confirm-message').textContent =
+            t === 'mondai'
+                ? '問題選択の★/☆の記録がすべてリセットされます。よろしいですか？'
+                : '検定の記録と、用語の出題回数がリセットされます。よろしいですか？';
+        document.getElementById('reset-confirm-modal').style.display = 'flex';
+    }
+
+    function confirmReset() {
+        if (pendingResetType === 'mondai') {
+            PR = {};
+            sv('hm_pr', PR);
+        } else {
+            bestNormalTimeMs = null;
+            correctStreakCount = 0;
+            maxStreakCount = 0;
+            kenteiAttemptCount = 0;
+            CLR = 0;
+            CNT = {};
+            sv('hm_clr', 0);
+            sv('hm_cnt', CNT);
+            saveKenteiRecords();
+            document.getElementById('best-normal-display').innerText = bestTimeText('--:--.-');
+        }
+        closeResetConfirm();
+    }
+    window.addEventListener('resize', resizeApp);
+    window.addEventListener('DOMContentLoaded', () => {
+        resizeApp();
+        initValidationControls();
+        loadKenteiRecords();
+        document.getElementById('best-normal-display').innerText = bestTimeText(
+            bestNormalTimeMs !== null ? formatMs(bestNormalTimeMs) : '--:--.-'
+        );
+        showScreen('screen-start');
+    });
+
+</script>
+</body>
+</html>
