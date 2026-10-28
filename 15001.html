@@ -2060,7 +2060,7 @@
         }
         const od = k === 1 ? [...Array(N).keys()] : SETS[f].o[k - 2],
             r = [];
-        for (let i = 0; i < od.length; i += 9) r.push(od.slice(i, i + 9));
+        for (let i = 0; i < od.length; i += 1) r.push(od.slice(i, i + 1));
         return r;
     }
 
@@ -2250,7 +2250,7 @@
         const it = cq();
         document.getElementById('hint-text').innerHTML = `<b>${it.n}</b>：${it.d}`;
         if (mode === 'p') {
-            msg('強制終了。答えは「' + plain(it.n) + '」。このセットを最初からやり直します。', 'incorrect');
+            msg('強制終了。答えは「' + plain(it.n) + '」。この問題を最初からやり直します。', 'incorrect');
             setAct('やり直す', () => {
                 seen = {};
                 anyWrong = false;
@@ -2274,7 +2274,7 @@
                 s = anyWrong ? 1 : 2;
             PR[k] = Math.max(PR[k] || 0, s);
             sv('hm_pr', PR);
-            msg('セット完了！' + (s == 2 ? '★' : '☆'), 'correct');
+            msg('クリア！' + (s == 2 ? '★' : '☆'), 'correct');
             setAct('問題選択へ', () => enterMondaiGrid(cur.f));
         } else {
             clearInterval(tmr);
@@ -2388,7 +2388,7 @@
                     tot++;
                     if (PR[f + '-' + k + '-' + j] == 2) n++;
                 });
-            c.push([FN[f], `★：${n}セット／全${tot}セット`]);
+            c.push([FN[f], `★：${n}問／全${tot}問`]);
         });
         const d = [];
         d.push(
