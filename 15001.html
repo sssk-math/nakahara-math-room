@@ -2316,7 +2316,12 @@
             seen[key] = 1;
             bump(plain(it.n));
         }
-        document.getElementById('progress').textContent = `${qi + 1} / ${Q.length}問`;
+        if (mode === 'p') {
+            const N = ITEMS[q.f].length;
+            document.getElementById('progress').textContent = `${(cur.k - 1) * N + cur.j + 1} / ${N * 10}問`;
+        } else {
+            document.getElementById('progress').textContent = `${qi + 1} / ${Q.length}問`;
+        }
         document.getElementById('qtext').textContent = qPrompt(q, it);
         document.getElementById('result-message').textContent = '';
         document.getElementById('result-message').className = 'result-message';
