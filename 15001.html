@@ -2409,18 +2409,24 @@
     function tapPart(id, el) {
         if (locked) return;
         const it = cq();
-        if (it.n === '円周') {
+        if (it.s === 'S4' && (id === 'circ' || id === 'arc')) {
             const g = (d) => document.querySelector('.fg .part[data-id="' + d + '"]');
-            if (id === 'circ') {
-                const on = !sel.includes('circ');
-                sel = on ? ['circ', 'arc'] : [];
-                g('circ').classList.toggle('sel', on);
-                g('arc').classList.toggle('sel', on);
-            } else if (id === 'arc') {
-                const on = !(sel.length === 1 && sel[0] === 'arc');
-                sel = on ? ['arc'] : [];
+            const whole = sel.includes('circ');
+            const lowOnly = sel.includes('arc') && !whole;
+            if (!it.m) {
+                sel = [];
+                document.querySelectorAll('.fg .sel').forEach((e) => e.classList.remove('sel'));
+            } else {
+                sel = sel.filter((d) => d !== 'circ' && d !== 'arc');
                 g('circ').classList.remove('sel');
-                g('arc').classList.toggle('sel', on);
+                g('arc').classList.remove('sel');
+            }
+            const turnOn = id === 'circ' ? !whole : !lowOnly;
+            if (turnOn) {
+                (id === 'circ' ? ['circ', 'arc'] : ['arc']).forEach((d) => {
+                    sel.push(d);
+                    g(d).classList.add('sel');
+                });
             }
             setAct('判定する', sel.length ? decide : null);
             return;
