@@ -1453,7 +1453,7 @@
         correctStreakCount = 0,
         maxStreakCount = 0,
         pendingResetType = null;
-    const QUESTION_COUNT = 6,
+    const QUESTION_COUNT = 9,
         KENTEI_RECORDS_KEY = 'heimen_kentei_v1';
 
     const GOOGLE_FORM_URL = 'https://docs.google.com/forms/d/e/*****変更箇所*****/formResponse';
@@ -2490,7 +2490,7 @@
         const it = cq();
         msg('正解！', 'correct');
         document.getElementById('hint-text').innerHTML = `<b>${it.n}</b>：${it.d}`;
-        if (mode === 'k') ksc++;
+                if (mode === 'k' && wrong === 0) ksc++;
         if (mode === 'p' && qi + 1 >= Q.length) {
             const pk = cur.f + '-' + cur.k + '-' + cur.j;
             PR[pk] = Math.max(PR[pk] || 0, anyWrong ? 1 : 2);
@@ -2531,7 +2531,8 @@
             kenteiAttemptCount++;
             correctStreakCount = 0;
             saveKenteiRecords();
-            msg('ここで検定終了。答えは「' + plain(it.n) + '」。', 'incorrect');
+            msg(`強制終了！全 ${QUESTION_COUNT} 問中 ${ksc} 問ノーミス正解。答えは「${plain(it.n)}」。`, 'incorrect');
+            document.getElementById('progress').textContent = '強制終了！';
            setFinished();
         }
     }
@@ -2565,7 +2566,9 @@
             }
             saveKenteiRecords();
             updateSendButtonState();
-            msg(`検定クリア！ タイム ${tx}`, 'correct');
+            msg(`全 ${QUESTION_COUNT} 問中 ${ksc} 問ノーミス正解！`, 'correct');
+            document.getElementById('progress').textContent = (ksc === QUESTION_COUNT) ? '全問ノーミスパーフェクト！' : '全問終了！';
+            document.getElementById('hint-text').innerHTML = '全問終了！<br>『送信』ボタンを押そう。';
            setFinished();
         }
     }
@@ -2575,7 +2578,7 @@
         showScreen('screen-kentei');
         document.getElementById('timer-container-area').classList.remove('practice-disabled');
         document.getElementById('timer-display').innerText = '⏱️ 00:00.0';
-        document.getElementById('qa').innerHTML = '<div class="qprompt">スタートを押すと、6問の検定が始まります。</div>';
+        document.getElementById('qa').innerHTML = '<div class="qprompt">生徒番号を入力→【スタート】</div>';
         document.getElementById('chs').innerHTML = '';
         locked = true;
         ['progress', 'qtext', 'result-message', 'hint-text'].forEach((i) => (document.getElementById(i).textContent = ''));
@@ -2594,7 +2597,7 @@
                 .map((it, i) => ({ f, i, n: plain(it.n) }))
                 .filter((x) => !used.has(x.n))
                 .sort((a, b) => (CNT[a.n] || 0) - (CNT[b.n] || 0) || Math.random() - 0.5)
-                .slice(0, 2)
+                .slice(0, 3)
                 .forEach((x) => {
                     used.add(x.n);
                     out.push({ f: x.f, i: x.i });
@@ -2721,4 +2724,3 @@
 </script>
 </body>
 </html>
-
