@@ -2373,6 +2373,10 @@
             let same = shuf(ITEMS[q.f].filter((x) => x !== it && sg(x, it)));
             const mate = q.f === 3 && /^半直線/.test(it.n) ? ITEMS[3].find((x) => x !== it && /^半直線/.test(x.n)) : null;
             if (mate) same = [mate, ...same.filter((x) => x !== mate)];
+            const kzu = q.f === 1 && /の作図$/.test(it.n)
+                ? ITEMS[1].filter((x) => x !== it && /の作図$/.test(x.n))
+                : null;
+            if (kzu) same = shuf(kzu);
             same = same.slice(0, 2);
             const diff = shuf(ITEMS[q.f].filter((x) => !sg(x, it))).slice(0, 1);
             CH = shuf([it, ...same, ...diff]);
