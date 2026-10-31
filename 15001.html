@@ -2299,8 +2299,47 @@
     setPrompt(['対応する辺'], '赤い辺は、辺ABの何ですか？');
     setPrompt(['対応する角'], '赤い角は、∠Aの何ですか？');
 
+    /* --- ②の問題文（用語ごと。未登録の用語は「用語名を選びなさい。」） --- */
+    const PROMPT2 = {
+        '点': '点をすべて選びなさい。',
+        '直線': '直線ℓを選びなさい。',
+        '線分': '線分ABを選びなさい。',
+        '垂直': '垂直に交わる2直線を選びなさい。',
+        '垂線': '直線ℓの垂線を選びなさい。',
+        '平行': '平行な2直線を選びなさい。',
+        '2点間の距離': '2点間の距離を表す線を選びなさい。',
+        '点と直線の距離': '点と直線の距離を表す線を選びなさい。',
+        '平行な2直線間の距離': '平行な2直線間の距離を表す線を選びなさい。',
+        '角': '角を選びなさい。',
+        '頂点': '頂点を選びなさい。',
+        '辺': '辺をすべて選びなさい。',
+        '三角形': '三角形の辺をすべて選びなさい。',
+        '円': '円を表す線と点をすべて選びなさい。',
+        '中心': '円の中心を選びなさい。',
+        '円周': '円周を選びなさい。',
+        '面積': '円の面積を表す部分を選びなさい。',
+        '半径': '円の半径を選びなさい。',
+        '直径': '円の直径を選びなさい。',
+        '弧': '弧を選びなさい。',
+        '弦': '弦を選びなさい。',
+        '中心角': '中心角を選びなさい。',
+        '接線': '円の接線を選びなさい。',
+        '接点': '接点を選びなさい。',
+        'おうぎ形': 'おうぎ形を表す線をすべて選びなさい。',
+        'おうぎ形の半径': 'おうぎ形の半径をすべて選びなさい。',
+        'おうぎ形の中心角': 'おうぎ形の中心角を選びなさい。',
+        'おうぎ形の弧の長さ': 'おうぎ形の弧の長さを表す線を選びなさい。',
+        'おうぎ形の面積': 'おうぎ形の面積を表す部分を選びなさい。',
+        '中点': '線分ABの中点を選びなさい。',
+        '回転の中心': '回転移動の中心を選びなさい。',
+        '対称の軸': '対称移動の軸を選びなさい。'
+    };
+
     function qPrompt(q, it) {
-        if (q.f === 2) return `「${it.q || it.n}」を${it.m ? 'すべて' : ''}タップしよう`;
+        if (q.f === 2) {
+            if (it.n === '半直線') return `半直線${q.v === 'B' ? 'BA' : 'AB'}を選びなさい。`;
+            return PROMPT2[it.n] || `${it.q || it.n}を選びなさい。`;
+        }
         if (q.f === 3) return 'この図を用語や記号を使って表しなさい。';
         return PROMPT1[it.n] || '赤い部分は何ですか？';
     }
@@ -2321,6 +2360,9 @@
             document.getElementById('progress').textContent = `${(cur.k - 1) * N + cur.j + 1} / ${N * 10}問`;
         } else {
             document.getElementById('progress').textContent = `${qi + 1} / ${Q.length}問`;
+        }
+        if (q.f === 2 && it.n === '半直線' && !q.v) {
+            q.v = mode === 'p' ? (cur.k % 2 === 1 ? 'A' : 'B') : Math.random() < 0.5 ? 'A' : 'B';
         }
         document.getElementById('qtext').textContent = qPrompt(q, it);
         document.getElementById('result-message').textContent = '';
@@ -2367,6 +2409,22 @@
     function tapPart(id, el) {
         if (locked) return;
         const it = cq();
+        if (it.n === '円周') {
+            const g = (d) => document.querySelector('.fg .part[data-id="' + d + '"]');
+            if (id === 'circ') {
+                const on = !sel.includes('circ');
+                sel = on ? ['circ', 'arc'] : [];
+                g('circ').classList.toggle('sel', on);
+                g('arc').classList.toggle('sel', on);
+            } else if (id === 'arc') {
+                const on = !(sel.length === 1 && sel[0] === 'arc');
+                sel = on ? ['arc'] : [];
+                g('circ').classList.remove('sel');
+                g('arc').classList.toggle('sel', on);
+            }
+            setAct('判定する', sel.length ? decide : null);
+            return;
+        }
         const x = sel.indexOf(id);
         if (x >= 0) {
             sel.splice(x, 1);
@@ -2403,7 +2461,12 @@
         if (locked) return;
         const it = cq();
         const cand = [it.t, ...(it.alt || [])];
-        const hit = it.m ? cand.some((c) => c.length === sel.length && c.every((x) => sel.includes(x))) : sel.length === 1 && it.t.includes(sel[0]);
+        let hit;
+        if (it.n === '半直線' && Q[qi].f === 2) {
+            hit = sel.length === 2 && sel.includes('ell') && sel.includes(Q[qi].v);
+        } else {
+            hit = it.m ? cand.some((c) => c.length === sel.length && c.every((x) => sel.includes(x))) : sel.length === 1 && it.t.includes(sel[0]);
+        }
         if (hit) ok();
         else {
             sel = [];
@@ -2656,3 +2719,4 @@
 </script>
 </body>
 </html>
+
