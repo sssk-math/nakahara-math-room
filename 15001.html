@@ -1244,7 +1244,7 @@
         .chs .chb {
             height: 46px;
             padding: 0 8px;
-            font-size: 18px;
+            font-size: 17px;
         }
         /* --- 出題画面の図を大きく表示 --- */
         #qa {
@@ -2231,8 +2231,8 @@
         ['作図', '角の二等分線', '角を2等分する半直線。', 'CangBis', [], ['kbis', 'am1', 'am2'], 0, 'CangBis', null],
         ['作図', '垂直二等分線の作図', '線分の中点を通り、その線分に垂直な直線の作図。', 'K2', [], ['ka1', 'ka2', 'kb1', 'kb2', 'kpq'], 0, null, null],
         ['作図', '角の二等分線の作図', '角を2等分する半直線の作図。', 'K3', [], ['ko', 'kp', 'kq', 'kbis'], 0, null, null],
-        ['作図', '直線上にある点からの<br>垂線の作図', '直線上にある点を通り、その直線に垂直な直線をひく作図。', 'K4', [], ['k0', 'ka', 'kb', 'kperp'], 0, null, null],
-        ['作図', '直線上にない点からの<br>垂線の作図', '直線上にない点を通り、その直線に垂直な直線をひく作図。', 'K5', [], ['k0', 'ka', 'kb', 'kperp'], 0, null, null],
+        ['作図', '直線上にある点からの垂線の作図', '直線上にある点を通り、その直線に垂直な直線をひく作図。', 'K4', [], ['k0', 'ka', 'kb', 'kperp'], 0, null, null],
+        ['作図', '直線上にない点からの垂線の作図', '直線上にない点を通り、その直線に垂直な直線をひく作図。', 'K5', [], ['k0', 'ka', 'kb', 'kperp'], 0, null, null],
 
         ['移動', '移動', '図形を、その形を変えずに別の位置へ動かすこと。', 'M0', [], ['t2', 'arw', 'ah'], 0, null, null],
         ['移動', '平行移動', '図形を、一定の方向に一定の距離だけ動かす移動。', 'M1', [], ['t2', 'mv'], 0, null, null],
@@ -2770,11 +2770,15 @@
             .join('');
     }
 
+    function dn(n) {
+        return n.replace('の垂線の作図', 'の<br>垂線の作図');
+    }
+
     function openCards(g) {
         document.getElementById('yougo-title').textContent = '📖 ' + g;
         document.getElementById('ycards').innerHTML = TERMS.map((t, i) =>
             t.g === g
-                ? `<div class="ycard" onclick="zoomCard(${i})"><b>${t.n}</b>${t.cs ? svgOf(t.cs, t.h, false) : svgOf(t.s, t.h, false, t.n)}<small>${CNT[t.n] || 0}回出題</small></div>`
+                ? `<div class="ycard" onclick="zoomCard(${i})"><b>${dn(t.n)}</b>${t.cs ? svgOf(t.cs, t.h, false) : svgOf(t.s, t.h, false, t.n)}<small>${CNT[t.n] || 0}回出題</small></div>`
                 : ''
         ).join('');
         showScreen('screen-yougo-cards');
@@ -2783,7 +2787,7 @@
     function zoomCard(i) {
         const t = TERMS[i];
         document.getElementById('zoom-box').innerHTML =
-            `<div style="font-size:24px;font-weight:bold">${t.n}</div>${t.cs ? svgOf(t.cs, t.h, false) : svgOf(t.s, t.h, false, t.n)}<div style="font-size:18px;margin:8px 0">${t.d}</div><div style="color:#789">${CNT[t.n] || 0}回出題</div>`;
+            `<div style="font-size:24px;font-weight:bold">${dn(t.n)}</div>${t.cs ? svgOf(t.cs, t.h, false) : svgOf(t.s, t.h, false, t.n)}<div style="font-size:18px;margin:8px 0">${t.d}</div><div style="color:#789">${CNT[t.n] || 0}回出題</div>`;
         document.getElementById('zoom-modal').style.display = 'flex';
     }
 
