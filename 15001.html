@@ -1812,6 +1812,20 @@
                 [286, 142, 'ℓ']
             ]
         },
+        K5: {
+            p: [
+                ln('ell', [20, 150], [300, 150]),
+                ['kP', 'p', 160, 50],
+                ['k0', 'a', ar(160, 50, 120, -138, -42)],
+                ['ka', 'a', ar(93.7, 150, 80, -48, -20)],
+                ['kb', 'a', ar(226.3, 150, 80, -160, -132)],
+                ln('kperp', [160, 50], [160, 196])
+            ],
+            L: [
+                [170, 46, 'P'],
+                [286, 142, 'ℓ']
+            ]
+        },
         M0: {
             p: [
                 ['t1', 'g', '40 150 110 150 70 90'],
@@ -1940,7 +1954,7 @@
                 [284, 152, 'm']
             ]
         },
-        Cmid: { p: [ln('kab', [60, 120], [260, 120]), ['M', 'p', 160, 120], ['d', 'd', 60, 120], ['d', 'd', 260, 120], ['tk1', 'a', 'M106 110 L106 130 M114 110 L114 130'], ['tk2', 'a', 'M206 110 L206 130 M214 110 L214 130']], L: [] },
+        Cmid: { p: [ln('kab', [60, 120], [260, 120]), ['M', 'p', 160, 120], ['d', 'd', 60, 120], ['d', 'd', 260, 120], ['tk1', 'a', 'M106 110 L106 130 M114 110 L114 130'], ['tk2', 'a', 'M206 110 L206 130 M214 110 L214 130']], L: [[48, 140, 'A'], [256, 140, 'B'], [146, 140, 'M']] },
         Ccen: {
             p: [['circ', 'o', 160, 110, 80], ln('cr1', O, pt(210)), ln('cr2', O, pt(330)), ['cang', 'a', ar(160, 110, 18, 210, 330)], ['d', 'd', ...pt(210)], ['d', 'd', ...pt(330)]],
             L: [
@@ -2110,7 +2124,8 @@
         '垂直二等分線': ['kab', 'kt1', 'kt2', 'krt'],
         '角の二等分線': ['koa', 'koc'],
         '角の二等分線の作図': ['koa', 'koc'],
-        '垂線の作図': ['ell', 'kP'],
+        '直線上にある点からの垂線の作図': ['ell', 'kP'],
+        '直線上にない点からの垂線の作図': ['ell', 'kP'],
         '移動': ['t1'],
         '平行移動': ['t1'],
         '回転移動': ['t1', 'ctr'],
@@ -2211,7 +2226,8 @@
         ['作図', '角の二等分線', '角を2等分する半直線。', 'CangBis', [], ['kbis', 'am1', 'am2'], 0, 'CangBis', null],
         ['作図', '垂直二等分線の作図', '線分の中点を通り、その線分に垂直な直線の作図。', 'K2', [], ['ka1', 'ka2', 'kb1', 'kb2', 'kpq'], 0, null, null],
         ['作図', '角の二等分線の作図', '角を2等分する半直線の作図。', 'K3', [], ['ko', 'kp', 'kq', 'kbis'], 0, null, null],
-        ['作図', '垂線の作図', '直線上の点からの作図。<br>直線上にない点からの作図もある。', 'K4', [], ['k0', 'ka', 'kb', 'kperp'], 0, null, null],
+        ['作図', '直線上にある点からの垂線の作図', '直線上にある点を通り、その直線に垂直な直線をひく作図。', 'K4', [], ['k0', 'ka', 'kb', 'kperp'], 0, null, null],
+        ['作図', '直線上にない点からの垂線の作図', '直線上にない点を通り、その直線に垂直な直線をひく作図。', 'K5', [], ['k0', 'ka', 'kb', 'kperp'], 0, null, null],
 
         ['移動', '移動', '図形を、その形を変えずに別の位置へ動かすこと。', 'M0', [], ['t2', 'arw', 'ah'], 0, null, null],
         ['移動', '平行移動', '図形を、一定の方向に一定の距離だけ動かす移動。', 'M1', [], ['t2', 'mv'], 0, null, null],
@@ -2239,7 +2255,7 @@
     ];
 
     const SYM = SD.map((a) => ({ g: a[0], n: a[1], d: a[2], s: a[3], t: a[4], h: a[4] }));
-    const ITEMS = { 1: TERMS.filter((t) => t.n !== '作図' && t.n !== '移動'), 2: TERMS.filter((t) => t.t.length), 3: SYM },
+    const ITEMS = { 1: TERMS.filter((t) => t.n !== '作図' && t.n !== '移動' && t.n !== '直線上にない点からの垂線の作図'), 2: TERMS.filter((t) => t.t.length), 3: SYM },
         FN = { 1: '①図を見て用語を選ぶ', 2: '②用語を見て図をタップ', 3: '③表し方を選ぶ' };
     const sg = (a, b) =>
         a.g === b.g ||
@@ -2378,7 +2394,7 @@
     setPrompt(['面積','おうぎ形の面積'], '赤い部分を何といいますか？');
     setPrompt(['中心角','おうぎ形の中心角'], '赤い角を何といいますか？');
     setPrompt(['作図'], '赤い道具を使って図をかくことを何といいますか？');
-    setPrompt(['垂直二等分線の作図', '角の二等分線の作図', '垂線の作図'], '赤い線は、何の作図の書き方ですか？');
+    setPrompt(['垂直二等分線の作図', '角の二等分線の作図', '直線上にある点からの垂線の作図'], '赤い線は、何の作図の書き方ですか？');
     setPrompt(['移動', '平行移動', '回転移動', '対称移動', '点対称移動'], '次の移動の仕方を何といいますか？');
     setPrompt(['対応する点'], '2つの赤い点の関係を、何といいますか？');
     setPrompt(['対応する辺'], '2つの赤い辺の関係を、何といいますか？');
@@ -2436,8 +2452,14 @@
         const q = Q[qi],
             it = ITEMS[q.f][q.i],
             key = q.f + '_' + q.i;
+        if (q.f === 1 && it.n === PERP0 && !q.v) {
+            const c0 = CNT[PERP0] || 0,
+                c1 = CNT[PERP1] || 0;
+            if (mode === 'p') q.v = (cur.k % 2 === 1) ? 'A' : 'B';
+            else q.v = (c0 < c1) ? 'A' : (c0 > c1) ? 'B' : (Math.random() < 0.5 ? 'A' : 'B');
+        }
         if (mode === 'k') {
-            bump(plain(it.n));
+            bump(plain(vt(it).n));
         }
         if (mode === 'p') {
             const N = ITEMS[q.f].length;
@@ -2472,19 +2494,30 @@
             same = same.slice(0, 2);
             const diff = shuf(ITEMS[q.f].filter((x) => !sg(x, it))).slice(0, 1);
             CH = shuf([it, ...same, ...diff]);
-            qa.innerHTML = svgOf(it.s, it.h, false);
-            chs.innerHTML = CH.map((c, i) => `<button class="chb" onclick="choose(${i})">${c.n}</button>`).join('');
+            qa.innerHTML = svgOf(q.v === 'B' ? 'K5' : it.s, it.h, false);
+            chs.innerHTML = CH.map((c, i) => `<button class="chb" onclick="choose(${i})">${vt(c).n}</button>`).join('');
         }
     }
 
-   function showHint() {
+    function showHint() {
         if (locked) return;
-        document.getElementById('hint-text').innerHTML = cq().d;
+        document.getElementById('hint-text').innerHTML = vt(cq()).d;
     }
 
     function cq() {
         const q = Q[qi];
         return ITEMS[q.f][q.i];
+    }
+
+    /* --- 垂線の作図（①）: 偶数セットなどで「直線上にない点から」の用語に読み替える --- */
+    const PERP0 = '直線上にある点からの垂線の作図',
+        PERP1 = '直線上にない点からの垂線の作図';
+
+    function vt(it) {
+        const q = Q[qi];
+        return (it.n === PERP0 && q && q.f === 1 && q.v === 'B')
+            ? TERMS.find((x) => x.n === PERP1)
+            : it;
     }
 
     function choose(i) {
@@ -2581,7 +2614,7 @@
         locked = true;
         const it = cq();
         msg('正解！', 'correct');
-        document.getElementById('hint-text').innerHTML = `<b>${it.n}</b>：${it.d}`;
+        document.getElementById('hint-text').innerHTML = `<b>${vt(it).n}</b>：${vt(it).d}`;
                 if (mode === 'k' && wrong === 0) ksc++;
         if (mode === 'p' && qi + 1 >= Q.length) {
             const pk = cur.f + '-' + cur.k + '-' + cur.j;
@@ -2609,9 +2642,9 @@
     function force() {
         locked = true;
         const it = cq();
-        document.getElementById('hint-text').innerHTML = `<b>${it.n}</b>：${it.d}`;
+        document.getElementById('hint-text').innerHTML = `<b>${vt(it).n}</b>：${vt(it).d}`;
         if (mode === 'p') {
-            msg('強制終了。答えは「' + plain(it.n) + '」。この問題を最初からやり直します。', 'incorrect');
+            msg('強制終了。答えは「' + plain(vt(it).n) + '」。この問題を最初からやり直します。', 'incorrect');
             setAct('やり直す', () => {
                 seen = {};
                 anyWrong = false;
@@ -2623,7 +2656,7 @@
             kenteiAttemptCount++;
             correctStreakCount = 0;
             saveKenteiRecords();
-            msg(`強制終了！全 ${QUESTION_COUNT} 問中 ${ksc} 問ノーミス正解。答えは「${plain(it.n)}」。`, 'incorrect');
+            msg(`強制終了！全 ${QUESTION_COUNT} 問中 ${ksc} 問ノーミス正解。答えは「${plain(vt(it).n)}」。`, 'incorrect');
             document.getElementById('progress').textContent = '強制終了！';
            setFinished();
         }
@@ -2679,6 +2712,10 @@
         setMid('ヒント', null);
     }
 
+    function kc(n) {
+        return (CNT[n] || 0) + (n === PERP0 ? (CNT[PERP1] || 0) : 0);
+    }
+
     function startKentei() {
         mode = 'k';
         clearInterval(tmr);
@@ -2688,7 +2725,7 @@
             ITEMS[f]
                 .map((it, i) => ({ f, i, n: plain(it.n) }))
                 .filter((x) => !used.has(x.n))
-                .sort((a, b) => (CNT[a.n] || 0) - (CNT[b.n] || 0) || Math.random() - 0.5)
+                .sort((a, b) => kc(a.n) - kc(b.n) || Math.random() - 0.5)
                 .slice(0, 3)
                 .forEach((x) => {
                     used.add(x.n);
