@@ -402,6 +402,18 @@
         /* ==========================================================================
            6. 記録画面【共通】
            ========================================================================== */
+        /* --- 記録画面の区分(問題選択/検定) --- */
+        .kiroku-section {
+            width: 560px;
+            margin: 0 auto;
+        }
+        .kiroku-section-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 6px;
+            text-align: left;
+        }
         /* --- 記録カード群のレイアウト --- */
         .kiroku-cards {
             display: grid;
@@ -1133,41 +1145,13 @@
 
         <div id="screen-kiroku" class="app-screen" style="display:none; align-items:center; justify-content:center; gap:16px;">
             <div class="sub-screen-header"><h1>🏆 記録</h1></div>
-            <div class="kiroku-cards">
-                <div class="kiroku-card">
-                    <div class="kiroku-card-label">練習：ノーミスクリア合計</div>
-                    <div class="kiroku-card-value" id="kiroku-mondai-count">0回</div>
-                </div>
-                <div class="kiroku-card">
-                    <div class="kiroku-card-label">グループA（垂直二等分線）</div>
-                    <div class="kiroku-card-value" id="kiroku-group-a">ノーミス：0回</div>
-                </div>
-                <div class="kiroku-card">
-                    <div class="kiroku-card-label">グループB（角の二等分線）</div>
-                    <div class="kiroku-card-value" id="kiroku-group-b">ノーミス：0回</div>
-                </div>
-                <div class="kiroku-card">
-                    <div class="kiroku-card-label">グループC（垂線：線上の点）</div>
-                    <div class="kiroku-card-value" id="kiroku-group-c">ノーミス：0回</div>
-                </div>
-                <div class="kiroku-card">
-                    <div class="kiroku-card-label">グループD（垂線：線外の点）</div>
-                    <div class="kiroku-card-value" id="kiroku-group-d">ノーミス：0回</div>
-                </div>
-                
-                <div class="kiroku-card">
-                    <div class="kiroku-card-label">検定：受検回数</div>
-                    <div class="kiroku-card-value" id="kiroku-attempts">0回</div>
-                </div>
-                <div class="kiroku-card">
-                    <div class="kiroku-card-label">検定：ベストタイム</div>
-                    <div class="kiroku-card-value" id="kiroku-best-time">--:--.-</div>
-                </div>
-                <div class="kiroku-card">
-                    <div class="kiroku-card-label">検定：連続正解記録</div>
-                    <div class="kiroku-card-value" id="kiroku-streak">現在：0問／最高：0問</div>
-                </div>
-
+            <div class="kiroku-section">
+                <div class="kiroku-section-title">📝 問題選択</div>
+                <div class="kiroku-cards" id="kiroku-cards-mondai"></div>
+            </div>
+            <div class="kiroku-section">
+                <div class="kiroku-section-title">🎯 検定</div>
+                <div class="kiroku-cards" id="kiroku-cards-kentei"></div>
             </div>
             <button class="btn-tutorial-hud-secondary" onclick="showScreen('screen-start')">←開始画面へ</button>
         </div>
@@ -1764,28 +1748,28 @@
         savePracticeProgress();
     }
 
-    /* --- 記録画面の描画（renderKirokuScreen） --- */
+        /* --- 記録画面の描画（renderKirokuScreen） --- */
     function renderKirokuScreen() {
-        let totalPerfect = 0;
-        GROUP_ORDER.forEach(g => {
-            totalPerfect += (practiceProgress[g] || 0);
-        });
-        const mondaiCountEl = document.getElementById('kiroku-mondai-count');
-        if (mondaiCountEl) mondaiCountEl.textContent = `${totalPerfect}回`;
+        const mondai = GROUP_ORDER.map(g => [
+            `${GROUP_INFO[g].mark} ${GROUP_INFO[g].desc}`,
+            `ノーミス：${practiceProgress[g] || 0}回`
+        ]);
 
-        GROUP_ORDER.forEach(g => {
-            const el = document.getElementById(`kiroku-group-${g.toLowerCase()}`);
-            if (!el) return;
-            el.textContent = `ノーミス：${practiceProgress[g] || 0}回`;
-        });
+        const kentei = [
+            ['検定：受検回数', `${kenteiAttemptCount}回`],
+            ['検定：ベストタイム', (bestNormalTimeMs !== null) ? formatMs(bestNormalTimeMs) : '--:--.-'],
+            ['検定：連続正解記録', `現在：${correctStreakCount}問／最高：${maxStreakCount}問`]
+        ];
 
-        const bestTimeEl = document.getElementById('kiroku-best-time');
-        if (bestTimeEl) bestTimeEl.textContent = (bestNormalTimeMs !== null) ? formatMs(bestNormalTimeMs) : '--:--.-';
+        const toCards = (rows) => rows.map(a =>
+            `<div class="kiroku-card">`
+            + `<div class="kiroku-card-label">${a[0]}</div>`
+            + `<div class="kiroku-card-value">${a[1]}</div>`
+            + `</div>`
+        ).join('');
 
-        const streakEl = document.getElementById('kiroku-streak');
-        if (streakEl) streakEl.textContent = `現在：${correctStreakCount}問／最高：${maxStreakCount}問`;
-        const attemptsEl = document.getElementById('kiroku-attempts');
-        if (attemptsEl) attemptsEl.textContent = `${kenteiAttemptCount}回`;
+        document.getElementById('kiroku-cards-mondai').innerHTML = toCards(mondai);
+        document.getElementById('kiroku-cards-kentei').innerHTML = toCards(kentei);
     }
 
     /* --- リセット確認を開く（openResetConfirm） --- */
