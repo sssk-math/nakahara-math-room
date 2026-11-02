@@ -1279,6 +1279,7 @@
     let timerInterval          = null;
     let bestNormalTimeMs       = null;
     let kenteiAttemptCount     = 0;
+    let kenteiClearCount       = 0;
     let lastClearTimeText      = "";
     let elapsedBeforeResume    = 0;
 
@@ -1441,6 +1442,7 @@
 
     if (!practiceMode) {
         kenteiAttemptCount++;
+        if (!isTimeUp) kenteiClearCount++;   // 時間切れでなければクリア
         saveKenteiRecords();
     }
 
@@ -1702,6 +1704,7 @@
                 correctStreakCount = (typeof parsed.streak === 'number') ? parsed.streak : 0;
                 maxStreakCount = (typeof parsed.maxStreak === 'number') ? parsed.maxStreak : 0;
                 kenteiAttemptCount = (typeof parsed.attempts === 'number') ? parsed.attempts : 0;
+                kenteiClearCount = (typeof parsed.clears === 'number') ? parsed.clears : 0;
                 return;
             }
         } catch (e) { /* 読み込み失敗時は初期化 */ }
@@ -1709,13 +1712,19 @@
         correctStreakCount = 0;
         maxStreakCount = 0;
         kenteiAttemptCount = 0;
+        kenteiClearCount = 0;
     }
 
     /* --- 検定記録の保存（saveKenteiRecords） --- */
     function saveKenteiRecords() {
         try {
-            localStorage.setItem(KENTEI_RECORDS_KEY, JSON.stringify({ bestTimeMs: bestNormalTimeMs, streak: correctStreakCount, maxStreak: maxStreakCount, attempts: kenteiAttemptCount }));
-        } catch (e) { /* 保存失敗時は何もしない */ }
+            localStorage.setItem(KENTEI_RECORDS_KEY, JSON.stringify({
+                bestTimeMs: bestNormalTimeMs,
+                streak: correctStreakCount,
+                maxStreak: maxStreakCount,
+                attempts: kenteiAttemptCount,
+                clears: kenteiClearCount
+            }));        } catch (e) { /* 保存失敗時は何もしない */ }
     }
 
     /* --- 問題選択の進捗の読み込み（loadPracticeProgress） --- */
@@ -1757,6 +1766,7 @@
 
         const kentei = [
             ['検定：受検回数', `${kenteiAttemptCount}回`],
+            ['検定：クリア回数', `${kenteiClearCount}回`],
             ['検定：ベストタイム', (bestNormalTimeMs !== null) ? formatMs(bestNormalTimeMs) : '--:--.-'],
             ['検定：連続正解記録', `現在：${correctStreakCount}問／最高：${maxStreakCount}問`]
         ];
@@ -1801,6 +1811,7 @@
             correctStreakCount = 0;
             maxStreakCount = 0;
             kenteiAttemptCount = 0;
+            kenteiClearCount = 0;
             saveKenteiRecords();
             if (!practiceMode) {
                 const bestDisplayEl = document.getElementById('best-normal-display');
@@ -1828,10 +1839,8 @@
         let html = '';
         GROUP_ORDER.forEach(g => {
             const info = GROUP_INFO[g];
-            const subText = `ノーミス ${practiceProgress[g] || 0}回`;
             html += `<button type="button" class="group-select-btn" onclick="startPractice('${g}')">`
                   +   `<span>${info.mark} ${info.desc}</span>`
-                  +   `<span class="group-select-sub">${subText}</span>`
                   + `</button>`;
         });
         wrap.innerHTML = html;
@@ -2658,7 +2667,8 @@ function isCurrentStageEmpty() {
                 const sameDist = eq(dist(op.p, q.O), M[0].r);
                 const bigEnough = op.r > M[0].r * Math.sin(q.w / 2) + 5;
                 const sameRadius = (k === 1) || eq(op.r, M[1].r);
-                return isCircle && onRay && sameDist && bigEnough && sameRadius;
+                const diffFromFirst = !eq(op.r, M[0].r);   // 1手目の円とは違う半径
+                return isCircle && onRay && sameDist && bigEnough && sameRadius && diffFromFirst;
             }
             return isLine && offL(q.O, op.a, d) < 6 && Math.abs(d.x * q.ub.y - d.y * q.ub.x) < 0.04;
         }
@@ -2889,7 +2899,7 @@ function isCurrentStageEmpty() {
         ],
         B: [
             '頂点Oを中心に円をかいて、2つの辺と交わらせよう。',
-            '辺OXとの交点を中心に円をかこう。半径は2つの交点の距離の半分より大きくね。',
+            '辺OXとの交点を中心に円をかこう。半径は2つの交点の距離の半分より大きく、1手目の円とは違う半径にしてね。',
             '辺OYとの交点を中心に、同じ半径の円をかこう。',
             '点Oと、2つの円の交点を通る直線を引こう。'
         ],
@@ -3108,7 +3118,7 @@ function isCurrentStageEmpty() {
 
         /* 描いた円・直線（お手本：今の手番＝赤、終わった線＝青） */
         drawn.forEach((o, i) => {
-            if (demoMode) {
+            if (demoMode || practiceMode) {
                 drawOp(o, (i === drawn.length - 1) ? '#e53935' : '#1a73e8', 2);
             } else if (o.t === 'c') {
                 drawOp(o, '#1a73e8', 1.5);
@@ -3121,13 +3131,26 @@ function isCurrentStageEmpty() {
         if (drag) {
             ctx.setLineDash([5, 4]);
             if (tool === 'compass') {
+                const pr = dist(drag.s, drag.p);
+                const prev = drawn.length ? drawn[drawn.length - 1] : null;
+                /* 同じ半径で円をかく手順：垂直二等分線は2手目、ほかは3手目 */
+                const sameStep = practiceMode && prev && prev.t === 'c' && drawn.length === (q.g === 'A' ? 1 : 2);
+                const sameR = sameStep && eq(pr, prev.r);
+
+                /* 検定：直前の円と同じ半径（正解判定と同じ許容差）になったら実線にする */
+                const circles = drawn.filter(o => o.t === 'c');
+                const prevCircle = circles.length ? circles[circles.length - 1] : null;
+                if (!practiceMode && prevCircle && eq(pr, prevCircle.r)) {
+                    ctx.setLineDash([]);
+                }
+
                 ctx.beginPath();
-                ctx.arc(drag.s.x, drag.s.y, dist(drag.s, drag.p), 0, 7);
-                ctx.strokeStyle = '#74a9f0';
+                ctx.arc(drag.s.x, drag.s.y, pr, 0, 7);
+                ctx.strokeStyle = sameR ? '#e53935' : '#74a9f0';
                 ctx.lineWidth = 1.5;
                 ctx.stroke();
             } else {
-                drawLine(drag.s, drag.p, '#f0a070', 2);
+                drawLine(drag.s, drag.p, practiceMode ? '#74a9f0' : '#f0a070', 2);
             }
             ctx.setLineDash([]);
             drawPoint(drag.s, 7, 'rgba(26,115,232,.35)');
@@ -3335,6 +3358,11 @@ function isCurrentStageEmpty() {
         msg('', '');
         drawn = [];
         drag = null;
+        tool = null;
+        document.getElementById('tool-compass').classList.remove('active');
+        document.getElementById('tool-ruler').classList.remove('active');
+        document.getElementById('tool-compass').blur();
+        document.getElementById('tool-ruler').blur();
         updateControlKeysState('playing');
 
         const q = curQ();
