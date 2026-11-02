@@ -1091,6 +1091,15 @@
             border: 2px solid #ced4da;
             border-radius: 8px;
             cursor: pointer;
+            padding: 0 2px;
+            white-space: nowrap;
+        }
+        /* --- コンパスボタン（「コンパス（固定）」が入る幅）と定規ボタンの幅の比率 --- */
+        #tool-compass {
+            flex: 3;
+        }
+        #tool-ruler {
+            flex: 2;
         }
         /* --- 道具ボタンの選択中スタイル --- */
         .tool-btn.active {
@@ -2603,6 +2612,8 @@ function isCurrentStageEmpty() {
     let drawn = [];          // 描いた作図（円・直線）の一覧
     let drag = null;         // ドラッグ中の状態
     let tool = null;         // 選択中の道具（null / 'compass' / 'ruler'）
+    let needle = null;       // コンパスの針の位置（置いていないときは null）
+    let compassFixed = false; // コンパス（固定）：直前の弧と同じ半径にするか
     let demoMode = false;    // お手本モード中か
     let demoList = [];       // お手本の手順（作図の一覧）
     let demoStep = 0;        // お手本で何手目まで進んだか
@@ -2651,7 +2662,7 @@ function isCurrentStageEmpty() {
                 return isCircle && dist(op.p, q.A) < 8 && op.r > q.L / 2 + 5;
             }
             if (k === 1) {
-                return isCircle && dist(op.p, q.B) < 8 && eq(op.r, M[0].r);
+                return isCircle && dist(op.p, q.B) < 8 && eq(op.r, M[0].r) && arcCrossCount(M[0], op) >= 2;
             }
             return isLine && Math.abs(dot(d, q.u)) < 0.04 && offL(q.m, op.a, d) < 6;
         }
@@ -2667,8 +2678,9 @@ function isCurrentStageEmpty() {
                 const sameDist = eq(dist(op.p, q.O), M[0].r);
                 const bigEnough = op.r > M[0].r * Math.sin(q.w / 2) + 5;
                 const sameRadius = (k === 1) || eq(op.r, M[1].r);
+                const crossOk = (k === 1) || arcCrossCount(M[1], op) >= 1;   // 3手目は2手目の弧と交わっていること
                 const diffFromFirst = !eq(op.r, M[0].r);   // 1手目の円とは違う半径
-                return isCircle && onRay && sameDist && bigEnough && sameRadius && diffFromFirst;
+                return isCircle && onRay && sameDist && bigEnough && sameRadius && diffFromFirst && crossOk;
             }
             return isLine && offL(q.O, op.a, d) < 6 && Math.abs(d.x * q.ub.y - d.y * q.ub.x) < 0.04;
         }
@@ -2689,7 +2701,7 @@ function isCurrentStageEmpty() {
             if (op.r <= need) return false;
 
             if (k === 1) return true;
-            return eq(op.r, M[1].r) && dist(op.p, M[1].p) > 10;
+            return eq(op.r, M[1].r) && dist(op.p, M[1].p) > 10 && arcCrossCount(M[1], op) >= 1;
         }
         return isLine && offL(q.P, op.a, d) < 6 && Math.abs(dot(d, q.u)) < 0.04;
     }
@@ -2920,7 +2932,7 @@ function isCurrentStageEmpty() {
     /* --- ヒント文のデータ（HINT_DATA） --- */
     const HINT_DATA = {
         start: "目指せ！パーフェクト！",
-        init: "道具（コンパス・定規）を選ぼう。<br>コンパスは「中心の点」からドラッグして半径を決め、<br>定規は2つの点をドラッグでつなぐよ。",
+        init: "道具（コンパス・定規）を選ぼう。<br>コンパス：針の点をタップ→弧の始点からドラッグ。もう一度押すと「固定」（前と同じ半径）。<br>定規：2つの点をドラッグでつなぐよ。",
         nextQuestion: "正解！<br>『次の問題』を押そう。",
         allFinished: "全問終了！<br>『送信』ボタンを押そう。"
     };
@@ -2966,11 +2978,59 @@ function isCurrentStageEmpty() {
         return quizData[currentQuestionIndex];
     }
 
-    /* --- 道具の選択／選択解除（setTool） --- */
-    function setTool(name) {
-        tool = (tool === name) ? null : name;
-        document.getElementById('tool-compass').classList.toggle('active', tool === 'compass');
+    /* --- 道具ボタンの見た目の更新（updateToolButtons） --- */
+    function updateToolButtons() {
+        const compassBtn = document.getElementById('tool-compass');
+        compassBtn.classList.toggle('active', tool === 'compass');
+        compassBtn.textContent = (tool === 'compass' && compassFixed) ? '🧭 コンパス（固定）' : '🧭 コンパス';
         document.getElementById('tool-ruler').classList.toggle('active', tool === 'ruler');
+    }
+
+    /* --- 道具の選択／選択解除（setTool）：コンパス選択中にもう一度押すと「通常 ⇄ 固定」 --- */
+    function setTool(name) {
+        if (name === 'compass' && tool === 'compass') {
+            if (!compassFixed && lastArcRadius() === null) {
+                msg('先に1本弧を描いてね。', 'incorrect');
+                return;
+            }
+            compassFixed = !compassFixed;
+        } else {
+            tool = (tool === name) ? null : name;
+            compassFixed = false;
+        }
+        needle = null;
+        drag = null;
+        updateToolButtons();
+        draw();
+    }
+
+    /* --- 直前に描いた弧（円）の半径（なければ null）（lastArcRadius） --- */
+    function lastArcRadius() {
+        const circles = drawn.filter(o => o.t === 'c');
+        return circles.length ? circles[circles.length - 1].r : null;
+    }
+
+    /* --- 点pが弧cの範囲内にあるか（onArcRange）：弧の端は3pxぶんゆるめに見る --- */
+    function onArcRange(c, p) {
+        if (c.a0 === undefined) return true;
+        const full = 2 * Math.PI;
+        const tol = 3 / c.r;
+        let diff = (Math.atan2(p.y - c.p.y, p.x - c.p.x) - c.a0) % full;
+        if (diff < 0) diff += full;
+        return diff <= (c.a1 - c.a0) + tol || diff >= full - tol;
+    }
+
+    /* --- 弧どうしが交わっている点の数（0〜2）（arcCrossCount） --- */
+    function arcCrossCount(c1, c2) {
+        const d = dist(c1.p, c2.p);
+        if (d < 1e-6 || d > c1.r + c2.r || d < Math.abs(c1.r - c2.r)) return 0;
+        const a = (c1.r * c1.r - c2.r * c2.r + d * d) / (2 * d);
+        const h = Math.sqrt(Math.max(0, c1.r * c1.r - a * a));
+        const ux = (c2.p.x - c1.p.x) / d, uy = (c2.p.y - c1.p.y) / d;
+        const mx = c1.p.x + a * ux, my = c1.p.y + a * uy;
+        return [V(mx - h * uy, my + h * ux), V(mx + h * uy, my - h * ux)]
+            .filter(pt => onArcRange(c1, pt) && onArcRange(c2, pt))
+            .length;
     }
 
     /* --- 交点の計算（ixs） --- */
@@ -3020,7 +3080,10 @@ function isCurrentStageEmpty() {
                 if (D < 0) return;
                 [-1, 1].forEach(sign => {
                     const t = (-B + sign * Math.sqrt(D)) / (2 * A);
-                    if (t >= 0 && t <= 1) add(V(a.x + t * d.x, a.y + t * d.y));
+                    if (t >= 0 && t <= 1) {
+                        const pt = V(a.x + t * d.x, a.y + t * d.y);
+                        if (onArcRange(c, pt)) add(pt);
+                    }
                 });
             });
         });
@@ -3035,8 +3098,9 @@ function isCurrentStageEmpty() {
                 const h = Math.sqrt(Math.max(0, c1.r * c1.r - a * a));
                 const ux = (c2.p.x - c1.p.x) / d, uy = (c2.p.y - c1.p.y) / d;
                 const mx = c1.p.x + a * ux, my = c1.p.y + a * uy;
-                add(V(mx - h * uy, my + h * ux));
-                add(V(mx + h * uy, my - h * ux));
+                [V(mx - h * uy, my + h * ux), V(mx + h * uy, my - h * ux)].forEach(pt => {
+                    if (onArcRange(c1, pt) && onArcRange(c2, pt)) add(pt);
+                });
             }
         }
         return out;
@@ -3127,28 +3191,47 @@ function isCurrentStageEmpty() {
             }
         });
 
+        /* 針の位置（コンパス選択中）：固定のときは、直前の弧と同じ半径のガイド円も出す */
+        if (needle && tool === 'compass' && !demoMode) {
+            const guideR = lastArcRadius();
+            if (compassFixed && guideR !== null) {
+                ctx.setLineDash([3, 5]);
+                ctx.beginPath();
+                ctx.arc(needle.x, needle.y, guideR, 0, 7);
+                ctx.strokeStyle = '#b5d3fa';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+            if (!drag) drawPoint(needle, 7, 'rgba(26,115,232,.35)');
+        }
+
         /* ドラッグ中のプレビュー */
         if (drag) {
             ctx.setLineDash([5, 4]);
             if (tool === 'compass') {
-                const pr = dist(drag.s, drag.p);
-                const prev = drawn.length ? drawn[drawn.length - 1] : null;
-                /* 同じ半径で円をかく手順：垂直二等分線は2手目、ほかは3手目 */
-                const sameStep = practiceMode && prev && prev.t === 'c' && drawn.length === (q.g === 'A' ? 1 : 2);
-                const sameR = sameStep && eq(pr, prev.r);
+                /* ほとんど動かしていない（タップ）間は、弧を出さない */
+                if (drag.r >= 12 && drag.moved >= 8) {
+                    const a0 = (drag.cum >= 0) ? drag.a0 : drag.a0 + drag.cum;
+                    const a1 = (drag.cum >= 0) ? drag.a0 + drag.cum : drag.a0;
+                    const prev = drawn.length ? drawn[drawn.length - 1] : null;
+                    /* 同じ半径で円をかく手順：垂直二等分線は2手目、ほかは3手目 */
+                    const sameStep = practiceMode && prev && prev.t === 'c' && drawn.length === (q.g === 'A' ? 1 : 2);
+                    const sameR = sameStep && eq(drag.r, prev.r);
 
-                /* 検定：直前の円と同じ半径（正解判定と同じ許容差）になったら実線にする */
-                const circles = drawn.filter(o => o.t === 'c');
-                const prevCircle = circles.length ? circles[circles.length - 1] : null;
-                if (!practiceMode && prevCircle && eq(pr, prevCircle.r)) {
-                    ctx.setLineDash([]);
+                    /* 検定：直前の円と同じ半径（正解判定と同じ許容差）になったら実線にする */
+                    const circles = drawn.filter(o => o.t === 'c');
+                    const prevCircle = circles.length ? circles[circles.length - 1] : null;
+                    if (!practiceMode && prevCircle && eq(drag.r, prevCircle.r)) {
+                        ctx.setLineDash([]);
+                    }
+
+                    ctx.beginPath();
+                    ctx.arc(drag.s.x, drag.s.y, drag.r, a0, a1);
+                    ctx.strokeStyle = sameR ? '#e53935' : '#74a9f0';
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
                 }
-
-                ctx.beginPath();
-                ctx.arc(drag.s.x, drag.s.y, pr, 0, 7);
-                ctx.strokeStyle = sameR ? '#e53935' : '#74a9f0';
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
             } else {
                 drawLine(drag.s, drag.p, practiceMode ? '#74a9f0' : '#f0a070', 2);
             }
@@ -3177,12 +3260,50 @@ function isCurrentStageEmpty() {
             msg('コンパスか定規を選んでね。', 'incorrect');
             return;
         }
-        const s = nearSnap(cpos(e), 18);
+        const pos = cpos(e);
+
+        if (tool === 'compass') {
+            /* 固定にしているのに直前の弧がない（消したあと）ときは、通常に戻す */
+            if (compassFixed && lastArcRadius() === null) {
+                compassFixed = false;
+                updateToolButtons();
+            }
+            const snap = nearSnap(pos, 18);
+
+            /* ①針の位置をタップ */
+            if (!needle) {
+                if (!snap) {
+                    msg('針は点の上に置いてね。', 'incorrect');
+                    return;
+                }
+                needle = V(snap.x, snap.y);
+                msg('', '');
+                draw();
+                return;
+            }
+
+            /* ②弧の始点を押して、ドラッグで弧をなぞる（固定：半径は直前の弧のまま、押した向きから始める） */
+            let r, a0;
+            if (compassFixed) {
+                r = lastArcRadius();
+                a0 = Math.atan2(pos.y - needle.y, pos.x - needle.x);
+            } else {
+                const start = snap || pos;
+                r = dist(needle, start);
+                a0 = Math.atan2(start.y - needle.y, start.x - needle.x);
+            }
+            drag = { s: V(needle.x, needle.y), p: pos, down: pos, r: r, a0: a0, last: a0, cum: 0, moved: 0 };
+            cv.setPointerCapture(e.pointerId);
+            draw();
+            return;
+        }
+
+        const s = nearSnap(pos, 18);
         if (!s) {
             msg('点の上から始めてね。', 'incorrect');
             return;
         }
-        drag = { s: V(s.x, s.y), p: cpos(e) };
+        drag = { s: V(s.x, s.y), p: pos };
         cv.setPointerCapture(e.pointerId);
         draw();
     });
@@ -3190,28 +3311,61 @@ function isCurrentStageEmpty() {
     cv.addEventListener('pointermove', e => {
         if (!drag) return;
         drag.p = cpos(e);
+
+        if (tool === 'compass') {
+            drag.moved = Math.max(drag.moved, dist(drag.down, drag.p));
+            /* 針のすぐそばでは角度が定まらないので、角度は更新しない */
+            if (dist(drag.s, drag.p) > 6) {
+                const ang = Math.atan2(drag.p.y - drag.s.y, drag.p.x - drag.s.x);
+                let diff = ang - drag.last;
+                while (diff > Math.PI) diff -= 2 * Math.PI;
+                while (diff < -Math.PI) diff += 2 * Math.PI;
+                drag.cum = Math.max(-2 * Math.PI, Math.min(2 * Math.PI, drag.cum + diff));
+                drag.last = ang;
+            }
+        }
         draw();
     });
 
     cv.addEventListener('pointerup', e => {
         if (!drag) return;
-        const s = drag.s;
-        const p = cpos(e);
-        const end = nearSnap(p, 12);
+        const d = drag;
         drag = null;
 
         if (tool === 'compass') {
-            const r = end ? dist(s, end) : dist(s, p);
-            if (r < 12) { draw(); return; }
-            addOp({ t: 'c', p: s, r: r });
-        } else {
-            if (!end || dist(end, s) < 8) {
-                msg('もう1つの点までドラッグしてね。', 'incorrect');
+            /* ほとんど動かさずに離したらタップ：針を置きなおす */
+            if (d.moved < 8) {
+                const snap = nearSnap(d.down, 18);
+                if (snap) {
+                    needle = V(snap.x, snap.y);
+                    msg('', '');
+                } else {
+                    msg('針は点の上に置いてね。', 'incorrect');
+                }
                 draw();
                 return;
             }
-            addOp({ t: 'l', a: s, b: V(end.x, end.y) });
+            /* 短すぎる弧は無視（針はそのまま） */
+            if (d.r < 12 || d.r * Math.abs(d.cum) < 12) {
+                draw();
+                return;
+            }
+            const a0 = (d.cum >= 0) ? d.a0 : d.a0 + d.cum;
+            const a1 = (d.cum >= 0) ? d.a0 + d.cum : d.a0;
+            needle = null;   // 弧を描いたら針はリセット
+            addOp({ t: 'c', p: d.s, r: d.r, a0: a0, a1: a1 });
+            return;
         }
+
+        const s = d.s;
+        const p = cpos(e);
+        const end = nearSnap(p, 12);
+        if (!end || dist(end, s) < 8) {
+            msg('もう1つの点までドラッグしてね。', 'incorrect');
+            draw();
+            return;
+        }
+        addOp({ t: 'l', a: s, b: V(end.x, end.y) });
     });
 
     cv.addEventListener('pointercancel', () => {
@@ -3304,6 +3458,7 @@ function isCurrentStageEmpty() {
         if (key === 'Backspace') drawn.pop();
         else if (key === 'clear') drawn = [];
         drag = null;
+        needle = null;
         msg('', '');
         draw();
         updateControlKeysState(currentControlState);
@@ -3341,6 +3496,7 @@ function isCurrentStageEmpty() {
         demoMode = false;
         drawn = [];
         drag = null;
+        needle = null;
         progressEl.textContent = "スタートボタンを押してください";
         formulaBox.innerHTML = practiceMode
             ? `<span style="color:#aaa; font-size:20px;">【スタート】を押して挑戦しよう</span>`
@@ -3359,8 +3515,9 @@ function isCurrentStageEmpty() {
         drawn = [];
         drag = null;
         tool = null;
-        document.getElementById('tool-compass').classList.remove('active');
-        document.getElementById('tool-ruler').classList.remove('active');
+        compassFixed = false;
+        needle = null;
+        updateToolButtons();
         document.getElementById('tool-compass').blur();
         document.getElementById('tool-ruler').blur();
         updateControlKeysState('playing');
