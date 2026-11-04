@@ -571,6 +571,24 @@
         .group-select-btn > span:first-child {
            white-space: nowrap;
        }
+        /* --- 問題の種類の選択画面：2列に並べ、ランダムは最後に横いっぱいで表示 --- */
+        #type-select-wrap {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: 92%;
+            max-width: 560px;
+        }
+        #type-select-wrap .group-select-btn {
+            height: auto;
+            min-height: 60px;
+            padding: 10px 14px;
+            justify-content: center;
+            text-align: center;
+        }
+        #type-select-wrap .group-select-btn > span:first-child {
+            white-space: normal;
+        }
 
         /* ==========================================================================
            9. メインゲーム画面・左右パネル【共通】
@@ -1327,6 +1345,7 @@
     let isConfirmed = false;
 
     let practiceMode              = false;
+    let hintShown                 = false;   // ヒント（答えの直線）を出しているか
     let practiceCurrentGroup      = null;
     let savedQuizData              = null;
     let savedCurrentQuestionIndex  = 0;
@@ -1875,14 +1894,16 @@
 
     /* 問題の種類の表示名 */
     const TYPE_INFO = {
-        'A-point': '2点から等しい距離の点',
-        'A-fold': '折り紙の折り目（点を重ねる）',
-        'B-point': '2辺から等しい距離の点',
-        'B-fold': '折り紙の折り目（辺を重ねる）',
-        'B-quarter': '角の4等分',
+        'A-mid': '中点の作図',
+        'A-point': '2点から等しい距離の点の集まり',
+        'A-fold': '頂点を重ねるときの折り目',
+        'A-quarter': '線分の4等分線',
+        'B-point': '2辺から等しい距離の点の集まり',
+        'B-fold': '辺を重ねるときの折り目',
+        'B-quarter': '角の4等分線',
         'C-dist': '点と直線の距離',
-        'C-height': '三角形の高さ',
-        'C-perp': '垂線と直線の交点'
+        'C-height': '三角形の頂点からの高さ',
+        'C-para': '平行四辺形の頂点からの高さ'
     };
 
     /* --- 問題の種類の選択画面への移行（openTypeSelect） --- */
@@ -1898,14 +1919,15 @@
         if (!wrap) return;
         const info = GROUP_INFO[group];
         document.getElementById('type-select-title').textContent = `📚 ${info.mark} ${info.desc}`;
-        let html = `<button type="button" class="group-select-btn" onclick="startPractice('${group}', null)">`
-                 +   `<span>🎲 ランダム（全種類）</span>`
-                 + `</button>`;
+        let html = '';
         PROBLEM_TYPES[group].forEach(type => {
             html += `<button type="button" class="group-select-btn" onclick="startPractice('${group}', '${type}')">`
                   +   `<span>${TYPE_INFO[type]}</span>`
                   + `</button>`;
         });
+        html += `<button type="button" class="group-select-btn type-select-random" onclick="startPractice('${group}', null)">`
+              +   `<span>🎲 ランダム（全種類）</span>`
+              + `</button>`;
         wrap.innerHTML = html;
     }
     /* --- 練習モードの開始（startPractice） --- */
@@ -2078,6 +2100,10 @@
             advancePracticeToNext();
             return;
         }
+        if (practiceMode && currentControlState === 'playing' && isCurrentStageEmpty()) {
+            showHintLines();
+            return;
+        }
         if (currentControlState === 'finished') {
             restartQuiz();
         } else {
@@ -2107,6 +2133,8 @@
                 actionBtn.disabled = true;
                 clearBtn.disabled = true;
                 if (practiceMode) {
+                    clearBtn.textContent = hintShown ? "消す" : "ヒント";
+                    clearBtn.disabled = hintShown;
                     clearAllBtn.textContent = "戻る";
                     clearAllBtn.className = "key action-btn-back";
                     clearAllBtn.disabled = false;
@@ -2757,13 +2785,16 @@ function isCurrentStageEmpty() {
         const u = unit(P, Q);
         return [
             {
-                hint: '点' + nP + 'を中心に、' + nP + nQ + 'の半分より大きい半径の弧をかこう。',
-                pred: (op) => op.t === 'c' && dist(op.p, P) < 8 && op.r > L / 2 + 5
+                hint: '点' + nP + 'か点' + nQ + 'のどちらかを中心に、' + nP + nQ + 'の半分より大きい半径の弧をかこう。',
+                pred: (op) => op.t === 'c' && (dist(op.p, P) < 8 || dist(op.p, Q) < 8) && op.r > L / 2 + 5
             },
             {
-                hint: '点' + nQ + 'を中心に、さっきと同じ半径の弧をかこう。2つの弧が交わるようにね。',
+                hint: 'もう一方の点を中心に、さっきと同じ半径の弧をかこう。2つの弧が交わるようにね。',
                 sameR: true,
-                pred: (op, M) => op.t === 'c' && dist(op.p, Q) < 8 && eq(op.r, M[base].r) && arcCrossCount(M[base], op) >= 2
+                pred: (op, M) => {
+                    const other = (dist(M[base].p, P) < 8) ? Q : P;
+                    return op.t === 'c' && dist(op.p, other) < 8 && eq(op.r, M[base].r) && arcCrossCount(M[base], op) >= 2;
+                }
             },
             {
                 hint: '2つの弧の交点を2つとも通る直線を引こう。',
@@ -2777,10 +2808,13 @@ function isCurrentStageEmpty() {
     }
 
     /* --- 手順の部品：角の二等分線（4手）。rays：O→u1、O→u2 の2本の半直線、ub：二等分線の向き --- */
-    function stepsAngleBisector(O, u1, u2, ub, w, rl, base, n1, n2) {
-        const arcStep = (u, k) => (op, M) => {
+    function stepsAngleBisector(O, u1, u2, ub, w, rl, base, n1, n2, nO = 'O') {
+        const onRayOf = (c, u) => offL(c.p, O, u) < 6 && side(c.p, O, u) > 0;
+        const arcStep = (k) => (op, M) => {
             if (op.t !== 'c') return false;
-            const onRay = offL(op.p, O, u) < 6 && side(op.p, O, u) > 0;
+            const onRay = (k === 1)
+                ? (onRayOf(op, u1) || onRayOf(op, u2))
+                : (onRayOf(M[base + 1], u1) ? onRayOf(op, u2) : onRayOf(op, u1));
             const sameDist = eq(dist(op.p, O), M[base].r);
             const bigEnough = op.r > M[base].r * Math.sin(w / 2) + 5;
             const sameRadius = (k === 1) || eq(op.r, M[base + 1].r);
@@ -2790,20 +2824,20 @@ function isCurrentStageEmpty() {
         };
         return [
             {
-                hint: '頂点Oを中心に弧をかいて、' + n1 + 'と' + n2 + 'に交わらせよう。',
+                hint: '頂点' + nO + 'を中心に弧をかいて、' + n1 + 'と' + n2 + 'に交わらせよう。',
                 pred: (op) => op.t === 'c' && dist(op.p, O) < 8 && op.r > 15 && op.r < rl - 8
             },
             {
-                hint: n1 + 'との交点を中心に弧をかこう。半径は2つの交点の距離の半分より大きく、1手目の弧とは違う半径にしてね。',
-                pred: arcStep(u1, 1)
+                hint: n1 + 'か' + n2 + 'との交点のどちらかを中心に弧をかこう。半径は2つの交点の距離の半分より大きく、1手目の弧とは違う半径にしてね。',
+                pred: arcStep(1)
             },
             {
-                hint: n2 + 'との交点を中心に、同じ半径の弧をかこう。',
+                hint: 'もう一方の交点を中心に、同じ半径の弧をかこう。',
                 sameR: true,
-                pred: arcStep(u2, 2)
+                pred: arcStep(2)
             },
             {
-                hint: '点Oと、2つの弧の交点を通る直線を引こう。',
+                hint: '点' + nO + 'と、2つの弧の交点を通る直線を引こう。',
                 pred: (op) => {
                     if (op.t !== 'l') return false;
                     const d = unit(op.a, op.b);
@@ -2861,6 +2895,33 @@ function isCurrentStageEmpty() {
         };
     }
 
+    /* --- 手順の部品：答えの点を複数のうちのどれか1つとる（1手）。すでにとった点は数えない --- */
+    function stepMarkAny(targets, hint) {
+        return {
+            hint: hint,
+            pred: (op, M) => op.t === 'p' && targets.some(t =>
+                dist(op.p, t) < 8 && !M.some(m => m.t === 'p' && dist(m.p, t) < 8))
+        };
+    }
+
+    /* --- 小さい三角形ABC（辺BCは水平、点Aは辺BCより上側） --- */
+    function makeSmallTriangle(rnd) {
+        const yb = rr(rnd, 170, 225);
+        const B = V(rr(rnd, 80, 340), yb);
+        const C = V(B.x + rr(rnd, 110, 160), yb);
+        const A = V(rr(rnd, B.x + 15, C.x - 15), yb - rr(rnd, 70, 105));
+        return { A: A, B: B, C: C };
+    }
+
+    /* --- 小さい三角形の線分とラベル --- */
+    function smallTriangleParts(T) {
+        return {
+            pts: [T.A, T.B, T.C],
+            segs: [[T.A, T.B], [T.B, T.C], [T.C, T.A]],
+            labels: [[T.A, 'A', -5, -10], [T.B, 'B', -18, 14], [T.C, 'C', 6, 14]]
+        };
+    }
+
     /* --- 角の図（OYは水平・右向き、OXは上向きに角wだけ開く）の共通部分 --- */
     function makeAngleBase(rnd, wLo, wHi) {
         const O = V(rr(rnd, 60, 150), rr(rnd, 250, 280));
@@ -2876,90 +2937,148 @@ function isCurrentStageEmpty() {
         };
     }
 
+    /* --- ヒント用：線分PQの垂直二等分線 --- */
+    function hintBisectorLine(P, Q) {
+        const mid = V((P.x + Q.x) / 2, (P.y + Q.y) / 2);
+        const u = unit(P, Q);
+        return { a: mid, b: V(mid.x - u.y, mid.y + u.x) };
+    }
+
+    /* --- ヒント用：点Oを通り、向きdの直線 --- */
+    function hintLineThrough(O, d) {
+        return { a: O, b: V(O.x + d.x, O.y + d.y) };
+    }
+
+    /* --- 手順の部品：辺をのばして直線にする（定規で1本引く） --- */
+    function stepExtend(a, u, name) {
+        return {
+            hint: '辺' + name + 'を定規でのばして、直線にしよう。',
+            pred: (op) => {
+                if (op.t !== 'l') return false;
+                const d = unit(op.a, op.b);
+                return offL(a, op.a, d) < 6 && Math.abs(d.x * u.y - d.y * u.x) < 0.04;
+            }
+        };
+    }
+
     /* --- 問題の種類（グループごと） --- */
     const PROBLEM_TYPES = {
-        A: ['A-point', 'A-fold'],
+        A: ['A-mid', 'A-point', 'A-fold', 'A-quarter'],
         B: ['B-point', 'B-fold', 'B-quarter'],
-        C: ['C-dist', 'C-height', 'C-perp']
+        C: ['C-dist', 'C-height', 'C-para']
     };
 
     /* --- 問題の種類ごとの生成。条件に合わない図になったら null を返す（やり直し） --- */
     const PROBLEM_BUILDERS = {
 
-        /* ① 2点から等距離の点（直線ℓは水平） */
-        'A-point': function (rnd) {
-            const yl = rr(rnd, 225, 262);
-            const A = V(rr(rnd, 60, 260), rr(rnd, 85, 155));
-            const t = rr(rnd, -45, 45) * RAD;
-            const B = polar(A, t, rr(rnd, 120, 220));
+        /* ① 中点の作図 */
+        'A-mid': function (rnd) {
+            const A = V(rr(rnd, 70, 250), rr(rnd, 90, 220));
+            const ang = rr(rnd, -60, 60) * RAD + (rnd() < 0.5 ? 0 : Math.PI);
+            const B = polar(A, ang, rr(rnd, 200, 320));
             const mid = V((A.x + B.x) / 2, (A.y + B.y) / 2);
-            const n = V(-Math.sin(t), Math.cos(t));
-            const s = (yl - mid.y) / n.y;
-            const X = V(mid.x + n.x * s, yl);
-            if (B.y < 70 || B.y > 170 || X.x < 60 || X.x > 530) return null;
+            if (mid.x < 90 || mid.x > 500 || mid.y < 70 || mid.y > 240) return null;
             return {
-                g: 'A', type: 'A-point',
+                g: 'A', type: 'A-mid',
+                hintLines: [hintBisectorLine(A, B)],
                 text: oneOf([
-                    'AとBから等しい距離にある、ℓ上の点Pを作図しなさい。',
-                    '線分ABを底辺とする二等辺三角形ABPの頂点Pを、ℓ上に作図しなさい。',
-                    '2つの駅A、Bから等しい距離にある、道路ℓ上の点Pを作図しなさい。'
+                    '線分ABの中点Mを作図しなさい。',
+                    '線分ABの真ん中の点Mを、作図によって求めなさい。'
                 ], rnd),
                 pts: [A, B],
-                segs: [[V(-1000, yl), V(CW + 1000, yl)]],
-                labels: [[A, 'A', -18, -8], [B, 'B', 8, -8], [V(20, yl), 'ℓ', 0, -12]],
+                segs: [[A, B]],
+                labels: [[A, 'A', -18, -8], [B, 'B', 8, -8]],
                 steps: stepsPerpBisector(A, B, 'A', 'B', 0)
-                    .concat([stepMark(X, '垂直二等分線とℓの交点をタップして、点Pをとろう。')]),
-                target: X, ansLabel: 'P'
+                    .concat([stepMark(mid, '垂直二等分線と線分ABの交点をタップして、中点Mをとろう。')]),
+                target: mid, ansLabel: 'M'
             };
         },
 
-        /* ① 折り紙の折り目（点Aを点Bに重ねる） */
-        'A-fold': function (rnd) {
-            let A = V(rr(rnd, 70, 220), rr(rnd, 60, 250));
-            let B = polar(A, rr(rnd, -60, 60) * RAD, rr(rnd, 200, 330));
-            if (B.x > 540 || B.y < 40 || B.y > 270) return null;
-            if (rnd() < 0.5) { const tmp = A; A = B; B = tmp; }
-            const e = [V(15, 15), V(575, 15), V(575, 295), V(15, 295)];
+        /* ① 2点から等しい距離の点の集まり（垂直二等分線を引く） */
+        'A-point': function (rnd) {
+            const A = V(rr(rnd, 100, 490), rr(rnd, 70, 240));
+            const B = polar(A, rr(rnd, 0, 360) * RAD, rr(rnd, 150, 250));
+            const mid = V((A.x + B.x) / 2, (A.y + B.y) / 2);
+            if (mid.x < 90 || mid.x > 500 || mid.y < 85 || mid.y > 225) return null;
             return {
-                g: 'A', type: 'A-fold',
-                text: '点Aが点Bに重なるように折る。折り目を作図しなさい。',
+                g: 'A', type: 'A-point',
+                hintLines: [hintBisectorLine(A, B)],
+                text: oneOf([
+                    '2点A、Bから等しい距離にある点の集まりを作図しなさい。',
+                    '2つの駅A、Bから等しい距離にある点の集まりを作図しなさい。',
+                    '2点A、Bから等しい距離にある点を、すべて作図しなさい。'
+                ], rnd),
                 pts: [A, B],
-                segs: [[e[0], e[1]], [e[1], e[2]], [e[2], e[3]], [e[3], e[0]]],
+                segs: [],
                 labels: [[A, 'A', -18, -8], [B, 'B', 8, -8]],
                 steps: stepsPerpBisector(A, B, 'A', 'B', 0)
             };
         },
 
-        /* ② 2辺から等距離の点（線分AB上） */
-        'B-point': function (rnd) {
-            const a = makeAngleBase(rnd, 50, 100);
-            const T = polar(a.O, -a.w / 2, rr(rnd, 120, 185));
-            const dirAng = -a.w / 2 + oneOf([-1, 1], rnd) * rr(rnd, 55, 125) * RAD;
-            const half = rr(rnd, 45, 70);
-            const A = polar(T, dirAng + Math.PI, half);
-            const B = polar(T, dirAng, half);
-            if (segCross(A, B, a.O, a.X) || segCross(A, B, a.O, a.Y)) return null;
+        /* ① 頂点を重ねるときの折り目（小さい三角形。重ねる頂点の位置を変える） */
+        'A-fold': function (rnd) {
+            const T = makeSmallTriangle(rnd);
+            const parts = smallTriangleParts(T);
+            const keys = ['A', 'B', 'C'];
+            const from = oneOf(keys, rnd);
+            const to = oneOf(keys.filter(k => k !== from), rnd);
             return {
-                g: 'B', type: 'B-point',
+                g: 'A', type: 'A-fold',
+                hintLines: [hintBisectorLine(T[from], T[to])],
                 text: oneOf([
-                    '∠XOYの2辺から等しい距離にある、AB上の点Pを作図しなさい。',
-                    '2本の道OX、OYから等しい距離にある、AB上の点Pを作図しなさい。'
+                    '三角形ABCを、頂点' + from + 'が頂点' + to + 'に重なるように折る。折り目を作図しなさい。',
+                    '三角形ABCを、頂点' + from + 'が頂点' + to + 'に重なるように折る。折り目の直線を作図しなさい。'
                 ], rnd),
-                pts: [a.O, a.X, a.Y, A, B],
-                segs: [[a.O, a.X], [a.O, a.Y], [A, B]],
-                labels: [[a.O, 'O', -18, 14], [a.X, 'X', 6, -6], [a.Y, 'Y', 6, 14], [A, 'A', 8, -8], [B, 'B', 8, -8]],
-                steps: stepsAngleBisector(a.O, a.u1, a.u2, a.ub, a.w, a.rl, 0, '辺OX', '辺OY')
-                    .concat([stepMark(T, '二等分線と線分ABの交点をタップして、点Pをとろう。')]),
-                target: T, ansLabel: 'P'
+                pts: parts.pts,
+                segs: parts.segs,
+                labels: parts.labels,
+                steps: stepsPerpBisector(T[from], T[to], from, to, 0)
             };
         },
 
-        /* ② 折り紙の折り目（辺OXを辺OYに重ねる） */
-        'B-fold': function (rnd) {
-            const a = makeAngleBase(rnd, 40, 100);
+        /* ① 線分の4等分線（垂直二等分線を3回引き、3つの点をとる） */
+        'A-quarter': function (rnd) {
+            let A = V(rr(rnd, 60, 130), rr(rnd, 110, 200));
+            let B = polar(A, rr(rnd, -20, 20) * RAD, rr(rnd, 300, 370));
+            if (B.y < 60 || B.y > 250 || B.x > 560) return null;
+            if (rnd() < 0.5) { const tmp = A; A = B; B = tmp; }
+            const P = V(A.x + (B.x - A.x) / 4, A.y + (B.y - A.y) / 4);
+            const Q = V((A.x + B.x) / 2, (A.y + B.y) / 2);
+            const R = V(A.x + (B.x - A.x) * 3 / 4, A.y + (B.y - A.y) * 3 / 4);
+            const note = (list) => {
+                list.forEach(s => { if (s.hint.indexOf('M') >= 0) s.hint += '（Mは線分ABの中点）'; });
+                return list;
+            };
+            const marks = '線分ABを4等分する点を1つタップして、とろう。';
             return {
-                g: 'B', type: 'B-fold',
-                text: '辺OXが辺OYに重なるように折る。折り目を作図しなさい。',
+                g: 'A', type: 'A-quarter',
+                hintLines: [hintBisectorLine(A, B), hintBisectorLine(A, Q), hintBisectorLine(Q, B)],
+                text: '線分ABを4等分する3つの点P、Q、Rを作図しなさい。',
+                pts: [A, B],
+                segs: [[A, B]],
+                labels: [[A, 'A', -18, -8], [B, 'B', 8, -8]],
+                steps: stepsPerpBisector(A, B, 'A', 'B', 0)
+                    .concat(note(stepsPerpBisector(A, Q, 'A', 'M', 3)))
+                    .concat(note(stepsPerpBisector(Q, B, 'M', 'B', 6)))
+                    .concat([
+                        stepMarkAny([P, Q, R], marks),
+                        stepMarkAny([P, Q, R], marks),
+                        stepMarkAny([P, Q, R], marks)
+                    ]),
+                targets: [{ p: P, label: 'P' }, { p: Q, label: 'Q' }, { p: R, label: 'R' }]
+            };
+        },
+
+        /* ② 2辺から等しい距離の点の集まり（角の二等分線を引く） */
+        'B-point': function (rnd) {
+            const a = makeAngleBase(rnd, 50, 100);
+            return {
+                g: 'B', type: 'B-point',
+                hintLines: [hintLineThrough(a.O, a.ub)],
+                text: oneOf([
+                    '∠XOYの2辺OX、OYから等しい距離にある点の集まりを作図しなさい。',
+                    '2本の道OX、OYから等しい距離にある点を、すべて作図しなさい。'
+                ], rnd),
                 pts: [a.O, a.X, a.Y],
                 segs: [[a.O, a.X], [a.O, a.Y]],
                 labels: [[a.O, 'O', -18, 14], [a.X, 'X', 6, -6], [a.Y, 'Y', 6, 14]],
@@ -2967,18 +3086,52 @@ function isCurrentStageEmpty() {
             };
         },
 
-        /* ② 角の4等分（二等分線をもう一度二等分する） */
+        /* ② 辺を重ねるときの折り目（小さい三角形。重ねる辺の位置を変える） */
+        'B-fold': function (rnd) {
+            const T = makeSmallTriangle(rnd);
+            const parts = smallTriangleParts(T);
+            const keys = ['A', 'B', 'C'];
+            const v = oneOf(keys, rnd);
+            const others = keys.filter(k => k !== v);
+            if (rnd() < 0.5) others.reverse();
+            const p1 = others[0], p2 = others[1];
+            const u1 = unit(T[v], T[p1]);
+            const u2 = unit(T[v], T[p2]);
+            const w = Math.acos(Math.max(-1, Math.min(1, dot(u1, u2))));
+            if (w < 35 * RAD || w > 110 * RAD) return null;
+            const sum = V(u1.x + u2.x, u1.y + u2.y);
+            const sl = Math.hypot(sum.x, sum.y);
+            const ub = V(sum.x / sl, sum.y / sl);
+            const rl = Math.min(dist(T[v], T[p1]), dist(T[v], T[p2]));
+            return {
+                g: 'B', type: 'B-fold',
+                hintLines: [hintLineThrough(T[v], ub)],
+                text: oneOf([
+                    '三角形ABCを、辺' + v + p1 + 'が辺' + v + p2 + 'に重なるように折る。折り目を作図しなさい。',
+                    '三角形ABCを、辺' + v + p1 + 'が辺' + v + p2 + 'に重なるように折る。折り目の直線を作図しなさい。'
+                ], rnd),
+                pts: parts.pts,
+                segs: parts.segs,
+                labels: parts.labels,
+                steps: stepsAngleBisector(T[v], u1, u2, ub, w, rl, 0, '辺' + v + p1, '辺' + v + p2, v)
+            };
+        },
+
+        /* ② 角の4等分線（二等分線を3本引く） */
         'B-quarter': function (rnd) {
             const a = makeAngleBase(rnd, 64, 100);
             const ub2 = V(Math.cos(-a.w * 3 / 4), Math.sin(-a.w * 3 / 4));
+            const ub3 = V(Math.cos(-a.w / 4), Math.sin(-a.w / 4));
             return {
                 g: 'B', type: 'B-quarter',
-                text: '∠XOYの4分の1の角∠XOZをつくる直線OZを作図しなさい。',
+                hintLines: [hintLineThrough(a.O, a.ub), hintLineThrough(a.O, ub2), hintLineThrough(a.O, ub3)],
+                text: '∠XOYを4等分する3本の直線を作図しなさい。',
                 pts: [a.O, a.X, a.Y],
                 segs: [[a.O, a.X], [a.O, a.Y]],
                 labels: [[a.O, 'O', -18, 14], [a.X, 'X', 6, -6], [a.Y, 'Y', 6, 14]],
                 steps: stepsAngleBisector(a.O, a.u1, a.u2, a.ub, a.w, a.rl, 0, '辺OX', '辺OY')
                     .concat(stepsAngleBisector(a.O, a.u1, a.ub, ub2, a.w / 2, a.rl, 4, '辺OX', '1本目の二等分線'))
+                    .concat(stepsAngleBisector(a.O, a.ub, a.u2, ub3, a.w / 2, a.rl, 8, '1本目の二等分線', '辺OY'))
             };
         },
 
@@ -2994,6 +3147,7 @@ function isCurrentStageEmpty() {
             const labL = V(F.x - 170 * u.x, F.y - 170 * u.y);
             return {
                 g: 'C', type: 'C-dist',
+                hintLines: [hintLineThrough(P, nv)],
                 text: oneOf([
                     '点Pから直線ℓに垂線PHを引き、Hに点をとりなさい。',
                     '点Pと直線ℓの距離を表す線分PHの、点Hを作図しなさい。'
@@ -3007,58 +3161,97 @@ function isCurrentStageEmpty() {
             };
         },
 
-        /* ③ 三角形の高さ（辺BCは水平。頂点Aから垂線AHを引く） */
+        /* ③ 三角形の頂点からの高さ（辺BCは水平、Aは上側。鈍角三角形は頂点Aからのみ） */
         'C-height': function (rnd) {
+            const obtuse = rnd() < 0.3;
             const yb = rr(rnd, 235, 268);
-            const B = V(rr(rnd, 70, 150), yb);
-            const C = V(B.x + rr(rnd, 280, 380), yb);
-            if (C.x > 560) return null;
-            const h = rr(rnd, 120, 175);
-            const A = V(rr(rnd, B.x + 80, C.x - 80), yb - h);
-            const F = V(A.x, yb);
+            const B = V(rr(rnd, 125, 160), yb);
+            const C = V(B.x + rr(rnd, 200, 260), yb);
+            const h = rr(rnd, 110, 180);
+            const ax = obtuse
+                ? ((rnd() < 0.5) ? C.x + rr(rnd, 45, 90) : B.x - rr(rnd, 45, 90))
+                : rr(rnd, B.x + 40, C.x - 40);
+            const A = V(ax, yb - h);
+            const P = { A: A, B: B, C: C };
+            const ang = (X, Y, Z) => Math.acos(dot(unit(X, Y), unit(X, Z))) / RAD;
+            const angles = [ang(A, B, C), ang(B, A, C), ang(C, A, B)];
+            if (obtuse) {
+                if (Math.max.apply(null, angles) < 100) return null;
+            } else if (Math.max.apply(null, angles) > 85 || Math.min.apply(null, angles) < 30) {
+                return null;
+            }
+            const v = obtuse ? 'A' : oneOf(['A', 'B', 'C'], rnd);
+            const others = ['A', 'B', 'C'].filter(k => k !== v);
+            const o1 = P[others[0]], o2 = P[others[1]];
+            const u = unit(o1, o2);
+            const tt = dot(V(P[v].x - o1.x, P[v].y - o1.y), u);
+            const F = V(o1.x + u.x * tt, o1.y + u.y * tt);
+            const d = dist(P[v], F);
+            if (d < 60) return null;
+            if (!obtuse && (tt < 40 || tt > dist(o1, o2) - 40)) return null;
+            const sideName = others.join('');
             return {
                 g: 'C', type: 'C-height',
-                text: '△ABCで、頂点Aから辺BCへの垂線AHを作図し、Hに点をとりなさい。',
+                hintLines: [hintLineThrough(P[v], V(-u.y, u.x))],
+                text: obtuse
+                    ? '△ABCで、頂点' + v + 'から辺' + sideName + 'をのばした直線への高さを表す線分' + v + 'Hを作図し、Hに点をとりなさい。'
+                    : '△ABCで、頂点' + v + 'から辺' + sideName + 'への高さを表す線分' + v + 'Hを作図し、Hに点をとりなさい。',
                 pts: [A, B, C],
-                segs: [[A, B], [A, C], [V(-1000, yb), V(CW + 1000, yb)]],
+                segs: [
+                    [P[v], o1],
+                    [P[v], o2],
+                    [o1, o2]
+                ],
                 labels: [[A, 'A', -5, -10], [B, 'B', -18, 14], [C, 'C', 6, 14]],
-                steps: stepsPerp(A, F, V(1, 0), h, 'off', 0, 'A', '辺BC')
-                    .concat([stepMark(F, '垂線と辺BCの交点をタップして、点Hをとろう。')]),
+                steps: (obtuse ? [stepExtend(o1, u, sideName)] : [])
+                    .concat(stepsPerp(P[v], F, u, d, 'off', obtuse ? 1 : 0, v, (obtuse ? '直線' : '辺') + sideName))
+                    .concat([stepMark(F, '垂線と直線' + sideName + 'の交点をタップして、点Hをとろう。')]),
                 target: F, ansLabel: 'H'
             };
         },
 
-        /* ③ ℓ上の点Pを通る垂線と、斜めの直線mとの交点Q（ℓは水平） */
-        'C-perp': function (rnd) {
-            const yl = rr(rnd, 225, 262);
-            const P = V(rr(rnd, 150, 420), yl);
-            const h = rr(rnd, 90, 150);
-            const Q = V(P.x, yl - h);
-            const phi = oneOf([-1, 1], rnd) * rr(rnd, 25, 65) * RAD;
-            const dir = V(Math.cos(phi), Math.sin(phi));
-            const M1 = V(Q.x - 1500 * dir.x, Q.y - 1500 * dir.y);
-            const M2 = V(Q.x + 1500 * dir.x, Q.y + 1500 * dir.y);
-            /* 直線mのラベルは、画面内に入る側に置く */
-            let labM = polar(Q, phi, 140);
-            if (labM.x > 560 || labM.y < 25 || labM.y > 290) labM = polar(Q, phi + Math.PI, 140);
+        /* ③ 平行四辺形の頂点からの高さ（左上から反時計回りにABCD。辺BCは水平） */
+        'C-para': function (rnd) {
+            const yb = rr(rnd, 235, 268);
+            const B = V(rr(rnd, 130, 190), yb);
+            const len = rr(rnd, 190, 260);
+            const C = V(B.x + len, yb);
+            const h = rr(rnd, 95, 140);
+            const s = rr(rnd, 45, 110) * (rnd() < 0.7 ? 1 : -1);
+            const A = V(B.x + s, yb - h);
+            const D = V(A.x + len, A.y);
+            const v = oneOf(['A', 'D'], rnd);
+            const Pv = (v === 'A') ? A : D;
+            const F = V(Pv.x, yb);
+            const outside = F.x < B.x - 1 || F.x > C.x + 1;
             return {
-                g: 'C', type: 'C-perp',
-                text: 'Pを通るℓの垂線と、直線mとの交点Qを作図しなさい。',
-                pts: [P],
-                segs: [[V(-1000, yl), V(CW + 1000, yl)], [M1, M2]],
-                labels: [[P, 'P', 8, 16], [V(20, yl), 'ℓ', 0, -12], [labM, 'm', 6, -8]],
-                steps: stepsPerp(P, P, V(1, 0), 0, 'on', 0, 'P', 'ℓ')
-                    .concat([stepMark(Q, '垂線と直線mの交点をタップして、点Qをとろう。')]),
-                target: Q, ansLabel: 'Q'
+                g: 'C', type: 'C-para',
+                hintLines: [hintLineThrough(Pv, V(0, 1))],
+                text: outside
+                    ? '平行四辺形ABCDで、頂点' + v + 'から辺BCをのばした直線への高さを表す線分' + v + 'Hを作図し、Hに点をとりなさい。'
+                    : '平行四辺形ABCDで、頂点' + v + 'から辺BCへの高さを表す線分' + v + 'Hを作図し、Hに点をとりなさい。',
+                pts: [A, B, C, D],
+                segs: [
+                    [A, B],
+                    [C, D],
+                    [D, A],
+                    [B, C]
+                ],
+                labels: [[A, 'A', -18, -6], [B, 'B', -18, 14], [C, 'C', 6, 14], [D, 'D', 6, -6]],
+                steps: (outside ? [stepExtend(B, V(1, 0), 'BC')] : [])
+                    .concat(stepsPerp(Pv, F, V(1, 0), h, 'off', outside ? 1 : 0, v, outside ? '直線BC' : '辺BC'))
+                    .concat([stepMark(F, '垂線と直線BCの交点をタップして、点Hをとろう。')]),
+                target: F, ansLabel: 'H'
             };
         }
     };
 
     /* --- 生成した図のチェック（点が画面内・点どうしが近すぎない） --- */
     function validProblem(q) {
-        const inside = p => p.x >= 14 && p.x <= CW - 14 && p.y >= 14 && p.y <= CH - 14;
+        const inside = p => p.x >= 45 && p.x <= CW - 45 && p.y >= 40 && p.y <= CH - 40;
         if (!q.pts.every(inside)) return false;
         if (q.target && !inside(q.target)) return false;
+        if (q.targets && !q.targets.every(t => inside(t.p))) return false;
         for (let i = 0; i < q.pts.length; i++) {
             for (let j = i + 1; j < q.pts.length; j++) {
                 if (dist(q.pts[i], q.pts[j]) < 40) return false;
@@ -3353,6 +3546,11 @@ function isCurrentStageEmpty() {
             }
         };
 
+        /* ヒント：答えの直線を薄灰色の実線で（他の線の下に敷く） */
+        if (hintShown && practiceMode && q.hintLines) {
+            q.hintLines.forEach(l => drawOp({ t: 'l', a: l.a, b: l.b }, '#c4c4c4', 3));
+        }
+
         /* 与えられた図形 */
         q.segs.forEach(seg => drawLine(seg[0], seg[1], '#333', 2.5));
 
@@ -3362,7 +3560,8 @@ function isCurrentStageEmpty() {
                 drawPoint(o.p, 5, '#e53935');
                 ctx.fillStyle = '#e53935';
                 ctx.font = 'bold 17px sans-serif';
-                ctx.fillText(q.ansLabel || '', o.p.x + 8, o.p.y - 8);
+                const tg = q.targets ? q.targets.find(t => dist(t.p, o.p) < 8) : null;
+                ctx.fillText(tg ? tg.label : (q.ansLabel || ''), o.p.x + 8, o.p.y - 8);
             } else if (practiceMode) {
                 drawOp(o, (i === drawn.length - 1) ? '#e53935' : '#1a73e8', 2);
             } else if (o.t === 'c') {
@@ -3653,6 +3852,14 @@ function isCurrentStageEmpty() {
         updateControlKeysState(currentControlState);
     }
 
+    /* --- ヒントを出す（showHintLines）：答えの直線を薄灰色で表示（練習のみ） --- */
+    function showHintLines() {
+        hintShown = true;
+        document.getElementById('hint-text').textContent = '薄い灰色の直線が、作図でめざす直線だよ。この線ができるように手順をたどろう。';
+        draw();
+        updateControlKeysState(currentControlState);
+    }
+
     /* --- 現在のステージの未入力判定（isCurrentStageEmpty）：作図用に差し替え --- */
     function isCurrentStageEmpty() {
         return drawn.length === 0;
@@ -3701,6 +3908,7 @@ function isCurrentStageEmpty() {
         currentQuestionWrongCount = 0;
         msg('', '');
         drawn = [];
+        hintShown = false;
         drag = null;
         tool = null;
         compassFixed = false;
