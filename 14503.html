@@ -2595,7 +2595,16 @@ function isCurrentStageEmpty() {
 
     /* --- 現在の問題の種類に合わせたヒント文の取得（kindHint） --- */
     function kindHint(key) {
-        return HINT_BY_KIND[currentKind()][key];
+        const q = quizData[currentQuestionIndex];
+        const group = q ? (q.aFrac ? 'hireiFrac' : q.kind) : 'hirei';
+        return hintOf(group, key);
+    }
+
+    /* --- ヒント文の取り出し（hintOf）：hireiFrac（比例定数が分数）に無いものは、比例のヒントを使う --- */
+    function hintOf(group, key) {
+        const g = HINT_BY_KIND[group];
+        if (g && g[key] !== undefined) return g[key];
+        return HINT_BY_KIND[group === 'hireiFrac' ? 'hirei' : group][key];
     }
 
     /* --- 答えの判定（judgeAnswer）：式の文字列が完全に一致したら正解 --- */
@@ -2672,7 +2681,7 @@ function isCurrentStageEmpty() {
                 if (!userLeft && !userRight) return;
                 leftOk = exprCandidates(q).has(userLeft);
             }
-            if (leftOk && userRight === String(q.a)) {
+            if (leftOk && q.aSet.has(userRight)) {
                 document.getElementById('group-expression').className = "input-box-group locked-correct";
                 document.getElementById('badge-expression').textContent = "正解！";
                 currentStage = 'answer';
@@ -2848,40 +2857,72 @@ function isCurrentStageEmpty() {
     const num = n => (n < 0 ? `(${n})` : `${n}`);
     const first = n => (n < 0 ? [String(n), `(${n})`] : [String(n)]);
 
-    /* --- 1問の生成（buildQuestion）：kind＝'hirei'（比例）／'hanpirei'（反比例）、x の符号 sx、y の符号 sy を指定する --- */
-    function buildQuestion(kind, sx, sy) {
-        const ax = randInt(2, 9);
-        const x = sx * ax;
-        let y, a, ansStr;
+    /* --- 比例定数が分数になる問題用：約分済みの分数 p/q（q は 2〜5、p は 1〜7、互いに素）を選ぶ（pickFractionConstant） --- */
+    function pickFractionConstant() {
+        while (true) {
+            const p = randInt(1, 7);
+            const q2 = randInt(2, 5);
+            if (gcd(p, q2) === 1) return { p: p, q: q2 };
+        }
+    }
+
+    /* --- 1問の生成（buildQuestion）：kind＝'hirei'（比例）／'hanpirei'（反比例）、x の符号 sx、y の符号 sy を指定する。fractional＝true は、比例定数が分数になる比例の問題 --- */
+    function buildQuestion(kind, sx, sy, fractional = false) {
+        let x, y, a, ansStr;
         const exprSet = new Set();
-        if (kind === 'hirei') {
+        const aSet = new Set();                         // 途中式の右の枠（a の値）で正解にする文字列
+        const useFrac = (kind === 'hirei' && fractional);
+        if (useFrac) {
+            const f = pickFractionConstant();
+            const m = randInt(1, Math.floor(9 / f.q));  // |x| が 9 以下になるようにする
+            const sa = sx * sy;                         // 比例定数の符号
+            x = sx * f.q * m;
+            y = sy * f.p * m;                           // y = a × x
+            a = sa * f.p / f.q;
+            ansStr = `${sa < 0 ? '-' : ''}${f.p}/${f.q}x`;
+            exprSet.add(`${y}/${x}`);
+            if (sa < 0) {
+                aSet.add(`-${f.p}/${f.q}`);
+                aSet.add(`${f.p}/-${f.q}`);
+            } else {
+                aSet.add(`${f.p}/${f.q}`);
+            }
+        } else if (kind === 'hirei') {
+            const ax = randInt(2, 9);
             const k = randInt(2, 9);
+            x = sx * ax;
             const ay = Math.abs(sy) * k * ax;           // |y| = |a| × |x|
             a = sx * sy * k;                            // 比例定数
             y = sy * ay;
             ansStr = `${a}x`;
             exprSet.add(`${y}/${x}`);   // a = y ÷ x（yを分子、xを分母にした縦型分数。符号はそのまま）
+            aSet.add(String(a));
         } else {
+            const ax = randInt(2, 9);
+            x = sx * ax;
             y = sy * randInt(2, 12);
             a = x * y;                                  // 比例定数 a = x × y
             ansStr = `${a < 0 ? '-' : ''}${Math.abs(a)}/x`;
             [[x, y], [y, x]].forEach(([p, q2]) => first(p).forEach(f => exprSet.add(`${f}×${num(q2)}`)));
+            aSet.add(String(a));
         }
         const kindJa = (kind === 'hirei') ? '比例' : '反比例';
-        const hints = HINT_BY_KIND[kind];
+        const group = useFrac ? 'hireiFrac' : kind;
         return {
             kentei: 1,
             kind: kind,
+            aFrac: useFrac,
             sentence: `$y$ は $x$ に${kindJa}し、<br>$x=${x}$ のとき、$y=${y}$ である。<br>$x$ と $y$ の関係を式に表しなさい。`,
             x: x, y: y, a: a,
             ansStr: ansStr,
             exprSet: exprSet,
-            initHint: hints.init,
-            errHint: hints.err
+            aSet: aSet,
+            initHint: hintOf(group, 'init'),
+            errHint: hintOf(group, 'err')
         };
     }
 
-    /* --- 検定用の問題セットの生成（generateQuizData）：(x,y)の符号 4通りを1問ずつ、比例2問・反比例2問、順番も組み合わせもランダム --- */
+    /* --- 検定用の問題セットの生成（generateQuizData）：(x,y)の符号 4通りを1問ずつ、比例2問・反比例2問、順番も組み合わせもランダム。比例の2問目は、比例定数が分数 --- */
     function generateQuizData() {
         const shuffle = arr => {
             for (let i = arr.length - 1; i > 0; i--) {
@@ -2892,9 +2933,9 @@ function isCurrentStageEmpty() {
         };
         const combos = shuffle([[1, 1], [1, -1], [-1, 1], [-1, -1]]);
         const kinds = shuffle(['hirei', 'hirei', 'hanpirei', 'hanpirei']);
-        return combos.map((c, i) => buildQuestion(kinds[i], c[0], c[1]));
+        const secondHirei = kinds.indexOf('hirei', kinds.indexOf('hirei') + 1);   // 比例の2問目の位置
+        return combos.map((c, i) => buildQuestion(kinds[i], c[0], c[1], i === secondHirei));
     }
-
 
     /* ==========================================================================
        11. ヒント文のデータ【固有】
@@ -2929,6 +2970,16 @@ function isCurrentStageEmpty() {
             stepManual: "途中式を書こう！<br>比例定数 $a$ は $x \\times y$ で求められるよ。左の枠に $x \\times y$ の式、右の枠に計算の答えを書いてね。負の数にはかっこをつけよう。「=」キーで左右の枠を移動できるよ。",
             stepSuccess: "途中式バッチリ！<br>$a$ の値が求まったね。$y=\\dfrac{a}{x}$ の形で答えよう。「−」（負の数のとき）→『x』→『分の』→分子の順に入力するよ。",
             exprError: "途中式が違うよ！<br>左の枠は「$x$ の値 × $y$ の値」（負の数はかっこ付き）、右の枠はその計算の答えだよ。"
+        },
+        hireiFrac: {   // 比例定数が分数になる比例の問題（書いていないものは hirei と同じ）
+            init: "「$y$ は $x$ に比例する」とき、$y=ax$ と表せるよ。比例定数 $a$ は分数になることもあるよ。$x$ と $y$ の値から $a$ を求めて式にしよう。",
+            err: "式は「$y=$ 比例定数 $\\times x$」の形だよ。比例定数 $a$ は $y \\div x$ で求められるよ。分数になったら約分して、符号にも気をつけよう。",
+            timeoutAnswer: "時間切れ！<br>比例定数 $a$ は $y \\div x$ で求めよう。分数になったら約分して、$y=ax$ の形で答えよう。",
+            timeoutExpression: "時間切れ！<br>$a=$（$y$ を分子、$x$ を分母にした分数）＝（約分した分数）の形で書こう。『＝』キーで枠を移動できるよ。",
+            stepIntro: "2回間違えたので、途中式を書こう！<br>左の枠に、$y$ の値を分子、$x$ の値を分母にした分数を書いてね。『＝』キーで右の枠に移って、約分した分数を書こう。",
+            stepManual: "途中式を書こう！<br>比例定数 $a$ は $y \\div x$ で求められるよ。左の枠に分数（分子は $y$、分母は $x$）、『＝』キーで右の枠に移って約分した分数を書いてね。",
+            stepSuccess: "途中式バッチリ！<br>$a$ を使って $y=ax$ の形で答えよう。負の数のときは「−」を先に入力して、分数のあとに「x」キーを使うよ。",
+            exprValueError: "分数はバッチリ！<br>右の枠は、約分した分数で書こう。「−」は分子の先頭に入れてね。"
         }
     };
 
