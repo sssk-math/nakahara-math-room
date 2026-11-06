@@ -3008,8 +3008,8 @@ function isCurrentStageEmpty() {
         const hints = buildHints('hirei', ask, type, sa, sv);
 
         if (ask === 'y') {
-            // x は「分母の倍数（1倍〜3倍）」か「1, 2, 3」（式の数が整数のときは 1〜9）
-            const absX = (type === 1) ? randInt(1, 9) : pickOne([1, 2, 3].map(k => k * aDen).concat([1, 2, 3]));
+            // x は「分母の倍数（1倍〜3倍）」か「2, 3」（式の数が整数のときは 2〜9）。±1 は出さない
+            const absX = (type === 1) ? randInt(2, 9) : pickOne([1, 2, 3].map(k => k * aDen).concat([2, 3]));
             const x = sv * absX;
             const g = gcd(aNum * x, aDen);
             return {
@@ -3031,8 +3031,8 @@ function isCurrentStageEmpty() {
             xNum = sv * sa * randInt(1, 9); xDen = 1;
             yNum = aNum * xNum;
         } else {
-            // y は「分子の倍数（1倍〜3倍）」か「1, 2, 3」
-            yNum = sv * pickOne([1, 2, 3].map(k => k * p).concat([1, 2, 3]));
+            // y は「分子の倍数（1倍〜3倍）」か「1, 2, 3」。ただし ±1 は出さない
+            yNum = sv * pickOne([1, 2, 3].map(k => k * p).concat([1, 2, 3]).filter(v => v >= 2));
             xNum = yNum * aDen; xDen = aNum;
             if (xDen < 0) { xNum = -xNum; xDen = -xDen; }
             const g = gcd(xNum, xDen); xNum /= g; xDen /= g;
@@ -3063,7 +3063,7 @@ function isCurrentStageEmpty() {
         let a, d;
         if (type === 3) {
             do { a = randInt(2, 36); } while (divs(a).length < 2);   // 2〜9の約数をもつ数だけ使う
-            d = pickOne(divs(a));
+            d = pickOne(divs(a).filter(k => k >= 2));   // 与える値は ±1 にしない
         } else if (Math.random() < 0.5) {
             do { a = randInt(2, 36); d = randInt(2, 9); } while (gcd(a, d) !== 1);   // 互いに素 → 約分できない分数
         } else {
