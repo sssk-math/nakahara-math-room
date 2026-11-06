@@ -2628,11 +2628,13 @@ function isCurrentStageEmpty() {
         return new Set([q.exprStr]);
     }
 
-    /* --- 途中式の枠の読み取り（getExprFractionString）：枠に分数がちょうど1つだけで、分数の外に文字がなければ 'top/bottom'、それ以外は null --- */
+     /* --- 途中式の枠の読み取り（getExprFractionString）：枠に分数がちょうど1つだけで、分数の外に文字がなければ 'top/bottom'、それ以外は null。
+          ただし、分数の前に「−」だけが付いている場合は '-top/bottom' として扱う（例：−10/−1 を、「−」＋ 10/−1 で入力してもOK） --- */
     function getExprFractionString() {
         const ed = document.getElementById('math-editor-expression-right');
         if (!ed) return null;
         let fracCount = 0, str = null, stray = false;
+        let prefix = "";
         ed.childNodes.forEach(node => {
             if (node.classList && node.classList.contains('editor-fraction-node')) {
                 const topEl = node.querySelector('.frac-top');
@@ -2640,10 +2642,17 @@ function isCurrentStageEmpty() {
                 fracCount++;
                 str = `${topEl ? topEl.value : ''}/${bottomEl ? bottomEl.value : ''}`;
             } else if (node.classList && node.classList.contains('editor-text-node')) {
-                if (node.value.replace(/\s+/g, '') !== '') stray = true;
+                const t = node.value.replace(/\s+/g, '');
+                if (t === '') return;
+                // 分数より前にある「−」1つだけなら許可する
+                if (fracCount === 0 && t === '-' && prefix === "") {
+                    prefix = '-';
+                } else {
+                    stray = true;
+                }
             }
         });
-        return (fracCount === 1 && !stray) ? str : null;
+        return (fracCount === 1 && !stray) ? prefix + str : null;
     }
 
     /* --- 途中式の枠を開く（openExpressionStep）：auto=true は2回間違えたときの自動表示 --- */
