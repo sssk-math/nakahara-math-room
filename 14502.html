@@ -3093,7 +3093,7 @@ function isCurrentStageEmpty() {
           検定①＝y を求める／検定②＝x を求める／検定③＝1問ごとに x か y かをランダムに決める --- */
     function generateQuizData() {
         const pats = shuffle(SIGN_PATTERNS.slice());
-        const plan = [['hirei', 1], ['hirei', 2], ['hanpirei', 3], ['hanpirei', 4]];
+        const plan = shuffle([['hirei', 1], ['hirei', 2], ['hanpirei', 3], ['hanpirei', 4]]);
         return plan.map((pt, i) => {
             const ask = (currentKentei === 3) ? pickOne(['y', 'x']) : (currentKentei === 2 ? 'x' : 'y');
             const sa = pats[i][0], sv = pats[i][1];
