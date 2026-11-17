@@ -2260,6 +2260,140 @@ function specHireiGive(p) {
         }
     };
 }
+/* ==========================================================================
+   3g. 方法ごとの方程式の形【固有】
+   言葉の式…各 spec の eqAns（言葉の式のとおり）
+   線分図  …「全体＝部分の和」の形
+   表      …表に並ぶ数量の順にまとめた形
+   ここに書いた方法だけ、spec の eqAns・eqWrong・eqHint を置き換える（書いていない方法は spec のまま）
+   ========================================================================== */
+const eqf = (ans, wrong, hint) => ({ans: ans, wrong: wrong, hint: hint});
+
+function eqFormOtsuri(p) {
+    const {M, c} = p;
+    if (p.kind === 'a1') {
+        const {n, b} = p;
+        return {
+            diagram: eqf(`${M}=${n}x+${b}+${c}`,
+                [`${M}=${n}x+${b}`, `${M}=${b * n}+x+${c}`, `${M}+${c}=${n}x+${b}`],
+                '線分図は「全体＝部分の和」。「出した金額 ＝ 代金 ＋ 代金 ＋ おつり」を式にしよう。'),
+            table: eqf(`${n}x+${b}=${M}-${c}`,
+                [`${n}x+${b}=${M}+${c}`, `${b * n}+x=${M}-${c}`, `${n}x=${M}-${c}`],
+                '表の「代金」の欄を読もう。「代金の合計 ＝ 出した金額 − おつり」を式にしよう。')
+        };
+    }
+    if (p.kind === 'count') {
+        const {a, b, n} = p;
+        return {
+            diagram: eqf(`${M}=${a}x+${b}(${n}-x)+${c}`,
+                [`${M}=${a}x+${b}x+${c}`, `${M}=${a}x+${b}(${n}-x)`, `${M}=${b}x+${a}(${n}-x)+${c}`],
+                '線分図は「全体＝部分の和」。「出した金額 ＝ 代金 ＋ 代金 ＋ おつり」を式にしよう。もう一方の個数は(全部の数−x)だよ。'),
+            table: eqf(`${a}x+${b}(${n}-x)=${M}-${c}`,
+                [`${a}x+${b}(${n}-x)=${M}+${c}`, `${a}x+${b}x=${M}-${c}`, `${b}x+${a}(${n}-x)=${M}-${c}`],
+                '表の「代金」の欄を読もう。「代金の合計 ＝ 出した金額 − おつり」を式にしよう。')
+        };
+    }
+    const {a, p: pp, q} = p;
+    return {
+        diagram: eqf(`${M}=${a * pp}+${q}x+${c}`,
+            [`${M}=${a * pp}+${q}x`, `${M}=${a * q}+${pp}x+${c}`, `${M}+${c}=${a * pp}+${q}x`],
+            '線分図は「全体＝部分の和」。「出した金額 ＝ 代金 ＋ 代金 ＋ おつり」を式にしよう。'),
+        table: eqf(`${a * pp}+${q}x=${M}-${c}`,
+            [`${a * pp}+${q}x=${M}+${c}`, `${a * q}+${pp}x=${M}-${c}`, `${a * pp}+x=${M}-${c}`],
+            '表の「代金」の欄を読もう。「代金の合計 ＝ 出した金額 − おつり」を式にしよう。')
+    };
+}
+
+function eqFormDaikin(p) {
+    if (p.kind === 'bai') {
+        const {n, b, q, c, k} = p;
+        return {
+            diagram: eqf(`${k}(${q}x+${c})=${n}x+${b}`,
+                [`${k}${q}x+${c}=${n}x+${b}`, `${q}x+${c}=${n}x+${b}`, `${k}(${n}x+${b})=${q}x+${c}`],
+                `線分図の上の線は、下の線の${k}倍。「${k}×(下の線) ＝ 上の線」を式にしよう。`)
+        };
+    }
+    if (p.kind === 'zan') {
+        const {m1, m2, k} = p;
+        return {
+            diagram: eqf(`${m1}=${k}(${m2}-x)+x`,
+                [`${m1}=${k}(${m2}-x)`, `${m1}=${k}(${m2}-x)-x`, `${m1}=${m2}-x+x`],
+                `線分図で、兄の所持金は「兄の残金＋値段」。兄の残金は弟の残金の${k}倍だよ。`)
+        };
+    }
+    const {a, p: pp, q, T} = p;
+    return {
+        diagram: eqf(`${T}=${a * pp}+${q}x`,
+            [`${T}=${a * q}+${pp}x`, `${T}=${a * pp}+x`, `${T}=${a + pp}+${q}x`],
+            '線分図は「全体＝部分の和」。「代金の合計 ＝ 代金 ＋ 代金」を式にしよう。')
+    };
+}
+
+function eqFormKafusoku(p) {
+    const {a, c, r1, r2} = p;
+    return {
+        diagram: eqf(`${a}x+${r1}+${r2}=${c}x`,
+            [`${a}x+${r1}-${r2}=${c}x`, `${a}x+${r1}=${c}x`, `${a}x-${r1}-${r2}=${c}x`],
+            '線分図で、上の線の全体に不足の分を足すと、下の線の全体と等しくなるよ。')
+    };
+}
+
+function eqFormHayasa(p) {
+    if (p.kind === 'oikake') {
+        const {v1, v2, t} = p;
+        return {
+            diagram: eqf(`${v1}(x+${t})=${v2}x`,
+                [`${v1}x+${t}=${v2}x`, `${v1}(x-${t})=${v2}x`, `${v1}(x+${t})=${v2}(x+${t})`],
+                '線分図は、兄と弟の道のりが同じ長さ。「弟の道のり ＝ 兄の道のり」を式にしよう。')
+        };
+    }
+    if (p.kind === 'chigai') {
+        const {a, b, t} = p;
+        return {
+            diagram: eqf(`${fracT('x', a)}=${fracT('x', b)}+${t}`,
+                [`${fracT('x', b)}=${fracT('x', a)}+${t}`, `${fracT(a, 'x')}=${fracT(b, 'x')}+${t}`, `${fracT('x', a)}=${fracT('x', b)}-${t}`],
+                '線分図は「遅い方の時間 ＝ 速い方の時間 ＋ 時間の差」。時間＝道のり÷速さ だよ。')
+        };
+    }
+    if (p.kind === 'deau') {
+        const {v1, v2, t, D, Dm} = p;
+        return {
+            diagram: eqf(`${Dm}=${v1}x+${v2}(x-${t})`,
+                [`${D}=${v1}x+${v2}(x-${t})`, `${Dm}=${v1}x+${v2}(x+${t})`, `${Dm}=${v1}x+${v2}x-${t}`],
+                '線分図は「全体＝部分の和」。「家の間の道のり ＝ Aさんの道のり ＋ Bさんの道のり」を式にしよう。単位をそろえることと、Bさんの時間に気をつけよう。')
+        };
+    }
+    if (p.kind === 'dist') {
+        const {a, b, T} = p;
+        return {
+            diagram: eqf(`${T}=${fracT('x', a)}+${fracT('x', b)}`,
+                [`${T}=${fracT(a, 'x')}+${fracT(b, 'x')}`, `${T}=${a}x+${b}x`, `${T}=${fracT('x', a)}-${fracT('x', b)}`],
+                '線分図は「全体＝部分の和」。「往復の時間 ＝ 行きの時間 ＋ 帰りの時間」を式にしよう。時間＝道のり÷速さ だよ。')
+        };
+    }
+    const {a, b, t, D} = p;
+    return {
+        diagram: eqf(`${D}=${a}x+${b * t}`,
+            [`${D}=${a}x+${b}x`, `${D}=${a * t}+${b}x`, `${D}=${a}+x+${b * t}`],
+            '線分図は「全体＝部分の和」。「全体の道のり ＝ 歩いた道のり ＋ 走った道のり」を式にしよう。')
+    };
+}
+
+/* 比例式は、表も線分図も「横に読むとそのまま比」になるので、言葉の式と同じ形。「比で分ける」の線分図だけ縦に読む */
+function eqFormHirei(p) {
+    if (p.kind === 'ratio') {
+        const {m, n, a} = p;
+        return {
+            diagram: eqf(`x:${a}=${m + n}:${m}`,
+                [`x:${a}=${m}:${m + n}`, `x:${a}=${m}:${n}`, `${a}:x=${m + n}:${m}`],
+                '線分図で、「全体の数：兄の数 ＝ 全体の比：兄の比」と読んで式にしよう。')
+        };
+    }
+    return {};
+}
+
+const EQ_FORMS = {otsuri: eqFormOtsuri, daikin: eqFormDaikin, kafusoku: eqFormKafusoku, hayasa: eqFormHayasa, hirei: eqFormHirei};
+
 const GENS  = {
 daikin: genDaikin, otsuri: genOtsuri, kafusoku: genKafusoku, hayasa: genHayasa, hirei: genHirei};
 const SPECS = {daikin: specDaikin, otsuri: specOtsuri, kafusoku: specKafusoku, hayasa: specHayasa, hirei: specHirei};
@@ -2403,7 +2537,15 @@ function newSession(typeId) {
 }
 
 function buildSpec() {
-    return SPECS[S.typeId](S.p);
+    const sp = SPECS[S.typeId](S.p);
+    /* 整理方法ごとに方程式の形が違う問題は、選んだ方法の形に置き換える */
+    const forms = (S.method && EQ_FORMS[S.typeId]) ? EQ_FORMS[S.typeId](S.p)[S.method] : null;
+    if (forms) {
+        sp.eqAns = forms.ans;
+        sp.eqWrong = forms.wrong;
+        sp.eqHint = forms.hint;
+    }
+    return sp;
 }
 
 function openType(id) {
