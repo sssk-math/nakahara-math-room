@@ -564,6 +564,9 @@ footer {
     white-space: nowrap;
     background: #f1f3f5;
 }
+.tbl.small .slot {
+    padding: 0 10px;
+}
 .cards {
     display: flex;
     gap: 12px;
@@ -1351,7 +1354,7 @@ const barT = (parts, w) => `<div style="width:${w}%">${lineRowT(parts)}</div>`;
 const barTopT = (t, s, parts, w) => `<div style="width:${w}%"><div class="dg-top">${labT(t, s)}</div><div class="dg-bracket up"></div>${lineRowT(parts)}</div>`;
 const dgT = (inner, inline) => `<div class="dg compact${inline ? ' inline' : ''}">${inner}</div>`;
 const dgI = inner => dgT(inner, true);
-const tableT = (head, rows) => '<table class="tbl"><tr>' + head.map(h => `<th>${h}</th>`).join('') + '</tr>'
+const tableT = (head, rows) => `<table class="tbl${rows.length >= 4 ? ' small' : ''}"><tr>` + head.map(h => `<th>${h}</th>`).join('') + '</tr>'
     + rows.map(r => `<tr><th>${r[0]}</th>${r.slice(1).map(c => `<td>${c}</td>`).join('')}</tr>`).join('') + '</table>';
 
 /* ---------- 代金とおつり①：A1個の値段を求める ---------- */
@@ -2170,8 +2173,8 @@ function specHireiAdd(p) {
             }
         },
         eqAns: `${P}:(${Q}+x)=${m}:${n}`,
-        eqWrong: [`${P}:${Q}+x=${m}:${n}`, `${P}:(${Q}+x)=${n}:${m}`, `${P}:x=${m}:${n}`],
-        eqHint: `「${A}の量：加えたあとの${B}の量 ＝ ${A}の比：${B}の比」を式にしよう。加えたあとの${B}の量は、かっこでひとまとめにするよ。`,
+        eqWrong: [`${P}:${Q}=${m}:${n}`, `${P}:(${Q}+x)=${n}:${m}`, `${P}:x=${m}:${n}`],
+        eqHint: `「${A}の量：加えたあとの${B}の量 ＝ ${A}の比：${B}の比」を式にしよう。加えたあとの${B}の量は「はじめの量＋x」で、はじめの量のままにしないよ。`,
         best: 'table',
         fit: {
             words:   {mark: '○', msg: `言葉の式は「${A}の量：加えたあとの${B}の量 ＝ 比」と書けるけれど、「加えたあと」が「はじめの量＋x」になることを忘れやすいかも。`},
@@ -2206,10 +2209,12 @@ function specHireiGive(p) {
         sl(`${n}`, `${P2}の比は、問題文の「${m}：${n}」の右側だよ。`)
     ];
     const pool4 = [...new Set([...slots4.map(q => q.ans), `x（${u}）`, `${a}（${u}）`, `${a}x（${u}）`])];
-    const tans = [`${a}`, `${a}`, `${a}-x`, `${a}+x`, `${m}`, `${n}`];
+    const tans = [`${a}`, `${a}`, '-x', '+x', `${a}-x`, `${a}+x`, `${m}`, `${n}`];
     const thints = [
         `${P1}のもとの数は問題文に書いてあるよ。`,
         `${P2}のもとの数は問題文に書いてあるよ。`,
+        `${P1}が x ${u}あげたので、${P1}の数は x ${u}へるよ。へるときは−の符号をつけよう。`,
+        `${P2}は x ${u}もらったので、${P2}の数は x ${u}ふえるよ。ふえるときは＋の符号をつけよう。`,
         slots4[0].hint,
         slots4[1].hint,
         slots4[2].hint,
@@ -2238,13 +2243,14 @@ function specHireiGive(p) {
                 pool: mkPool(tans, ['x', `${m + n}`, `${a}x`]),
                 layout: s => tableT(['', P1, P2], [
                     [`もとの数（${u}）`, s[0], s[1]],
-                    [`あとの数（${u}）`, s[2], s[3]],
-                    ['比', s[4], s[5]]
+                    [`増減（${u}）`, s[2], s[3]],
+                    [`あとの数（${u}）`, s[4], s[5]],
+                    ['比', s[6], s[7]]
                 ])
             }
         },
-        eqAns: `${a}-x:${a}+x=${m}:${n}`,
-        eqWrong: [`${a}-x:${a}+x=${n}:${m}`, `${a}+x:${a}-x=${m}:${n}`, `${a}-x:${a}=${m}:${n}`],
+        eqAns: `(${a}-x):(${a}+x)=${m}:${n}`,
+        eqWrong: [`(${a}-x):(${a}+x)=${n}:${m}`, `(${a}+x):(${a}-x)=${m}:${n}`, `(${a}-x):${a}=${m}:${n}`],
         eqHint: `「${P1}のあとの数：${P2}のあとの数 ＝ ${P1}の比：${P2}の比」を式にしよう。あげた${P1}はへり、もらった${P2}はふえるよ。`,
         best: 'table',
         fit: {
@@ -2549,12 +2555,16 @@ function methodCards() {
     ).join('') + '</div>';
 }
 
+function eqWord() {
+    return (S.typeId === 'hirei') ? '比例式' : '方程式';
+}
+
 function render() {
     const sp = buildSpec();
     const type = TYPES.find(t => t.id === S.typeId);
     $('ex-title').textContent = `一次方程式の利用（${type.name}）`;
     $('problem-box').textContent = sp.text;
-    $('talk').textContent = TALK[S.step];
+    $('talk').textContent = TALK[S.step].replace('方程式', eqWord());
     $('hint-text').innerHTML = hintMsg;
 
     const xline = (S.step === 'var') ? '' : `<div class="xline">${sp.varAns}をxとおく</div>`;
@@ -2579,8 +2589,8 @@ function render() {
     } else if (S.step === 'eq') {
         const n = sp.fill[S.method].slots.length;
         work = xline + mhead + sp.fill[S.method].layout(slotHtml(sp, n))
-            + '<div class="bigq">方程式：<span class="slot act">？</span></div>';
-        optTitle = '方程式を選ぼう';
+            + `<div class="bigq">${eqWord()}：<span class="slot act">？</span></div>`;
+        optTitle = eqWord() + 'を選ぼう';
         opts = optButtons(visibleOpts());
         one = true;
     } else {
@@ -2589,7 +2599,7 @@ function render() {
         const best = (S.method !== sp.best) ? `<br>この問題は「${METHODS[sp.best].label}」がいちばん整理しやすいよ。` : '';
         const miss = (S.miss === 0) ? 'ノーミス！' : `まちがい ${S.miss}回`;
         work = xline + mhead + sp.fill[S.method].layout(slotHtml(sp, n))
-            + `<div class="bigq">方程式：<span class="slot ok">${toMath(sp.eqAns)}</span></div>`;
+            + `<div class="bigq">${eqWord()}：<span class="slot ok">${toMath(sp.eqAns)}</span></div>`;
         $('hint-text').innerHTML = `${miss}　この方法との相性：${f.mark}<br><br>${f.msg}${best}`;
         opts = '<button class="opt next" onclick="nextProblem()">次の問題へ ▶</button>';
     }
