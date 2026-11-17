@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>135001 一次方程式の利用</title>
+<script>
+window.MathJax = {
+    tex: {inlineMath: [['\\(', '\\)']]},
+    options: {enableMenu: false}
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
 <style>
 /* ==========================================================================
    1. 全体の基本設定
@@ -496,7 +503,35 @@ footer {
 }
 .dg.compact .lab {
     margin-bottom: 1px;
-    font-size: 12px;
+    font-size: 13px;
+    white-space: nowrap;
+}
+.dg.compact .dg-top .col {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+.dg.compact .dg-top .lab {
+    margin-bottom: 0;
+}
+.dg.compact.inline .col {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+.dg.compact.inline .lab {
+    margin-bottom: 0;
+}
+.dg.compact.inline .stack .col {
+    flex-direction: column;
+    gap: 0;
+}
+.dg.compact.inline .stack .lab {
+    margin-bottom: 1px;
 }
 .dg.compact .slot {
     min-width: 56px;
@@ -591,7 +626,7 @@ footer {
         <div class="sub-header"><h1>🏆 記録</h1></div>
         <table class="rec-table">
             <thead>
-                <tr><th>タイプ</th><th>取り組み回数</th><th>📝 言葉の式</th><th>📏 線分図</th><th>📊 表</th></tr>
+                <tr><th>タイプ</th><th>取り組み回数</th><th>ノーミスクリア数</th><th>📝 言葉の式</th><th>📏 線分図</th><th>📊 表</th></tr>
             </thead>
             <tbody id="kiroku-body"></tbody>
         </table>
@@ -651,6 +686,7 @@ footer {
    ========================================================================== */
 const SESSION_KEY = 'riyou_session_v1';
 const RECORDS_KEY = 'riyou_records_v1';
+const BAG_KEY = 'riyou_bag_v1';
 const container = document.getElementById('app-container');
 const $ = id => document.getElementById(id);
 
@@ -666,16 +702,16 @@ let pendingReset = null;
    2. タイプ一覧・整理方法・出題文言【固有】
    ========================================================================== */
 const TYPES = [
+    {id: 'otsuri',   name: '代金とおつり',     ready: true},
     {id: 'daikin',   name: '個数と代金',       ready: true},
-    {id: 'otsuri',   name: 'おつり',           ready: true},
-    {id: 'ookishou', name: '多い・少ない',     ready: false},
     {id: 'awasete',  name: '合わせて〇個',     ready: false},
     {id: 'kafusoku', name: '過不足',           ready: true},
     {id: 'nenrei',   name: '年齢',             ready: false},
     {id: 'heikin',   name: '平均',             ready: false},
     {id: 'wariai',   name: '割合',             ready: false},
     {id: 'noudo',    name: '食塩水・濃度',     ready: false},
-    {id: 'hayasa',   name: '道のり・速さ・時間', ready: true}
+    {id: 'hayasa',   name: '道のり・速さ・時間', ready: true},
+    {id: 'hirei',    name: '比例式',           ready: true}
 ];
 const METHODS = {
     words:   {label: '言葉の式', icon: '📝', desc: '言葉で「〇＋〇＝〇」と表す'},
@@ -711,7 +747,9 @@ function shuffle(arr) {
 /* ==========================================================================
    3. 問題生成・問題データ：個数と代金【固有】
    ========================================================================== */
-function genDaikin() {
+function genDaikin(kind) {
+    if (kind === 'bai') return genDaikinBai();
+    if (kind === 'zan') return genDaikinZan();
     const pairs = [
         ['りんご', '個', 'みかん', '個'],
         ['鉛筆', '本', '消しゴム', '個'],
@@ -731,15 +769,17 @@ function genDaikin() {
 }
 
 function specDaikin(p) {
+    if (p.kind === 'bai') return specDaikinBai(p);
+    if (p.kind === 'zan') return specDaikinZan(p);
     const uA = p.uA || '個';
     const uB = p.uB || '個';
     const U = (uA === uB) ? uA : `${uA}・${uB}`;   // 表の「数量」行の単位
-    const ap = `${p.a}×${p.p}（円）`;
-    const aq = `${p.a}×${p.q}（円）`;
-    const xq = `x×${p.q}（円）`;
-    const xp = `x×${p.p}（円）`;
+    const ap = `${p.a}\\times ${p.p}（円）`;
+    const aq = `${p.a}\\times ${p.q}（円）`;
+    const xq = `${p.q}x（円）`;
+    const xp = `${p.p}x（円）`;
     const tot = `${p.T}（円）`;
-    const f1 = Math.round(Math.min(0.7, Math.max(0.3, (p.a * p.p) / p.T)) * 100);
+    const f1 = Math.round(Math.min(0.65, Math.max(0.35, (p.a * p.p) / p.T)) * 100);
     const f2 = 100 - f1;
     const lab = (t, s) => `<div class="col"><div class="lab">${t}</div>${s}</div>`;
 
@@ -748,7 +788,7 @@ function specDaikin(p) {
         {ans: xq,  hint: `${p.B}1${uB}の値段が x 円。${p.q}${uB}分の代金は？`},
         {ans: tot, hint: '代金の合計は問題文に書いてあるよ。'}
     ];
-    const pool3 = [...new Set([ap, aq, xp, xq, tot, `${p.a}×x（円）`])];
+    const pool3 = [...new Set([ap, aq, xp, xq, tot, `${p.a}x（円）`])];
 
     const tslots = [
         {ans: `${p.a}`,          hint: `${p.A}の単価は問題文に書いてあるよ。`},
@@ -773,7 +813,7 @@ function specDaikin(p) {
             diagram: {
                 slots: slots3,
                 pool: pool3,
-                layout: s => `<div class="dg"><div class="dg-top">${lab('代金の合計', s[2])}</div><div class="dg-bracket up"></div><div class="dg-line"><div class="dg-seg" style="flex:${f1}"></div><div class="dg-seg" style="flex:${f2}"></div></div><div class="dg-row"><div class="dg-part" style="flex:${f1}"><div class="dg-bracket down"></div>${lab(p.A + 'の代金', s[0])}</div><div class="dg-part" style="flex:${f2}"><div class="dg-bracket down"></div>${lab(p.B + 'の代金', s[1])}</div></div></div>`
+                layout: s => `<div class="dg compact"><div class="dg-top">${lab('代金の合計', s[2])}</div><div class="dg-bracket up"></div><div class="dg-line"><div class="dg-seg" style="flex:${f1}"></div><div class="dg-seg" style="flex:${f2}"></div></div><div class="dg-row"><div class="dg-part" style="flex:${f1}"><div class="dg-bracket down"></div>${lab(p.A + 'の代金', s[0])}</div><div class="dg-part" style="flex:${f2}"><div class="dg-bracket down"></div>${lab(p.B + 'の代金', s[1])}</div></div></div>`
             },
             table: {
                 slots: tslots,
@@ -799,7 +839,9 @@ function specDaikin(p) {
 /* ==========================================================================
    3b. 問題生成・問題データ：おつり【固有】
    ========================================================================== */
-function genOtsuri() {
+function genOtsuri(kind) {
+    if (kind === 'a1') return genOtsuriA1();
+    if (kind === 'count') return genOtsuriCount();
     const pairs = [
         ['りんご', '個', 'みかん', '個'],
         ['鉛筆', '本', '消しゴム', '個'],
@@ -814,20 +856,22 @@ function genOtsuri() {
         x = randInt(3, 15) * 10;
         p = randInt(2, 6);
         q = randInt(2, 6);
-    } while (a === x || p === q);
+    } while (a === x || p === q || (Math.floor((a * p + q * x) / 500) + 1) * 500 === 2 * (a * p + q * x));
     const T = a * p + q * x;
     const M = (Math.floor(T / 500) + 1) * 500;
     return {A, uA, B, uB, a, x, p, q, T, M, c: M - T};
 }
 
 function specOtsuri(p) {
+    if (p.kind === 'a1') return specOtsuriA1(p);
+    if (p.kind === 'count') return specOtsuriCount(p);
     const uA = p.uA || '個';
     const uB = p.uB || '個';
     const U = (uA === uB) ? uA : `${uA}・${uB}`;
-    const ap = `${p.a}×${p.p}（円）`;
-    const aq = `${p.a}×${p.q}（円）`;
-    const xq = `x×${p.q}（円）`;
-    const xp = `x×${p.p}（円）`;
+    const ap = `${p.a}\\times ${p.p}（円）`;
+    const aq = `${p.a}\\times ${p.q}（円）`;
+    const xq = `${p.q}x（円）`;
+    const xp = `${p.p}x（円）`;
     const pay = `${p.M}（円）`;
     const chg = `${p.c}（円）`;
     const lab = (t, s) => `<div class="col"><div class="lab">${t}</div>${s}</div>`;
@@ -839,7 +883,7 @@ function specOtsuri(p) {
         {ans: xq,  hint: `${p.B}1${uB}の値段が x 円。${p.q}${uB}分の代金は？`},
         {ans: chg, hint: 'おつりは問題文に書いてあるよ。'}
     ];
-    const pool4 = [...new Set([pay, ap, xq, chg, aq, xp, `${p.T}（円）`, `${p.a}×x（円）`])];
+    const pool4 = [...new Set([pay, ap, xq, chg, aq, xp, `${p.T}（円）`, `${p.a}x（円）`])];
 
     const tslots = [
         {ans: `${p.a}`,        hint: `${p.A}の単価は問題文に書いてあるよ。`},
@@ -865,7 +909,7 @@ function specOtsuri(p) {
             diagram: {
                 slots: slots4,
                 pool: pool4,
-                layout: s => `<div class="dg"><div class="dg-top">${lab('出した金額', s[0])}</div><div class="dg-bracket up"></div>`
+                layout: s => `<div class="dg compact"><div class="dg-top">${lab('出した金額', s[0])}</div><div class="dg-bracket up"></div>`
                     + `<div class="dg-line">${f.map(w => `<div class="dg-seg" style="flex:${w}"></div>`).join('')}</div>`
                     + '<div class="dg-row">'
                     + [[p.A + 'の代金', s[1], f[0]], [p.B + 'の代金', s[2], f[1]], ['おつり', s[3], f[2]]].map(([t, sl, w]) =>
@@ -900,11 +944,14 @@ function specOtsuri(p) {
    ========================================================================== */
 const gcd = (a, b) => (b === 0 ? a : gcd(b, a % b));
 
-function genHayasa() {
+function genHayasa(kind) {
+    if (kind === 'oikake') return genOikake();
+    if (kind === 'chigai') return genChigai();
+    if (kind === 'deau') return genDeau();
     const places = [['家', '駅'], ['学校', '図書館'], ['公園', '店'], ['駅', '病院']];
     const [P, Q] = places[randInt(0, places.length - 1)];
 
-    if (Math.random() < 0.5) {
+    if (kind === 'dist') {
         const sp = [3, 4, 5, 6, 8, 10, 12];
         let a, b, x, T;
         do {
@@ -927,10 +974,13 @@ function genHayasa() {
 }
 
 function specHayasa(p) {
-    const fr = (n, d) => `<span class="fr"><span>${n}</span><span>${d}</span></span>`;
+    if (p.kind === 'oikake') return specOikake(p);
+    if (p.kind === 'chigai') return specChigai(p);
+    if (p.kind === 'deau') return specDeau(p);
+    const fr = (n, d) => `\\frac{${n}}{${d}}`;
     const lab = (t, s) => `<div class="col"><div class="lab">${t}</div>${s}</div>`;
     const wordsHtml = (n, s) => `<div class="words">${lab(n[0], s[0])}<div class="op">＋</div>${lab(n[1], s[1])}<div class="op">＝</div>${lab(n[2], s[2])}</div>`;
-    const dgHtml = (n, f1, s) => `<div class="dg"><div class="dg-top">${lab(n[2], s[2])}</div><div class="dg-bracket up"></div>`
+    const dgHtml = (n, f1, s) => `<div class="dg compact"><div class="dg-top">${lab(n[2], s[2])}</div><div class="dg-bracket up"></div>`
         + `<div class="dg-line"><div class="dg-seg" style="flex:${f1}"></div><div class="dg-seg" style="flex:${100 - f1}"></div></div>`
         + `<div class="dg-row"><div class="dg-part" style="flex:${f1}"><div class="dg-bracket down"></div>${lab(n[0], s[0])}</div>`
         + `<div class="dg-part" style="flex:${100 - f1}"><div class="dg-bracket down"></div>${lab(n[1], s[1])}</div></div></div>`;
@@ -986,8 +1036,8 @@ function specHayasa(p) {
     }
 
     /* --- 時間を求める（道のりの合計） --- */
-    const walk = `${p.a}×x（km）`;
-    const run = `${p.b}×${p.t}（km）`;
+    const walk = `${p.a}x（km）`;
+    const run = `${p.b}\\times ${p.t}（km）`;
     const tot = `${p.D}（km）`;
     const names = ['歩いた道のり', '走った道のり', '全体の道のり'];
     const slots3 = [
@@ -995,7 +1045,7 @@ function specHayasa(p) {
         {ans: run,  hint: `走った道のりも「速さ×時間」。時速${p.b}kmで${p.t}時間だよ。`},
         {ans: tot,  hint: '全体の道のりは問題文に書いてあるよ。'}
     ];
-    const pool3 = [...new Set([walk, run, tot, `${p.b}×x（km）`, `${p.a}×${p.t}（km）`, `${p.a + p.b}（km）`])];
+    const pool3 = [...new Set([walk, run, tot, `${p.b}x（km）`, `${p.a}\\times ${p.t}（km）`, `${p.a + p.b}（km）`])];
     const tslots = [
         {ans: `${p.a}`,       hint: '歩く速さは問題文に書いてあるよ。'},
         {ans: `${p.b}`,       hint: '走る速さは問題文に書いてあるよ。'},
@@ -1035,8 +1085,8 @@ function specHayasa(p) {
 
 /* ==========================================================================
    3d. 問題生成・問題データ：過不足【固有】
-   kind='haifu'：配る問題（余りと不足）／kind='seki'：長椅子・テーブルに座る問題
-   どちらも「人数（または数）をx」とおき、a x + r1 = c x − r2 の形になる
+   kind='haifu'：配る問題／kind='seki'：長椅子・食卓に座る問題／kind='kai'：クラス費を集める問題
+   どれも「人数（または数）をx」とおき、a x + r1 = c x − r2 の形になる
    ========================================================================== */
 function genHaifu() {
     const items = [
@@ -1059,7 +1109,7 @@ function genHaifu() {
 }
 
 function genSeki() {
-    const nouns = [['長椅子', '脚'], ['テーブル', '台']];
+    const nouns = [['長椅子', '脚'], ['食卓', '台']];
     const [N, U] = nouns[randInt(0, nouns.length - 1)];
     let a, d, c, t, x, r1, r2;
     do {
@@ -1074,101 +1124,152 @@ function genSeki() {
     return {kind: 'seki', N, U, a, c, t, x, r1, r2};
 }
 
-function genKafusoku() {
-    return (Math.random() < 0.5) ? genHaifu() : genSeki();
+/* --- クラス費：不足が「＋」、余りが「－」になる紛らわしい問題 --- */
+function genKai() {
+    let a, d, x, r1, r2;
+    do {
+        a = randInt(4, 8) * 50;
+        d = randInt(1, 2) * 50;
+        x = randInt(25, 40);
+        r1 = randInt(2, 20) * 50;
+        r2 = d * x - r1;
+    } while (r2 < 100 || r2 > 1500 || r1 > 1500 || r1 === r2);
+    return {kind: 'kai', a, c: a + d, x, r1, r2};
+}
+
+function genKafusoku(kind) {
+    if (kind === 'seki') return genSeki();
+    if (kind === 'kai') return genKai();
+    return genHaifu();
 }
 
 function specKafusoku(p) {
-    const seki = (p.kind === 'seki');
     const {a, c, r1, r2} = p;
     const lab = (t, s) => `<div class="col"><div class="lab">${t}</div>${s}</div>`;
     const clamp = (r, lo, hi) => Math.round(Math.min(hi, Math.max(lo, r)) * 100);
 
-    /* --- 問題ごとの文言・選択肢・ヒント --- */
+    /* --- 問題ごとの文言・選択肢・ヒント（w：言葉の式、d：線分図） --- */
     let K;
-    if (seki) {
+    if (p.kind === 'seki') {
         const {N, U, t} = p;
+        const ax = `${a}x（席）`;
+        const cx = `${c}x（席）`;
+        const hAx = `${a}人ずつ座るとき、${N}1${U}の座席は${a}席。座席の数は「1${U}の席数×${U}の数」だよ。`;
+        const hCx = `${c}人ずつ座るときの座席の数も「1${U}の席数×${U}の数」だよ。`;
+        const hLast = `最後の${N}1${U}は、${c}席のうち${t}人だけが座ったね。空いている座席は何席？`;
         K = {
             text: `${N}を何${U}か並べます。集まった人たちが${N}1${U}に${a}人ずつ座ると${r1}人が座れず、${c}人ずつ座ると${t}人だけ座った${N}が1${U}できました。${N}は全部で何${U}ありますか。`,
             varAns: `${N}の数`,
             varWrong: ['集まった人たちの人数', `${N}1${U}に座る人数`, '座れなかった人数'],
-            ax: `${a}×x（席）`, r1s: `${r1}（人）`, cx: `${c}×x（席）`, r2s: `${r2}（席）`,
-            extra: [`${a + c}×x（席）`, `${t}（人）`],
-            wordNames: ['座席の数', '余った人数', '座席の数', '余った座席数'],
-            dgNames: [`${a}人ずつの座席の数`, '余った人数', `${c}人ずつの座席の数`, '余った座席数'],
+            wNames: ['座席の数', '過不足', '座席の数', '過不足'],
+            wAns: [ax, `+${r1}（人）`, cx, `-${r2}（人）`],
+            wExtra: [`-${t}（人）`, `+${r2}（人）`, `-${r1}（人）`, `${a + c}x（席）`],
+            wHints: [
+                hAx,
+                `${a}人ずつ座ると${r1}人が座れないね。人が余るので＋の符号をつけて選ぼう。`,
+                hCx,
+                `最後の${N}1${U}は、${c}席のうち${t}人だけが座ったね。空いた席の分は人が足りないので、−の符号をつけよう。空いた席は何席？`
+            ],
+            dNames: ['座席の数', '余った人数', '座席の数', '余った座席数'],
+            dAns: [ax, `${r1}（人）`, cx, `${r2}（席）`],
+            dExtra: [`${a + c}x（席）`, `${t}（人）`],
+            dHints: [hAx, `${a}人ずつ座ったときに座れなかった人数は、問題文に書いてあるよ。`, hCx, hLast],
             totalName: '集まった人数',
-            hints: [
-                `${a}人ずつ座るとき、${N}1${U}の座席は${a}席。座席の数は「1${U}の席数×${U}の数」だよ。`,
-                `${a}人ずつ座ったときに座れなかった人数は、問題文に書いてあるよ。`,
-                `${c}人ずつ座るときの座席の数も「1${U}の席数×${U}の数」だよ。`,
-                `最後の${N}1${U}は、${c}席のうち${t}人だけが座ったね。空いている座席は何席？`
-            ],
             th: [`${a}人ずつ`, `${c}人ずつ`],
-            rows: [`1${U}の席数（席）`, `${N}の数（${U}）`, '座席の数（席）', '余った人数（人）', '余った座席数（席）'],
+            rows: ['座席の数（席）', '過不足（人）'],
             thints: [
-                `${a}人ずつ座るとき、${N}1${U}の座席は${a}席だよ。`,
-                `${c}人ずつ座るとき、${N}1${U}の座席は${c}席だよ。`,
-                `求めたいもの（${N}の数）を x とおいたね。1回目の${U}数の欄だよ。`,
-                `2回目も同じ${N}の数 x だよ。`,
-                '座席の数は「1' + U + 'の席数×' + U + 'の数」。1回目の欄だよ。',
-                '座席の数は「1' + U + 'の席数×' + U + 'の数」。2回目の欄だよ。',
-                `${a}人ずつ座ったときに座れなかった人数は、問題文に書いてあるよ。`,
-                `最後の${N}1${U}は、${c}席のうち${t}人だけが座ったね。空いている座席は何席？`
+                `${a}人ずつ座るとき、座席の数は「1${U}の席数×${U}の数」。1${U}の席数は${a}席、${U}の数は x だよ。`,
+                `${c}人ずつ座るとき、座席の数は「1${U}の席数×${U}の数」。1${U}の席数は${c}席、${U}の数は x だよ。`,
+                `${a}人ずつ座ると${r1}人が座れないね。人が余るときは＋の符号をつけよう。`,
+                `最後の${N}1${U}は、${c}席のうち${t}人だけが座ったね。空いた席の分は人が足りないので、−の符号をつけよう。空いた席は何席？`
             ],
-            tExtra: [`${t}`, `${a + c}`, `${r1 + r2}`],
+            tExtra: [`+${r2}`, `-${t}`, `${a + c}x`],
             eqWrong: [`${a}x+${r1}=${c}x-${t}`, `${a}x+${r1}=${c}x+${r2}`, `${c}x+${r1}=${a}x-${r2}`],
             eqHint: '集まった人数は「座席の数＋座れなかった人数」でも、「座席の数−空いた座席数」でも表せるよ。この2つが等しいことを式にしよう。',
             whole: '座り方が変わっても集まった人数は同じ'
         };
+    } else if (p.kind === 'kai') {
+        const ax = `${a}x（円）`;
+        const cx = `${c}x（円）`;
+        const hAx = `1人${a}円ずつ集めた金額は「1人分×人数」。クラスの人数を x 人とおいたね。`;
+        const hCx = `1人${c}円ずつ集めた金額も「1人分×人数」だよ。`;
+        const hShort = `${a}円ずつ集めると${r1}円不足するね。必要な金額は「集めた金額＋不足」と表せるので、式では不足に＋の符号をつけよう。`;
+        const hOver = `${c}円ずつ集めると${r2}円余るね。必要な金額は「集めた金額−余り」と表せるので、式では余りに−の符号をつけよう。`;
+        K = {
+            text: `クラス費を集めることにしました。1人${a}円ずつ集めると${r1}円不足し、1人${c}円ずつ集めると${r2}円余ります。このクラスの人数を求めなさい。`,
+            varAns: 'クラスの人数',
+            varWrong: ['必要な金額', '1人から集める金額', '余った金額'],
+            wNames: [`${a}円ずつ集めた金額`, '過不足', `${c}円ずつ集めた金額`, '過不足'],
+            wAns: [ax, `+${r1}（円）`, cx, `-${r2}（円）`],
+            wExtra: [`-${r1}（円）`, `+${r2}（円）`, `${a + c}x（円）`],
+            wHints: [hAx, hShort, hCx, hOver],
+            dNames: ['集めた金額', '不足', '集めた金額', '余り'],
+            dAns: [ax, `${r1}（円）`, cx, `${r2}（円）`],
+            dExtra: [`${a + c}x（円）`, `${r1 + r2}（円）`],
+            dHints: [hAx, `${a}円ずつ集めたときの不足は問題文に書いてあるよ。`, hCx, `${c}円ずつ集めたときの余りは問題文に書いてあるよ。`],
+            totalName: '必要な金額',
+            th: [`1人${a}円ずつ`, `1人${c}円ずつ`],
+            rows: ['集めた金額（円）', '過不足（円）'],
+            thints: [
+                `${a}円ずつ集めた金額は「1人分×人数」。人数は x 人だよ。`,
+                `${c}円ずつ集めた金額は「1人分×人数」。人数は x 人だよ。`,
+                hShort,
+                hOver
+            ],
+            tExtra: [`-${r1}`, `+${r2}`, `${a + c}x`],
+            eqWrong: [`${a}x-${r1}=${c}x+${r2}`, `${a}x+${r1}=${c}x+${r2}`, `${c}x+${r1}=${a}x-${r2}`],
+            eqHint: '必要な金額は「集めた金額＋不足」でも「集めた金額−余り」でも表せるよ。不足は＋、余りは−になることに気をつけて、この2つが等しいことを式にしよう。',
+            whole: 'どちらの集め方でも必要な金額は同じ'
+        };
     } else {
         const {A, u, H} = p;
-        const r2hint = `${c}${u}ずつ配ったときの不足は問題文に書いてあるよ。`;
+        const ax = `${a}x（${u}）`;
+        const cx = `${c}x（${u}）`;
+        const hAx = `${a}${u}ずつ配った数は「1人分×人数」。${H}の人数を x 人とおいたね。`;
+        const hCx = `${c}${u}ずつ配った数も「1人分×人数」だよ。`;
+        const hR2 = `${c}${u}ずつ配ったときの不足は問題文に書いてあるよ。`;
         K = {
             text: `${A}を何人かの${H}に配ります。${a}${u}ずつ配ると${r1}${u}余り、${c}${u}ずつ配ると${r2}${u}不足します。${H}の人数を求めなさい。`,
             varAns: `${H}の人数`,
             varWrong: [`${A}の全体の数`, `1人に配る${A}の数`, `余った${A}の数`],
-            ax: `${a}×x（${u}）`, r1s: `${r1}（${u}）`, cx: `${c}×x（${u}）`, r2s: `${r2}（${u}）`,
-            extra: [`${a + c}×x（${u}）`, `${r1 + r2}（${u}）`],
-            wordNames: [`${a}${u}ずつ配る数`, '余り', `${c}${u}ずつ配る数`, '不足'],
-            dgNames: [`${a}${u}ずつ配る数`, '余り', `${c}${u}ずつ配る数`, '不足'],
+            wNames: [`${a}${u}ずつ配る数`, '過不足', `${c}${u}ずつ配る数`, '過不足'],
+            wAns: [ax, `+${r1}（${u}）`, cx, `-${r2}（${u}）`],
+            wExtra: [`-${r1}（${u}）`, `+${r2}（${u}）`, `${a + c}x（${u}）`],
+            wHints: [
+                hAx,
+                `${a}${u}ずつ配ると${r1}${u}余るね。余りは＋の符号をつけて選ぼう。`,
+                hCx,
+                `${c}${u}ずつ配ると${r2}${u}不足するね。不足は−の符号をつけて選ぼう。`
+            ],
+            dNames: ['配った数', '余り', '配った数', '不足'],
+            dAns: [ax, `${r1}（${u}）`, cx, `${r2}（${u}）`],
+            dExtra: [`${a + c}x（${u}）`, `${r1 + r2}（${u}）`],
+            dHints: [hAx, `${a}${u}ずつ配ったときの余りは問題文に書いてあるよ。`, hCx, hR2],
             totalName: `全体の${A}の数`,
-            hints: [
-                `${a}${u}ずつ配った数は「1人分×人数」。${H}の人数を x 人とおいたね。`,
-                `${a}${u}ずつ配ったときの余りは問題文に書いてあるよ。`,
-                `${c}${u}ずつ配った数も「1人分×人数」だよ。`,
-                r2hint
-            ],
             th: [`${a}${u}ずつ`, `${c}${u}ずつ`],
-            rows: [`1人分（${u}）`, '人数（人）', `配った数（${u}）`, `余り（${u}）`, `不足（${u}）`],
+            rows: [`配った数（${u}）`, `過不足（${u}）`],
             thints: [
-                `${a}${u}ずつ配るときの1人分は、問題文に書いてあるよ。`,
-                `${c}${u}ずつ配るときの1人分は、問題文に書いてあるよ。`,
-                `求めたいもの（${H}の人数）を x とおいたね。1回目の人数の欄だよ。`,
-                '2回目も同じ人数 x だよ。',
-                '配った数は「1人分×人数」。1回目の欄だよ。',
-                '配った数は「1人分×人数」。2回目の欄だよ。',
-                `${a}${u}ずつ配ったときの余りは問題文に書いてあるよ。`,
-                r2hint
+                `${a}${u}ずつ配った数は「1人分×人数」。${H}の人数は x 人だよ。`,
+                `${c}${u}ずつ配った数は「1人分×人数」。${H}の人数は x 人だよ。`,
+                `${a}${u}ずつ配ると${r1}${u}余るね。余りは＋の符号をつけよう。`,
+                `${c}${u}ずつ配ると${r2}${u}不足するね。不足は−の符号をつけよう。`
             ],
-            tExtra: [`${a + c}`, `${r1 + r2}`, `${a + c}x`],
-            eqWrong: [`${c}x+${r1}=${a}x-${r2}`, `${a}x+${r2}=${c}x-${r1}`, `${a}x+${r1}=${c}x+${r2}`],
+            tExtra: [`+${r2}`, `-${r1}`, `${a + c}x`],
+            eqWrong: [`${c}x+${r1}=${a}x-${r2}`, `${a}x-${r1}=${c}x+${r2}`, `${a}x+${r1}=${c}x+${r2}`],
             eqHint: '「配った数＋余り」と「配った数−不足」は、どちらも全体の数。この2つが等しいことを式にしよう。',
             whole: 'どちらの配り方でも全体の数は同じ'
         };
     }
 
-    const slots4 = [
-        {ans: K.ax,  hint: K.hints[0]},
-        {ans: K.r1s, hint: K.hints[1]},
-        {ans: K.cx,  hint: K.hints[2]},
-        {ans: K.r2s, hint: K.hints[3]}
-    ];
-    const pool4 = [...new Set([K.ax, K.r1s, K.cx, K.r2s, ...K.extra])];
+    const wSlots = K.wAns.map((ans, i) => ({ans: ans, hint: K.wHints[i]}));
+    const wPool = [...new Set([...K.wAns, ...K.wExtra])];
+    const dSlots = K.dAns.map((ans, i) => ({ans: ans, hint: K.dHints[i]}));
+    const dPool = [...new Set([...K.dAns, ...K.dExtra])];
 
-    const tans = [`${a}`, `${c}`, 'x', 'x', `${a}x`, `${c}x`, `${r1}`, `${r2}`];
+    const tans = [`${a}x`, `${c}x`, `+${r1}`, `-${r2}`];
     const tslots = tans.map((ans, i) => ({ans: ans, hint: K.thints[i]}));
 
-    /* --- 線分図（上の線：a x + r1、下の線：全体 + 不足 = c x）を縦に小さくまとめる --- */
+    /* --- 線分図（上の線：a x + r1、下の線：全体 + 不足 = c x）を、用語の横に？を置いて小さくまとめる --- */
     const seg = f => `<div class="dg-seg" style="flex:${f}"></div>`;
     const part = (t, s, f) => `<div class="dg-part" style="flex:${f}"><div class="dg-bracket down"></div>${lab(t, s)}</div>`;
     const bar = (parts, w) => `<div style="width:${w}%"><div class="dg-line">${parts.map(q => seg(q[2])).join('')}</div>`
@@ -1176,13 +1277,13 @@ function specKafusoku(p) {
     const T = a * p.x + r1;
 
     const diagramLayout = s => {
-        const f1 = clamp((a * p.x) / T, 0.3, 0.7);
-        const fr2 = clamp(r2 / (T + r2), 0.25, 0.4);
+        const f1 = clamp((a * p.x) / T, 0.35, 0.65);
+        const fr2 = clamp(r2 / (T + r2), 0.28, 0.4);
         const w1 = 100 - fr2;
-        return '<div class="dg compact">'
-            + bar([[K.dgNames[0], s[0], f1], [K.dgNames[1], s[1], 100 - f1]], w1)
-            + `<div class="dg-top" style="margin-top:8px;">${lab(K.dgNames[2], s[2])}</div><div class="dg-bracket up"></div>`
-            + bar([[K.totalName, '', w1], [K.dgNames[3], s[3], fr2]], 100)
+        return '<div class="dg compact inline">'
+            + bar([[K.dNames[0], s[0], f1], [K.dNames[1], s[1], 100 - f1]], w1)
+            + `<div class="dg-top" style="margin-top:8px;">${lab(K.dNames[2], s[2])}</div><div class="dg-bracket up"></div>`
+            + bar([[K.totalName, '', w1], [K.dNames[3], s[3], fr2]], 100)
             + '</div>';
     };
 
@@ -1192,13 +1293,13 @@ function specKafusoku(p) {
         varWrong: K.varWrong,
         fill: {
             words: {
-                slots: slots4,
-                pool: pool4,
-                layout: s => `<div class="words">${lab(K.wordNames[0], s[0])}<div class="op">＋</div>${lab(K.wordNames[1], s[1])}<div class="op">＝</div>${lab(K.wordNames[2], s[2])}<div class="op">−</div>${lab(K.wordNames[3], s[3])}</div>`
+                slots: wSlots,
+                pool: wPool,
+                layout: s => `<div class="words">${lab(K.wNames[0], s[0])}${lab(K.wNames[1], s[1])}<div class="op">＝</div>${lab(K.wNames[2], s[2])}${lab(K.wNames[3], s[3])}</div>`
             },
             diagram: {
-                slots: slots4,
-                pool: pool4,
+                slots: dSlots,
+                pool: dPool,
                 layout: diagramLayout
             },
             table: {
@@ -1206,10 +1307,7 @@ function specKafusoku(p) {
                 pool: mkPool(tans, K.tExtra),
                 layout: s => `<table class="tbl"><tr><th></th><th>${K.th[0]}</th><th>${K.th[1]}</th></tr>`
                     + `<tr><th>${K.rows[0]}</th><td>${s[0]}</td><td>${s[1]}</td></tr>`
-                    + `<tr><th>${K.rows[1]}</th><td>${s[2]}</td><td>${s[3]}</td></tr>`
-                    + `<tr><th>${K.rows[2]}</th><td>${s[4]}</td><td>${s[5]}</td></tr>`
-                    + `<tr><th>${K.rows[3]}</th><td>${s[6]}</td><td></td></tr>`
-                    + `<tr><th>${K.rows[4]}</th><td></td><td>${s[7]}</td></tr></table>`
+                    + `<tr><th>${K.rows[1]}</th><td>${s[2]}</td><td>${s[3]}</td></tr></table>`
             }
         },
         eqAns: `${a}x+${r1}=${c}x-${r2}`,
@@ -1224,8 +1322,922 @@ function specKafusoku(p) {
     };
 }
 
-const GENS  = {daikin: genDaikin, otsuri: genOtsuri, kafusoku: genKafusoku, hayasa: genHayasa};
-const SPECS = {daikin: specDaikin, otsuri: specOtsuri, kafusoku: specKafusoku, hayasa: specHayasa};
+/* ==========================================================================
+   3e. 問題生成・問題データ：新パターン【固有】
+   代金とおつり（A1個の値段／2つの値段で個数）・個数と代金（〇倍／兄弟の残金）
+   道のり・速さ・時間（追いかける／時間が〇分違う／出会う）
+   ========================================================================== */
+const ITEMS = [
+    ['りんご', '個'], ['みかん', '個'], ['鉛筆', '本'], ['消しゴム', '個'], ['クッキー', '枚'],
+    ['あめ', '個'], ['おにぎり', '個'], ['パン', '個'], ['ノート', '冊'], ['ペン', '本']
+];
+
+function pickItems(n) {
+    return shuffle(ITEMS).slice(0, n);
+}
+
+/* --- 新パターン用の共通部品（言葉の式・線分図・表） --- */
+const sl = (ans, hint) => ({ans: ans, hint: hint});
+const labT = (t, s) => `<div class="col"><div class="lab">${t}</div>${s}</div>`;
+const opT = o => `<div class="op">${o}</div>`;
+const wordsT = parts => `<div class="words">${parts.join('')}</div>`;
+const fracT = (n, d) => `\\frac{${n}}{${d}}`;
+const clampT = (r, lo, hi) => Math.round(Math.min(hi, Math.max(lo, r)) * 100);
+const segT = f => `<div class="dg-seg" style="flex:${f}"></div>`;
+const partT = (t, s, f) => `<div class="dg-part" style="flex:${f}"><div class="dg-bracket down"></div>${labT(t, s)}</div>`;
+const lineRowT = parts => `<div class="dg-line">${parts.map(q => segT(q[2])).join('')}</div>`
+    + `<div class="dg-row">${parts.map(q => partT(q[0], q[1], q[2])).join('')}</div>`;
+const barT = (parts, w) => `<div style="width:${w}%">${lineRowT(parts)}</div>`;
+const barTopT = (t, s, parts, w) => `<div style="width:${w}%"><div class="dg-top">${labT(t, s)}</div><div class="dg-bracket up"></div>${lineRowT(parts)}</div>`;
+const dgT = (inner, inline) => `<div class="dg compact${inline ? ' inline' : ''}">${inner}</div>`;
+const dgI = inner => dgT(inner, true);
+const tableT = (head, rows) => '<table class="tbl"><tr>' + head.map(h => `<th>${h}</th>`).join('') + '</tr>'
+    + rows.map(r => `<tr><th>${r[0]}</th>${r.slice(1).map(c => `<td>${c}</td>`).join('')}</tr>`).join('') + '</table>';
+
+/* ---------- 代金とおつり①：A1個の値段を求める ---------- */
+function genOtsuriA1() {
+    const [[A, uA], [B, uB]] = pickItems(2);
+    let x, n, b, T, M;
+    do {
+        x = randInt(3, 15) * 10;
+        n = randInt(2, 6);
+        b = randInt(3, 15) * 10;
+        T = n * x + b;
+        M = (Math.floor(T / 500) + 1) * 500;
+    } while (M === 2 * T || x === b);
+    return {kind: 'a1', A, uA, B, uB, x, n, b, M, c: M - T};
+}
+
+function specOtsuriA1(p) {
+    const {A, uA, B, uB, x, n, b, M, c} = p;
+    const T = M - c;
+    const U = (uA === uB) ? uA : `${uA}・${uB}`;
+    const pay = `${M}（円）`;
+    const ac = `${n}x（円）`;
+    const bc = `${b}（円）`;
+    const chg = `${c}（円）`;
+    const slots4 = [
+        sl(pay, '出した金額は問題文に書いてあるよ。'),
+        sl(ac, `${A}1${uA}の値段を x 円とおいたね。${A}の代金は「単価×数量」だよ。`),
+        sl(bc, `${B}は1${uB}だけ買ったね。${B}の代金は${b}円だよ。`),
+        sl(chg, 'おつりは問題文に書いてあるよ。')
+    ];
+    const pool4 = [...new Set([pay, ac, bc, chg, `${b}\\times ${n}（円）`, `${T}（円）`])];
+    const f = [n * x, b, c].map((w, i) => Math.max([34, 34, 24][i], Math.round(w / M * 100)));
+    const tans = ['x', `${b}`, `${n}`, '1', `${n}x`, `${b}`, `${M}`, `${c}`];
+    const thints = [
+        `求めたいものを x とおいたね。${A}の単価の欄だよ。`,
+        `${B}の単価は問題文に書いてあるよ。`,
+        `${A}は何${uA}買ったかな？`,
+        `${B}は何${uB}買ったかな？`,
+        `${A}の代金は「単価×数量」。単価は x だよ。`,
+        `${B}の代金は「単価×数量」。計算した数を選ぼう。`,
+        '出した金額は問題文に書いてあるよ。',
+        'おつりは問題文に書いてあるよ。'
+    ];
+    return {
+        text: `${M}円で、${A}を${n}${uA}と、${b}円の${B}を1${uB}買うと、おつりは${c}円でした。${A}1${uA}の値段を求めなさい。`,
+        varAns: `${A}1${uA}の値段`,
+        varWrong: [`${B}1${uB}の値段`, `${A}の代金`, 'おつり'],
+        fill: {
+            words: {
+                slots: slots4,
+                pool: pool4,
+                layout: s => wordsT([labT('出した金額', s[0]), opT('−'), opT('('), labT(`${A}の代金`, s[1]), opT('＋'), labT(`${B}の代金`, s[2]), opT(')'), opT('＝'), labT('おつり', s[3])])
+            },
+            diagram: {
+                slots: slots4,
+                pool: pool4,
+                layout: s => dgT(barTopT('出した金額', s[0], [[`${A}の代金`, s[1], f[0]], [`${B}の代金`, s[2], f[1]], ['おつり', s[3], f[2]]], 100))
+            },
+            table: {
+                slots: tans.map((ans, i) => sl(ans, thints[i])),
+                pool: mkPool(tans, [`${b * n}`, `${T}`, `${n + 1}`]),
+                layout: s => tableT(['', A, B, '出した金額', 'おつり'], [
+                    ['単価（円）', s[0], s[1], '', ''],
+                    [`数量（${U}）`, s[2], s[3], '', ''],
+                    ['代金（円）', s[4], s[5], s[6], s[7]]
+                ])
+            }
+        },
+        eqAns: `${M}-(${n}x+${b})=${c}`,
+        eqWrong: [`${M}-${n}x+${b}=${c}`, `${M}-(${n}x+${b})=${T}`, `${M}-(${b * n}+x)=${c}`],
+        eqHint: '「出した金額 − 代金の合計 ＝ おつり」を式にしよう。代金の合計は、かっこでひとまとめにするよ。',
+        best: 'words',
+        fit: {
+            words:   {mark: '◎', msg: '言葉の式は「出した金額 − 代金の合計 ＝ おつり」と、お金の流れをそのまま書けるので、いちばん立式しやすい！'},
+            diagram: {mark: '○', msg: '線分図も「出した金額が、代金とおつりに分かれる」関係が見やすいよ。ただ、式にするには言葉の式のほうが近道かも。'},
+            table:   {mark: '△', msg: '表は単価・数量・代金は整理しやすいけれど、「出した金額 − 代金 ＝ おつり」の引き算の関係が表からは見えにくくて、少し使いづらかったかも。'}
+        }
+    };
+}
+
+/* ---------- 代金とおつり②：2つの値段のAの個数を求める ---------- */
+function genOtsuriCount() {
+    const [[A, u]] = pickItems(1);
+    let a, b, n, x, T, M;
+    do {
+        a = randInt(3, 15) * 10;
+        b = randInt(3, 15) * 10;
+        n = randInt(8, 15);
+        x = randInt(2, n - 2);
+        T = a * x + b * (n - x);
+        M = (Math.floor(T / 500) + 1) * 500;
+    } while (a === b || M === 2 * T || n === 2 * x);
+    return {kind: 'count', A, u, a, b, n, x, M, c: M - T};
+}
+
+function specOtsuriCount(p) {
+    const {A, u, a, b, n, x, M, c} = p;
+    const T = M - c;
+    const pay = `${M}（円）`;
+    const ac = `${a}x（円）`;
+    const bc = `${b}(${n}-x)（円）`;
+    const chg = `${c}（円）`;
+    const slots4 = [
+        sl(pay, '出した金額は問題文に書いてあるよ。'),
+        sl(ac, `${a}円の${A}を x ${u}買ったね。代金は「単価×数量」だよ。`),
+        sl(bc, `${b}円の${A}は、全部で${n}${u}のうち、${a}円の${A}をのぞいた残りだよ。代金は「単価×数量」。`),
+        sl(chg, 'おつりは問題文に書いてあるよ。')
+    ];
+    const pool4 = [...new Set([pay, ac, bc, chg, `${b}x（円）`, `${a}(${n}-x)（円）`, `${a}\\times ${n}（円）`])];
+    const f = [a * x, b * (n - x), c].map((w, i) => Math.max([34, 34, 24][i], Math.round(w / M * 100)));
+    const names = [`${a}円の${A}`, `${b}円の${A}`];
+    const tans = [`${a}`, `${b}`, 'x', `${n}-x`, `${a}x`, `${b}(${n}-x)`, `${M}`, `${c}`];
+    const thints = [
+        `${a}円の${A}の単価は問題文に書いてあるよ。`,
+        `${b}円の${A}の単価は問題文に書いてあるよ。`,
+        `求めたいもの（${a}円の${A}の数）を x とおいたね。`,
+        `${b}円の${A}の数は、全部の${n}${u}から x ${u}をひいた数だよ。`,
+        `${a}円の${A}の代金は「単価×数量」。数量は x だよ。`,
+        `${b}円の${A}の代金は「単価×数量」。数量は(${n}−x)だよ。`,
+        '出した金額は問題文に書いてあるよ。',
+        'おつりは問題文に書いてあるよ。'
+    ];
+    return {
+        text: `${M}円で、1${u}${a}円の${A}と1${u}${b}円の${A}をあわせて${n}${u}買うと、おつりが${c}円でした。${a}円の${A}を何${u}買ったか求めなさい。`,
+        varAns: `${a}円の${A}の数`,
+        varWrong: [`${b}円の${A}の数`, `買った${A}の全部の数`, `${a}円の${A}の代金`],
+        fill: {
+            words: {
+                slots: slots4,
+                pool: pool4,
+                layout: s => wordsT([labT('出した金額', s[0]), opT('−'), opT('('), labT(`${names[0]}の代金`, s[1]), opT('＋'), labT(`${names[1]}の代金`, s[2]), opT(')'), opT('＝'), labT('おつり', s[3])])
+            },
+            diagram: {
+                slots: slots4,
+                pool: pool4,
+                layout: s => dgT(barTopT('出した金額', s[0], [[`${names[0]}の代金`, s[1], f[0]], [`${names[1]}の代金`, s[2], f[1]], ['おつり', s[3], f[2]]], 100))
+            },
+            table: {
+                slots: tans.map((ans, i) => sl(ans, thints[i])),
+                pool: mkPool(tans, [`${b}x`, `${a}(${n}-x)`, `${n}`]),
+                layout: s => tableT(['', names[0], names[1], '出した金額', 'おつり'], [
+                    ['単価（円）', s[0], s[1], '', ''],
+                    [`数量（${u}）`, s[2], s[3], '', ''],
+                    ['代金（円）', s[4], s[5], s[6], s[7]]
+                ])
+            }
+        },
+        eqAns: `${M}-(${a}x+${b}(${n}-x))=${c}`,
+        eqWrong: [`${M}-(${a}x+${b}x)=${c}`, `${M}-${a}x+${b}(${n}-x)=${c}`, `${M}-(${b}x+${a}(${n}-x))=${c}`],
+        eqHint: `「出した金額 − 代金の合計 ＝ おつり」を式にしよう。もう一方の値段の${A}の数は、全部の数から x をひいた数になるよ。`,
+        best: 'words',
+        fit: {
+            words:   {mark: '◎', msg: '言葉の式は「出した金額 − 代金の合計 ＝ おつり」と、2つの値段の代金をそのまま書けるので、立式しやすい！'},
+            diagram: {mark: '○', msg: '線分図も「出した金額が、2つの代金とおつりに分かれる」関係が見やすいよ。ただ、式にするには言葉の式のほうが近道かも。'},
+            table:   {mark: '△', msg: '表は2つの値段・数量・代金を整理できるけれど、「出した金額 − 代金の合計 ＝ おつり」の引き算の関係が表からは見えにくくて、少し使いづらかったかも。'}
+        }
+    };
+}
+
+/* ---------- 個数と代金②：〇倍になる ---------- */
+function genDaikinBai() {
+    const [[A, uA], [B, uB], [C, uC]] = pickItems(3);
+    let x, n, q, b, c, k;
+    do {
+        x = randInt(3, 20) * 10;
+        n = randInt(2, 8);
+        q = randInt(2, 8);
+        c = randInt(3, 15) * 10;
+        k = randInt(2, 3);
+        b = k * (q * x + c) - n * x;
+    } while (b < 30 || b > 600 || n === q);
+    return {kind: 'bai', A, uA, B, uB, C, uC, x, n, q, b, c, k};
+}
+
+function specDaikinBai(p) {
+    const {A, uA, B, uB, C, uC, x, n, q, b, c, k} = p;
+    const an = `${n}x（円）`;
+    const bs = `${b}（円）`;
+    const aq = `${q}x（円）`;
+    const cs = `${c}（円）`;
+    const names = [`${A}${n}${uA}の代金`, `${B}1${uB}の代金`, `${A}${q}${uA}の代金`, `${C}1${uC}の代金`];
+    const slots4 = [
+        sl(an, `${A}1${uA}の値段を x 円とおいたね。${A}${n}${uA}の代金は「単価×数量」だよ。`),
+        sl(bs, `${B}は1${uB}だけ買ったね。代金は${b}円だよ。`),
+        sl(aq, `${A}${q}${uA}の代金は「単価×数量」。単価は x だよ。`),
+        sl(cs, `${C}は1${uC}だけ買ったね。代金は${c}円だよ。`)
+    ];
+    const pool4 = [...new Set([an, bs, aq, cs, `${n + q}x（円）`, `${k}\\times ${b}（円）`, `${b + c}（円）`])];
+    const tans = [`${n}x`, `${q}x`, `${b}`, `${c}`, `${n}x+${b}`, `${q}x+${c}`];
+    const thints = [
+        `${A}${n}${uA}の代金は「単価×数量」。単価は x だよ。`,
+        `${A}${q}${uA}の代金は「単価×数量」。単価は x だよ。`,
+        `${B}1${uB}の代金は問題文に書いてあるよ。`,
+        `${C}1${uC}の代金は問題文に書いてあるよ。`,
+        `左の代金の合計は「${A}の代金＋${B}の代金」だよ。`,
+        `右の代金の合計は「${A}の代金＋${C}の代金」だよ。`
+    ];
+    const f1 = clampT((n * x) / (n * x + b), 0.35, 0.65);
+    const g1 = clampT((q * x) / (q * x + c), 0.4, 0.6);
+    return {
+        text: `${A}${n}${uA}と${b}円の${B}1${uB}の代金は、${A}${q}${uA}と${c}円の${C}1${uC}の代金の${k}倍になります。${A}1${uA}の値段はいくらですか。`,
+        varAns: `${A}1${uA}の値段`,
+        varWrong: [`${B}1${uB}の値段`, `${A}${n}${uA}の代金`, `${C}1${uC}の値段`],
+        fill: {
+            words: {
+                slots: slots4,
+                pool: pool4,
+                layout: s => wordsT([labT(names[0], s[0]), opT('＋'), labT(names[1], s[1]), opT('＝'), opT(`${k}`), opT('×'), opT('('), labT(names[2], s[2]), opT('＋'), labT(names[3], s[3]), opT(')')])
+            },
+            diagram: {
+                slots: slots4,
+                pool: pool4,
+                layout: s => dgI(
+                    barT([[`${A}の代金`, s[0], f1], [`${B}の代金`, s[1], 100 - f1]], 100)
+                    + `<div class="lab" style="margin:6px 3px;">↑ 上の線は、下の線の${k}倍の長さ</div>`
+                    + `<div class="stack">${barT([[`${A}の代金`, s[2], g1], [`${C}の代金`, s[3], 100 - g1]], 55)}</div>`
+                )
+            },
+            table: {
+                slots: tans.map((ans, i) => sl(ans, thints[i])),
+                pool: mkPool(tans, [`${n}x+${c}`, `${q}x+${b}`, `${k}(${q}x+${c})`]),
+                layout: s => tableT(['', `${A}${n}${uA}と${B}`, `${A}${q}${uA}と${C}`], [
+                    [`${A}の代金（円）`, s[0], s[1]],
+                    [`${B}・${C}の代金（円）`, s[2], s[3]],
+                    ['代金の合計（円）', s[4], s[5]]
+                ])
+            }
+        },
+        eqAns: `${n}x+${b}=${k}(${q}x+${c})`,
+        eqWrong: [`${n}x+${b}=${k}${q}x+${c}`, `${n}x+${b}=${q}x+${c}`, `${k}(${n}x+${b})=${q}x+${c}`],
+        eqHint: `左の代金の合計は、右の代金の合計の${k}倍。右の代金の合計は、かっこでひとまとめにしてから${k}倍するよ。`,
+        best: 'words',
+        fit: {
+            words:   {mark: '◎', msg: `言葉の式は「左の代金の合計 ＝ ${k}倍 ×（右の代金の合計）」と、倍の関係をそのまま式にできる！`},
+            diagram: {mark: '○', msg: '線分図でも「何倍か」は見やすいけれど、2本の線に代金を書き込むと図が細かくなって、少し使いづらかったかも。'},
+            table:   {mark: '△', msg: '表は2つの代金の合計を整理できるけれど、「〇倍」の関係が表からは見えにくくて、少し使いづらかったかも。'}
+        }
+    };
+}
+
+/* ---------- 個数と代金③：兄弟の残金 ---------- */
+function genDaikinZan() {
+    const [[A, uA]] = pickItems(1);
+    let x, m1, m2, k;
+    do {
+        x = randInt(3, 15) * 10;
+        m2 = x + randInt(2, 10) * 10;
+        k = randInt(2, 3);
+        m1 = k * m2 - (k - 1) * x;
+    } while (m1 > 1500 || m1 === m2);
+    return {kind: 'zan', A, uA, x, m1, m2, k};
+}
+
+function specDaikinZan(p) {
+    const {A, uA, x, m1, m2, k} = p;
+    const s1 = `${m1}（円）`;
+    const sx = 'x（円）';
+    const s2 = `${m2}（円）`;
+    const names = ['兄の所持金', `${A}の値段`, '弟の所持金', `${A}の値段`];
+    const slots4 = [
+        sl(s1, '兄が持っているお金は問題文に書いてあるよ。'),
+        sl(sx, `買った${A}の値段を x 円とおいたね。`),
+        sl(s2, '弟が持っているお金は問題文に書いてあるよ。'),
+        sl(sx, `2人とも同じ${A}を買ったので、弟が払った金額も x 円だよ。`)
+    ];
+    const pool4 = mkPool([s1, sx, s2, sx], [`${m1 + m2}（円）`, `${m1 - m2}（円）`]);
+    const tans = [`${m1}`, `${m2}`, 'x', 'x', `${m1}-x`, `${m2}-x`];
+    const thints = [
+        '兄が持っているお金は問題文に書いてあるよ。',
+        '弟が持っているお金は問題文に書いてあるよ。',
+        `買った${A}の値段を x 円とおいたね。兄の欄だよ。`,
+        `2人とも同じ${A}を買ったので、弟の欄も x だよ。`,
+        '残金は「持っているお金−払った金額」だよ。兄の欄だね。',
+        '残金は「持っているお金−払った金額」だよ。弟の欄だね。'
+    ];
+    const fr1 = clampT((m1 - x) / m1, 0.4, 0.6);
+    const fr2 = clampT((m2 - x) / m2, 0.4, 0.6);
+    const w2 = clampT(m2 / m1, 0.65, 1);
+    return {
+        text: `兄は${m1}円、弟は${m2}円持っていて、2人とも同じ${A}を買いました。すると、兄の残金は弟の残金の${k}倍になりました。${A}の値段を求めなさい。`,
+        varAns: `${A}の値段`,
+        varWrong: ['兄の残金', '弟の残金', '兄が持っているお金'],
+        fill: {
+            words: {
+                slots: slots4,
+                pool: pool4,
+                layout: s => wordsT([labT(names[0], s[0]), opT('−'), labT(names[1], s[1]), opT('＝'), opT(`${k}`), opT('×'), opT('('), labT(names[2], s[2]), opT('−'), labT(names[3], s[3]), opT(')')])
+            },
+            diagram: {
+                slots: slots4,
+                pool: pool4,
+                layout: s => dgI(
+                    barTopT(names[0], s[0], [[`兄の残金（弟の${k}倍）`, '', fr1], [names[1], s[1], 100 - fr1]], 100)
+                    + '<div style="height:6px;"></div>'
+                    + barTopT(names[2], s[2], [['弟の残金', '', fr2], [names[3], s[3], 100 - fr2]], w2)
+                )
+            },
+            table: {
+                slots: tans.map((ans, i) => sl(ans, thints[i])),
+                pool: mkPool(tans, [`x-${m1}`, `${m1 - m2}`, `${m1}+x`]),
+                layout: s => tableT(['', '兄', '弟'], [
+                    ['持っているお金（円）', s[0], s[1]],
+                    [`${A}の値段（円）`, s[2], s[3]],
+                    ['残金（円）', s[4], s[5]]
+                ])
+            }
+        },
+        eqAns: `${m1}-x=${k}(${m2}-x)`,
+        eqWrong: [`${m1}-x=${k}${m2}-x`, `${m1}-x=${m2}-${k}x`, `${k}(${m1}-x)=${m2}-x`],
+        eqHint: `兄の残金は、弟の残金の${k}倍。弟の残金は、かっこでひとまとめにしてから${k}倍するよ。`,
+        best: 'table',
+        fit: {
+            words:   {mark: '○', msg: `言葉の式は「兄の残金 ＝ ${k}倍 ×（弟の残金）」と書けるけれど、兄と弟の2人分を一度に考えるので、少し混乱しやすいかも。`},
+            diagram: {mark: '○', msg: '線分図でも2人の所持金と残金は表せるけれど、2本の線に書き込むことが多くなりやすいよ。'},
+            table:   {mark: '◎', msg: '表は兄と弟を並べて、持っているお金・値段・残金を縦に整理できるので、残金の関係が見えやすい！'}
+        }
+    };
+}
+
+/* ---------- 道のり・速さ・時間③：追いかける ---------- */
+function genOikake() {
+    const sp = [40, 50, 60, 70, 80];
+    let v1, v2, t, x;
+    do {
+        v1 = sp[randInt(0, sp.length - 1)];
+        v2 = v1 + randInt(1, 4) * 10;
+        t = randInt(2, 10);
+        x = v1 * t / (v2 - v1);
+    } while (!Number.isInteger(x) || x < 5 || x > 40);
+    const D = (Math.floor(v2 * x / 100) + 1 + randInt(0, 3)) * 100;
+    return {kind: 'oikake', v1, v2, t, x, D};
+}
+
+function specOikake(p) {
+    const {v1, v2, t, x, D} = p;
+    const names = ['兄の速さ', '兄の時間', '弟の速さ', '弟の時間'];
+    const slots4 = [
+        sl(`${v2}（m/分）`, '兄の速さは問題文に書いてあるよ。'),
+        sl('x（分）', '求めたいもの（兄が出発してからの時間）を x 分とおいたね。'),
+        sl(`${v1}（m/分）`, '弟の速さは問題文に書いてあるよ。'),
+        sl(`x+${t}（分）`, `弟は兄より${t}分早く出発したね。兄が出発してから x 分たったとき、弟は何分歩いている？`)
+    ];
+    const pool4 = [...new Set([...slots4.map(q => q.ans), `x-${t}（分）`, `${v2 - v1}（m/分）`, `${t}（分）`])];
+    const dAns = [`${v2}x（m）`, `${v1}(x+${t})（m）`];
+    const dSlots = [
+        sl(dAns[0], '兄の道のりは「速さ×時間」。兄は x 分歩いたね。'),
+        sl(dAns[1], '弟の道のりは「速さ×時間」。弟は兄より早く出発したので、歩いた時間は x 分より長いよ。')
+    ];
+    const dPool = [...new Set([...dAns, `${v1}x（m）`, `${v2}(x+${t})（m）`, `${D}（m）`])];
+    const tans = [`${v2}`, `${v1}`, 'x', `x+${t}`, `${v2}x`, `${v1}(x+${t})`];
+    const thints = [
+        '兄の速さは問題文に書いてあるよ。',
+        '弟の速さは問題文に書いてあるよ。',
+        '求めたいもの（兄が出発してからの時間）を x 分とおいたね。兄の時間の欄だよ。',
+        `弟は兄より${t}分早く出発したね。弟が歩いた時間は？`,
+        '兄の道のりは「速さ×時間」だよ。',
+        '弟の道のりは「速さ×時間」だよ。時間は(x＋早く出発した分)だよ。'
+    ];
+    return {
+        text: `弟が${D}m離れた駅に向かって家を出発しました。その${t}分後に、兄は家を出発し、弟と同じ道を通って追いかけました。弟は分速${v1}m、兄は分速${v2}mで歩くとすると、兄は出発してから何分後に弟に追いつきますか。`,
+        varAns: '兄が出発してからの時間',
+        varWrong: ['弟が出発してからの時間', '兄が進んだ道のり', '兄と弟の速さの差'],
+        fill: {
+            words: {
+                slots: slots4,
+                pool: pool4,
+                layout: s => wordsT([labT(names[0], s[0]), opT('×'), labT(names[1], s[1]), opT('＝'), labT(names[2], s[2]), opT('×'), labT(names[3], s[3])])
+            },
+            diagram: {
+                slots: dSlots,
+                pool: dPool,
+                layout: s => dgI(
+                    barTopT('追いついた地点までの道のり（兄も弟も同じ）', '', [['兄の道のり', s[0], 100]], 100)
+                    + '<div style="height:6px;"></div>'
+                    + barT([['弟の道のり', s[1], 100]], 100)
+                )
+            },
+            table: {
+                slots: tans.map((ans, i) => sl(ans, thints[i])),
+                pool: mkPool(tans, [`x-${t}`, `${v2 - v1}`, `${v1}x`]),
+                layout: s => tableT(['', '兄', '弟'], [
+                    ['道のり（m）', s[4], s[5]],
+                    ['速さ（m/分）', s[0], s[1]],
+                    ['時間（分）', s[2], s[3]]
+                ])
+            }
+        },
+        eqAns: `${v2}x=${v1}(x+${t})`,
+        eqWrong: [`${v2}x=${v1}x+${t}`, `${v2}x=${v1}(x-${t})`, `${v2}(x+${t})=${v1}x`],
+        eqHint: '追いついたとき、兄と弟が進んだ道のりは等しいよ。「兄の道のり ＝ 弟の道のり」を式にしよう。弟の時間は(x＋早く出発した分)だよ。',
+        best: 'table',
+        fit: {
+            words:   {mark: '○', msg: '言葉の式は「兄の速さ×兄の時間 ＝ 弟の速さ×弟の時間」と書けるけれど、2人分の速さと時間を1本の式に並べるので、少し整理しにくいかも。'},
+            diagram: {mark: '○', msg: '線分図は「道のりが同じ」という関係が見やすいけれど、速さと時間までは表したほうが整理しやすいよ。'},
+            table:   {mark: '◎', msg: '表は「速さ・時間・道のり」の関係を、兄と弟で縦横に整理できて、速さ×時間＝道のり の計算が見えやすい！'}
+        }
+    };
+}
+
+/* ---------- 道のり・速さ・時間④：かかる時間が〇分違う ---------- */
+function genChigai() {
+    const sp = [40, 50, 60, 80, 100, 120];
+    let a, b, x, t;
+    do {
+        a = sp[randInt(0, sp.length - 1)];
+        b = sp[randInt(0, sp.length - 1)];
+        x = (a < b) ? (a * b / gcd(a, b)) * randInt(1, 3) : 0;
+        t = (a < b) ? x / a - x / b : 0;
+    } while (a >= b || x > 3000 || t < 2 || t > 20);
+    return {kind: 'chigai', a, b, x, t};
+}
+
+function specChigai(p) {
+    const {a, b, x, t} = p;
+    const fa = `${fracT('x', a)}（分）`;
+    const fb = `${fracT('x', b)}（分）`;
+    const tt = `${t}（分）`;
+    const hSlow = `遅く歩いたときの時間は「道のり÷速さ」。分速${a}mで x m 進む時間は？`;
+    const hFast = `速く歩いたときの時間も「道のり÷速さ」。分速${b}mだよ。`;
+    const hDiff = '時間の差は問題文に書いてあるよ。';
+    const extra = [`${fracT(a, 'x')}（分）`, `${fracT(b, 'x')}（分）`, `${b - a}（分）`];
+    const wAns = [fa, fb, tt];
+    const wSlots = [sl(fa, hSlow), sl(fb, hFast), sl(tt, hDiff)];
+    const dNames = ['速い方の時間', '時間の差', '遅い方の時間'];
+    const dSlots = [sl(fb, hFast), sl(tt, hDiff), sl(fa, hSlow)];
+    const pool3 = [...new Set([...wAns, ...extra])];
+    const tans = [`${a}`, `${b}`, 'x', 'x', fracT('x', a), fracT('x', b), `${t}`];
+    const thints = [
+        '遅く歩いたときの速さは問題文に書いてあるよ。',
+        '速く歩いたときの速さは問題文に書いてあるよ。',
+        `求めたいもの（家から駅までの道のり）を x m とおいたね。遅く歩いたときの欄だよ。`,
+        '速く歩いたときも、同じ道のり x だよ。',
+        hSlow,
+        hFast,
+        hDiff
+    ];
+    return {
+        text: `家から駅まで分速${a}mで歩いたときと、分速${b}mで歩いたときでは、かかる時間が${t}分違います。家から駅までの道のりを求めなさい。`,
+        varAns: '家から駅までの道のり',
+        varWrong: ['遅く歩いたときの時間', '速く歩いたときの時間', 'かかる時間の差'],
+        fill: {
+            words: {
+                slots: wSlots,
+                pool: pool3,
+                layout: s => wordsT([labT('遅い方の時間', s[0]), opT('−'), labT('速い方の時間', s[1]), opT('＝'), labT('時間の差', s[2])])
+            },
+            diagram: {
+                slots: dSlots,
+                pool: pool3,
+                layout: s => dgT(barTopT(dNames[2], s[2], [[dNames[0], s[0], clampT(a / b, 0.35, 0.65)], [dNames[1], s[1], 100 - clampT(a / b, 0.35, 0.65)]], 100))
+            },
+            table: {
+                slots: tans.map((ans, i) => sl(ans, thints[i])),
+                pool: mkPool(tans, [fracT(a, 'x'), `${b - a}`, '2x']),
+                layout: s => tableT(['', `分速${a}m`, `分速${b}m`, '時間の差'], [
+                    ['道のり（m）', s[2], s[3], ''],
+                    ['速さ（m/分）', s[0], s[1], ''],
+                    ['時間（分）', s[4], s[5], s[6]]
+                ])
+            }
+        },
+        eqAns: `${fracT('x', a)}-${fracT('x', b)}=${t}`,
+        eqWrong: [`${fracT('x', b)}-${fracT('x', a)}=${t}`, `${fracT(a, 'x')}-${fracT(b, 'x')}=${t}`, `${a}x-${b}x=${t}`],
+        eqHint: '「遅く歩いたときの時間 − 速く歩いたときの時間 ＝ 時間の差」を式にしよう。時間＝道のり÷速さ だよ。',
+        best: 'table',
+        fit: {
+            words:   {mark: '○', msg: '言葉の式は「遅い方の時間 − 速い方の時間 ＝ 時間の差」と書けて、立式につながりやすいよ。'},
+            diagram: {mark: '○', msg: '線分図は「遅い方の時間 ＝ 速い方の時間 ＋ 時間の差」が見やすいけれど、時間＝道のり÷速さ の計算までは表のほうが整理しやすいよ。'},
+            table:   {mark: '◎', msg: '表は「道のり・速さ・時間」の関係を縦横に整理できるので、時間＝道のり÷速さ の計算が見えやすい！'}
+        }
+    };
+}
+
+/* ---------- 道のり・速さ・時間⑤：出会う（kmをmに直す） ---------- */
+function genDeau() {
+    let v1, v2, t, x, Dm;
+    do {
+        v1 = randInt(5, 9) * 10;
+        v2 = randInt(5, 9) * 10;
+        t = randInt(3, 15);
+        x = randInt(t + 3, 40);
+        Dm = v1 * x + v2 * (x - t);
+    } while (v1 === v2 || Dm % 100 !== 0 || Dm > 6000);
+    return {kind: 'deau', v1, v2, t, x, Dm, D: Dm / 1000};
+}
+
+function specDeau(p) {
+    const {v1, v2, t, x, Dm, D} = p;
+    const names = ['Aさんの道のり', 'Bさんの道のり', '2人の家の間の道のり'];
+    const sA = `${v1}x（m）`;
+    const sB = `${v2}(x-${t})（m）`;
+    const sT = `${Dm}（m）`;
+    const slots3 = [
+        sl(sA, 'Aさんの道のりは「速さ×時間」。Aさんは x 分歩いたね。'),
+        sl(sB, `Bさんの道のりは「速さ×時間」。BさんはAさんより${t}分あとに出発したので、歩いた時間は x 分より短いよ。`),
+        sl(sT, '2人の家の間の道のりは問題文に書いてあるよ。速さが分速(m)なので、kmをmに直そう。')
+    ];
+    const pool3 = [...new Set([sA, sB, sT, `${v2}x（m）`, `${v1}(x-${t})（m）`, `${D}（km）`])];
+    const tans = [`${v1}`, `${v2}`, 'x', `x-${t}`, `${v1}x`, `${v2}(x-${t})`, `${Dm}`];
+    const thints = [
+        'Aさんの速さは問題文に書いてあるよ。',
+        'Bさんの速さは問題文に書いてあるよ。',
+        '求めたいもの（Aさんが出発してからの時間）を x 分とおいたね。Aさんの時間の欄だよ。',
+        `BさんはAさんより${t}分あとに出発したね。Bさんが歩いた時間は？`,
+        'Aさんの道のりは「速さ×時間」だよ。',
+        'Bさんの道のりは「速さ×時間」だよ。時間は(x−あとで出発した分)だよ。',
+        '2人の家の間の道のりは問題文に書いてあるよ。速さが分速(m)なので、kmをmに直そう。'
+    ];
+    const f1 = clampT((v1 * x) / Dm, 0.35, 0.65);
+    return {
+        text: `AさんとBさんの家は${D}km離れています。Aさんは家を出発して分速${v1}mでBさんの家に、BさんはAさんが出発してから${t}分後に家を出発し、同じ道を通って分速${v2}mでAさんの家にそれぞれ向かいました。2人が出会うのはAさんが出発してから何分後になりますか。`,
+        varAns: 'Aさんが出発してからの時間',
+        varWrong: ['Bさんが出発してからの時間', '2人の家の間の道のり', 'Aさんが進んだ道のり'],
+        fill: {
+            words: {
+                slots: slots3,
+                pool: pool3,
+                layout: s => wordsT([labT(names[0], s[0]), opT('＋'), labT(names[1], s[1]), opT('＝'), labT(names[2], s[2])])
+            },
+            diagram: {
+                slots: slots3,
+                pool: pool3,
+                layout: s => dgT(barTopT(names[2], s[2], [[names[0], s[0], f1], [names[1], s[1], 100 - f1]], 100))
+            },
+            table: {
+                slots: tans.map((ans, i) => sl(ans, thints[i])),
+                pool: mkPool(tans, [`x+${t}`, `${v1 + v2}`, `${D}`]),
+                layout: s => tableT(['', 'Aさん', 'Bさん', '合計'], [
+                    ['道のり（m）', s[4], s[5], s[6]],
+                    ['速さ（m/分）', s[0], s[1], ''],
+                    ['時間（分）', s[2], s[3], '']
+                ])
+            }
+        },
+        eqAns: `${v1}x+${v2}(x-${t})=${Dm}`,
+        eqWrong: [`${v1}x+${v2}(x-${t})=${D}`, `${v1}x+${v2}(x+${t})=${Dm}`, `${v1}x+${v2}x-${t}=${Dm}`],
+        eqHint: '2人が出会うとき、2人が進んだ道のりの和が、2人の家の間の道のりになるよ。単位をそろえることと、Bさんの時間は(x−あとで出発した分)であることに気をつけよう。',
+        best: 'table',
+        fit: {
+            words:   {mark: '○', msg: '言葉の式は「Aさんの道のり ＋ Bさんの道のり ＝ 家の間の道のり」と、そのまま書けるね。'},
+            diagram: {mark: '○', msg: '線分図は「全体＝部分の和」が見やすいけれど、速さ・時間・道のりの関係や、kmとmの単位は表のほうが整理しやすいよ。'},
+            table:   {mark: '◎', msg: '表は「速さ・時間・道のり」の関係を、2人で縦横に整理できて、速さ×時間＝道のり の計算が見えやすい！'}
+        }
+    };
+}
+
+/* ==========================================================================
+   3f. 問題生成・問題データ：比例式【固有】
+   kind='mix'：混ぜる割合／kind='ratio'：比で分ける（全体を求める）／kind='recipe'：同じ割合でつくる
+   どれも「a：b ＝ c：d」の形の比例式をつくる
+   ========================================================================== */
+function genHirei(kind) {
+    if (kind === 'ratio') return genHireiRatio();
+    if (kind === 'recipe') return genHireiRecipe();
+    if (kind === 'add') return genHireiAdd();
+    if (kind === 'give') return genHireiGive();
+    const mats = [['牛乳', 'コーヒー', 'mL'], ['水', 'ジュース', 'mL'], ['小麦粉', '砂糖', 'g']];
+    const [A, B, u] = mats[randInt(0, mats.length - 1)];
+    let m, n, k;
+    do {
+        m = randInt(2, 7);
+        n = randInt(2, 7);
+        k = randInt(2, 9) * 10;
+    } while (m === n || gcd(m, n) !== 1);
+    return {kind: 'mix', A, B, u, m, n, a: m * k, x: n * k};
+}
+
+function genHireiRatio() {
+    const items = [['あめ', '個'], ['色紙', '枚'], ['クッキー', '枚']];
+    const [A, u] = items[randInt(0, items.length - 1)];
+    let m, n, k;
+    do {
+        m = randInt(2, 7);
+        n = randInt(2, 7);
+        k = randInt(2, 9);
+    } while (m === n);
+    return {kind: 'ratio', A, u, m, n, a: m * k, x: (m + n) * k};
+}
+
+function genHireiRecipe() {
+    const mats = [['小麦粉', 'g', 'クッキー', '枚'], ['牛乳', 'mL', 'プリン', '個'], ['砂糖', 'g', 'ジャム', 'びん']];
+    const [A, uA, B, uB] = mats[randInt(0, mats.length - 1)];
+    let b, c, k;
+    do {
+        b = randInt(2, 6);
+        c = randInt(2, 12);
+        k = randInt(2, 5) * 5;
+    } while (b === c);
+    return {kind: 'recipe', A, uA, B, uB, b, c, a: b * k, x: c * k};
+}
+
+function specHirei(p) {
+    if (p.kind === 'ratio') return specHireiRatio(p);
+    if (p.kind === 'recipe') return specHireiRecipe(p);
+    if (p.kind === 'add') return specHireiAdd(p);
+    if (p.kind === 'give') return specHireiGive(p);
+    const {A, B, u, m, n, a} = p;
+    const slots4 = [
+        sl(`${a}（${u}）`, `${A}の量は問題文に書いてあるよ。`),
+        sl(`x（${u}）`, `求めたいもの（${B}の量）を x とおいたね。`),
+        sl(`${m}`, `${A}の比は、問題文の「${m}：${n}」の左側だよ。`),
+        sl(`${n}`, `${B}の比は、問題文の「${m}：${n}」の右側だよ。`)
+    ];
+    const pool4 = [...new Set([...slots4.map(q => q.ans), `${m + n}`, `${a}x（${u}）`, `${n}（${u}）`])];
+    const tans = [`${a}`, 'x', `${m}`, `${n}`];
+    const f = clampT(m / (m + n), 0.35, 0.65);
+    return {
+        text: `${A}と${B}を${m}：${n}の割合で混ぜます。${A}を${a}${u}使うとき、${B}は何${u}必要ですか。`,
+        varAns: `${B}の量`,
+        varWrong: [`${A}の量`, `${A}と${B}の合計の量`, `${B}の比`],
+        fill: {
+            words: {
+                slots: slots4,
+                pool: pool4,
+                layout: s => wordsT([labT(`${A}の量`, s[0]), opT('：'), labT(`${B}の量`, s[1]), opT('＝'), labT(`${A}の比`, s[2]), opT('：'), labT(`${B}の比`, s[3])])
+            },
+            diagram: {
+                slots: slots4,
+                pool: pool4,
+                layout: s => dgT(
+                    barT([[`${A}の量`, s[0], f], [`${B}の量`, s[1], 100 - f]], 100)
+                    + '<div class="lab" style="margin:4px 3px;">↑ 上の線の割合は、下の比と等しい</div>'
+                    + barT([[`${A}の比`, s[2], f], [`${B}の比`, s[3], 100 - f]], 100)
+                )
+            },
+            table: {
+                slots: tans.map((ans, i) => sl(ans, slots4[i].hint)),
+                pool: mkPool(tans, [`${m + n}`, `${a}x`, `${a + m}`]),
+                layout: s => tableT(['', A, B], [
+                    [`量（${u}）`, s[0], s[1]],
+                    ['比', s[2], s[3]]
+                ])
+            }
+        },
+        eqAns: `${a}:x=${m}:${n}`,
+        eqWrong: [`x:${a}=${m}:${n}`, `${a}:x=${n}:${m}`, `${a}:${m}=${n}:x`],
+        eqHint: `「${A}の量：${B}の量 ＝ ${A}の比：${B}の比」を式にしよう。順番をそろえることが大切だよ。`,
+        best: 'table',
+        fit: {
+            words:   {mark: '○', msg: `言葉の式は「${A}の量：${B}の量 ＝ ${A}の比：${B}の比」と、そのまま比例式にできるよ。`},
+            diagram: {mark: '○', msg: '線分図でも比は表せるけれど、量と比の2本の線を書くことになるので、表のほうが整理しやすいかも。'},
+            table:   {mark: '◎', msg: '表は「量」と「比」を縦に並べて、同じ品物どうしを横に見比べられるので、比例式の順番がまちがいにくい！'}
+        }
+    };
+}
+
+function specHireiRatio(p) {
+    const {A, u, m, n, a} = p;
+    const slots4 = [
+        sl(`${a}（${u}）`, `兄の${A}の数は問題文に書いてあるよ。`),
+        sl(`x（${u}）`, `求めたいもの（全体の${A}の数）を x とおいたね。`),
+        sl(`${m}`, `兄の比は、問題文の「${m}：${n}」の左側だよ。`),
+        sl(`${m + n}`, `全体の比は、兄の比と弟の比の和だよ。`)
+    ];
+    const pool4 = [...new Set([...slots4.map(q => q.ans), `${n}`, `${m * n}`, `${a}x（${u}）`])];
+    const tans = [`${a}`, 'x', `${m}`, `${m + n}`];
+    const f = clampT(m / (m + n), 0.35, 0.65);
+    return {
+        text: `${A}を兄と弟で${m}：${n}の割合で分けたところ、兄は${a}${u}でした。${A}は全部で何${u}ありますか。`,
+        varAns: `全体の${A}の数`,
+        varWrong: [`兄の${A}の数`, `弟の${A}の数`, '全体の比'],
+        fill: {
+            words: {
+                slots: slots4,
+                pool: pool4,
+                layout: s => wordsT([labT('兄の数', s[0]), opT('：'), labT('全体の数', s[1]), opT('＝'), labT('兄の比', s[2]), opT('：'), labT('全体の比', s[3])])
+            },
+            diagram: {
+                slots: slots4,
+                pool: pool4,
+                layout: s => dgT(
+                    barTopT('全体の数', s[1], [['兄の数', s[0], f], ['弟の数', '', 100 - f]], 100)
+                    + '<div class="lab" style="margin:4px 3px;">↑ 上の線の割合は、下の比と等しい</div>'
+                    + barTopT('全体の比', s[3], [['兄の比', s[2], f], ['弟の比', `${n}`, 100 - f]], 100)
+                )
+            },
+            table: {
+                slots: tans.map((ans, i) => sl(ans, slots4[i].hint)),
+                pool: mkPool(tans, [`${n}`, `${m * n}`, `${a}x`]),
+                layout: s => tableT(['', '兄', '全体'], [
+                    [`数（${u}）`, s[0], s[1]],
+                    ['比', s[2], s[3]]
+                ])
+            }
+        },
+        eqAns: `${a}:x=${m}:${m + n}`,
+        eqWrong: [`${a}:x=${m}:${n}`, `${a}:x=${n}:${m + n}`, `x:${a}=${m}:${m + n}`],
+        eqHint: '「兄の数：全体の数 ＝ 兄の比：全体の比」を式にしよう。全体の比は、兄と弟の比を足した数だよ。',
+        best: 'diagram',
+        fit: {
+            words:   {mark: '○', msg: '言葉の式でも書けるけれど、「全体の比＝兄の比＋弟の比」という見方は、線分図のほうがつかみやすいかも。'},
+            diagram: {mark: '◎', msg: '線分図は、全体が兄と弟に分かれる様子と、全体の比が「兄の比＋弟の比」になることが見やすい！'},
+            table:   {mark: '△', msg: '表は兄と全体の数・比を整理できるけれど、全体の比が「兄の比＋弟の比」になることが表からは見えにくくて、少し使いづらかったかも。'}
+        }
+    };
+}
+
+function specHireiRecipe(p) {
+    const {A, uA, B, uB, a, b, c} = p;
+    const slots4 = [
+        sl(`${a}（${uA}）`, `はじめの${A}の量は問題文に書いてあるよ。`),
+        sl(`${b}（${uB}）`, `はじめにできる${B}の数は問題文に書いてあるよ。`),
+        sl(`x（${uA}）`, `求めたいもの（必要な${A}の量）を x とおいたね。`),
+        sl(`${c}（${uB}）`, `つくりたい${B}の数は問題文に書いてあるよ。`)
+    ];
+    const pool4 = [...new Set([...slots4.map(q => q.ans), `${b}（${uA}）`, `${a}x（${uA}）`, `${a + c}（${uB}）`])];
+    const tans = [`${a}`, `${b}`, 'x', `${c}`];
+    const f1 = clampT(a / (a + b), 0.35, 0.65);
+    const f2 = clampT(p.x / (p.x + c), 0.35, 0.65);
+    return {
+        text: `${A}${a}${uA}で${B}が${b}${uB}できます。同じ割合で${B}を${c}${uB}つくるには、${A}は何${uA}必要ですか。`,
+        varAns: `必要な${A}の量`,
+        varWrong: [`はじめの${A}の量`, `つくりたい${B}の数`, `はじめにできる${B}の数`],
+        fill: {
+            words: {
+                slots: slots4,
+                pool: pool4,
+                layout: s => wordsT([labT(`はじめの${A}`, s[0]), opT('：'), labT(`はじめの${B}`, s[1]), opT('＝'), labT(`必要な${A}`, s[2]), opT('：'), labT(`つくる${B}`, s[3])])
+            },
+            diagram: {
+                slots: slots4,
+                pool: pool4,
+                layout: s => dgT(
+                    barT([[`はじめの${A}`, s[0], f1], [`はじめの${B}`, s[1], 100 - f1]], 100)
+                    + '<div class="lab" style="margin:4px 3px;">↑ 上の線と下の線は、同じ割合</div>'
+                    + barT([[`必要な${A}`, s[2], f2], [`つくる${B}`, s[3], 100 - f2]], 100)
+                )
+            },
+            table: {
+                slots: tans.map((ans, i) => sl(ans, slots4[[0, 1, 2, 3][i]].hint)),
+                pool: mkPool(tans, [`${a}x`, `${a + b}`, `${c}x`]),
+                layout: s => tableT(['', 'はじめ', 'つくる'], [
+                    [`${A}の量（${uA}）`, s[0], s[2]],
+                    [`${B}の数（${uB}）`, s[1], s[3]]
+                ])
+            }
+        },
+        eqAns: `${a}:${b}=x:${c}`,
+        eqWrong: [`${a}:${b}=${c}:x`, `${b}:${a}=x:${c}`, `${a}:${c}=x:${b}`],
+        eqHint: '「はじめの材料：はじめの個数 ＝ 必要な材料：つくる個数」を式にしよう。同じ種類のものを同じ側にそろえるよ。',
+        best: 'words',
+        fit: {
+            words:   {mark: '◎', msg: '言葉の式は「はじめの材料：はじめの個数 ＝ 必要な材料：つくる個数」と、そのまま比例式にできる！'},
+            diagram: {mark: '△', msg: '線分図は、材料と個数という単位のちがうものを1本の線に並べることになって、図に表しにくかったかも。'},
+            table:   {mark: '○', msg: '表は「はじめ」と「つくる」を並べて整理できるけれど、比例式にするには言葉の式のほうが近道かも。'}
+        }
+    };
+}
+
+/* ---------- 比例式④：加えて比を合わせる ---------- */
+function genHireiAdd() {
+    const mats = [['小麦粉', '砂糖'], ['薄力粉', '砂糖'], ['米粉', '砂糖']];
+    const [A, B] = mats[randInt(0, mats.length - 1)];
+    let m, n, k, x, Q;
+    do {
+        m = randInt(2, 7);
+        n = randInt(2, 7);
+        k = randInt(2, 9) * 5;
+        x = randInt(1, 6) * 5;
+        Q = n * k - x;
+    } while (m === n || gcd(m, n) !== 1 || Q < 10);
+    return {kind: 'add', A, B, m, n, P: m * k, Q, x};
+}
+
+function specHireiAdd(p) {
+    const {A, B, m, n, P, Q} = p;
+    const slots4 = [
+        sl(`${P}（g）`, `${A}の量は問題文に書いてあるよ。`),
+        sl(`${Q}+x（g）`, `加えたあとの${B}の量は「もとの量＋加えた量」。加えた量を x g とおいたね。`),
+        sl(`${m}`, `${A}の比は、問題文の「${m}：${n}」の左側だよ。`),
+        sl(`${n}`, `${B}の比は、問題文の「${m}：${n}」の右側だよ。`)
+    ];
+    const pool4 = [...new Set([...slots4.map(q => q.ans), 'x（g）', `${Q}（g）`, `${P + Q}（g）`])];
+    const tans = [`${P}`, `${Q}+x`, `${m}`, `${n}`];
+    const f = clampT(m / (m + n), 0.35, 0.65);
+    return {
+        text: `${A}が${P}g、${B}が${Q}gある。${A}と${B}の重さの比が${m}：${n}になるように${B}を加えてケーキをつくる。加えた${B}の量を求めなさい。`,
+        varAns: `加えた${B}の量`,
+        varWrong: [`はじめの${B}の量`, `加えたあとの${B}の量`, `${A}の量`],
+        fill: {
+            words: {
+                slots: slots4,
+                pool: pool4,
+                layout: s => wordsT([labT(`${A}の量`, s[0]), opT('：'), labT(`加えたあとの${B}の量`, s[1]), opT('＝'), labT(`${A}の比`, s[2]), opT('：'), labT(`${B}の比`, s[3])])
+            },
+            diagram: {
+                slots: slots4,
+                pool: pool4,
+                layout: s => dgT(
+                    barT([[`${A}の量`, s[0], f], [`加えたあとの${B}`, s[1], 100 - f]], 100)
+                    + '<div class="lab" style="margin:4px 3px;">↑ 上の線の割合は、下の比と等しい</div>'
+                    + barT([[`${A}の比`, s[2], f], [`${B}の比`, s[3], 100 - f]], 100)
+                )
+            },
+            table: {
+                slots: tans.map((ans, i) => sl(ans, slots4[i].hint)),
+                pool: mkPool(tans, ['x', `${Q}`, `${P + Q}`]),
+                layout: s => tableT(['', A, B], [
+                    ['はじめの量（g）', `${P}`, `${Q}`],
+                    ['加えたあとの量（g）', s[0], s[1]],
+                    ['比', s[2], s[3]]
+                ])
+            }
+        },
+        eqAns: `${P}:(${Q}+x)=${m}:${n}`,
+        eqWrong: [`${P}:${Q}+x=${m}:${n}`, `${P}:(${Q}+x)=${n}:${m}`, `${P}:x=${m}:${n}`],
+        eqHint: `「${A}の量：加えたあとの${B}の量 ＝ ${A}の比：${B}の比」を式にしよう。加えたあとの${B}の量は、かっこでひとまとめにするよ。`,
+        best: 'table',
+        fit: {
+            words:   {mark: '○', msg: `言葉の式は「${A}の量：加えたあとの${B}の量 ＝ 比」と書けるけれど、「加えたあと」が「はじめの量＋x」になることを忘れやすいかも。`},
+            diagram: {mark: '△', msg: '線分図は、加える前と加えたあとの量を図に表すと線が増えて、少し使いづらかったかも。'},
+            table:   {mark: '◎', msg: '表は「はじめの量」「加えたあとの量」「比」を縦に整理できるので、加えたあとの量が「はじめ＋x」になることが見えやすい！'}
+        }
+    };
+}
+
+/* ---------- 比例式⑤：あげたあとの比 ---------- */
+function genHireiGive() {
+    const items = [['折り紙', '枚'], ['シール', '枚'], ['ビー玉', '個']];
+    const pairs = [['姉', '妹'], ['兄', '弟']];
+    const [A, u] = items[randInt(0, items.length - 1)];
+    const [P1, P2] = pairs[randInt(0, pairs.length - 1)];
+    let m, n, k, a;
+    do {
+        m = randInt(2, 15);
+        n = randInt(m + 1, 20);
+        k = randInt(1, 12);
+        a = (m + n) * k / 2;
+    } while (gcd(m, n) !== 1 || !Number.isInteger(a) || a % 10 !== 0 || a < 30 || a > 150 || (n - m) * k % 2 !== 0);
+    return {kind: 'give', A, u, P1, P2, m, n, a, x: (n - m) * k / 2};
+}
+
+function specHireiGive(p) {
+    const {A, u, P1, P2, m, n, a} = p;
+    const slots4 = [
+        sl(`${a}-x（${u}）`, `${P1}が x ${u}あげたので、${P1}の数は、もとの${a}${u}から x ${u}へるよ。`),
+        sl(`${a}+x（${u}）`, `${P2}は x ${u}もらったので、${P2}の数は、もとの${a}${u}から x ${u}ふえるよ。`),
+        sl(`${m}`, `${P1}の比は、問題文の「${m}：${n}」の左側だよ。`),
+        sl(`${n}`, `${P2}の比は、問題文の「${m}：${n}」の右側だよ。`)
+    ];
+    const pool4 = [...new Set([...slots4.map(q => q.ans), `x（${u}）`, `${a}（${u}）`, `${a}x（${u}）`])];
+    const tans = [`${a}-x`, `${a}+x`, `${m}`, `${n}`];
+    const f = clampT(m / (m + n), 0.35, 0.65);
+    return {
+        text: `${P1}と${P2}が、${A}を${a}${u}ずつ持っている。${P1}が${P2}に何${u}かあげたら、${P1}と${P2}の持っている${A}の数の比は${m}：${n}になった。${P1}が${P2}にあげた${A}の数を求めなさい。`,
+        varAns: `${P1}が${P2}にあげた${A}の数`,
+        varWrong: [`${P1}のあとの${A}の数`, `${P2}のあとの${A}の数`, `${P1}と${P2}の${A}の合計`],
+        fill: {
+            words: {
+                slots: slots4,
+                pool: pool4,
+                layout: s => wordsT([labT(`${P1}のあとの数`, s[0]), opT('：'), labT(`${P2}のあとの数`, s[1]), opT('＝'), labT(`${P1}の比`, s[2]), opT('：'), labT(`${P2}の比`, s[3])])
+            },
+            diagram: {
+                slots: slots4,
+                pool: pool4,
+                layout: s => dgT(
+                    barT([[`${P1}のあとの数`, s[0], f], [`${P2}のあとの数`, s[1], 100 - f]], 100)
+                    + '<div class="lab" style="margin:4px 3px;">↑ 上の線の割合は、下の比と等しい</div>'
+                    + barT([[`${P1}の比`, s[2], f], [`${P2}の比`, s[3], 100 - f]], 100)
+                )
+            },
+            table: {
+                slots: tans.map((ans, i) => sl(ans, slots4[i].hint)),
+                pool: mkPool(tans, ['x', `${a}`, `${m + n}`]),
+                layout: s => tableT(['', P1, P2], [
+                    [`もとの数（${u}）`, `${a}`, `${a}`],
+                    [`あとの数（${u}）`, s[0], s[1]],
+                    ['比', s[2], s[3]]
+                ])
+            }
+        },
+        eqAns: `${a}-x:${a}+x=${m}:${n}`,
+        eqWrong: [`${a}-x:${a}+x=${n}:${m}`, `${a}+x:${a}-x=${m}:${n}`, `${a}-x:${a}=${m}:${n}`],
+        eqHint: `「${P1}のあとの数：${P2}のあとの数 ＝ ${P1}の比：${P2}の比」を式にしよう。あげた${P1}はへり、もらった${P2}はふえるよ。`,
+        best: 'table',
+        fit: {
+            words:   {mark: '○', msg: `言葉の式は「${P1}のあとの数：${P2}のあとの数 ＝ 比」と書けるけれど、へる・ふえるの向きを混ぜやすいかも。`},
+            diagram: {mark: '△', msg: '線分図は、あげる前とあとで2人の数が変わる様子を図に表しにくくて、少し使いづらかったかも。'},
+            table:   {mark: '◎', msg: '表は「もとの数」「あとの数」「比」を2人分並べて整理できるので、へる・ふえるの向きが見えやすい！'}
+        }
+    };
+}
+const GENS  = {
+daikin: genDaikin, otsuri: genOtsuri, kafusoku: genKafusoku, hayasa: genHayasa, hirei: genHirei};
+const SPECS = {daikin: specDaikin, otsuri: specOtsuri, kafusoku: specKafusoku, hayasa: specHayasa, hirei: specHirei};
 
 /* ==========================================================================
    4. 画面・保存・記録【共通】
@@ -1270,7 +2282,7 @@ function loadRecords() {
     try { r = JSON.parse(localStorage.getItem(RECORDS_KEY)); } catch (e) { /* 初期化 */ }
     R = (r && r.types) ? r : {types: {}};
     TYPES.forEach(t => {
-        R.types[t.id] = Object.assign({count: 0, words: 0, diagram: 0, table: 0}, R.types[t.id]);
+        R.types[t.id] = Object.assign({count: 0, nomiss: 0, words: 0, diagram: 0, table: 0}, R.types[t.id]);
     });
 }
 
@@ -1295,7 +2307,7 @@ function renderTypeSelect() {
 function renderKiroku() {
     $('kiroku-body').innerHTML = TYPES.map(t => {
         const r = R.types[t.id];
-        return `<tr><th>${t.name}</th><td>${r.count}</td><td>${r.words}</td><td>${r.diagram}</td><td>${r.table}</td></tr>`;
+        return `<tr><th>${t.name}</th><td>${r.count}</td><td>${r.nomiss}</td><td>${r.words}</td><td>${r.diagram}</td><td>${r.table}</td></tr>`;
     }).join('');
 }
 
@@ -1325,7 +2337,7 @@ function confirmReset() {
 }
 
 function loadRecordsDefaults() {
-    TYPES.forEach(t => { R.types[t.id] = {count: 0, words: 0, diagram: 0, table: 0}; });
+    TYPES.forEach(t => { R.types[t.id] = {count: 0, nomiss: 0, words: 0, diagram: 0, table: 0}; });
 }
 
 function setHand(hand) {
@@ -1337,8 +2349,32 @@ function setHand(hand) {
 /* ==========================================================================
    5. 演習の進行【共通】
    ========================================================================== */
+/* --- 各タイプのパターンを同じ割合で出題する（1周に全パターンを1回ずつ。ブラウザを閉じるとリセット） --- */
+const PATTERNS = {
+    otsuri:   ['basic', 'a1', 'count'],
+    daikin:   ['basic', 'bai', 'zan'],
+    kafusoku: ['haifu', 'seki', 'kai'],
+    hayasa:   ['dist', 'time', 'oikake', 'chigai', 'deau'],
+    hirei:    ['mix', 'ratio', 'recipe', 'add', 'give']
+};
+
+function pickPattern(typeId) {
+    let bag = {};
+    try { bag = JSON.parse(sessionStorage.getItem(BAG_KEY)) || {}; } catch (e) { bag = {}; }
+    bag.last = bag.last || {};
+    if (!Array.isArray(bag[typeId]) || bag[typeId].length === 0) {
+        const next = shuffle(PATTERNS[typeId]);
+        if (next.length > 1 && next[0] === bag.last[typeId]) next.push(next.shift());
+        bag[typeId] = next;
+    }
+    const kind = bag[typeId].shift();
+    bag.last[typeId] = kind;
+    try { sessionStorage.setItem(BAG_KEY, JSON.stringify(bag)); } catch (e) { /* 保存失敗時は何もしない */ }
+    return kind;
+}
+
 function newSession(typeId) {
-    return {typeId: typeId, p: GENS[typeId](), step: 'var', method: null, filled: 0, miss: 0};
+    return {typeId: typeId, p: GENS[typeId](pickPattern(typeId)), step: 'var', method: null, filled: 0, miss: 0};
 }
 
 function buildSpec() {
@@ -1389,8 +2425,6 @@ function pickMethod(m) {
     S.method = m;
     S.filled = 0;
     S.step = 'fill';
-    R.types[S.typeId][m]++;
-    saveRecords();
     hintMsg = '光っている空欄から順に埋めていこう。';
     enterStep();
     saveSession();
@@ -1431,7 +2465,10 @@ function choose(i) {
     } else if (S.step === 'eq') {
         answer(opt === sp.eqAns, sp.eqHint, () => {
             S.step = 'done';
-            R.types[S.typeId].count++;
+            const rec = R.types[S.typeId];
+            rec.count++;
+            rec[S.method]++;
+            if (S.miss === 0) rec.nomiss++;
             saveRecords();
         });
     }
@@ -1462,14 +2499,28 @@ function slotHtml(sp, filled) {
     const shown = ans => (S.method === 'words') ? ans.replace(/（[^（）]*）$/, '') : ans;
     return sp.fill[S.method].slots.map((s, i) =>
         i < filled
-            ? `<span class="slot ok">${shown(s.ans)}</span>`
+            ? `<span class="slot ok">${toMath(shown(s.ans))}</span>`
             : `<span class="slot${i === filled ? ' act' : ''}">？</span>`
     );
 }
 
+/* --- 解答枠・選択肢をMathJaxで表示するために、数式部分を \( \) で囲む（（円）などの単位は式の外） --- */
+function toMath(str) {
+    const m = str.match(/^(.*?)(（[^（）]*）)?$/);
+    return `\\(${m[1]}\\)${m[2] || ''}`;
+}
+
+function typeset() {
+    if (window.MathJax && MathJax.startup && MathJax.typesetPromise) {
+        MathJax.startup.promise = MathJax.startup.promise
+            .then(() => MathJax.typesetPromise([$('work-area'), $('opt-grid')]))
+            .catch(() => { /* 数式の描画に失敗しても進行は止めない */ });
+    }
+}
+
 function optButtons(list) {
     return list.map((o, i) =>
-        `<button class="opt${wrongOpts.includes(o) ? ' wrong' : ''}" onclick="choose(${i})">${o}</button>`
+        `<button class="opt${wrongOpts.includes(o) ? ' wrong' : ''}" onclick="choose(${i})">${S.step === 'var' ? o : toMath(o)}</button>`
     ).join('');
 }
 
@@ -1519,7 +2570,7 @@ function render() {
         const best = (S.method !== sp.best) ? `<br>この問題は「${METHODS[sp.best].label}」がいちばん整理しやすいよ。` : '';
         const miss = (S.miss === 0) ? 'ノーミス！' : `まちがい ${S.miss}回`;
         work = xline + mhead + sp.fill[S.method].layout(slotHtml(sp, n))
-            + `<div class="bigq">方程式：<span class="slot ok">${sp.eqAns}</span></div>`;
+            + `<div class="bigq">方程式：<span class="slot ok">${toMath(sp.eqAns)}</span></div>`;
         $('hint-text').innerHTML = `${miss}　この方法との相性：${f.mark}<br><br>${f.msg}${best}`;
         opts = '<button class="opt next" onclick="nextProblem()">次の問題へ ▶</button>';
     }
@@ -1530,6 +2581,7 @@ function render() {
     $('opt-grid').className = 'opt-grid' + (one ? ' one' : '') + (S.step === 'done' ? ' done' : '');
     $('opt-grid').innerHTML = opts;
     $('switch-btn').disabled = !(S.step === 'fill' || S.step === 'eq');
+    typeset();
 }
 
 /* ==========================================================================
