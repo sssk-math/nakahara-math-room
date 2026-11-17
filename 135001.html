@@ -1898,6 +1898,15 @@ function specDeau(p) {
     };
 }
 
+/* --- 比例式用：1本の線分図（線の上に実際の数量、下に比）。parts：[上の名前, 上の空欄, 下の名前, 下の空欄, 長さ] --- */
+const bar2T = parts => '<div class="dg-row">'
+    + parts.map(q => `<div class="dg-part" style="flex:${q[4]}">${labT(q[0], q[1])}<div class="dg-bracket up"></div></div>`).join('')
+    + '</div>'
+    + `<div class="dg-line">${parts.map(q => segT(q[4])).join('')}</div>`
+    + '<div class="dg-row">'
+    + parts.map(q => `<div class="dg-part" style="flex:${q[4]}"><div class="dg-bracket down"></div>${labT(q[2], q[3])}</div>`).join('')
+    + '</div>';
+
 /* ==========================================================================
    3f. 問題生成・問題データ：比例式【固有】
    kind='mix'：混ぜる割合／kind='ratio'：比で分ける（全体を求める）／kind='recipe'：同じ割合でつくる
@@ -1972,9 +1981,7 @@ function specHirei(p) {
                 slots: slots4,
                 pool: pool4,
                 layout: s => dgT(
-                    barT([[`${A}の量`, s[0], f], [`${B}の量`, s[1], 100 - f]], 100)
-                    + '<div class="lab" style="margin:4px 3px;">↑ 上の線の割合は、下の比と等しい</div>'
-                    + barT([[`${A}の比`, s[2], f], [`${B}の比`, s[3], 100 - f]], 100)
+                    bar2T([[`${A}の量`, s[0], `${A}の比`, s[2], f], [`${B}の量`, s[1], `${B}の比`, s[3], 100 - f]])
                 )
             },
             table: {
@@ -2023,9 +2030,9 @@ function specHireiRatio(p) {
                 slots: slots4,
                 pool: pool4,
                 layout: s => dgT(
-                    barTopT('全体の数', s[1], [['兄の数', s[0], f], ['弟の数', '', 100 - f]], 100)
-                    + '<div class="lab" style="margin:4px 3px;">↑ 上の線の割合は、下の比と等しい</div>'
-                    + barTopT('全体の比', s[3], [['兄の比', s[2], f], ['弟の比', `${n}`, 100 - f]], 100)
+                    `<div class="dg-top">${labT('全体の数', s[1])}</div><div class="dg-bracket up"></div>`
+                    + bar2T([['兄の数', s[0], '兄の比', s[2], f], ['弟の数', '', '弟の比', `${n}`, 100 - f]])
+                    + `<div class="dg-top">${labT('全体の比', s[3])}</div>`
                 )
             },
             table: {
@@ -2075,17 +2082,15 @@ function specHireiRecipe(p) {
                 slots: slots4,
                 pool: pool4,
                 layout: s => dgT(
-                    barT([[`はじめの${A}`, s[0], f1], [`はじめの${B}`, s[1], 100 - f1]], 100)
-                    + '<div class="lab" style="margin:4px 3px;">↑ 上の線と下の線は、同じ割合</div>'
-                    + barT([[`必要な${A}`, s[2], f2], [`つくる${B}`, s[3], 100 - f2]], 100)
+                    bar2T([[`はじめの${A}`, s[0], `必要な${A}`, s[2], f1], [`はじめの${B}`, s[1], `つくる${B}`, s[3], 100 - f1]])
                 )
             },
             table: {
                 slots: tans.map((ans, i) => sl(ans, slots4[[0, 1, 2, 3][i]].hint)),
                 pool: mkPool(tans, [`${a}x`, `${a + b}`, `${c}x`]),
-                layout: s => tableT(['', 'はじめ', 'つくる'], [
-                    [`${A}の量（${uA}）`, s[0], s[2]],
-                    [`${B}の数（${uB}）`, s[1], s[3]]
+                layout: s => tableT(['', `${A}の量（${uA}）`, `${B}の数（${uB}）`], [
+                    ['はじめ', s[0], s[1]],
+                    ['つくる', s[2], s[3]]
                 ])
             }
         },
@@ -2125,7 +2130,16 @@ function specHireiAdd(p) {
         sl(`${n}`, `${B}の比は、問題文の「${m}：${n}」の右側だよ。`)
     ];
     const pool4 = [...new Set([...slots4.map(q => q.ans), 'x（g）', `${Q}（g）`, `${P + Q}（g）`])];
-    const tans = [`${P}`, `${Q}+x`, `${m}`, `${n}`];
+    const tans = [`${P}`, `${Q}`, 'x', `${P}`, `${Q}+x`, `${m}`, `${n}`];
+    const thints = [
+        `${A}のはじめの量は問題文に書いてあるよ。`,
+        `${B}のはじめの量は問題文に書いてあるよ。`,
+        `求めたいもの（加えた${B}の量）を x とおいたね。${B}の「加える量」の欄だよ。`,
+        `${A}は加えないので、加えたあとの量は、はじめの量と同じだよ。`,
+        slots4[1].hint,
+        slots4[2].hint,
+        slots4[3].hint
+    ];
     const f = clampT(m / (m + n), 0.35, 0.65);
     return {
         text: `${A}が${P}g、${B}が${Q}gある。${A}と${B}の重さの比が${m}：${n}になるように${B}を加えてケーキをつくる。加えた${B}の量を求めなさい。`,
@@ -2141,18 +2155,17 @@ function specHireiAdd(p) {
                 slots: slots4,
                 pool: pool4,
                 layout: s => dgT(
-                    barT([[`${A}の量`, s[0], f], [`加えたあとの${B}`, s[1], 100 - f]], 100)
-                    + '<div class="lab" style="margin:4px 3px;">↑ 上の線の割合は、下の比と等しい</div>'
-                    + barT([[`${A}の比`, s[2], f], [`${B}の比`, s[3], 100 - f]], 100)
+                    bar2T([[`${A}の量`, s[0], `${A}の比`, s[2], f], [`加えたあとの${B}`, s[1], `${B}の比`, s[3], 100 - f]])
                 )
             },
             table: {
-                slots: tans.map((ans, i) => sl(ans, slots4[i].hint)),
-                pool: mkPool(tans, ['x', `${Q}`, `${P + Q}`]),
+                slots: tans.map((ans, i) => sl(ans, thints[i])),
+                pool: mkPool(tans, [`${P + Q}`, `${Q}x`, `${P}+x`]),
                 layout: s => tableT(['', A, B], [
-                    ['はじめの量（g）', `${P}`, `${Q}`],
-                    ['加えたあとの量（g）', s[0], s[1]],
-                    ['比', s[2], s[3]]
+                    ['はじめの量（g）', s[0], s[1]],
+                    ['加える量（g）', '−', s[2]],
+                    ['加えたあとの量（g）', s[3], s[4]],
+                    ['比', s[5], s[6]]
                 ])
             }
         },
@@ -2193,7 +2206,15 @@ function specHireiGive(p) {
         sl(`${n}`, `${P2}の比は、問題文の「${m}：${n}」の右側だよ。`)
     ];
     const pool4 = [...new Set([...slots4.map(q => q.ans), `x（${u}）`, `${a}（${u}）`, `${a}x（${u}）`])];
-    const tans = [`${a}-x`, `${a}+x`, `${m}`, `${n}`];
+    const tans = [`${a}`, `${a}`, `${a}-x`, `${a}+x`, `${m}`, `${n}`];
+    const thints = [
+        `${P1}のもとの数は問題文に書いてあるよ。`,
+        `${P2}のもとの数は問題文に書いてあるよ。`,
+        slots4[0].hint,
+        slots4[1].hint,
+        slots4[2].hint,
+        slots4[3].hint
+    ];
     const f = clampT(m / (m + n), 0.35, 0.65);
     return {
         text: `${P1}と${P2}が、${A}を${a}${u}ずつ持っている。${P1}が${P2}に何${u}かあげたら、${P1}と${P2}の持っている${A}の数の比は${m}：${n}になった。${P1}が${P2}にあげた${A}の数を求めなさい。`,
@@ -2209,18 +2230,16 @@ function specHireiGive(p) {
                 slots: slots4,
                 pool: pool4,
                 layout: s => dgT(
-                    barT([[`${P1}のあとの数`, s[0], f], [`${P2}のあとの数`, s[1], 100 - f]], 100)
-                    + '<div class="lab" style="margin:4px 3px;">↑ 上の線の割合は、下の比と等しい</div>'
-                    + barT([[`${P1}の比`, s[2], f], [`${P2}の比`, s[3], 100 - f]], 100)
+                    bar2T([[`${P1}のあとの数`, s[0], `${P1}の比`, s[2], f], [`${P2}のあとの数`, s[1], `${P2}の比`, s[3], 100 - f]])
                 )
             },
             table: {
-                slots: tans.map((ans, i) => sl(ans, slots4[i].hint)),
-                pool: mkPool(tans, ['x', `${a}`, `${m + n}`]),
+                slots: tans.map((ans, i) => sl(ans, thints[i])),
+                pool: mkPool(tans, ['x', `${m + n}`, `${a}x`]),
                 layout: s => tableT(['', P1, P2], [
-                    [`もとの数（${u}）`, `${a}`, `${a}`],
-                    [`あとの数（${u}）`, s[0], s[1]],
-                    ['比', s[2], s[3]]
+                    [`もとの数（${u}）`, s[0], s[1]],
+                    [`あとの数（${u}）`, s[2], s[3]],
+                    ['比', s[4], s[5]]
                 ])
             }
         },
