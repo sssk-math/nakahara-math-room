@@ -108,6 +108,12 @@ footer {
 .menu-btn:active {
     transform: scale(0.97);
 }
+.menu-btn.resume:disabled {
+    color: #90a4ae;
+    background: #cfd8dc;
+    cursor: not-allowed;
+    transform: none;
+}
 .sub-header h1 {
     font-size: 22px;
     color: #333;
@@ -140,6 +146,28 @@ footer {
 .type-btn:disabled {
     background: #cfd8dc;
     color: #90a4ae;
+    cursor: not-allowed;
+}
+.num-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 38px);
+    gap: 5px;
+}
+.num-btn.on {
+    color: #fff;
+    background: #1a73e8;
+    cursor: pointer;
+}
+.num-btn {
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    font-size: 14px;
+    font-weight: bold;
+    color: #90a4ae;
+    background: #cfd8dc;
+    border: none;
+    border-radius: 6px;
     cursor: not-allowed;
 }
 .rec-table {
@@ -267,6 +295,10 @@ footer {
     border: 2px solid #ccc;
     border-radius: 8px;
 }
+.problem-box.long {
+    font-size: 16px;
+    line-height: 1.4;
+}
 .talk {
     padding: 8px 14px;
     font-size: 17px;
@@ -383,6 +415,17 @@ footer {
     color: #555;
     margin-bottom: 8px;
 }
+.xrow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 24px;
+    margin-bottom: 8px;
+}
+.xrow .xline,
+.xrow .mhead {
+    margin-bottom: 0;
+}
 .bigq {
     margin: 12px 0;
     font-size: 24px;
@@ -403,6 +446,10 @@ footer {
     border-color: #007bff;
     background: #f0f7ff;
     box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
+}
+.slot.pick {
+    border-style: dashed;
+    cursor: pointer;
 }
 .slot.ok {
     border-color: #81c784;
@@ -615,16 +662,30 @@ footer {
             <div class="start-sub">方程式をつくる練習</div>
         </div>
         <div class="menu">
-            <button id="btn-resume" class="menu-btn resume" style="display:none;" onclick="resumeSession()"></button>
-            <button class="menu-btn" onclick="renderTypeSelect(); showScreen('screen-types')">📚 問題選択</button>
+            <button id="btn-resume" class="menu-btn resume" onclick="resumeSession()">▶ 続きから</button>
+            <button class="menu-btn" onclick="renderKihon(); showScreen('screen-kihon')">📘 基本問題</button>
+            <button class="menu-btn" onclick="renderTypeSelect(); showScreen('screen-types')">📚 演習問題</button>
+            <button class="menu-btn" onclick="renderNyushi(); showScreen('screen-nyushi')">🎓 発展問題</button>
             <button class="menu-btn" onclick="renderKiroku(); showScreen('screen-kiroku')">🏆 記録</button>
             <button class="menu-btn" onclick="showScreen('screen-settei')">⚙️ 設定</button>
         </div>
     </div>
 
     <div id="screen-types" class="app-screen center">
-        <div class="sub-header"><h1>📚 問題選択（タイプを選ぼう）</h1></div>
+        <div class="sub-header"><h1>📚 演習問題（タイプを選ぼう）</h1></div>
         <div class="type-grid" id="type-grid"></div>
+        <button class="btn-sub" onclick="goStart()">←開始画面へ</button>
+    </div>
+
+    <div id="screen-kihon" class="app-screen center">
+        <div class="sub-header"><h1>📘 基本問題（タイプを選ぼう）</h1></div>
+        <div class="type-grid" id="kihon-grid"></div>
+        <button class="btn-sub" onclick="goStart()">←開始画面へ</button>
+    </div>
+
+    <div id="screen-nyushi" class="app-screen center" style="gap:12px;">
+        <div class="sub-header"><h1>🎓 発展問題</h1></div>
+        <div class="num-grid" id="nyushi-grid"></div>
         <button class="btn-sub" onclick="goStart()">←開始画面へ</button>
     </div>
 
@@ -712,7 +773,7 @@ const TYPES = [
     {id: 'daikin',   name: '個数と代金',       ready: true},
     {id: 'awasete',  name: '合わせて〇個',     ready: false},
     {id: 'kafusoku', name: '過不足',           ready: true},
-    {id: 'nenrei',   name: '年齢',             ready: false},
+    {id: 'nenrei',   name: '年齢',             ready: true},
     {id: 'heikin',   name: '平均',             ready: false},
     {id: 'wariai',   name: '割合',             ready: false},
     {id: 'noudo',    name: '食塩水・濃度',     ready: false},
@@ -728,6 +789,7 @@ const TALK = {
     var:    '① 求めたいものを文字 x でおこう。何を x とおく？',
     method: '② 整理の方法を選ぼう。やりにくければ途中で変えてもOK！',
     fill:   '③ 選んだ方法で整理しよう。空欄にあてはまるものをタップ！',
+    fillSel: '③ 選んだ方法で整理しよう。空欄をタップして選び、あてはまるものをタップ！',
     eq:     '④ 整理をもとに、方程式をつくろう。',
     done:   '🎉 立式できたね！'
 };
@@ -2264,6 +2326,403 @@ function specHireiGive(p) {
     };
 }
 /* ==========================================================================
+   3h. 問題生成・問題データ：年齢【固有】
+   kind='now'：父が子の○倍になるのは何年後か／kind='ratio'：倍の関係が変わる（現在の子の年齢）
+   kind='diff'：年の差がわかっている（現在の子の年齢）／kind='sum'：父が2人の子の年齢の和の○倍になるのは何年後か
+   どれも「父の○年後の年齢 ＝ ○倍 ×（子の○年後の年齢）」の形になる
+   ========================================================================== */
+function genNenrei(kind) {
+    if (kind === 'ratio') return genNenreiRatio();
+    if (kind === 'diff') return genNenreiDiff();
+    if (kind === 'sum') return genNenreiSum();
+    let C, x, k, F;
+    do {
+        C = randInt(8, 16);
+        x = randInt(3, 20);
+        k = randInt(2, 3);
+        F = k * (C + x) - x;
+    } while (F > 62);
+    return {kind: 'now', F, C, k, x};
+}
+
+function genNenreiRatio() {
+    let k1, k2, x, n;
+    do {
+        k1 = randInt(3, 5);
+        k2 = randInt(2, k1 - 1);
+        x = randInt(8, 20);
+        n = x * (k1 - k2) / (k2 - 1);
+    } while (!Number.isInteger(n) || n < 3 || n > 25 || k1 * x > 60);
+    return {kind: 'ratio', k1, k2, x, n};
+}
+
+function genNenreiDiff() {
+    let k, x, n, d;
+    do {
+        k = randInt(2, 4);
+        x = randInt(6, 16);
+        n = randInt(2, 10);
+        d = (k - 1) * (x + n);
+    } while (d < 10 || d > 40);
+    return {kind: 'diff', k, x, n, d};
+}
+
+function genNenreiSum() {
+    let C1, C2, k, x, F;
+    do {
+        C1 = randInt(6, 12);
+        C2 = randInt(2, C1 - 1);
+        k = randInt(2, 3);
+        x = randInt(3, 12);
+        F = k * (C1 + C2) + (2 * k - 1) * x;
+    } while (F > 65);
+    return {kind: 'sum', C1, C2, k, x, F};
+}
+
+/* --- 問題ごとの文言・数量・ヒント --- */
+function ageParams(p) {
+    if (p.kind === 'ratio') {
+        const {k1, k2, n} = p;
+        return {
+            text: `現在父の年齢はA君の年齢のちょうど${k1}倍です。${n}年後に父の年齢はA君の年齢のちょうど${k2}倍になります。現在のA君の年齢を求めなさい。`,
+            varAns: '現在のA君の年齢',
+            varWrong: ['現在の父の年齢', `${n}年後のA君の年齢`, `${n}年後の父の年齢`],
+            Fh: '父', Ch: 'A君', Fl: '父の年齢', Cl: 'A君の年齢', when: `${n}年後`, k: k2,
+            F0: `${k1}x`, C0: 'x', iF: `${n}`, iC: `${n}`, aF: `${k1}x+${n}`, aC: `x+${n}`,
+            ex: [`${k1}x-${n}`, `x-${n}`, `${k1}(x+${n})`],
+            h: [
+                `現在の父の年齢は「A君の年齢の${k1}倍」。A君の現在の年齢を x 歳とおいたね。`,
+                '求めたいもの（現在のA君の年齢）を x 歳とおいたね。',
+                `${n}年間で、父の年齢は何歳増える？`,
+                `A君の年齢も、同じ${n}年間で増えるよ。`,
+                `${n}年後の父の年齢は「現在の年齢＋増える年齢」だよ。`,
+                `${n}年後のA君の年齢は「現在の年齢＋増える年齢」だよ。`
+            ],
+            eqAns: `${k1}x+${n}=${k2}(x+${n})`,
+            eqWrong: [`${k1}x+${n}=${k2}x+${n}`, `${k1}x=${k2}(x+${n})`, `${k1}x+${n}=${k2}(x-${n})`]
+        };
+    }
+    if (p.kind === 'diff') {
+        const {k, n, d} = p;
+        return {
+            text: `父はA君より${d}歳年上です。${n}年後には父はA君の年齢のちょうど${k}倍になります。現在A君は何歳か求めなさい。`,
+            varAns: '現在のA君の年齢',
+            varWrong: ['現在の父の年齢', `${n}年後のA君の年齢`, `${n}年後の父の年齢`],
+            Fh: '父', Ch: 'A君', Fl: '父の年齢', Cl: 'A君の年齢', when: `${n}年後`, k: k,
+            F0: `x+${d}`, C0: 'x', iF: `${n}`, iC: `${n}`, aF: `x+${d + n}`, aC: `x+${n}`,
+            ex: [`x-${d}`, `x+${d - n}`, `x-${n}`],
+            h: [
+                `父はA君より${d}歳年上。A君の現在の年齢を x 歳とおいたので、父の現在の年齢は？`,
+                '求めたいもの（現在のA君の年齢）を x 歳とおいたね。',
+                `${n}年間で、父の年齢は何歳増える？`,
+                `A君の年齢も、同じ${n}年間で増えるよ。`,
+                `${n}年後の父の年齢は「現在の年齢＋増える年齢」。計算できる数は計算した数を選ぼう。`,
+                `${n}年後のA君の年齢は「現在の年齢＋増える年齢」だよ。`
+            ],
+            eqAns: `x+${d + n}=${k}(x+${n})`,
+            eqWrong: [`x+${d + n}=${k}x+${n}`, `x+${d}=${k}(x+${n})`, `x+${d + n}=${k}(x-${n})`]
+        };
+    }
+    if (p.kind === 'sum') {
+        const {C1, C2, k, F} = p;
+        return {
+            text: `現在、父の年齢は${F}歳、2人の子供の年齢は${C1}歳と${C2}歳である。父の年齢が2人の子供の年齢の和の${k}倍になるのは何年後か求めなさい。`,
+            varAns: '何年後か',
+            varWrong: ['現在の2人の子供の年齢の和', 'x年後の父の年齢', 'x年後の2人の子供の年齢の和'],
+            Fl: '父の年齢', Cl: '下の子の年齢と上の子の年齢の和', when: 'x年後', k: k,
+            aF: `${F}+x`, aC: `${C2}+x+${C1}+x`,
+            eqAns: `${F}+x=${k}(${C2}+x+${C1}+x)`,
+            eqWrong: [`${F}+x=${k}(${C2}+x+${C1})`, `${F}+x=${k}(${C2}+x)+${C1}+x`, `${F}+x=${C2}+x+${C1}+x`]
+        };
+    }
+    const {F, C, k} = p;
+    return {
+        text: `現在、父親の年齢は${F}歳で、子どもの年齢は${C}歳です。父親の年齢が子どもの年齢の${k}倍になるのは、何年後か求めなさい。`,
+        varAns: '何年後か',
+        varWrong: ['現在の子どもの年齢', 'x年後の父親の年齢', 'x年後の子どもの年齢'],
+        Fh: '父親', Ch: '子ども', Fl: '父親の年齢', Cl: '子どもの年齢', when: 'x年後', k: k,
+        F0: `${F}`, C0: `${C}`, iF: 'x', iC: 'x', aF: `${F}+x`, aC: `${C}+x`,
+        ex: [`${F}-x`, `${C}-x`, `${F + C}`],
+        h: [
+            '現在の父親の年齢は問題文に書いてあるよ。',
+            '現在の子どもの年齢は問題文に書いてあるよ。',
+            '求めたいもの（何年後か）を x 年とおいたね。x年間で父親の年齢は何歳増える？',
+            '子どもの年齢も、同じ x 年間で増えるよ。',
+            'x年後の父親の年齢は「現在の年齢＋増える年齢」だよ。',
+            'x年後の子どもの年齢は「現在の年齢＋増える年齢」だよ。'
+        ],
+        eqAns: `${F}+x=${k}(${C}+x)`,
+        eqWrong: [`${F}+x=${k}\\times ${C}+x`, `${F}+x=${C}+${k}x`, `${F}=${k}(${C}+x)`]
+    };
+}
+
+/* --- 2人の子の和の問題：2人の子を「下の子」「上の子」に分けて、年齢順（下の子→上の子→父）に整理する --- */
+function specNenreiSum(p) {
+    const A = ageParams(p);
+    const {C1, C2, F, k} = p;
+    const U = s => `${s}（歳）`;
+    const nF = 'x年後の父の年齢';
+    const nL = 'x年後の下の子の年齢';
+    const nU = 'x年後の上の子の年齢';
+    const hF = 'x年後の父の年齢は「現在の年齢＋増える年齢」だよ。';
+    const hL = `x年後の下の子（現在${C2}歳）の年齢は「現在の年齢＋増える年齢」だよ。`;
+    const hU = `x年後の上の子（現在${C1}歳）の年齢は「現在の年齢＋増える年齢」だよ。`;
+    const hF0 = '現在の父の年齢は問題文に書いてあるよ。';
+    const hL0 = `現在の下の子の年齢は${C2}歳だよ。`;
+    const hU0 = `現在の上の子の年齢は${C1}歳だよ。`;
+    const hFi = '求めたいもの（何年後か）を x 年とおいたね。x年間で父の年齢は何歳増える？';
+    const hLi = '下の子の年齢も、同じ x 年間で増えるよ。';
+    const hUi = '上の子の年齢も、同じ x 年間で増えるよ。';
+
+    /* --- 言葉の式 --- */
+    const wAns = [U(`${F}+x`), U(`${C2}+x`), U(`${C1}+x`)];
+    const wSlots = [sl(wAns[0], hF), sl(wAns[1], hL), sl(wAns[2], hU)];
+    const wPool = mkPool(wAns, [U(`${F}`), U(`${C2}`), U(`${C1}`), U(`${F}-x`)]);
+
+    /* --- 線分図（上の線：父、下の2本の線：下の子と上の子。上の線は下の2本の和の k 倍） --- */
+    const dAns = [U(`${F}`), U('x'), U(`${C2}`), U('x'), U(`${C1}`), U('x')];
+    const dSlots = [sl(dAns[0], hF0), sl(dAns[1], hFi), sl(dAns[2], hL0), sl(dAns[3], hLi), sl(dAns[4], hU0), sl(dAns[5], hUi)];
+    const dPool = mkPool(dAns, [U(`${F}+x`), U(`${C2}+x`), U(`${F}-x`)]);
+
+    /* --- 表（左から下の子→上の子→父の順。下の子の欄から埋める） --- */
+    const tans = [`${C2}`, `${C1}`, `${F}`, 'x', 'x', 'x', `${C2}+x`, `${C1}+x`, `${F}+x`];
+    const thints = [hL0, hU0, hF0, hLi, hUi, hFi, hL, hU, hF];
+
+    return {
+        text: A.text,
+        varAns: A.varAns,
+        varWrong: A.varWrong,
+        fill: {
+            words: {
+                slots: wSlots,
+                pool: wPool,
+                layout: s => wordsT([
+                    labT(nF, s[0]),
+                    opT('＝'),
+                    opT(`${k}`),
+                    opT('×'),
+                    opT('('),
+                    labT(nL, s[1]),
+                    opT('＋'),
+                    labT(nU, s[2]),
+                    opT(')')
+                ])
+            },
+            diagram: {
+                slots: dSlots,
+                pool: dPool,
+                layout: s => dgI(
+                    barTopT(nF, '', [['現在', s[0], 62], ['増える分', s[1], 38]], 100)
+                    + `<div class="lab" style="margin:6px 3px;">↑ 上の線は、下の2本の線（下の子と上の子のx年後の年齢）の和の${k}倍の長さ</div>`
+                    + '<div style="display:flex; gap:14px;">'
+                    + `<div class="stack" style="flex:1;">${barTopT(nL, '', [['現在', s[2], 50], ['増える分', s[3], 50]], 100)}</div>`
+                    + `<div class="stack" style="flex:1;">${barTopT(nU, '', [['現在', s[4], 50], ['増える分', s[5], 50]], 100)}</div>`
+                    + '</div>'
+                )
+            },
+            table: {
+                slots: tans.map((ans, i) => sl(ans, thints[i])),
+                pool: mkPool(tans, [`${F}-x`, `${C1}-x`, `${C1 + C2}`]),
+                layout: s => tableT(['', '下の子', '上の子', '父'], [
+                    ['現在の年齢（歳）', s[0], s[1], s[2]],
+                    ['増える年齢（歳）', s[3], s[4], s[5]],
+                    ['x年後の年齢（歳）', s[6], s[7], s[8]]
+                ])
+            }
+        },
+        eqAns: A.eqAns,
+        eqWrong: A.eqWrong,
+        eqHint: `「${nF} ＝ ${k}倍 ×（${nL} ＋ ${nU}）」を式にしよう。x年後の年齢は「現在の年齢＋増える年齢」。下の子と上の子をそれぞれ書いてから足すよ。`,
+        best: 'table',
+        fit: {
+            words:   {mark: '○', msg: `言葉の式は「${nF} ＝ ${k}倍 ×（下の子 ＋ 上の子）」と書けるけれど、3人分の「現在」と「x年後」が混ざりやすいかも。`},
+            diagram: {mark: '△', msg: '線分図は、父・下の子・上の子の3本の線に書き込むことが多くて、少し使いづらかったかも。'},
+            table:   {mark: '◎', msg: '表は下の子・上の子・父を年齢順に横に並べて、「現在」「増える年齢」「あとの年齢」を縦に整理できるので、年齢の変化が見えやすい！'}
+        }
+    };
+}
+
+function specNenrei(p) {
+    if (p.kind === 'sum') return specNenreiSum(p);
+    const A = ageParams(p);
+    const {Fh, Ch, Fl, Cl, when, k, F0, C0, iF, iC, aF, aC, ex, h} = A;
+    const U = s => `${s}（歳）`;
+
+    /* --- 言葉の式 --- */
+    const wSlots = [sl(U(aF), h[4]), sl(U(aC), h[5])];
+    const wPool = [...new Set([U(aF), U(aC), U(F0), U(C0), U(ex[0]), U(ex[1])])];
+
+    /* --- 線分図（上の線：父、下の線：子。上の線は下の線の k 倍） --- */
+    const dAns = [U(F0), U(iF), U(C0), U(iC)];
+    const dSlots = [sl(dAns[0], h[0]), sl(dAns[1], h[2]), sl(dAns[2], h[1]), sl(dAns[3], h[3])];
+    const dPool = mkPool(dAns, [U(aF), U(aC), U(ex[0])]);
+    const w2 = (k === 2) ? 55 : 45;
+
+    /* --- 表（左から子→父の順にして、子の欄から埋める） --- */
+    const order = [1, 0, 3, 2, 5, 4];
+    const base = [F0, C0, iF, iC, aF, aC];
+    const tans = order.map(i => base[i]);
+    const tslots = order.map(i => sl(base[i], h[i]));
+
+    return {
+        text: A.text,
+        varAns: A.varAns,
+        varWrong: A.varWrong,
+        fill: {
+            words: {
+                slots: wSlots,
+                pool: wPool,
+                layout: s => wordsT([
+                    labT(`${when}の${Fl}`, s[0]),
+                    opT('＝'),
+                    opT(`${k}`),
+                    opT('×'),
+                    opT('('),
+                    labT(`${when}の${Cl}`, s[1]),
+                    opT(')')
+                ])
+            },
+            diagram: {
+                slots: dSlots,
+                pool: dPool,
+                layout: s => dgI(
+                    barTopT(`${when}の${Fl}`, '', [['現在', s[0], 62], ['増える分', s[1], 38]], 100)
+                    + `<div class="lab" style="margin:6px 3px;">↑ 上の線は、下の線（${when}の${Cl}）の${k}倍の長さ</div>`
+                    + barTopT(`${when}の${Cl}`, '', [['現在', s[2], 55], ['増える分', s[3], 45]], w2)
+                )
+            },
+            table: {
+                slots: tslots,
+                pool: mkPool(tans, ex),
+                layout: s => tableT(['', Ch, Fh], [
+                    ['現在の年齢（歳）', s[0], s[1]],
+                    ['増える年齢（歳）', s[2], s[3]],
+                    [`${when}の年齢（歳）`, s[4], s[5]]
+                ])
+            }
+        },
+        eqAns: A.eqAns,
+        eqWrong: A.eqWrong,
+        eqHint: `「${when}の${Fl} ＝ ${k}倍 ×（${when}の${Cl}）」を式にしよう。${when}の年齢は「現在の年齢＋増える年齢」。計算できる数は計算した数にしてね。`,
+        best: 'table',
+        fit: {
+            words:   {mark: '○', msg: `言葉の式は「${when}の${Fl} ＝ ${k}倍 ×（${when}の${Cl}）」と書けるけれど、「現在」と「${when}」の年齢が混ざりやすいかも。`},
+            diagram: {mark: '△', msg: '線分図は「現在の年齢＋増える年齢」は見やすいけれど、父と子の2本の線に書き込むことが多くて、少し使いづらかったかも。'},
+            table:   {mark: '◎', msg: '表は「現在の年齢」「増える年齢」「あとの年齢」を縦に整理できるので、年齢の変化が見えやすい！'}
+        }
+    };
+}
+
+/* ==========================================================================
+   3i. 発展問題（固定問題）【固有】
+   数値は変えない。「発展問題」画面の1〜100のボタンから開く
+   ========================================================================== */
+const HATTEN = {
+    hatten1: {name: '発展問題1', num: 1}
+};
+
+function typeName(id) {
+    const t = TYPES.find(x => x.id === id);
+    if (t) return t.name;
+    return HATTEN[id] ? HATTEN[id].name : '';
+}
+
+/* ---------- 発展問題1：自転車がパンクして歩く（自転車で進んだ道のりを求める） ---------- */
+function genHatten1() {
+    return {kind: 'fixed'};
+}
+
+function specHatten1(p) {
+    const T = t => `${t}（時間）`;
+    const fBike = fracT('x', 15);
+    const fStop = fracT(20, 60);
+    const fWalk = fracT('4-x', 3);
+    const fAll = fracT(44, 60);
+    const names = ['自転車の時間', '停止した時間', '歩いた時間', '全体の時間'];
+
+    /* --- 言葉の式・線分図（時間の和＝全体の時間） --- */
+    const slots4 = [
+        sl(T(fBike), '自転車で進んだ時間は「道のり÷速さ」。自転車で進んだ道のりを x km とおいたね。速さは時速15kmだよ。'),
+        sl(T(fStop), '停止していた時間は20分。単位を「時間」にそろえよう。1時間＝60分だから、20÷60 を分数で表そう（約分しなくてOK）。'),
+        sl(T(fWalk), '歩いた道のりは、全体の4kmから x km をひいた残り。歩く速さは分速50m ＝ 時速3km。時間＝道のり÷速さ だよ。'),
+        sl(T(fAll), '出発の10時30分から到着の11時14分まで、全部で44分。単位を「時間」にそろえよう。1時間＝60分だから、44÷60 を分数で表そう（約分しなくてOK）。')
+    ];
+    const pool4 = [...new Set([
+        ...slots4.map(q => q.ans),
+        T(fracT(15, 'x')),
+        T(fracT('x', 3)),
+        T(fracT('4-x', 50)),
+        T('20'),
+        T('44')
+    ])];
+
+    /* --- 表（道のり・速さ・時間） --- */
+    const tans = ['x', '4-x', '4', '15', '3', fBike, fStop, fWalk, fAll];
+    const thints = [
+        '求めたいもの（自転車で進んだ道のり）を x km とおいたね。自転車の道のりの欄だよ。',
+        '歩いた道のりは、全体の4kmから自転車で進んだ x km をひいた残りだよ。',
+        '自宅から公園までの道のりは問題文に書いてあるよ。',
+        '自転車の速さは時速15kmだよ。',
+        '歩く速さは分速50m。1時間（60分）では何m進む？ kmに直そう。',
+        '時間＝道のり÷速さ。自転車で進んだ道のり x km を、時速15kmで割るよ。',
+        '停止していた20分は、何時間かな？ 1時間＝60分だから、20÷60 を分数で表そう（約分しなくてOK）。',
+        '歩いた時間も「道のり÷速さ」。歩いた道のり(4−x)km を、時速3kmで割るよ。',
+        '出発の10時30分から到着の11時14分までは44分。何時間かな？ 1時間＝60分だから、44÷60 を分数で表そう（約分しなくてOK）。'
+    ];
+
+    return {
+        text: 'Aさんは自宅から4km離れた公園へ自転車で行くことにした。午前10時30分に自宅から自転車に乗って時速15kmの速さで出発した。しばらく走っていたが、タイヤがパンクしたため停止し、修理を試みたが直らなかったので、停止してから20分後、分速50mの速さで自転車を押しながら歩き出した。公園に到着したのが午前11時14分のとき、自転車で進んだ距離は何kmか求めなさい。',
+        long: true,
+        varAns: '自転車で進んだ道のり',
+        varWrong: ['歩いた道のり', '自宅から公園までの道のり', '自転車で進んだ時間'],
+        fill: {
+            words: {
+                slots: slots4,
+                pool: pool4,
+                layout: s => wordsT([
+                    labT(names[0], s[0]),
+                    opT('＋'),
+                    labT(names[1], s[1]),
+                    opT('＋'),
+                    labT(names[2], s[2]),
+                    opT('＝'),
+                    labT(names[3], s[3])
+                ])
+            },
+            diagram: {
+                slots: slots4,
+                pool: pool4,
+                layout: s => dgT(
+                    barTopT(names[3], s[3], [[names[0], s[0], 34], [names[1], s[1], 30], [names[2], s[2], 36]], 100)
+                )
+            },
+            table: {
+                slots: tans.map((ans, i) => sl(ans, thints[i])),
+                pool: mkPool(tans, ['50', '20', '44', fracT('4-x', 50), fracT('x', 3)]),
+                layout: s => tableT(['', '自転車', '停止', '歩き', '全体'], [
+                    ['道のり（km）', s[0], '', s[1], s[2]],
+                    ['速さ（km/時）', s[3], '', s[4], ''],
+                    ['時間（時間）', s[5], s[6], s[7], s[8]]
+                ])
+            }
+        },
+        eqAns: `${fBike}+${fStop}+${fWalk}=${fAll}`,
+        eqWrong: [
+            `${fBike}+${fWalk}=${fAll}`,
+            `${fBike}+20+${fWalk}=44`,
+            `15x+${fStop}+3(4-x)=${fAll}`
+        ],
+        eqHint: '「自転車の時間＋停止した時間＋歩いた時間＝全体の時間」を式にしよう。時間の単位を「時間」にそろえて、時間＝道のり÷速さ で表すよ。',
+        best: 'table',
+        fit: {
+            words:   {mark: '○', msg: '言葉の式は「自転車の時間＋停止した時間＋歩いた時間＝全体の時間」と書けるけれど、分を時間に、mをkmに直す変換を一度にやることになって、少し大変かも。'},
+            diagram: {mark: '○', msg: '線分図は「全体の時間＝部分の和」が見やすいけれど、道のりと速さから時間を求める計算までは、表のほうが整理しやすいよ。'},
+            table:   {mark: '◎', msg: '表は「道のり・速さ・時間」と単位を縦横に整理できるので、分を時間に、mをkmに直すところまで見えやすい！'}
+        }
+    };
+}
+
+/* ==========================================================================
    3g. 方法ごとの方程式の形【固有】
    言葉の式…各 spec の eqAns（言葉の式のとおり）
    線分図  …「全体＝部分の和」の形
@@ -2395,11 +2854,23 @@ function eqFormHirei(p) {
     return {};
 }
 
-const EQ_FORMS = {otsuri: eqFormOtsuri, daikin: eqFormDaikin, kafusoku: eqFormKafusoku, hayasa: eqFormHayasa, hirei: eqFormHirei};
+/* 年齢の表は「子→父」の順に並ぶので、方程式も表の順（左が子、右が父）にそろえる */
+function eqFormNenrei(p) {
+    const A = ageParams(p);
+    const {Fl, Cl, when, k, aF, aC} = A;
+    const swapSides = e => e.split('=').reverse().join('=');
+    return {
+        table: eqf(`${k}(${aC})=${aF}`,
+            A.eqWrong.map(swapSides),
+            `表の「${when}の年齢」の欄を、左（${Cl}）から順に読もう。「${when}の${Cl}の${k}倍 ＝ ${when}の${Fl}」を式にしよう。`)
+    };
+}
+
+const EQ_FORMS = {otsuri: eqFormOtsuri, daikin: eqFormDaikin, kafusoku: eqFormKafusoku, hayasa: eqFormHayasa, hirei: eqFormHirei, nenrei: eqFormNenrei};
 
 const GENS  = {
-daikin: genDaikin, otsuri: genOtsuri, kafusoku: genKafusoku, hayasa: genHayasa, hirei: genHirei};
-const SPECS = {daikin: specDaikin, otsuri: specOtsuri, kafusoku: specKafusoku, hayasa: specHayasa, hirei: specHirei};
+daikin: genDaikin, otsuri: genOtsuri, kafusoku: genKafusoku, hayasa: genHayasa, hirei: genHirei, nenrei: genNenrei, hatten1: genHatten1};
+const SPECS = {daikin: specDaikin, otsuri: specOtsuri, kafusoku: specKafusoku, hayasa: specHayasa, hirei: specHirei, nenrei: specNenrei, hatten1: specHatten1};
 
 /* ==========================================================================
    4. 画面・保存・記録【共通】
@@ -2452,11 +2923,11 @@ function renderStart() {
     const saved = loadSession();
     const btn = $('btn-resume');
     if (saved) {
-        const t = TYPES.find(x => x.id === saved.typeId);
-        btn.textContent = `▶ 続きから（${t.name}）`;
-        btn.style.display = 'block';
+        btn.textContent = `▶ 続きから（${typeName(saved.typeId)}）`;
+        btn.disabled = false;
     } else {
-        btn.style.display = 'none';
+        btn.textContent = '▶ 続きから';
+        btn.disabled = true;
     }
 }
 
@@ -2464,6 +2935,30 @@ function renderTypeSelect() {
     $('type-grid').innerHTML = TYPES.map(t =>
         `<button class="type-btn" ${t.ready ? `onclick="openType('${t.id}')"` : 'disabled'}>${t.name}${t.ready ? '' : '（準備中）'}</button>`
     ).join('');
+}
+
+/* --- 基本問題：タイプ一覧と同じ並び。いまはすべて準備中 --- */
+function renderKihon() {
+    $('kihon-grid').innerHTML = TYPES.map(t =>
+        `<button class="type-btn" disabled>${t.name}（準備中）</button>`
+    ).join('');
+}
+
+/* --- 発展問題：1〜100のボタン（問題があるものだけ押せる） --- */
+function renderNyushi() {
+    let html = '';
+    for (let i = 1; i <= 100; i++) {
+        const id = Object.keys(HATTEN).find(k => HATTEN[k].num === i);
+        html += id
+            ? `<button class="num-btn on" onclick="openType('${id}')">${i}</button>`
+            : `<button class="num-btn" disabled>${i}</button>`;
+    }
+    $('nyushi-grid').innerHTML = html;
+}
+
+function backNyushi() {
+    renderNyushi();
+    showScreen('screen-nyushi');
 }
 
 function renderKiroku() {
@@ -2517,7 +3012,9 @@ const PATTERNS = {
     daikin:   ['basic', 'bai', 'zan'],
     kafusoku: ['haifu', 'seki', 'kai'],
     hayasa:   ['dist', 'time', 'oikake', 'chigai', 'deau'],
-    hirei:    ['mix', 'ratio', 'recipe', 'add', 'give']
+    hirei:    ['mix', 'ratio', 'recipe', 'add', 'give'],
+    nenrei:   ['now', 'ratio', 'diff', 'sum'],
+    hatten1:  ['fixed']
 };
 
 function pickPattern(typeId) {
@@ -2536,7 +3033,7 @@ function pickPattern(typeId) {
 }
 
 function newSession(typeId) {
-    return {typeId: typeId, p: GENS[typeId](pickPattern(typeId)), step: 'var', method: null, filled: 0, miss: 0};
+    return {typeId: typeId, p: GENS[typeId](pickPattern(typeId)), step: 'var', method: null, fills: null, sel: 0, miss: 0};
 }
 
 function buildSpec() {
@@ -2564,6 +3061,11 @@ function resumeSession() {
 
 function startExercise() {
     hintMsg = '';
+    if (S.step === 'fill' && !Array.isArray(S.fills)) {
+        const n = S.filled || 0;
+        S.fills = buildSpec().fill[S.method].slots.map((q, i) => i < n);
+        S.sel = n;
+    }
     enterStep();
     saveSession();
     showScreen('screen-exercise');
@@ -2584,18 +3086,32 @@ function enterStep() {
 function visibleOpts() {
     if (S.step !== 'fill') return curOpts;
     const rest = curOpts.slice();
-    buildSpec().fill[S.method].slots.slice(0, S.filled).forEach(sl => {
-        const i = rest.indexOf(sl.ans);
+    buildSpec().fill[S.method].slots.forEach((q, k) => {
+        if (!S.fills[k]) return;
+        const i = rest.indexOf(q.ans);
         if (i >= 0) rest.splice(i, 1);
     });
     return rest;
 }
 
+/* --- 整理エリアの空欄をタップして、入力する空欄を選ぶ --- */
+function selectSlot(i) {
+    if (!HATTEN[S.typeId] || S.step !== 'fill' || S.fills[i]) return;
+    S.sel = i;
+    wrongOpts = [];
+    hintMsg = 'この空欄にあてはまるものを選ぼう。';
+    saveSession();
+    render();
+}
+
 function pickMethod(m) {
     S.method = m;
-    S.filled = 0;
+    S.fills = buildSpec().fill[m].slots.map(() => false);
+    S.sel = 0;
     S.step = 'fill';
-    hintMsg = '光っている空欄から順に埋めていこう。';
+    hintMsg = HATTEN[S.typeId]
+        ? '光っている空欄に入るものを選ぼう。ほかの空欄をタップして、先に入れることもできるよ。'
+        : '光っている空欄から順に埋めていこう。';
     enterStep();
     saveSession();
     render();
@@ -2604,7 +3120,8 @@ function pickMethod(m) {
 function switchMethod() {
     S.step = 'method';
     S.method = null;
-    S.filled = 0;
+    S.fills = null;
+    S.sel = 0;
     hintMsg = '別の方法で整理し直してみよう。やりにくいと感じたことが大事なヒントだよ。';
     enterStep();
     saveSession();
@@ -2627,15 +3144,18 @@ function choose(i) {
         answer(opt === sp.varAns, '今回求めたいものは何かな？問題文の最後の一文を読み直そう。', () => { S.step = 'method'; });
     } else if (S.step === 'fill') {
         const spec = sp.fill[S.method];
-        const slot = spec.slots[S.filled];
+        const slot = spec.slots[S.sel];
         answer(opt === slot.ans, slot.hint, () => {
-            S.filled++;
-            if (S.filled === spec.slots.length) S.step = 'eq';
+            S.fills[S.sel] = true;
+            const next = spec.slots.findIndex((q, k) => !S.fills[k] && k > S.sel);
+            const first = S.fills.indexOf(false);
+            if (first < 0) S.step = 'eq';
+            else S.sel = (next >= 0) ? next : first;
         });
     } else if (S.step === 'eq') {
         answer(opt === sp.eqAns, sp.eqHint, () => {
             S.step = 'done';
-            const rec = R.types[S.typeId];
+            const rec = R.types[S.typeId] || (R.types[S.typeId] = {count: 0, nomiss: 0, words: 0, diagram: 0, table: 0});
             rec.count++;
             rec[S.method]++;
             if (S.miss === 0) rec.nomiss++;
@@ -2664,13 +3184,17 @@ function answer(ok, hint, onOk) {
 /* ==========================================================================
    6. 描画【共通】
    ========================================================================== */
-function slotHtml(sp, filled) {
+function slotHtml(sp, allDone) {
     /* 言葉の式では、選択肢についている（円）（時間）（km）などの単位を外して表示する */
     const shown = ans => (S.method === 'words') ? ans.replace(/（[^（）]*）$/, '') : ans;
     return sp.fill[S.method].slots.map((s, i) =>
-        i < filled
+        (allDone || S.fills[i])
             ? `<span class="slot ok">${toMath(shown(s.ans))}</span>`
-            : `<span class="slot${i === filled ? ' act' : ''}">？</span>`
+            : (i === S.sel)
+                ? '<span class="slot act">？</span>'
+                : (HATTEN[S.typeId]
+                    ? `<span class="slot pick" onclick="selectSlot(${i})">？</span>`
+                    : '<span class="slot">？</span>')
     );
 }
 
@@ -2706,14 +3230,16 @@ function eqWord() {
 
 function render() {
     const sp = buildSpec();
-    const type = TYPES.find(t => t.id === S.typeId);
-    $('ex-title').textContent = `一次方程式の利用（${type.name}）`;
+    $('ex-title').textContent = `一次方程式の利用（${typeName(S.typeId)}）`;
+    $('problem-box').className = 'problem-box' + (sp.long ? ' long' : '');
     $('problem-box').textContent = sp.text;
-    $('talk').textContent = TALK[S.step].replace('方程式', eqWord());
+    const talk = (S.step === 'fill' && HATTEN[S.typeId]) ? TALK.fillSel : TALK[S.step];
+    $('talk').textContent = talk.replace('方程式', eqWord());
     $('hint-text').innerHTML = hintMsg;
 
     const xline = (S.step === 'var') ? '' : `<div class="xline">${sp.varAns}をxとおく</div>`;
     const mhead = S.method ? `<div class="mhead">整理方法：${METHODS[S.method].icon} ${METHODS[S.method].label}</div>` : '';
+    const head = (xline || mhead) ? `<div class="xrow">${xline}${mhead}</div>` : '';
     let work = '';
     let optTitle = '';
     let opts = '';
@@ -2725,28 +3251,28 @@ function render() {
         opts = optButtons(visibleOpts());
         one = true;
     } else if (S.step === 'method') {
-        work = xline + methodCards();
+        work = head + methodCards();
         optTitle = '← 整理の方法を選んでね';
     } else if (S.step === 'fill') {
-        work = xline + mhead + sp.fill[S.method].layout(slotHtml(sp, S.filled));
+        work = head + sp.fill[S.method].layout(slotHtml(sp, false));
         optTitle = 'あてはまるものを選ぼう';
         opts = optButtons(visibleOpts());
     } else if (S.step === 'eq') {
-        const n = sp.fill[S.method].slots.length;
-        work = xline + mhead + sp.fill[S.method].layout(slotHtml(sp, n))
+        work = head + sp.fill[S.method].layout(slotHtml(sp, true))
             + `<div class="bigq">${eqWord()}：<span class="slot act">？</span></div>`;
         optTitle = eqWord() + 'を選ぼう';
         opts = optButtons(visibleOpts());
         one = true;
     } else {
-        const n = sp.fill[S.method].slots.length;
         const f = sp.fit[S.method];
         const best = (S.method !== sp.best) ? `<br>この問題は「${METHODS[sp.best].label}」がいちばん整理しやすいよ。` : '';
         const miss = (S.miss === 0) ? 'ノーミス！' : `まちがい ${S.miss}回`;
-        work = xline + mhead + sp.fill[S.method].layout(slotHtml(sp, n))
+        work = head + sp.fill[S.method].layout(slotHtml(sp, true))
             + `<div class="bigq">${eqWord()}：<span class="slot ok">${toMath(sp.eqAns)}</span></div>`;
         $('hint-text').innerHTML = `${miss}　この方法との相性：${f.mark}<br><br>${f.msg}${best}`;
-        opts = '<button class="opt next" onclick="nextProblem()">次の問題へ ▶</button>';
+        opts = HATTEN[S.typeId]
+            ? '<button class="opt next" onclick="backNyushi()">発展問題にもどる ▶</button>'
+            : '<button class="opt next" onclick="nextProblem()">次の問題へ ▶</button>';
     }
 
     $('work-area').innerHTML = work;
