@@ -564,6 +564,9 @@ footer {
     white-space: nowrap;
     background: #f1f3f5;
 }
+.slot.hid {
+    visibility: hidden;
+}
 .tbl.small .slot {
     padding: 0 10px;
 }
@@ -2032,9 +2035,9 @@ function specHireiRatio(p) {
             diagram: {
                 slots: slots4,
                 pool: pool4,
-                layout: s => dgT(
+                layout: s => dgI(
                     `<div class="dg-top">${labT('全体の数', s[1])}</div><div class="dg-bracket up"></div>`
-                    + bar2T([['兄の数', s[0], '兄の比', s[2], f], ['弟の数', '', '弟の比', `${n}`, 100 - f]])
+                    + bar2T([['兄の数', s[0], '兄の比', s[2], f], ['弟の数', '<span class="slot hid">？</span>', '弟の比', `${n}`, 100 - f]])
                     + `<div class="dg-top">${labT('全体の比', s[3])}</div>`
                 )
             },
