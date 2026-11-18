@@ -2622,6 +2622,7 @@ function specNenrei(p) {
 const frH = (n, d) => `\\(\\frac{${n}}{${d}}\\)`;
 
 function genWariai(kind) {
+    if (kind === 'megane') return genWariaiMegane();
     const x = randInt(6, 30) * 20;
     if (kind === 'waribiki') {
         const w = randInt(1, 4);
@@ -2758,7 +2759,82 @@ function specWariaiBubun(p) {
     };
 }
 
+/* 割合・最後の問題：男子a%と女子b%で合わせてM人がメガネ（数値はランダム） */
+function genWariaiMegane() {
+    const rs = [10, 15, 20, 25, 30, 40, 50];
+    for (let i = 0; i < 300; i++) {
+        const a = rs[randInt(0, rs.length - 1)];
+        const b = rs[randInt(0, rs.length - 1)];
+        const x = randInt(12, 24);
+        const y = randInt(12, 24);
+        if (a === b || x === y) continue;
+        if ((a * x) % 100 !== 0 || (b * y) % 100 !== 0) continue;
+        return {kind: 'megane', x, a, b, T: x + y, M: (a * x + b * y) / 100};
+    }
+    return {kind: 'megane', x: 16, a: 25, b: 15, T: 36, M: 7};
+}
+
+function specWariaiMegane(p) {
+    const {x, a, b, T, M} = p;
+    const fr = n => fracT(n, 100);
+    const U = s => `${s}（人）`;
+    const bm = `${fr(a)}x`;
+    const gm = `${fr(b)}(${T}-x)`;
+    const hx = '求めたいもの（男子の人数）を x 人とおいたね。';
+    const hg = `男女合わせて${T}人だから、女子は「${T}−x」人だよ。`;
+    const hbm = `男子x人の${a}%だから、「x×${frH(a, 100)}」だよ。`;
+    const hgm = `女子(${T}−x)人の${b}%だから、「(${T}−x)×${frH(b, 100)}」だよ。`;
+    const hT = `男女合わせて${T}人と問題文に書いてあるよ。`;
+    const hM = `合わせて${M}人と問題文に書いてあるよ。`;
+    const ex = [`${fr(b)}x`, `${fr(a)}(${T}-x)`, `${T}`];
+    const wa = [U(bm), U(gm), U(`${M}`)];
+    const wh = [hbm, hgm, hM];
+    const da = [U(`${T}`), U('x'), U(`${T}-x`), U(`${M}`), U(bm), U(gm)];
+    const dh = [hT, hx, hg, hM, hbm, hgm];
+    const ta = [`${T}`, `${M}`, 'x', `${T}-x`, bm, gm];
+    const th = [hT, hM, hx, hg, hbm, hgm];
+    const wb = Math.min(75, Math.max(25, Math.round(x / T * 100)));
+    const wm = Math.min(75, Math.max(25, Math.round((a * x / 100) / M * 100)));
+    return {
+        text: `男女合わせて${T}人のクラスで、男子の${a}%と女子の${b}%の合わせて${M}人がメガネをかけている。クラスの男子の人数を求めなさい。`,
+        varAns: '男子の人数',
+        varWrong: ['女子の人数', 'メガネをかけている人数', 'クラス全体の人数'],
+        fill: {
+            words: {
+                slots: wa.map((q, i) => sl(q, wh[i])),
+                pool: mkPool(wa, ex.map(U)),
+                layout: s => wordsT([labT('男子のメガネ', s[0]), opT('＋'), labT('女子のメガネ', s[1]), opT('＝'), labT('メガネの人数', s[2])])
+            },
+            diagram: {
+                slots: da.map((q, i) => sl(q, dh[i])),
+                pool: mkPool(da, [...ex.map(U), U(`x-${T}`)]),
+                layout: s => dgI(barTopT('クラス全体', s[0], [['男子', s[1], wb], ['女子', s[2], 100 - wb]], 100)
+                    + '<div style="height:10px"></div>'
+                    + barTopT('メガネの人', s[3], [[`男子の${a}%`, s[4], wm], [`女子の${b}%`, s[5], 100 - wm]], 100))
+            },
+            table: {
+                slots: ta.map((q, i) => sl(q, th[i])),
+                pool: mkPool(ta, [...ex, `x-${T}`]),
+                layout: s => tableT(['', '男子', '女子', '合計'], [
+                    ['人数（人）', s[2], s[3], s[0]],
+                    ['メガネの人数（人）', s[4], s[5], s[1]]
+                ], true)
+            }
+        },
+        eqAns: `${fr(a)}x+${fr(b)}(${T}-x)=${M}`,
+        eqWrong: [`${fr(a)}x+${fr(b)}x=${M}`, `${fr(a)}(${T}-x)+${fr(b)}x=${M}`, `${fr(a)}x+${fr(b)}(${T}-x)=${T}`],
+        eqHint: `「男子のメガネ ＋ 女子のメガネ ＝ ${M}人」を式にしよう。女子は(${T}−x)人だよ。`,
+        best: 'diagram',
+        fit: {
+            words:   {mark: '○', msg: '言葉の式は「男子のメガネ＋女子のメガネ＝合計」と書けるけれど、女子の人数のつながりが見えにくいかも。'},
+            diagram: {mark: '◎', msg: '線分図は「クラス全体」と「メガネの人」を続けて見られるので、男女の関係がわかりやすい！'},
+            table: {mark: '◎', msg: '表は男子・女子ごとに人数とメガネの人数を整理できるので、あとの式づくりが楽になる！'}
+        }
+    };
+}
+
 function specWariai(p) {
+    if (p.kind === 'megane') return specWariaiMegane(p);
     if (p.kind === 'bubun') return specWariaiBubun(p);
     const D = wariaiData(p);
     const U = s => `${s}（${D.unit}）`;
@@ -3154,7 +3230,7 @@ function eqFormNenrei(p) {
 
 /* 割合の線分図は「全体＝部分の和」の形で読む（表・言葉の式は計算前の形＝eqAns） */
 function eqFormWariai(p) {
-    if (p.kind === 'bubun') return {};
+    if (p.kind === 'bubun' || p.kind === 'megane') return {};
     const D = wariaiData(p);
     const den = (p.kind === 'waribiki') ? 10 : 100;
     const num = (p.kind === 'waribiki') ? p.w : p.r;
@@ -3329,7 +3405,7 @@ const PATTERNS = {
     hayasa:   ['dist', 'time', 'oikake', 'chigai', 'deau'],
     hirei:    ['mix', 'ratio', 'recipe', 'add', 'give'],
     nenrei:   ['now', 'ratio', 'diff', 'sum'],
-    wariai:   ['bubun', 'waribiki', 'zouka', 'nokori'],
+    wariai:   ['waribiki', 'zouka', 'nokori', 'megane'],
     hatten1:  ['fixed'],
     hatten2:  ['fixed']
 };
