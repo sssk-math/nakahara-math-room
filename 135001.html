@@ -2618,7 +2618,8 @@ function specNenrei(p) {
    数値は変えない。「発展問題」画面の1〜100のボタンから開く
    ========================================================================== */
 const HATTEN = {
-    hatten1: {name: '発展問題1', num: 1}
+    hatten1: {name: '発展問題1', num: 1},
+    hatten2: {name: '発展問題2', num: 2}
 };
 
 function typeName(id) {
@@ -2718,6 +2719,94 @@ function specHatten1(p) {
             words:   {mark: '○', msg: '言葉の式は「自転車の時間＋停止した時間＋歩いた時間＝全体の時間」と書けるけれど、分を時間に、mをkmに直す変換を一度にやることになって、少し大変かも。'},
             diagram: {mark: '○', msg: '線分図は「全体の時間＝部分の和」が見やすいけれど、道のりと速さから時間を求める計算までは、表のほうが整理しやすいよ。'},
             table:   {mark: '◎', msg: '表は「道のり・速さ・時間」と単位を縦横に整理できるので、分を時間に、mをkmに直すところまで見えやすい！'}
+        }
+    };
+}
+
+/* ---------- 発展問題2：ポストで折り返した弟と出会う（Aさんが出発してからの時間を求める） ---------- */
+function genHatten2() {
+    return {kind: 'fixed'};
+}
+
+function specHatten2(p) {
+    const A = '190x（m）';
+    const B = '60(x+15)（m）';
+    const tot = '2400（m）';
+    const names = ['Aさんの道のり', '弟の道のり', '家からポストまでの往復の道のり'];
+
+    /* --- 言葉の式・線分図（2人の道のりの和＝往復の道のり） --- */
+    const slots3 = [
+        sl(A, 'Aさんの道のりは「速さ×時間」。Aさんは家を出発してから x 分たったね。'),
+        sl(B, '弟の道のりも「速さ×時間」。弟はAさんより15分早く出発したので、歩いた時間は x 分より長いよ。ポストへ行って引き返した分もふくむよ。'),
+        sl(tot, '出会うまでに、Aさんは家からポストの方へ進み、弟は家からポストまで行って引き返したね。2人の道のりの和は、家とポストの間の往復分だよ。1.2kmを「m」にそろえて、2倍しよう。')
+    ];
+    const pool3 = [...new Set([
+        A, B, tot,
+        '190(x+15)（m）',
+        '60x（m）',
+        '60(x-15)（m）',
+        '1200（m）',
+        '1.2（km）'
+    ])];
+
+    /* --- 表（道のり・速さ・時間） --- */
+    const tans = ['190x', '60(x+15)', '2400', '190', '60', 'x', 'x+15'];
+    const thints = [
+        slots3[0].hint,
+        slots3[1].hint,
+        slots3[2].hint,
+        'Aさんの自転車の速さは毎分190mだよ。',
+        '弟の歩く速さは毎分60mだよ。',
+        '求めたいもの（Aさんが出発してからの時間）を x 分とおいたね。Aさんの時間の欄だよ。',
+        '弟はAさんより15分早く出発したね。弟が歩いた時間は？'
+    ];
+
+    return {
+        text: 'Aさんの家から1.2km離れた所にポストがあります。Aさんの弟は、手紙を出すために歩いてポストに向かいました。Aさんは、弟が出発してから15分後に、弟が忘れていたもう一通の手紙を届けるために、同じ道を自転車で追いかけました。その途中、手紙を出してすぐに引き返してきた弟と出会いました。弟の歩く速さは毎分60m、Aさんの自転車の速さは毎分190mであるとき、Aさんが弟と出会ったのは、Aさんが家を出発してから何分後か求めなさい。',
+        long: true,
+        varAns: 'Aさんが出発してからの時間',
+        varWrong: ['弟が出発してからの時間', 'Aさんが進んだ道のり', '家からポストまでの道のり'],
+        fill: {
+            words: {
+                slots: slots3,
+                pool: pool3,
+                layout: s => wordsT([
+                    labT(names[0], s[0]),
+                    opT('＋'),
+                    labT(names[1], s[1]),
+                    opT('＝'),
+                    labT(names[2], s[2])
+                ])
+            },
+            diagram: {
+                slots: slots3,
+                pool: pool3,
+                layout: s => dgT(
+                    barTopT(names[2], s[2], [[names[0], s[0], 45], [names[1], s[1], 55]], 100)
+                )
+            },
+            table: {
+                slots: tans.map((ans, i) => sl(ans, thints[i])),
+                pool: mkPool(tans, ['x-15', '1200', '190(x+15)', '60x']),
+                layout: s => tableT(['', 'Aさん', '弟', '合計'], [
+                    ['道のり（m）', s[0], s[1], s[2]],
+                    ['速さ（m/分）', s[3], s[4], ''],
+                    ['時間（分）', s[5], s[6], '']
+                ])
+            }
+        },
+        eqAns: '190x+60(x+15)=2400',
+        eqWrong: [
+            '190x+60(x+15)=1200',
+            '190x+60(x-15)=2400',
+            '190x+60x+15=2400'
+        ],
+        eqHint: '出会うまでに2人が進んだ道のりの和は、家とポストの間の往復分（1200m×2）になるよ。「Aさんの道のり＋弟の道のり＝往復の道のり」を式にしよう。弟の時間は(x＋15)分だよ。',
+        best: 'table',
+        fit: {
+            words:   {mark: '○', msg: '言葉の式は「Aさんの道のり＋弟の道のり＝往復の道のり」と書けるけれど、弟がポストで折り返すので、道のりの和がなぜ往復分になるのかを考える必要があるよ。'},
+            diagram: {mark: '○', msg: '線分図は「往復分の道のりが、2人の道のりに分かれる」関係が見やすいけれど、速さと時間から道のりを求める計算までは、表のほうが整理しやすいよ。'},
+            table:   {mark: '◎', msg: '表は「道のり・速さ・時間」の関係を、2人で縦横に整理できて、速さ×時間＝道のり の計算が見えやすい！'}
         }
     };
 }
@@ -2869,8 +2958,8 @@ function eqFormNenrei(p) {
 const EQ_FORMS = {otsuri: eqFormOtsuri, daikin: eqFormDaikin, kafusoku: eqFormKafusoku, hayasa: eqFormHayasa, hirei: eqFormHirei, nenrei: eqFormNenrei};
 
 const GENS  = {
-daikin: genDaikin, otsuri: genOtsuri, kafusoku: genKafusoku, hayasa: genHayasa, hirei: genHirei, nenrei: genNenrei, hatten1: genHatten1};
-const SPECS = {daikin: specDaikin, otsuri: specOtsuri, kafusoku: specKafusoku, hayasa: specHayasa, hirei: specHirei, nenrei: specNenrei, hatten1: specHatten1};
+daikin: genDaikin, otsuri: genOtsuri, kafusoku: genKafusoku, hayasa: genHayasa, hirei: genHirei, nenrei: genNenrei, hatten1: genHatten1, hatten2: genHatten2};
+const SPECS = {daikin: specDaikin, otsuri: specOtsuri, kafusoku: specKafusoku, hayasa: specHayasa, hirei: specHirei, nenrei: specNenrei, hatten1: specHatten1, hatten2: specHatten2};
 
 /* ==========================================================================
    4. 画面・保存・記録【共通】
@@ -3014,7 +3103,8 @@ const PATTERNS = {
     hayasa:   ['dist', 'time', 'oikake', 'chigai', 'deau'],
     hirei:    ['mix', 'ratio', 'recipe', 'add', 'give'],
     nenrei:   ['now', 'ratio', 'diff', 'sum'],
-    hatten1:  ['fixed']
+    hatten1:  ['fixed'],
+    hatten2:  ['fixed']
 };
 
 function pickPattern(typeId) {
