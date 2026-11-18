@@ -775,7 +775,7 @@ const TYPES = [
     {id: 'kafusoku', name: '過不足',           ready: true},
     {id: 'nenrei',   name: '年齢',             ready: true},
     {id: 'heikin',   name: '平均',             ready: false},
-    {id: 'wariai',   name: '割合',             ready: false},
+    {id: 'wariai',   name: '割合',             ready: true},
     {id: 'noudo',    name: '食塩水・濃度',     ready: false},
     {id: 'hayasa',   name: '道のり・速さ・時間', ready: true},
     {id: 'hirei',    name: '比例式',           ready: true}
@@ -1419,7 +1419,7 @@ const barT = (parts, w) => `<div style="width:${w}%">${lineRowT(parts)}</div>`;
 const barTopT = (t, s, parts, w) => `<div style="width:${w}%"><div class="dg-top">${labT(t, s)}</div><div class="dg-bracket up"></div>${lineRowT(parts)}</div>`;
 const dgT = (inner, inline) => `<div class="dg compact${inline ? ' inline' : ''}">${inner}</div>`;
 const dgI = inner => dgT(inner, true);
-const tableT = (head, rows) => `<table class="tbl${rows.length >= 4 ? ' small' : ''}"><tr>` + head.map(h => `<th>${h}</th>`).join('') + '</tr>'
+const tableT = (head, rows, keepPad) => `<table class="tbl${(rows.length >= 4 && !keepPad) ? ' small' : ''}"><tr>` + head.map(h => `<th>${h}</th>`).join('') + '</tr>'
     + rows.map(r => `<tr><th>${r[0]}</th>${r.slice(1).map(c => `<td>${c}</td>`).join('')}</tr>`).join('') + '</table>';
 
 /* ---------- 代金とおつり①：A1個の値段を求める ---------- */
@@ -2614,6 +2614,203 @@ function specNenrei(p) {
 }
 
 /* ==========================================================================
+   3h2. 問題生成・問題データ：割合【固有】
+   kind='bubun'：全体の○%が○人（全体を求める）／kind='waribiki'：定価の○割引で売値が○円（定価を求める）
+   kind='zouka'：去年より○%増えて今年○人（去年を求める）／kind='nokori'：男子が○%で女子が○人（全体を求める）
+   ========================================================================== */
+/* ヒント枠用：縦型分数（MathJax）を文中に入れる */
+const frH = (n, d) => `\\(\\frac{${n}}{${d}}\\)`;
+
+function genWariai(kind) {
+    const x = randInt(6, 30) * 20;
+    if (kind === 'waribiki') {
+        const w = randInt(1, 4);
+        return {kind: 'waribiki', A: pickItems(1)[0][0], w, x: x * 5, P: x * 5 * (10 - w) / 10};
+    }
+    if (kind === 'zouka') {
+        const r = [10, 20, 25, 30, 40, 60][randInt(0, 5)];
+        return {kind: 'zouka', r, x, P: x * (100 + r) / 100};
+    }
+    if (kind === 'nokori') {
+        const r = [20, 25, 30, 35, 40, 45][randInt(0, 5)];
+        return {kind: 'nokori', r, x, P: x * (100 - r) / 100};
+    }
+    const r = [20, 25, 30, 40, 60, 75][randInt(0, 5)];
+    return {kind: 'bubun', r, x, P: x * r / 100};
+}
+
+/* --- 割合：問題文・数量・ヒント（bubun以外は「名前3つ・割合3つ・数量3つ」の形で共通） --- */
+function wariaiData(p) {
+    const {r, P} = p;
+    const pc = n => String(n / 100);
+    if (p.kind === 'waribiki') {
+        const A = p.A;
+        const d = fracT(p.w, 10);
+        const s = fracT(10 - p.w, 10);
+        return {
+            text: `${A}を定価の${p.w}割引で売ったところ、売値は${P}円になりました。${A}の定価を求めなさい。`,
+            varAns: `${A}の定価`,
+            varWrong: [`${A}の売値`, '割引した金額', '割引の割合'],
+            unit: '円', mn: '金額（円）',
+            names: ['定価', '割引額', '売値'], ops: ['－', '＝'], whole: 0, parts: [1, 2], share: clampT(p.w / 10, 0.2, 0.8),
+            rates: ['1', d, s], amts: ['x', `${d}x`, `${P}`],
+            rh: ['定価をもとにするので、割合は1だよ。', `割引額の割合は${p.w}割＝${d}だよ。`, `売値の割合は「1−${d}」だよ。計算した数を選ぼう。`],
+            ah: ['求めたいもの（定価）を x 円とおいたね。', `割引額は「定価×${frH(p.w, 10)}」だよ。`, '売値は問題文に書いてあるよ。'],
+            ex: [`${s}x`, `${p.w}x`],
+            fd: fracT(p.w, 10), rname: '割引率', tex: [`${fracT(10 - p.w, 10)}x`, `${p.w}x`],
+            eqAns: `x-${fracT(p.w, 10)}x=${P}`,
+            eqWrong: [`x+${fracT(p.w, 10)}x=${P}`, `x-${fracT(10 - p.w, 10)}x=${P}`, `${fracT(p.w, 10)}x=${P}`],
+            eqHint: `「売値 ＝ 定価 － 割引額」をそのまま式にしよう。割引額は「定価×${frH(p.w, 10)}」だよ。`,
+            best: 'diagram',
+            fm: {words: ['○', '言葉の式は「定価－割引額＝売値」と書けるけれど、割合の計算が見えにくいかも。'], diagram: ['◎', '線分図は「定価」を「割引額」と「売値」に分けて見られるので、割引の関係がわかりやすい！'], table: ['○', '表は割合と金額を整理できるけれど、「定価－割引額」の関係が見えにくいかも。']}
+        };
+    }
+    if (p.kind === 'zouka') {
+        const d = fracT(r, 100);
+        const s = fracT(100 + r, 100);
+        return {
+            text: `ある中学校の今年の生徒数は、去年より${r}%増えて${P}人になりました。去年の生徒数を求めなさい。`,
+            varAns: '去年の生徒数',
+            varWrong: ['今年の生徒数', '増えた生徒数', '増えた割合'],
+            unit: '人', mn: '人数（人）',
+            names: ['去年', '増えた分', '今年'], ops: ['＋', '＝'], whole: 2, parts: [0, 1], share: clampT(100 / (100 + r), 0.4, 0.85),
+            rates: ['1', d, s], amts: ['x', `${d}x`, `${P}`],
+            rh: ['去年をもとにするので、割合は1だよ。', `増えた分の割合は${r}%＝${d}だよ。`, `今年の割合は「1＋${d}」だよ。計算した数を選ぼう。`],
+            ah: ['求めたいもの（去年の生徒数）を x 人とおいたね。', `増えた分は「去年×${frH(r, 100)}」だよ。`, '今年の人数は問題文に書いてあるよ。'],
+            ex: [`${fracT(100 - r, 100)}x`, `${r}x`],
+            fd: fracT(r, 100), rname: '増加率', tex: [`${fracT(100 - r, 100)}x`, `${r}x`],
+            eqAns: `x+${fracT(r, 100)}x=${P}`,
+            eqWrong: [`x+${fracT(100 + r, 100)}x=${P}`, `x-${fracT(r, 100)}x=${P}`, `${fracT(r, 100)}x=${P}`],
+            eqHint: `「今年 ＝ 去年 ＋ 増えた分」をそのまま式にしよう。増えた分は「去年×${frH(r, 100)}」だよ。`,
+            best: 'diagram',
+            fm: {words: ['○', '言葉の式は「去年＋増えた分＝今年」と書けるけれど、割合の計算が見えにくいかも。'], diagram: ['◎', '線分図は「今年」を「去年」と「増えた分」に分けて見られるので、増加の関係がわかりやすい！'], table: ['○', '表は割合と人数を整理できるけれど、「去年＋増えた分」の関係が見えにくいかも。']}
+        };
+    }
+    if (p.kind === 'nokori') {
+        const d = fracT(r, 100);
+        const s = fracT(100 - r, 100);
+        return {
+            text: `ある学校の生徒のうち${r}%が男子で、女子は${P}人です。全生徒の人数を求めなさい。`,
+            varAns: '全生徒の人数',
+            varWrong: ['男子の人数', '女子の人数', '男子の割合'],
+            unit: '人', mn: '人数（人）',
+            names: ['全体', '男子', '女子'], ops: ['＝', '＋'], whole: 0, parts: [1, 2], share: clampT(r / 100, 0.2, 0.8),
+            rates: ['1', d, s], amts: ['x', `${d}x`, `${P}`],
+            rh: ['全体をもとにするので、割合は1だよ。', `男子の割合は${r}%＝${d}だよ。`, `女子の割合は「1−${d}」だよ。計算した数を選ぼう。`],
+            ah: ['求めたいもの（全生徒の人数）を x 人とおいたね。', `男子は「全体×${frH(r, 100)}」だよ。`, '女子の人数は問題文に書いてあるよ。'],
+            ex: [`${s}x`, `${r}x`],
+            fd: fracT(r, 100), rname: null, tex: [`${fracT(100 - r, 100)}x`, `${r}x`],
+            eqAns: `x=${fracT(r, 100)}x+${P}`,
+            eqWrong: [`x=${fracT(100 - r, 100)}x+${P}`, `${fracT(r, 100)}x=${P}`, `x+${fracT(r, 100)}x=${P}`],
+            eqHint: '「全体 ＝ 男子 ＋ 女子」。男子は「全体×割合」で x を使って表そう。',
+            best: 'diagram',
+            fm: {words: ['◎', '言葉の式は「全体＝男子＋女子」と、そのまま式にできる！'], diagram: ['◎', '線分図は「全体」を「男子」と「女子」に分けて見られるので、わかりやすい！'], table: ['○', '表は割合と人数を整理できるけれど、「全体＝男子＋女子」の式が少し遠回りかも。']}
+        };
+    }
+    return null;
+}
+
+function specWariaiBubun(p) {
+    const {r, P} = p;
+    const d = fracT(r, 100);
+    const e = fracT(100 - r, 100);
+    const U = s => `${s}（人）`;
+    const ws = [
+        sl(U('x'), '求めたいもの（全生徒の人数）を x 人とおいたね。これが「全体」だよ。'),
+        sl(d, `${r}%を分数で表すと${frH(r, 100)}だよ。`),
+        sl(U(P), '「部分」の人数は問題文に書いてあるよ。')
+    ];
+    const one = (t, s, w) => `<div style="width:${w}%"><div class="dg-top">${labT(t, s)}</div><div class="dg-bracket up"></div><div class="dg-line">${segT(1)}</div></div>`;
+    const tans = ['x', `${P}`, '1', d];
+    const th = ['求めたいもの（全生徒の人数）を x 人とおいたね。', '部分の人数は問題文に書いてあるよ。', '全体をもとにするので、割合は1だよ。', `部分の割合は${r}%＝${frH(r, 100)}だよ。`];
+    return {
+        text: `ある学校で、全生徒の${r}%がサッカー部に入っていて、その人数は${P}人です。全生徒の人数を求めなさい。`,
+        varAns: '全生徒の人数',
+        varWrong: ['サッカー部の人数', 'サッカー部の割合', 'サッカー部に入っていない人数'],
+        fill: {
+            words: {
+                slots: ws,
+                pool: mkPool(ws.map(q => q.ans), [U(`${d}x`), e, `${r}`]),
+                layout: s => wordsT([labT('全体', s[0]), opT('×'), labT('割合', s[1]), opT('＝'), labT('部分', s[2])])
+            },
+            diagram: {
+                slots: ws,
+                pool: mkPool(ws.map(q => q.ans), [U(`${d}x`), e, `${r}`]),
+                layout: s => dgI(one('全体', s[0], 100)
+                    + `<div class="lab" style="margin:6px 3px;">↓ 下の線の長さは、上の線の ${s[1]} 倍</div>`
+                    + one('部分', s[2], clampT(r / 100, 0.25, 0.85)))
+            },
+            table: {
+                slots: tans.map((a, i) => sl(a, th[i])),
+                pool: mkPool(tans, [e, `${d}x`, `${r}`]),
+                layout: s => tableT(['', '全体', '部分'], [['人数（人）', s[0], s[1]], ['割合', s[2], s[3]]])
+            }
+        },
+        eqAns: `${fracT(r, 100)}x=${P}`,
+        eqWrong: [`${fracT(100 - r, 100)}x=${P}`, `${r}x=${P}`, `x=${fracT(r, 100)}x`],
+        eqHint: '「全体 × 割合 ＝ 部分」を式にしよう。割合は分数で表すよ。',
+        best: 'words',
+        fit: {
+            words:   {mark: '◎', msg: '言葉の式は「全体×割合＝部分」と、そのまま式にできる！'},
+            diagram: {mark: '○', msg: '線分図は「何倍か」は見やすいけれど、式にするには言葉の式のほうが近道かも。'},
+            table: {mark: '○', msg: '表は割合と人数を縦に整理できるけれど、少し手順が多かったかも。'}
+        }
+    };
+}
+
+function specWariai(p) {
+    if (p.kind === 'bubun') return specWariaiBubun(p);
+    const D = wariaiData(p);
+    const U = s => `${s}（${D.unit}）`;
+    const names = D.names;
+    const wans = D.amts.map(U);
+    const wslots = wans.map((a, i) => sl(a, D.ah[i]));
+    const wpool = mkPool(wans, D.ex.map(U));
+    const tans = ['x', `${D.fd}x`, D.amts[2]];
+    const thints = D.ah;
+    return {
+        text: D.text,
+        varAns: D.varAns,
+        varWrong: D.varWrong,
+        fill: {
+            words: {
+                slots: wslots,
+                pool: wpool,
+                layout: s => wordsT([labT(names[0], s[0]), opT(D.ops[0]), labT(names[1], s[1]), opT(D.ops[1]), labT(names[2], s[2])])
+            },
+            diagram: {
+                slots: wslots,
+                pool: wpool,
+                layout: s => dgI(barTopT(names[D.whole], s[D.whole],
+                    D.parts.map((i, j) => [names[i], s[i], j === 0 ? D.share : 100 - D.share]), 100))
+            },
+            table: {
+                slots: tans.map((a, i) => sl(a, thints[i])),
+                pool: mkPool(tans, D.tex),
+                layout: s => {
+                    if (D.rname) {
+                        const tn = n => (n === '増えた分') ? '増加数' : n;
+                        const rows = names.map((n, i) => [tn(n), s[i]]);
+                        rows.splice(1, 0, [D.rname, `\\(${D.fd}\\)`]);
+                        return tableT(['', D.mn], rows, true);
+                    }
+                    return tableT(['', names[1], names[2], names[0]], [[D.mn, s[1], s[2], s[0]]]);
+                }
+            }
+        },
+        eqAns: D.eqAns,
+        eqWrong: D.eqWrong,
+        eqHint: D.eqHint,
+        best: D.best,
+        fit: {
+            words:   {mark: D.fm.words[0], msg: D.fm.words[1]},
+            diagram: {mark: D.fm.diagram[0], msg: D.fm.diagram[1]},
+            table:   {mark: D.fm.table[0], msg: D.fm.table[1]}
+        }
+    };
+}
+
+/* ==========================================================================
    3i. 発展問題（固定問題）【固有】
    数値は変えない。「発展問題」画面の1〜100のボタンから開く
    ========================================================================== */
@@ -2955,11 +3152,40 @@ function eqFormNenrei(p) {
     };
 }
 
-const EQ_FORMS = {otsuri: eqFormOtsuri, daikin: eqFormDaikin, kafusoku: eqFormKafusoku, hayasa: eqFormHayasa, hirei: eqFormHirei, nenrei: eqFormNenrei};
+/* 割合の線分図は「全体＝部分の和」の形で読む（表・言葉の式は計算前の形＝eqAns） */
+function eqFormWariai(p) {
+    if (p.kind === 'bubun') return {};
+    const D = wariaiData(p);
+    const den = (p.kind === 'waribiki') ? 10 : 100;
+    const num = (p.kind === 'waribiki') ? p.w : p.r;
+    const d = fracT(num, den);
+    const s = fracT((p.kind === 'zouka') ? den + num : den - num, den);
+    const P = p.P;
+    if (p.kind === 'zouka') {
+        return {
+            diagram: eqf(`${P}=x+${d}x`,
+                [`${P}=x+${s}x`, `${P}=x-${d}x`, `${P}=${d}x`],
+                '線分図は「全体＝部分の和」。「今年 ＝ 去年 ＋ 増えた分」を式にしよう。')
+        };
+    }
+    const whole = (p.kind === 'waribiki') ? '定価 ＝ 割引額 ＋ 売値' : '全体 ＝ 男子 ＋ 女子';
+    const table = (p.kind === 'nokori')
+        ? eqf(`${d}x+${P}=x`, [`${s}x+${P}=x`, `${d}x=${P}`, `${d}x+x=${P}`],
+            '表の順に読もう。「男子 ＋ 女子 ＝ 全体」を式にしよう。')
+        : undefined;
+    return {
+        table: table,
+        diagram: eqf(`x=${d}x+${P}`,
+            [`x=${s}x+${P}`, `x+${d}x=${P}`, `${d}x=${P}`],
+            `線分図は「全体＝部分の和」。「${whole}」を式にしよう。`)
+    };
+}
+
+const EQ_FORMS = {wariai: eqFormWariai, otsuri: eqFormOtsuri, daikin: eqFormDaikin, kafusoku: eqFormKafusoku, hayasa: eqFormHayasa, hirei: eqFormHirei, nenrei: eqFormNenrei};
 
 const GENS  = {
-daikin: genDaikin, otsuri: genOtsuri, kafusoku: genKafusoku, hayasa: genHayasa, hirei: genHirei, nenrei: genNenrei, hatten1: genHatten1, hatten2: genHatten2};
-const SPECS = {daikin: specDaikin, otsuri: specOtsuri, kafusoku: specKafusoku, hayasa: specHayasa, hirei: specHirei, nenrei: specNenrei, hatten1: specHatten1, hatten2: specHatten2};
+daikin: genDaikin, otsuri: genOtsuri, kafusoku: genKafusoku, hayasa: genHayasa, hirei: genHirei, nenrei: genNenrei, wariai: genWariai, hatten1: genHatten1, hatten2: genHatten2};
+const SPECS = {daikin: specDaikin, otsuri: specOtsuri, kafusoku: specKafusoku, hayasa: specHayasa, hirei: specHirei, nenrei: specNenrei, wariai: specWariai, hatten1: specHatten1, hatten2: specHatten2};
 
 /* ==========================================================================
    4. 画面・保存・記録【共通】
@@ -3103,6 +3329,7 @@ const PATTERNS = {
     hayasa:   ['dist', 'time', 'oikake', 'chigai', 'deau'],
     hirei:    ['mix', 'ratio', 'recipe', 'add', 'give'],
     nenrei:   ['now', 'ratio', 'diff', 'sum'],
+    wariai:   ['bubun', 'waribiki', 'zouka', 'nokori'],
     hatten1:  ['fixed'],
     hatten2:  ['fixed']
 };
@@ -3297,7 +3524,7 @@ function toMath(str) {
 function typeset() {
     if (window.MathJax && MathJax.startup && MathJax.typesetPromise) {
         MathJax.startup.promise = MathJax.startup.promise
-            .then(() => MathJax.typesetPromise([$('work-area'), $('opt-grid')]))
+            .then(() => MathJax.typesetPromise([$('work-area'), $('opt-grid'), $('hint-box')]))
             .catch(() => { /* 数式の描画に失敗しても進行は止めない */ });
     }
 }
