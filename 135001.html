@@ -498,6 +498,9 @@ footer {
 .xrow .mhead {
     margin-bottom: 0;
 }
+.xrow.xwrap .xline {
+    flex-basis: 100%;
+}
 .bigq {
     margin: 12px 0;
     font-size: 24px;
@@ -562,6 +565,14 @@ footer {
     font-size: 26px;
     font-weight: bold;
     padding-bottom: 4px;
+}
+.words.tight {
+    gap: 10px 2px;
+}
+.words.tight .slot {
+    min-width: 36px;
+    padding: 3px 6px;
+    font-size: 20px;
 }
 .dg {
     margin: 16px 10px;
@@ -1421,7 +1432,7 @@ function specKafusoku(p) {
         const fr2 = clamp(r2 / (T + r2), 0.28, 0.4);
         const w1 = 100 - fr2;
         return '<div class="dg compact inline">'
-            + bar([[K.dNames[0], s[0], f1], [K.dNames[1], s[1], 100 - f1]], w1)
+            + barTopT(K.totalName, '', [[K.dNames[0], s[0], f1], [K.dNames[1], s[1], 100 - f1]], w1)
             + `<div class="dg-top" style="margin-top:8px;">${lab(K.dNames[2], s[2])}</div><div class="dg-bracket up"></div>`
             + bar([[K.totalName, '', w1], [K.dNames[3], s[3], fr2]], 100)
             + '</div>';
@@ -3703,30 +3714,57 @@ function genKKafusoku(kind) {
 }
 
 function specKKafusoku(p) {
-    if (p.sub === 'haifu') return specKafusoku(Object.assign({}, p, {kind: 'haifu'}));
+    if (p.sub === 'haifu') {
+        /* k1：人数をxとおく（演習の「配る」と同じ形。表は縦横を入れ替え） */
+        const sp = specKafusoku(Object.assign({}, p, {kind: 'haifu'}));
+        const t = sp.fill.table;
+        const u = p.u;
+        sp.xText = `${p.H}の人数をxとおいて、全体の数を2通りの式で表す。`;
+        sp.fill.table = {
+            slots: [t.slots[0], t.slots[2], t.slots[1], t.slots[3]],
+            pool: t.pool,
+            layout: s => tableT(['', `配った数（${u}）`, `過不足（${u}）`], [
+                [`${p.a}${u}ずつ`, s[0], s[1]],
+                [`${p.c}${u}ずつ`, s[2], s[3]]
+            ])
+        };
+        return sp;
+    }
     /* k2：全体の数をxとおく（p.x は人数で、図の長さの計算にだけ使う） */
     const {A, u, H, a, c, r1, r2} = p;
     const lab = (t, s) => `<div class="col"><div class="lab">${t}</div>${s}</div>`;
     const g1 = `x-${r1}（${u}）`;
     const g2 = `x+${r2}（${u}）`;
+    const xs = `x（${u}）`;
     const hG1 = `${a}${u}ずつ配ると${r1}${u}余るね。配った数は「全体の数−余り」だよ。`;
     const hG2 = `${c}${u}ずつ配ると${r2}${u}不足するね。配りたい数は「全体の数＋不足」だよ。`;
     const hA = `${a}${u}ずつ配るときの1人分は${a}${u}だよ。`;
     const hC = `${c}${u}ずつ配るときの1人分は${c}${u}だよ。`;
-    const wAns = [g1, `${a}（${u}）`, g2, `${c}（${u}）`];
-    const wHints = [hG1, hA, hG2, hC];
+    const hX = '求めたいもの（全体の数）を x とおいたね。';
+    const hR1 = `${a}${u}ずつ配ると${r1}${u}余るね。余りは問題文に書いてあるよ。`;
+    const hR2 = `${c}${u}ずつ配ると${r2}${u}不足するね。不足は問題文に書いてあるよ。`;
+
+    /* 言葉の式：（全体の数−余り）÷1人分＝（全体の数＋不足）÷1人分 */
+    const wAns = [xs, `${r1}（${u}）`, `${a}（${u}）`, xs, `${r2}（${u}）`, `${c}（${u}）`];
+    const wHints = [hX, hR1, hA, hX, hR2, hC];
     const wSlots = wAns.map((ans, i) => sl(ans, wHints[i]));
-    const wPool = mkPool(wAns, [`x+${r1}（${u}）`, `x-${r2}（${u}）`, `${a + c}（${u}）`]);
-    const dAns = [g1, `${r1}（${u}）`, g2, `${r2}（${u}）`];
-    const dSlots = [
-        sl(dAns[0], hG1),
-        sl(dAns[1], `${a}${u}ずつ配ったときの余りは、問題文に書いてあるよ。`),
-        sl(dAns[2], hG2),
-        sl(dAns[3], `${c}${u}ずつ配ったときの不足は、問題文に書いてあるよ。`)
-    ];
+    const wPool = mkPool(wAns, [`${r1 + r2}（${u}）`, `${a + c}（${u}）`]);
+
+    /* 線分図：全体の個数→余り→配った数、全体の個数→不足→配った数 の順 */
+    const dAns = [xs, `${r1}（${u}）`, g1, xs, `${r2}（${u}）`, g2];
+    const dHints = [hX, hR1, hG1, hX, hR2, hG2];
+    const dSlots = dAns.map((ans, i) => sl(ans, dHints[i]));
     const dPool = mkPool(dAns, [`x+${r1}（${u}）`, `x-${r2}（${u}）`, `${r1 + r2}（${u}）`]);
-    const tans = [`${a}`, `${c}`, `x-${r1}`, `x+${r2}`];
-    const thints = [hA, hC, hG1, hG2];
+
+    /* 表：過不足→配った数（5個ずつ、6個ずつ の順） */
+    const tans = [`+${r1}`, `x-${r1}`, `-${r2}`, `x+${r2}`];
+    const thints = [
+        `${a}${u}ずつ配ると${r1}${u}余るね。余りは「＋」で表そう。`,
+        hG1,
+        `${c}${u}ずつ配ると${r2}${u}不足するね。不足は「−」で表そう。`,
+        hG2
+    ];
+
     const T = a * p.x + r1;
     const f1 = clampT(a * p.x / T, 0.35, 0.65);
     const fr2 = clampT(r2 / (T + r2), 0.28, 0.4);
@@ -3734,28 +3772,34 @@ function specKKafusoku(p) {
     return {
         text: `${A}を何人かの${H}に配ります。${a}${u}ずつ配ると${r1}${u}余り、${c}${u}ずつ配ると${r2}${u}不足します。${A}は全部で何${u}ありますか。`,
         varAns: `${A}の全体の数`,
+        xText: `全体の数をxとおいて、${H}の人数を2通りの式で表す。`,
         varWrong: [`${H}の人数`, `1人に配る${A}の数`, `余った${A}の数`],
         fill: {
             words: {
                 slots: wSlots,
                 pool: wPool,
-                layout: s => `<div class="words">${lab('配った数', s[0])}<div class="op">÷</div>${lab('1人分', s[1])}<div class="op">＝</div>${lab('配った数', s[2])}<div class="op">÷</div>${lab('1人分', s[3])}</div>`
+                layout: s => `<div class="words tight">`
+                    + `<div class="op">（</div>${lab(`${A}の数`, s[0])}<div class="op">−</div>${lab('余り', s[1])}<div class="op">）</div>`
+                    + `<div class="op">÷</div>${lab('1人分', s[2])}`
+                    + `<div class="op">＝</div>`
+                    + `<div class="op">（</div>${lab(`${A}の数`, s[3])}<div class="op">＋</div>${lab('不足', s[4])}<div class="op">）</div>`
+                    + `<div class="op">÷</div>${lab('1人分', s[5])}</div>`
             },
             diagram: {
                 slots: dSlots,
                 pool: dPool,
                 layout: s => dgI(
-                    barT([['配った数', s[0], f1], ['余り', s[1], 100 - f1]], w1)
-                    + `<div class="dg-top" style="margin-top:8px;">${labT('配った数', s[2])}</div><div class="dg-bracket up"></div>`
-                    + barT([['全体の数', `x（${u}）`, w1], ['不足', s[3], fr2]], 100)
+                    barTopT('全体の個数', s[0], [['配った数', s[2], f1], ['余り', s[1], 100 - f1]], w1)
+                    + '<div style="height:8px;"></div>'
+                    + barTopT('配った数', s[5], [['全体の個数', s[3], w1], ['不足', s[4], fr2]], 100)
                 )
             },
             table: {
                 slots: tans.map((ans, i) => sl(ans, thints[i])),
-                pool: mkPool(tans, [`x+${r1}`, `x-${r2}`, `${a + c}`]),
-                layout: s => tableT(['', `${a}${u}ずつ`, `${c}${u}ずつ`], [
-                    [`1人分（${u}）`, s[0], s[1]],
-                    [`配った数（${u}）`, s[2], s[3]]
+                pool: mkPool(tans, [`-${r1}`, `+${r2}`, `x+${r1}`, `x-${r2}`]),
+                layout: s => tableT(['', `過不足（${u}）`, `配った数（${u}）`], [
+                    [`${a}${u}ずつ`, s[0], s[1]],
+                    [`${c}${u}ずつ`, s[2], s[3]]
                 ])
             }
         },
@@ -3765,18 +3809,18 @@ function specKKafusoku(p) {
             `${fracT(a, `x-${r1}`)}=${fracT(c, `x+${r2}`)}`,
             `${fracT(`x-${r1}`, c)}=${fracT(`x+${r2}`, a)}`
         ],
-        eqHint: '「配った数÷1人分」が人数。どちらの配り方でも人数は同じだから、この2つが等しいことを式にしよう。',
-        best: 'diagram',
+        eqHint: '「（全体の数−余り）÷1人分」と「（全体の数＋不足）÷1人分」は、どちらも人数。どちらの配り方でも人数は同じだから、この2つが等しいことを式にしよう。',
+        best: 'words',
         fit: {
-            words:   {mark: '○', msg: '言葉の式では「配った数÷1人分＝人数」と書けるけれど、全体の数と余り・不足の関係は、線分図のほうがつかめるかも。'},
-            diagram: {mark: '◎', msg: '線分図は、「全体の数−余り」「全体の数＋不足」という関係が見やすい！'},
-            table:   {mark: '△', msg: '表は1人分と配った数を整理できるけれど、「全体の数−余り」「全体の数＋不足」という関係が表からは見えにくくて、少し使いづらかったかも。'}
+            words:   {mark: '◎', msg: `言葉の式は「（${A}の数−余り）÷1人分＝（${A}の数＋不足）÷1人分」と書けるので、2通りの配り方の人数が等しいことを、そのまま式にできるよ！`},
+            diagram: {mark: '△', msg: '線分図は「全体の数−余り」「全体の数＋不足」を表せるけれど、何個ずつ配ったのかは図に書かれていないので、方程式までは見えにくくて、少し使いづらかったかも。'},
+            table:   {mark: '○', msg: '表は「過不足」と「配った数」を、配り方ごとに整理できるよ。ただ、「配った数÷何個ずつ」が人数になる関係は、言葉の式のほうが式にしやすいかも。'}
         }
     };
 }
 
 function eqFormKKafusoku(p) {
-    return (p.sub === 'haifu') ? eqFormKafusoku(p) : {};
+    return {};
 }
 
 function eqFormKHirei(p) {
@@ -4652,9 +4696,9 @@ function render() {
     $('talk').textContent = talk.replace('方程式', eqWord());
     $('hint-text').innerHTML = hintMsg;
 
-    const xline = (S.step === 'var') ? '' : `<div class="xline">${sp.varAns}をxとおく</div>`;
+    const xline = (S.step === 'var') ? '' : `<div class="xline">${sp.xText || (sp.varAns + 'をxとおく')}</div>`;
     const mhead = S.method ? `<div class="mhead">整理方法：${METHODS[S.method].icon} ${METHODS[S.method].label}</div>` : '';
-    const head = (xline || mhead) ? `<div class="xrow">${xline}${mhead}</div>` : '';
+    const head = (xline || mhead) ? `<div class="xrow${sp.xText ? ' xwrap' : ''}">${xline}${mhead}</div>` : '';
     let work = '';
     let optTitle = '';
     let opts = '';
