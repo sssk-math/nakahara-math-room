@@ -3720,14 +3720,19 @@ function specKKafusoku(p) {
         const t = sp.fill.table;
         const u = p.u;
         sp.xText = `${p.H}の人数をxとおいて、全体の数を2通りの式で表す。`;
+        const tot1 = `${p.a}x+${p.r1}`;
+        const tot2 = `${p.c}x-${p.r2}`;
+        const tHint = '全体の数は「配った数＋過不足」で表せるよ。';
+        const tans = [t.slots[0].ans, t.slots[2].ans, tot1, t.slots[1].ans, t.slots[3].ans, tot2];
         sp.fill.table = {
-            slots: [t.slots[0], t.slots[2], t.slots[1], t.slots[3]],
-            pool: t.pool,
-            layout: s => tableT(['', `配った数（${u}）`, `過不足（${u}）`], [
-                [`${p.a}${u}ずつ`, s[0], s[1]],
-                [`${p.c}${u}ずつ`, s[2], s[3]]
+            slots: [t.slots[0], t.slots[2], sl(tot1, tHint), t.slots[1], t.slots[3], sl(tot2, tHint)],
+            pool: mkPool(tans, [`${p.a}x-${p.r1}`, `${p.c}x+${p.r2}`]),
+            layout: s => tableT(['', `配った数（${u}）`, `過不足（${u}）`, `全体の数（${u}）`], [
+                [`${p.a}${u}ずつ`, s[0], s[1], s[2]],
+                [`${p.c}${u}ずつ`, s[3], s[4], s[5]]
             ])
         };
+        sp.fit.table = {mark: '○', msg: '表は「配った数＋過不足＝全体の数」を配り方ごとに整理できて、右の列を見比べると、どちらの配り方でも全体の数が同じだとわかるよ。'};
         return sp;
     }
     /* k2：全体の数をxとおく（p.x は人数で、図の長さの計算にだけ使う） */
@@ -3757,12 +3762,16 @@ function specKKafusoku(p) {
     const dPool = mkPool(dAns, [`x+${r1}（${u}）`, `x-${r2}（${u}）`, `${r1 + r2}（${u}）`]);
 
     /* 表：過不足→配った数（5個ずつ、6個ずつ の順） */
-    const tans = [`+${r1}`, `x-${r1}`, `-${r2}`, `x+${r2}`];
+    const fr1 = fracT(`x-${r1}`, a);
+    const fr2t = fracT(`x+${r2}`, c);
+    const tans = [`+${r1}`, `x-${r1}`, fr1, `-${r2}`, `x+${r2}`, fr2t];
     const thints = [
         `${a}${u}ずつ配ると${r1}${u}余るね。余りは「＋」で表そう。`,
         hG1,
+        `${H}の人数は「配った数÷1人分」だよ。${a}${u}ずつ配るから、${a}で割ろう。`,
         `${c}${u}ずつ配ると${r2}${u}不足するね。不足は「−」で表そう。`,
-        hG2
+        hG2,
+        `${H}の人数は「配った数÷1人分」だよ。${c}${u}ずつ配るから、${c}で割ろう。`
     ];
 
     const T = a * p.x + r1;
@@ -3796,10 +3805,10 @@ function specKKafusoku(p) {
             },
             table: {
                 slots: tans.map((ans, i) => sl(ans, thints[i])),
-                pool: mkPool(tans, [`-${r1}`, `+${r2}`, `x+${r1}`, `x-${r2}`]),
-                layout: s => tableT(['', `過不足（${u}）`, `配った数（${u}）`], [
-                    [`${a}${u}ずつ`, s[0], s[1]],
-                    [`${c}${u}ずつ`, s[2], s[3]]
+                pool: mkPool(tans, [`-${r1}`, `+${r2}`, `x+${r1}`, `x-${r2}`, fracT(`x+${r1}`, a), fracT(`x-${r2}`, c)]),
+                layout: s => tableT(['', `過不足（${u}）`, `配った数（${u}）`, `${H}の人数`], [
+                    [`${a}${u}ずつ`, s[0], s[1], s[2]],
+                    [`${c}${u}ずつ`, s[3], s[4], s[5]]
                 ])
             }
         },
@@ -3814,7 +3823,7 @@ function specKKafusoku(p) {
         fit: {
             words:   {mark: '◎', msg: `言葉の式は「（${A}の数−余り）÷1人分＝（${A}の数＋不足）÷1人分」と書けるので、2通りの配り方の人数が等しいことを、そのまま式にできるよ！`},
             diagram: {mark: '△', msg: '線分図は「全体の数−余り」「全体の数＋不足」を表せるけれど、何個ずつ配ったのかは図に書かれていないので、方程式までは見えにくくて、少し使いづらかったかも。'},
-            table:   {mark: '○', msg: '表は「過不足」と「配った数」を、配り方ごとに整理できるよ。ただ、「配った数÷何個ずつ」が人数になる関係は、言葉の式のほうが式にしやすいかも。'}
+            table:   {mark: '○', msg: '表は「過不足」「配った数」「人数」を、配り方ごとに整理できるよ。ただ、「過不足」と「配った数」の符号が違うから、わかりにくいかも。'}
         }
     };
 }
