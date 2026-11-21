@@ -90,7 +90,7 @@ footer {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    width: 320px;
+    width: 300px;
 }
 .menu-btn {
     height: 56px;
@@ -854,12 +854,12 @@ let pendingReset = null;
 const TYPES = [
     {id: 'daikin',   name: '個数と代金',       ready: true},
     {id: 'otsuri',   name: '代金とおつり',     ready: true},
-    {id: 'awasete',  name: '合わせて〇個',     ready: false},
+    {id: 'awasete',  name: '合わせて〇個',     ready: true},
     {id: 'kafusoku', name: '過不足',           ready: true},
     {id: 'nenrei',   name: '年齢',             ready: true},
-    {id: 'heikin',   name: '平均',             ready: false},
+    {id: 'heikin',   name: '平均',             ready: true},
     {id: 'wariai',   name: '割合',             ready: true},
-    {id: 'noudo',    name: '食塩水・濃度',     ready: false},
+    {id: 'noudo',    name: '食塩水・濃度',     ready: true},
     {id: 'hayasa',   name: '道のり・速さ・時間', ready: true},
     {id: 'hirei',    name: '比例式',           ready: true}
 ];
@@ -982,7 +982,7 @@ function specDaikin(p) {
         fit: {
             words:   {mark: '◎', msg: `言葉の式は「${p.A}の代金＋${p.B}の代金＝代金の合計」と、そのまま式につなげられる。この問題にぴったり！`},
             diagram: {mark: '△', msg: '線分図は「全体＝部分の和」は見やすいけれど、「単価×数量」の掛け算が入ると図に書くことが多くて、少し使いづらかったかも。'},
-            table:   {mark: '○', msg: '表は「単価・数量・代金」を整理できるけれど、式にするには一手間かかるので、言葉の式のほうが近道だったかも。'}
+            table:   {mark: '〇', msg: '表は「単価・数量・代金」を整理できるけれど、式にするには一手間かかるので、言葉の式のほうが近道だったかも。'}
         }
     };
 }
@@ -1083,7 +1083,7 @@ function specOtsuri(p) {
         best: 'words',
         fit: {
             words:   {mark: '◎', msg: '言葉の式は「出した金額 − 代金の合計 ＝ おつり」と、お金の流れをそのまま書けるので、いちばん立式しやすい！'},
-            diagram: {mark: '○', msg: '線分図も「出した金額が、代金とおつりに分かれる」関係が見やすいよ。ただ、式にするには言葉の式のほうが近道かも。'},
+            diagram: {mark: '〇', msg: '線分図も「出した金額が、代金とおつりに分かれる」関係が見やすいよ。ただ、式にするには言葉の式のほうが近道かも。'},
             table:   {mark: '△', msg: '表は単価・数量・代金は整理しやすいけれど、「出した金額 − 代金 ＝ おつり」の引き算の関係が表からは見えにくくて、少し使いづらかったかも。'}
         }
     };
@@ -1179,7 +1179,7 @@ function specHayasa(p) {
             eqHint: '「行きの時間＋帰りの時間＝往復の時間」を式にしよう。時間＝道のり÷速さ だよ。',
             best: 'table',
             fit: {
-                words:   {mark: '○', msg: '言葉の式は「行きの時間＋帰りの時間＝往復の時間」と書けて、立式につながりやすいよ。'},
+                words:   {mark: '〇', msg: '言葉の式は「行きの時間＋帰りの時間＝往復の時間」と書けて、立式につながりやすいよ。'},
                 diagram: {mark: '△', msg: '線分図は「全体＝部分の和」が見やすいけれど、この問題で足すのは「時間」。道のり x が行きと帰りで2回出てくるので、図に表しにくかったかも。'},
                 table:   {mark: '◎', msg: '表は「速さ・時間・道のり」の関係を縦横に整理できるので、時間＝道のり÷速さ の計算が見えやすい！'}
             }
@@ -1227,8 +1227,8 @@ function specHayasa(p) {
         eqHint: '「歩いた道のり＋走った道のり＝全体の道のり」を式にしよう。道のり＝速さ×時間。走った道のりは計算した数にしてね。',
         best: 'table',
         fit: {
-            words:   {mark: '○', msg: '言葉の式は「歩いた道のり＋走った道のり＝全体の道のり」と、そのまま書けるね。'},
-            diagram: {mark: '○', msg: '道のりの線分図は「全体＝部分の和」が見やすいけれど、速さと時間の関係までは表のほうが整理しやすいよ。'},
+            words:   {mark: '〇', msg: '言葉の式は「歩いた道のり＋走った道のり＝全体の道のり」と、そのまま書けるね。'},
+            diagram: {mark: '〇', msg: '道のりの線分図は「全体＝部分の和」が見やすいけれど、速さと時間の関係までは表のほうが整理しやすいよ。'},
             table:   {mark: '◎', msg: '表は「速さ・時間・道のり」の関係を縦横に整理できて、速さ×時間＝道のり の計算が見えやすい！'}
         }
     };
@@ -1466,7 +1466,7 @@ function specKafusoku(p) {
         eqHint: K.eqHint,
         best: 'diagram',
         fit: {
-            words:   {mark: '○', msg: `言葉の式でも書けるけれど、「${K.whole}」という見方は、線分図のほうがつかみやすいかも。`},
+            words:   {mark: '〇', msg: `言葉の式でも書けるけれど、「${K.whole}」という見方は、線分図のほうがつかみやすいかも。`},
             diagram: {mark: '◎', msg: `線分図は、「${K.whole}」という関係が見やすい！`},
             table:   {mark: '△', msg: `表は1回目と2回目の数は整理しやすいけれど、「${K.whole}」という関係が表からは見えにくくて、少し使いづらかったかも。`}
         }
@@ -1577,7 +1577,7 @@ function specOtsuriA1(p) {
         best: 'words',
         fit: {
             words:   {mark: '◎', msg: '言葉の式は「出した金額 − 代金の合計 ＝ おつり」と、お金の流れをそのまま書けるので、いちばん立式しやすい！'},
-            diagram: {mark: '○', msg: '線分図も「出した金額が、代金とおつりに分かれる」関係が見やすいよ。ただ、式にするには言葉の式のほうが近道かも。'},
+            diagram: {mark: '〇', msg: '線分図も「出した金額が、代金とおつりに分かれる」関係が見やすいよ。ただ、式にするには言葉の式のほうが近道かも。'},
             table:   {mark: '△', msg: '表は単価・数量・代金は整理しやすいけれど、「出した金額 − 代金 ＝ おつり」の引き算の関係が表からは見えにくくて、少し使いづらかったかも。'}
         }
     };
@@ -1656,7 +1656,7 @@ function specOtsuriCount(p) {
         best: 'words',
         fit: {
             words:   {mark: '◎', msg: '言葉の式は「出した金額 − 代金の合計 ＝ おつり」と、2つの値段の代金をそのまま書けるので、立式しやすい！'},
-            diagram: {mark: '○', msg: '線分図も「出した金額が、2つの代金とおつりに分かれる」関係が見やすいよ。ただ、式にするには言葉の式のほうが近道かも。'},
+            diagram: {mark: '〇', msg: '線分図も「出した金額が、2つの代金とおつりに分かれる」関係が見やすいよ。ただ、式にするには言葉の式のほうが近道かも。'},
             table:   {mark: '△', msg: '表は2つの値段・数量・代金を整理できるけれど、「出した金額 − 代金の合計 ＝ おつり」の引き算の関係が表からは見えにくくて、少し使いづらかったかも。'}
         }
     };
@@ -1737,7 +1737,7 @@ function specDaikinBai(p) {
         best: 'words',
         fit: {
             words:   {mark: '◎', msg: `言葉の式は「左の代金の合計 ＝ ${k}倍 ×（右の代金の合計）」と、倍の関係をそのまま式にできる！`},
-            diagram: {mark: '○', msg: '線分図でも「何倍か」は見やすいけれど、2本の線に代金を書き込むと図が細かくなって、少し使いづらかったかも。'},
+            diagram: {mark: '〇', msg: '線分図でも「何倍か」は見やすいけれど、2本の線に代金を書き込むと図が細かくなって、少し使いづらかったかも。'},
             table:   {mark: '△', msg: '表は2つの代金の合計を整理できるけれど、「〇倍」の関係が表からは見えにくくて、少し使いづらかったかも。'}
         }
     };
@@ -1815,8 +1815,8 @@ function specDaikinZan(p) {
         eqHint: `兄の残金は、弟の残金の${k}倍。弟の残金は、かっこでひとまとめにしてから${k}倍するよ。`,
         best: 'table',
         fit: {
-            words:   {mark: '○', msg: `言葉の式は「兄の残金 ＝ ${k}倍 ×（弟の残金）」と書けるけれど、兄と弟の2人分を一度に考えるので、少し混乱しやすいかも。`},
-            diagram: {mark: '○', msg: '線分図でも2人の所持金と残金は表せるけれど、2本の線に書き込むことが多くなりやすいよ。'},
+            words:   {mark: '〇', msg: `言葉の式は「兄の残金 ＝ ${k}倍 ×（弟の残金）」と書けるけれど、兄と弟の2人分を一度に考えるので、少し混乱しやすいかも。`},
+            diagram: {mark: '〇', msg: '線分図でも2人の所持金と残金は表せるけれど、2本の線に書き込むことが多くなりやすいよ。'},
             table:   {mark: '◎', msg: '表は兄と弟を並べて、持っているお金・値段・残金を縦に整理できるので、残金の関係が見えやすい！'}
         }
     };
@@ -1895,8 +1895,8 @@ function specOikake(p) {
         eqHint: '追いついたとき、兄と弟が進んだ道のりは等しいよ。「兄の道のり ＝ 弟の道のり」を式にしよう。弟の時間は(x＋早く出発した分)だよ。',
         best: 'table',
         fit: {
-            words:   {mark: '○', msg: '言葉の式は「兄の速さ×兄の時間 ＝ 弟の速さ×弟の時間」と書けるけれど、2人分の速さと時間を1本の式に並べるので、少し整理しにくいかも。'},
-            diagram: {mark: '○', msg: '線分図は「道のりが同じ」という関係が見やすいけれど、速さと時間までは表したほうが整理しやすいよ。'},
+            words:   {mark: '〇', msg: '言葉の式は「兄の速さ×兄の時間 ＝ 弟の速さ×弟の時間」と書けるけれど、2人分の速さと時間を1本の式に並べるので、少し整理しにくいかも。'},
+            diagram: {mark: '〇', msg: '線分図は「道のりが同じ」という関係が見やすいけれど、速さと時間までは表したほうが整理しやすいよ。'},
             table:   {mark: '◎', msg: '表は「速さ・時間・道のり」の関係を、兄と弟で縦横に整理できて、速さ×時間＝道のり の計算が見えやすい！'}
         }
     };
@@ -1969,8 +1969,8 @@ function specChigai(p) {
         eqHint: '「遅く歩いたときの時間 − 速く歩いたときの時間 ＝ 時間の差」を式にしよう。時間＝道のり÷速さ だよ。',
         best: 'table',
         fit: {
-            words:   {mark: '○', msg: '言葉の式は「遅い方の時間 − 速い方の時間 ＝ 時間の差」と書けて、立式につながりやすいよ。'},
-            diagram: {mark: '○', msg: '線分図は「遅い方の時間 ＝ 速い方の時間 ＋ 時間の差」が見やすいけれど、時間＝道のり÷速さ の計算までは表のほうが整理しやすいよ。'},
+            words:   {mark: '〇', msg: '言葉の式は「遅い方の時間 − 速い方の時間 ＝ 時間の差」と書けて、立式につながりやすいよ。'},
+            diagram: {mark: '〇', msg: '線分図は「遅い方の時間 ＝ 速い方の時間 ＋ 時間の差」が見やすいけれど、時間＝道のり÷速さ の計算までは表のほうが整理しやすいよ。'},
             table:   {mark: '◎', msg: '表は「道のり・速さ・時間」の関係を縦横に整理できるので、時間＝道のり÷速さ の計算が見えやすい！'}
         }
     };
@@ -2042,8 +2042,8 @@ function specDeau(p) {
         eqHint: '2人が出会うとき、2人が進んだ道のりの和が、2人の家の間の道のりになるよ。単位をそろえることと、Bさんの時間は(x−あとで出発した分)であることに気をつけよう。',
         best: 'table',
         fit: {
-            words:   {mark: '○', msg: '言葉の式は「Aさんの道のり ＋ Bさんの道のり ＝ 家の間の道のり」と、そのまま書けるね。'},
-            diagram: {mark: '○', msg: '線分図は「全体＝部分の和」が見やすいけれど、速さ・時間・道のりの関係や、kmとmの単位は表のほうが整理しやすいよ。'},
+            words:   {mark: '〇', msg: '言葉の式は「Aさんの道のり ＋ Bさんの道のり ＝ 家の間の道のり」と、そのまま書けるね。'},
+            diagram: {mark: '〇', msg: '線分図は「全体＝部分の和」が見やすいけれど、速さ・時間・道のりの関係や、kmとmの単位は表のほうが整理しやすいよ。'},
             table:   {mark: '◎', msg: '表は「速さ・時間・道のり」の関係を、2人で縦横に整理できて、速さ×時間＝道のり の計算が見えやすい！'}
         }
     };
@@ -2149,8 +2149,8 @@ function specHirei(p) {
         eqHint: `「${A}の量：${B}の量 ＝ ${A}の比：${B}の比」を式にしよう。順番をそろえることが大切だよ。`,
         best: 'table',
         fit: {
-            words:   {mark: '○', msg: `言葉の式は「${A}の量：${B}の量 ＝ ${A}の比：${B}の比」と、そのまま比例式にできるよ。`},
-            diagram: {mark: '○', msg: '線分図でも、1本の線の上に量、下に比を並べて表せるけれど、表のほうが同じ品物どうしを縦に見比べやすいかも。'},
+            words:   {mark: '〇', msg: `言葉の式は「${A}の量：${B}の量 ＝ ${A}の比：${B}の比」と、そのまま比例式にできるよ。`},
+            diagram: {mark: '〇', msg: '線分図でも、1本の線の上に量、下に比を並べて表せるけれど、表のほうが同じ品物どうしを縦に見比べやすいかも。'},
             table:   {mark: '◎', msg: '表は「量」と「比」を縦に並べて、同じ品物どうしを横に見比べられるので、比例式の順番がまちがいにくい！'}
         }
     };
@@ -2200,7 +2200,7 @@ function specHireiRatio(p) {
         eqHint: '「兄の数：全体の数 ＝ 兄の比：全体の比」を式にしよう。全体の比は、兄と弟の比を足した数だよ。',
         best: 'diagram',
         fit: {
-            words:   {mark: '○', msg: '言葉の式でも書けるけれど、「全体の比＝兄の比＋弟の比」という見方は、線分図のほうがつかみやすいかも。'},
+            words:   {mark: '〇', msg: '言葉の式でも書けるけれど、「全体の比＝兄の比＋弟の比」という見方は、線分図のほうがつかみやすいかも。'},
             diagram: {mark: '◎', msg: '線分図は、全体が兄と弟に分かれる様子と、全体の比が「兄の比＋弟の比」になることが見やすい！'},
             table:   {mark: '△', msg: '表は兄と全体の数・比を整理できるけれど、全体の比が「兄の比＋弟の比」になることが表からは見えにくくて、少し使いづらかったかも。'}
         }
@@ -2252,7 +2252,7 @@ function specHireiRecipe(p) {
         fit: {
             words:   {mark: '◎', msg: '言葉の式は「はじめの材料：はじめの個数 ＝ 必要な材料：つくる個数」と、そのまま比例式にできる！'},
             diagram: {mark: '△', msg: '線分図は、材料と個数という単位のちがうものを1本の線に並べることになって、図に表しにくかったかも。'},
-            table:   {mark: '○', msg: '表は「はじめ」と「つくる」を並べて整理できるけれど、比例式にするには言葉の式のほうが近道かも。'}
+            table:   {mark: '〇', msg: '表は「はじめ」と「つくる」を並べて整理できるけれど、比例式にするには言葉の式のほうが近道かも。'}
         }
     };
 }
@@ -2325,7 +2325,7 @@ function specHireiAdd(p) {
         eqHint: `「${A}の量：加えたあとの${B}の量 ＝ ${A}の比：${B}の比」を式にしよう。加えたあとの${B}の量は「はじめの量＋x」で、はじめの量のままにしないよ。`,
         best: 'table',
         fit: {
-            words:   {mark: '○', msg: `言葉の式は「${A}の量：加えたあとの${B}の量 ＝ 比」と書けるけれど、「加えたあと」が「はじめの量＋x」になることを忘れやすいかも。`},
+            words:   {mark: '〇', msg: `言葉の式は「${A}の量：加えたあとの${B}の量 ＝ 比」と書けるけれど、「加えたあと」が「はじめの量＋x」になることを忘れやすいかも。`},
             diagram: {mark: '△', msg: '線分図は、加える前の量と加えたあとの量のどちらを図に書くか迷いやすくて、少し使いづらかったかも。'},
             table:   {mark: '◎', msg: '表は「はじめの量」「加えたあとの量」「比」を縦に整理できるので、加えたあとの量が「はじめ＋x」になることが見えやすい！'}
         }
@@ -2402,7 +2402,7 @@ function specHireiGive(p) {
         eqHint: `「${P1}のあとの数：${P2}のあとの数 ＝ ${P1}の比：${P2}の比」を式にしよう。あげた${P1}はへり、もらった${P2}はふえるよ。`,
         best: 'table',
         fit: {
-            words:   {mark: '○', msg: `言葉の式は「${P1}のあとの数：${P2}のあとの数 ＝ 比」と書けるけれど、へる・ふえるの向きを混ぜやすいかも。`},
+            words:   {mark: '〇', msg: `言葉の式は「${P1}のあとの数：${P2}のあとの数 ＝ 比」と書けるけれど、へる・ふえるの向きを混ぜやすいかも。`},
             diagram: {mark: '△', msg: '線分図は、あげる前とあとで2人の数が変わる様子を図に表しにくくて、少し使いづらかったかも。'},
             table:   {mark: '◎', msg: '表は「もとの数」「あとの数」「比」を2人分並べて整理できるので、へる・ふえるの向きが見えやすい！'}
         }
@@ -2618,7 +2618,7 @@ function specNenreiSum(p) {
         eqHint: `「${nF} ＝ ${k}倍 ×（${nL} ＋ ${nU}）」を式にしよう。x年後の年齢は「現在の年齢＋増える年齢」。下の子と上の子をそれぞれ書いてから足すよ。`,
         best: 'table',
         fit: {
-            words:   {mark: '○', msg: `言葉の式は「${nF} ＝ ${k}倍 ×（下の子 ＋ 上の子）」と書けるけれど、3人分の「現在」と「x年後」が混ざりやすいかも。`},
+            words:   {mark: '〇', msg: `言葉の式は「${nF} ＝ ${k}倍 ×（下の子 ＋ 上の子）」と書けるけれど、3人分の「現在」と「x年後」が混ざりやすいかも。`},
             diagram: {mark: '△', msg: '線分図は、父・下の子・上の子の3本の線に書き込むことが多くて、少し使いづらかったかも。'},
             table:   {mark: '◎', msg: '表は下の子・上の子・父を年齢順に横に並べて、「現在」「増える年齢」「あとの年齢」を縦に整理できるので、年齢の変化が見えやすい！'}
         }
@@ -2689,7 +2689,7 @@ function specNenrei(p) {
         eqHint: `「${when}の${Fl} ＝ ${k}倍 ×（${when}の${Cl}）」を式にしよう。${when}の年齢は「現在の年齢＋増える年齢」。計算できる数は計算した数にしてね。`,
         best: 'table',
         fit: {
-            words:   {mark: '○', msg: `言葉の式は「${when}の${Fl} ＝ ${k}倍 ×（${when}の${Cl}）」と書けるけれど、「現在」と「${when}」の年齢が混ざりやすいかも。`},
+            words:   {mark: '〇', msg: `言葉の式は「${when}の${Fl} ＝ ${k}倍 ×（${when}の${Cl}）」と書けるけれど、「現在」と「${when}」の年齢が混ざりやすいかも。`},
             diagram: {mark: '△', msg: '線分図は「現在の年齢＋増える年齢」は見やすいけれど、父と子の2本の線に書き込むことが多くて、少し使いづらかったかも。'},
             table:   {mark: '◎', msg: '表は「現在の年齢」「増える年齢」「あとの年齢」を縦に整理できるので、年齢の変化が見えやすい！'}
         }
@@ -2746,7 +2746,7 @@ function wariaiData(p) {
             eqWrong: [`x+${fracT(p.w, 10)}x=${P}`, `x-${fracT(10 - p.w, 10)}x=${P}`, `${fracT(p.w, 10)}x=${P}`],
             eqHint: `「売値 ＝ 定価 － 割引額」をそのまま式にしよう。割引額は「定価×${frH(p.w, 10)}」だよ。`,
             best: 'diagram',
-            fm: {words: ['○', '言葉の式は「定価－割引額＝売値」と書けるけれど、割合の計算が見えにくいかも。'], diagram: ['◎', '線分図は「定価」を「割引額」と「売値」に分けて見られるので、割引の関係がわかりやすい！'], table: ['○', '表は割合と金額を整理できるけれど、「定価－割引額」の関係が見えにくいかも。']}
+            fm: {words: ['〇', '言葉の式は「定価－割引額＝売値」と書けるけれど、割合の計算が見えにくいかも。'], diagram: ['◎', '線分図は「定価」を「割引額」と「売値」に分けて見られるので、割引の関係がわかりやすい！'], table: ['〇', '表は割合と金額を整理できるけれど、「定価－割引額」の関係が見えにくいかも。']}
         };
     }
     if (p.kind === 'zouka') {
@@ -2767,7 +2767,7 @@ function wariaiData(p) {
             eqWrong: [`x+${fracT(100 + r, 100)}x=${P}`, `x-${fracT(r, 100)}x=${P}`, `${fracT(r, 100)}x=${P}`],
             eqHint: `「今年 ＝ 去年 ＋ 増えた分」をそのまま式にしよう。増えた分は「去年×${frH(r, 100)}」だよ。`,
             best: 'diagram',
-            fm: {words: ['○', '言葉の式は「去年＋増えた分＝今年」と書けるけれど、割合の計算が見えにくいかも。'], diagram: ['◎', '線分図は「今年」を「去年」と「増えた分」に分けて見られるので、増加の関係がわかりやすい！'], table: ['○', '表は割合と人数を整理できるけれど、「去年＋増えた分」の関係が見えにくいかも。']}
+            fm: {words: ['〇', '言葉の式は「去年＋増えた分＝今年」と書けるけれど、割合の計算が見えにくいかも。'], diagram: ['◎', '線分図は「今年」を「去年」と「増えた分」に分けて見られるので、増加の関係がわかりやすい！'], table: ['〇', '表は割合と人数を整理できるけれど、「去年＋増えた分」の関係が見えにくいかも。']}
         };
     }
     if (p.kind === 'nokori') {
@@ -2788,7 +2788,7 @@ function wariaiData(p) {
             eqWrong: [`x=${fracT(100 - r, 100)}x+${P}`, `${fracT(r, 100)}x=${P}`, `x+${fracT(r, 100)}x=${P}`],
             eqHint: '「全体 ＝ 男子 ＋ 女子」。男子は「全体×割合」で x を使って表そう。',
             best: 'diagram',
-            fm: {words: ['◎', '言葉の式は「全体＝男子＋女子」と、そのまま式にできる！'], diagram: ['◎', '線分図は「全体」を「男子」と「女子」に分けて見られるので、わかりやすい！'], table: ['○', '表は割合と人数を整理できるけれど、「全体＝男子＋女子」の式が少し遠回りかも。']}
+            fm: {words: ['◎', '言葉の式は「全体＝男子＋女子」と、そのまま式にできる！'], diagram: ['◎', '線分図は「全体」を「男子」と「女子」に分けて見られるので、わかりやすい！'], table: ['〇', '表は割合と人数を整理できるけれど、「全体＝男子＋女子」の式が少し遠回りかも。']}
         };
     }
     return null;
@@ -2836,8 +2836,8 @@ function specWariaiBubun(p) {
         best: 'words',
         fit: {
             words:   {mark: '◎', msg: '言葉の式は「全体×割合＝部分」と、そのまま式にできる！'},
-            diagram: {mark: '○', msg: '線分図は「何倍か」は見やすいけれど、式にするには言葉の式のほうが近道かも。'},
-            table: {mark: '○', msg: '表は割合と人数を縦に整理できるけれど、少し手順が多かったかも。'}
+            diagram: {mark: '〇', msg: '線分図は「何倍か」は見やすいけれど、式にするには言葉の式のほうが近道かも。'},
+            table: {mark: '〇', msg: '表は割合と人数を縦に整理できるけれど、少し手順が多かったかも。'}
         }
     };
 }
@@ -2909,7 +2909,7 @@ function specWariaiMegane(p) {
         eqHint: `「男子のメガネ ＋ 女子のメガネ ＝ ${M}人」を式にしよう。女子は(${T}−x)人だよ。`,
         best: 'diagram',
         fit: {
-            words:   {mark: '○', msg: '言葉の式は「男子のメガネ＋女子のメガネ＝合計」と書けるけれど、女子の人数のつながりが見えにくいかも。'},
+            words:   {mark: '〇', msg: '言葉の式は「男子のメガネ＋女子のメガネ＝合計」と書けるけれど、女子の人数のつながりが見えにくいかも。'},
             diagram: {mark: '◎', msg: '線分図は「クラス全体」と「メガネの人」を続けて見られるので、男女の関係がわかりやすい！'},
             table: {mark: '◎', msg: '表は男子・女子ごとに人数とメガネの人数を整理できるので、あとの式づくりが楽になる！'}
         }
@@ -2979,7 +2979,7 @@ const HATTEN = {
 };
 
 /* 基本問題のタイプ（開始画面の「基本問題」→内部のタイプID） */
-const KIHON = {kafusoku: 'k_kafusoku', hirei: 'k_hirei', hayasa: 'k_hayasa', otsuri: 'k_otsuri', daikin: 'k_daikin'};
+const KIHON = {awasete: 'k_awasete', heikin: 'k_heikin', noudo: 'k_noudo', nenrei: 'k_nenrei', wariai: 'k_wariai', kafusoku: 'k_kafusoku', hirei: 'k_hirei', hayasa: 'k_hayasa', otsuri: 'k_otsuri', daikin: 'k_daikin'};
 
 function typeName(id) {
     const t = TYPES.find(x => x.id === id);
@@ -3077,8 +3077,8 @@ function specHatten1(p) {
         eqHint: '「自転車の時間＋停止した時間＋歩いた時間＝全体の時間」を式にしよう。時間の単位を「時間」にそろえて、時間＝道のり÷速さ で表すよ。',
         best: 'table',
         fit: {
-            words:   {mark: '○', msg: '言葉の式は「自転車の時間＋停止した時間＋歩いた時間＝全体の時間」と書けるけれど、分を時間に、mをkmに直す変換を一度にやることになって、少し大変かも。'},
-            diagram: {mark: '○', msg: '線分図は「全体の時間＝部分の和」が見やすいけれど、道のりと速さから時間を求める計算までは、表のほうが整理しやすいよ。'},
+            words:   {mark: '〇', msg: '言葉の式は「自転車の時間＋停止した時間＋歩いた時間＝全体の時間」と書けるけれど、分を時間に、mをkmに直す変換を一度にやることになって、少し大変かも。'},
+            diagram: {mark: '〇', msg: '線分図は「全体の時間＝部分の和」が見やすいけれど、道のりと速さから時間を求める計算までは、表のほうが整理しやすいよ。'},
             table:   {mark: '◎', msg: '表は「道のり・速さ・時間」と単位を縦横に整理できるので、分を時間に、mをkmに直すところまで見えやすい！'}
         }
     };
@@ -3165,8 +3165,8 @@ function specHatten2(p) {
         eqHint: '出会うまでに2人が進んだ道のりの和は、家とポストの間の往復分（1200m×2）になるよ。「Aさんの道のり＋弟の道のり＝往復の道のり」を式にしよう。弟の時間は(x＋15)分だよ。',
         best: 'table',
         fit: {
-            words:   {mark: '○', msg: '言葉の式は「Aさんの道のり＋弟の道のり＝往復の道のり」と書けるけれど、弟がポストで折り返すので、道のりの和がなぜ往復分になるのかを考える必要があるよ。'},
-            diagram: {mark: '○', msg: '線分図は「往復分の道のりが、2人の道のりに分かれる」関係が見やすいけれど、速さと時間から道のりを求める計算までは、表のほうが整理しやすいよ。'},
+            words:   {mark: '〇', msg: '言葉の式は「Aさんの道のり＋弟の道のり＝往復の道のり」と書けるけれど、弟がポストで折り返すので、道のりの和がなぜ往復分になるのかを考える必要があるよ。'},
+            diagram: {mark: '〇', msg: '線分図は「往復分の道のりが、2人の道のりに分かれる」関係が見やすいけれど、速さと時間から道のりを求める計算までは、表のほうが整理しやすいよ。'},
             table:   {mark: '◎', msg: '表は「道のり・速さ・時間」の関係を、2人で縦横に整理できて、速さ×時間＝道のり の計算が見えやすい！'}
         }
     };
@@ -3264,7 +3264,7 @@ function specKDaikin(p) {
     const fit = {
         words:   {mark: '◎', msg: '言葉の式は「単価×個数＝代金」「Aの代金＋Bの代金＝合計」と、そのまま式につなげられる。この問題にぴったり！'},
         diagram: {mark: '△', msg: '線分図は「全体＝部分の和」は見やすいけれど、「単価×個数」の掛け算が入ると図に書くことが多くて、少し使いづらかったかも。'},
-        table:   {mark: '○', msg: '表は「単価・数量・代金」を整理できるけれど、式にするには一手間かかるので、言葉の式のほうが近道だったかも。'}
+        table:   {mark: '〇', msg: '表は「単価・数量・代金」を整理できるけれど、式にするには一手間かかるので、言葉の式のほうが近道だったかも。'}
     };
 
     if (p.kind === 'k3') {
@@ -3489,7 +3489,7 @@ function specKOtsuri(p) {
         best: 'words',
         fit: {
             words:   {mark: '◎', msg: '言葉の式は「出した金額 − 代金 ＝ おつり」と、お金の流れをそのまま書けるので、いちばん立式しやすい！'},
-            diagram: {mark: '○', msg: '線分図も「出した金額が、代金とおつりに分かれる」関係が見やすいよ。ただし、式にするには言葉の式のほうが近道かも。'},
+            diagram: {mark: '〇', msg: '線分図も「出した金額が、代金とおつりに分かれる」関係が見やすいよ。ただし、式にするには言葉の式のほうが近道かも。'},
             table:   {mark: '△', msg: '表は単価・数量・代金は整理しやすいけれど、「出した金額 − 代金 ＝ おつり」の引き算の関係が表からは見えにくくて、少し使いづらかったかも。'}
         }
     };
@@ -3606,7 +3606,7 @@ function specKHayasa(p) {
         eqHint: `整理した公式「${formula.left}＝${ftxt}」に、問題の数を当てはめよう。計算はまだしなくていいよ。`,
         best: 'table',
         fit: {
-            words:   {mark: '○', msg: `言葉の式は公式「${formula.left}＝${ftxt}」をそのまま使えるので、数を当てはめるだけで式にできるよ。`},
+            words:   {mark: '〇', msg: `言葉の式は公式「${formula.left}＝${ftxt}」をそのまま使えるので、数を当てはめるだけで式にできるよ。`},
             diagram: {mark: '△', msg: '線分図は「全体と部分」を表すのが得意だけれど、この問題は「速さ×時間＝道のり」のかけ算の関係なので、図には表しにくかったかも。'},
             table:   {mark: '◎', msg: '表は「道のり・速さ・時間」の3つの量を縦に並べて整理できるので、この3つの関係が見えやすい！'}
         }
@@ -3686,8 +3686,8 @@ function specKHirei(p) {
         eqHint: `「${A}の量：${B}の量 ＝ ${A}の比：${B}の比」を式にしよう。順番をそろえることが大切だよ。`,
         best: 'table',
         fit: {
-            words:   {mark: '○', msg: `言葉の式は「${A}の量：${B}の量 ＝ ${A}の比：${B}の比」と、そのまま比例式にできるよ。`},
-            diagram: {mark: '○', msg: '線分図でも、1本の線の上に量、下に比を並べて表せるけれど、表のほうが同じ品物どうしを縦に見比べやすいかも。'},
+            words:   {mark: '〇', msg: `言葉の式は「${A}の量：${B}の量 ＝ ${A}の比：${B}の比」と、そのまま比例式にできるよ。`},
+            diagram: {mark: '〇', msg: '線分図でも、1本の線の上に量、下に比を並べて表せるけれど、表のほうが同じ品物どうしを縦に見比べやすいかも。'},
             table:   {mark: '◎', msg: '表は「量」と「比」を縦に並べて、同じ品物どうしを横に見比べられるので、比例式の順番がまちがいにくい！'}
         }
     };
@@ -3732,7 +3732,7 @@ function specKKafusoku(p) {
                 [`${p.c}${u}ずつ`, s[3], s[4], s[5]]
             ])
         };
-        sp.fit.table = {mark: '○', msg: '表は「配った数＋過不足＝全体の数」を配り方ごとに整理できて、右の列を見比べると、どちらの配り方でも全体の数が同じだとわかるよ。'};
+        sp.fit.table = {mark: '〇', msg: '表は「配った数＋過不足＝全体の数」を配り方ごとに整理できて、右の列を見比べると、どちらの配り方でも全体の数が同じだとわかるよ。'};
         return sp;
     }
     /* k2：全体の数をxとおく（p.x は人数で、図の長さの計算にだけ使う） */
@@ -3823,9 +3823,976 @@ function specKKafusoku(p) {
         fit: {
             words:   {mark: '◎', msg: `言葉の式は「（${A}の数−余り）÷1人分＝（${A}の数＋不足）÷1人分」と書けるので、2通りの配り方の人数が等しいことを、そのまま式にできるよ！`},
             diagram: {mark: '△', msg: '線分図は「全体の数−余り」「全体の数＋不足」を表せるけれど、何個ずつ配ったのかは図に書かれていないので、方程式までは見えにくくて、少し使いづらかったかも。'},
-            table:   {mark: '○', msg: '表は「過不足」「配った数」「人数」を、配り方ごとに整理できるよ。ただ、「過不足」と「配った数」の符号が違うから、わかりにくいかも。'}
+            table:   {mark: '〇', msg: '表は「過不足」「配った数」「人数」を、配り方ごとに整理できるよ。ただ、「過不足」と「配った数」の符号が違うから、わかりにくいかも。'}
         }
     };
+}
+
+/* ---------- 基本問題：年齢（k1:x年後／k2:現在の年齢をx／k3:x年前） ---------- */
+function genKNenrei(kind) {
+    const nm = ['A君', 'Bさん', 'C君', 'Dさん'][randInt(0, 3)];
+    if (kind === 'k1') {
+        const C = randInt(8, 16), x = randInt(2, 9);
+        return {kind: kind, nm: nm, C: C, x: x, T: C + x};
+    }
+    if (kind === 'k2') {
+        const x = randInt(10, 16), n = randInt(2, 9);
+        return {kind: kind, nm: nm, x: x, n: n, T: x + n};
+    }
+    const C = randInt(12, 18), x = randInt(2, 8);
+    return {kind: kind, nm: nm, C: C, x: x, T: C - x};
+}
+
+function specKNenrei(p) {
+    const {nm, T} = p;
+    const k = p.kind;
+    const lab = (t, s) => `<div class="col"><div class="lab">${t}</div>${s}</div>`;
+    const U = s => `${s}（歳）`;
+    const Y = s => `${s}（年）`;
+    const cur = (k === 'k2') ? 'x' : `${p.C}`;
+    const yrs = (k === 'k2') ? `${p.n}` : 'x';
+    const aftName = (k === 'k1') ? 'x年後の年齢' : (k === 'k2') ? `${p.n}年後の年齢` : 'x年前の年齢';
+    const yrName = (k === 'k3') ? '減る年数' : '増える年数';
+    const sign = (k === 'k3') ? '−' : '＋';
+    const hCur = (k === 'k2') ? '求めたいもの（現在の年齢）を x 歳とおいたね。' : `${nm}の現在の年齢は問題文に書いてあるよ。`;
+    const hYrs = (k === 'k2') ? `${p.n}年後だから、年数は${p.n}年だよ。` : '求めたいもの（年数）を x 年とおいたね。';
+    const hAft = `${aftName}は問題文に書いてあるよ。`;
+    const sCur = {ans: U(cur), hint: hCur};
+    const sYrs = {ans: Y(yrs), hint: hYrs};
+    const sAft = {ans: U(`${T}`), hint: hAft};
+    const wrong = [Y(cur), U(yrs)];
+
+    /* 線分図：全体→部分の順（k1・k2は「あとの年齢」が全体、k3は「現在の年齢」が全体） */
+    const dSlots = (k === 'k3') ? [sCur, sAft, sYrs] : [sAft, sCur, sYrs];
+    const f = (k === 'k3') ? 62 : 55;
+    const tans = [cur, yrs, `${T}`];
+    const tHints = [hCur, hYrs, hAft];
+    return {
+        text: {
+            k1: `現在${p.C}歳の${nm}が、${T}歳になるのは何年後ですか。`,
+            k2: `${nm}は${p.n}年後に${T}歳になります。${nm}の現在の年齢を求めなさい。`,
+            k3: `現在${p.C}歳の${nm}が、${T}歳だったのは何年前ですか。`
+        }[k],
+        varAns: {k1: '何年後か', k2: `${nm}の現在の年齢`, k3: '何年前か'}[k],
+        varWrong: {
+            k1: [`${nm}の現在の年齢`, '何年前か', `${T}歳になったときの年齢`],
+            k2: ['何年後か', `${T}歳の年齢`, '増える年数'],
+            k3: ['何年後か', `${nm}の現在の年齢`, `${T}歳になるまでの年数`]
+        }[k],
+        fill: {
+            words: {
+                slots: [sCur, sYrs, sAft],
+                pool: mkPool([sCur.ans, sYrs.ans, sAft.ans], wrong),
+                layout: s => `<div class="words">${lab('現在の年齢', s[0])}<div class="op">${sign}</div>${lab(yrName, s[1])}<div class="op">＝</div>${lab(aftName, s[2])}</div>`
+            },
+            diagram: {
+                slots: dSlots,
+                pool: mkPool(dSlots.map(q => q.ans), wrong),
+                layout: s => (k === 'k3')
+                    ? dgI(barTopT('現在の年齢', s[0], [[aftName, s[1], f], [yrName, s[2], 100 - f]], 100))
+                    : dgI(barTopT(aftName, s[0], [['現在の年齢', s[1], f], [yrName, s[2], 100 - f]], 100))
+            },
+            table: {
+                slots: tans.map((ans, i) => sl(ans, tHints[i])),
+                pool: mkPool(tans, wrong.map(w => w.replace(/（.）$/, ''))),
+                layout: s => tableT(['', nm], [
+                    ['現在の年齢（歳）', s[0]],
+                    [`${yrName}（年）`, s[1]],
+                    [`${aftName}（歳）`, s[2]]
+                ])
+            }
+        },
+        eqAns: {k1: `${p.C}+x=${T}`, k2: `x+${p.n}=${T}`, k3: `${p.C}-x=${T}`}[k],
+        eqWrong: {
+            k1: [`${p.C}-x=${T}`, `${T}+x=${p.C}`, `x=${p.C}+${T}`],
+            k2: [`x-${p.n}=${T}`, `x+${T}=${p.n}`, `${p.n}x=${T}`],
+            k3: [`${p.C}+x=${T}`, `${T}-x=${p.C}`, `x-${p.C}=${T}`]
+        }[k],
+        eqHint: (k === 'k3') ? '整理した「現在の年齢 − 減る年数 ＝ x年前の年齢」と見比べよう。' : `整理した「現在の年齢 ＋ 増える年数 ＝ ${aftName}」と見比べよう。`,
+        best: 'table',
+        fit: {
+            words:   {mark: '〇', msg: `言葉の式は「現在の年齢${sign}${yrName}＝${aftName}」と、そのまま式にできるよ。`},
+            diagram: {mark: '〇', msg: (k === 'k3') ? '線分図は「現在の年齢」を「x年前の年齢」と「減る年数」に分けて見られるけれど、年齢の変化を整理するなら、表のほうが見やすいかも。' : '線分図は「あとの年齢」を「現在の年齢」と「増える年数」に分けて見られるけれど、年齢の変化を整理するなら、表のほうが見やすいかも。'},
+            table:   {mark: '◎', msg: '表は「現在の年齢」「年数」「あとの年齢」を縦に整理できるので、年齢の変化が見えやすい！'}
+        }
+    };
+}
+
+function eqFormKNenrei(p) {
+    const {T} = p;
+    if (p.kind === 'k1') {
+        return {diagram: eqf(`${T}=${p.C}+x`, [`${T}=${p.C}-x`, `${p.C}=${T}+x`, `x=${T}+${p.C}`], '線分図は「全体＝部分の和」。「あとの年齢 ＝ 現在の年齢 ＋ 増える年数」を式にしよう。')};
+    }
+    if (p.kind === 'k2') {
+        return {diagram: eqf(`${T}=x+${p.n}`, [`${T}=x-${p.n}`, `x=${T}+${p.n}`, `${T}x=${p.n}`], '線分図は「全体＝部分の和」。「あとの年齢 ＝ 現在の年齢 ＋ 増える年数」を式にしよう。')};
+    }
+    return {diagram: eqf(`${p.C}=${T}+x`, [`${p.C}=${T}-x`, `${T}=${p.C}+x`, `x=${p.C}+${T}`], '線分図は「全体＝部分の和」。「現在の年齢 ＝ x年前の年齢 ＋ 減る年数」を式にしよう。')};
+}
+
+/* ---------- 基本問題：割合（k1:全体をx／k2:定価をx／k3:割合をx） ---------- */
+function genKWariai(kind) {
+    if (kind === 'k1') return Object.assign(genWariai('bubun'), {kind: 'k1', sub: 'bubun'});
+    if (kind === 'k2') return Object.assign(genWariai('waribiki'), {kind: 'k2', sub: 'waribiki'});
+    const r = [20, 25, 30, 40, 50, 60, 75][randInt(0, 6)];
+    const N = randInt(2, 10) * 20;
+    return {kind: 'k3', sub: 'rate', N: N, r: r, P: N * r / 100};
+}
+
+function specKWariai(p) {
+    if (p.sub === 'bubun' || p.sub === 'waribiki') return specWariai(Object.assign({}, p, {kind: p.sub}));
+    /* k3：割合をx%とおく */
+    const {N, P} = p;
+    const U = s => `${s}（人）`;
+    const d = fracT('x', 100);
+    const ws = [
+        sl(U(N), '全生徒の人数（全体）は問題文に書いてあるよ。'),
+        sl(d, '求めたいもの（サッカー部の割合）を x% とおいたね。分数で表すと x/100 だよ。'),
+        sl(U(P), 'サッカー部の人数（部分）は問題文に書いてあるよ。')
+    ];
+    const wrong = [U('x'), fracT(100, 'x'), U(`${P}x`)];
+    const one = (t, s, w) => `<div style="width:${w}%"><div class="dg-top">${labT(t, s)}</div><div class="dg-bracket up"></div><div class="dg-line">${segT(1)}</div></div>`;
+    const tans = [`${N}`, `${P}`, '1', d];
+    const th = ['全生徒の人数（全体）は問題文に書いてあるよ。', 'サッカー部の人数（部分）は問題文に書いてあるよ。', '全体をもとにするので、割合は1だよ。', '求めたいもの（部分の割合）を x% とおいたね。分数で表すと x/100 だよ。'];
+    return {
+        text: `ある学校の全生徒${N}人のうち、サッカー部に入っているのは${P}人です。サッカー部に入っている人は、全生徒の何%ですか。`,
+        varAns: 'サッカー部の割合',
+        varWrong: ['全生徒の人数', 'サッカー部の人数', 'サッカー部に入っていない人数'],
+        fill: {
+            words: {
+                slots: ws,
+                pool: mkPool(ws.map(q => q.ans), wrong),
+                layout: s => wordsT([labT('全体', s[0]), opT('×'), labT('割合', s[1]), opT('＝'), labT('部分', s[2])])
+            },
+            diagram: {
+                slots: ws,
+                pool: mkPool(ws.map(q => q.ans), wrong),
+                layout: s => dgI(one('全体', s[0], 100)
+                    + `<div class="lab" style="margin:6px 3px;">↓ 下の線の長さは、上の線の ${s[1]} 倍</div>`
+                    + one('部分', s[2], clampT(P / N, 0.25, 0.85)))
+            },
+            table: {
+                slots: tans.map((a, i) => sl(a, th[i])),
+                pool: mkPool(tans, [`${P}x`, fracT(100, 'x'), 'x']),
+                layout: s => tableT(['', '全体', '部分'], [['人数（人）', s[0], s[1]], ['割合', s[2], s[3]]])
+            }
+        },
+        eqAns: `${N}${fracT('x', 100)}=${P}`,
+        eqWrong: [`${N}x=${P}`, `${N}${fracT(100, 'x')}=${P}`, `${P}${fracT('x', 100)}=${N}`],
+        eqHint: '「全体 × 割合 ＝ 部分」を式にしよう。割合の x% は分数で表すよ。',
+        best: 'words',
+        fit: {
+            words:   {mark: '◎', msg: '言葉の式は「全体×割合＝部分」と、そのまま式にできる！'},
+            diagram: {mark: '〇', msg: '線分図は「何倍か」は見やすいけれど、式にするには言葉の式のほうが近道かも。'},
+            table:   {mark: '〇', msg: '表は割合と人数を縦に整理できるけれど、少し手順が多かったかも。'}
+        }
+    };
+}
+
+function eqFormKWariai(p) {
+    return (p.sub === 'rate') ? {} : eqFormWariai(Object.assign({}, p, {kind: p.sub}));
+}
+
+/* ---------- 基本問題：合わせて〇個（k1:Aの個数をx／k2:Bの個数をx／k3:あわせた個数をx） ---------- */
+function genKAwasete(kind) {
+    const pairs = [['みかん', 'りんご'], ['あめ', 'ガム'], ['パン', 'おにぎり'], ['クッキー', 'ドーナツ']];
+    const [A, B] = pairs[randInt(0, pairs.length - 1)];
+    const a = [50, 60, 80, 90][randInt(0, 3)];
+    const b = [120, 130, 150, 200][randInt(0, 3)];
+    if (kind === 'k3') {
+        const n = randInt(2, 4), y = randInt(3, 8);
+        return {kind: kind, A: A, B: B, a: a, b: b, n: n, x: n + y, M: a * n + b * y};
+    }
+    if (kind === 'k2') {
+        const cB = randInt(3, 8), d = randInt(2, 6);
+        return {kind: kind, A: A, B: B, d: d, N: 2 * cB + d, x: cB};
+    }
+    const N = randInt(8, 15), cA = randInt(2, N - 2);
+    return {kind: kind, A: A, B: B, a: a, b: b, N: N, x: cA, M: a * cA + b * (N - cA)};
+}
+
+function specKAwasete(p) {
+    if (p.kind === 'k2') return specKAwaseteDiff(p);
+    const {A, B, a, b, M, N, n} = p;
+    const k = p.kind;
+    const lab = (t, s) => `<div class="col"><div class="lab">${t}</div>${s}</div>`;
+    const cntA = (k === 'k1') ? 'x' : (k === 'k2') ? `${N}-x` : `${n}`;
+    const cntB = (k === 'k1') ? `${N}-x` : (k === 'k2') ? 'x' : `x-${n}`;
+    const cntT = (k === 'k3') ? 'x' : `${N}`;
+    const prA = (k === 'k1') ? `${a}x` : (k === 'k2') ? `${a}(${N}-x)` : `${a * n}`;
+    const prB = (k === 'k1') ? `${b}(${N}-x)` : (k === 'k2') ? `${b}x` : `${b}(x-${n})`;
+    const hA = `${A}の代金は「単価×個数」だよ。` + ((k === 'k3') ? '計算した数を選ぼう。' : '');
+    const hB = `${B}の代金は「単価×個数」だよ。`;
+    const hM = '代金の合計は問題文に書いてあるよ。';
+    const wSlots = [sl(`${prA}（円）`, hA), sl(`${prB}（円）`, hB), sl(`${M}（円）`, hM)];
+    const wrongW = {
+        k1: [`${a}(${N}-x)（円）`, `${b}x（円）`],
+        k2: [`${a}x（円）`, `${b}(${N}-x)（円）`],
+        k3: [`${a}x（円）`, `${b}x（円）`]
+    }[k];
+    const wPool = mkPool(wSlots.map(q => q.ans), wrongW);
+    const dSlots = [wSlots[2], wSlots[0], wSlots[1]];
+    const hx = (k === 'k1') ? `求めたい個数（${A}）を x 個とおいたね。` : (k === 'k2') ? `求めたい個数（${B}）を x 個とおいたね。` : '求めたい個数（あわせた個数）を x 個とおいたね。';
+    const tHints = [
+        `${A}の単価は問題文に書いてあるよ。`, `${B}の単価は問題文に書いてあるよ。`,
+        (k === 'k1') ? hx : (k === 'k2') ? `${A}の個数は「あわせた個数−${B}の個数」だよ。` : `${A}の個数は問題文に書いてあるよ。`,
+        (k === 'k2') ? hx : (k === 'k1') ? `${B}の個数は「あわせた個数−${A}の個数」だよ。` : `${B}の個数は「あわせた個数−${A}の個数」だよ。`,
+        (k === 'k3') ? hx : 'あわせた個数は問題文に書いてあるよ。',
+        hA, hB, hM
+    ];
+    const tans = [`${a}`, `${b}`, cntA, cntB, cntT, prA, prB, `${M}`];
+    const f = clampT(a / (a + b), 0.35, 0.65);
+    return {
+        text: {
+            k1: `1個${a}円の${A}と1個${b}円の${B}を、あわせて${N}個買ったところ、代金の合計は${M}円でした。${A}は何個買いましたか。`,
+            k2: `1個${a}円の${A}と1個${b}円の${B}を、あわせて${N}個買ったところ、代金の合計は${M}円でした。${B}は何個買いましたか。`,
+            k3: `1個${a}円の${A}を${n}個と、1個${b}円の${B}を何個か買ったところ、あわせて何個かになり、代金の合計は${M}円でした。あわせて何個買いましたか。`
+        }[k],
+        varAns: {k1: `買った${A}の個数`, k2: `買った${B}の個数`, k3: 'あわせた個数'}[k],
+        varWrong: {
+            k1: [`買った${B}の個数`, '代金の合計', 'あわせた個数'],
+            k2: [`買った${A}の個数`, '代金の合計', 'あわせた個数'],
+            k3: [`買った${B}の個数`, '代金の合計', `買った${A}の個数`]
+        }[k],
+        fill: {
+            words: {
+                slots: wSlots,
+                pool: wPool,
+                layout: s => `<div class="words">${lab(A + 'の代金', s[0])}<div class="op">＋</div>${lab(B + 'の代金', s[1])}<div class="op">＝</div>${lab('代金の合計', s[2])}</div>`
+            },
+            diagram: {
+                slots: dSlots,
+                pool: wPool,
+                layout: s => dgI(barTopT('代金の合計', s[0], [[A + 'の代金', s[1], Math.round(f * 100)], [B + 'の代金', s[2], 100 - Math.round(f * 100)]], 100))
+            },
+            table: {
+                slots: tans.map((ans, i) => sl(ans, tHints[i])),
+                pool: mkPool(tans, [`${a + b}`, `x+${N || n}`, `${a}x`]),
+                layout: s => tableT(['', A, B, '合計'], [
+                    ['単価（円）', s[0], s[1], ''],
+                    ['個数（個）', s[2], s[3], s[4]],
+                    ['代金（円）', s[5], s[6], s[7]]
+                ])
+            }
+        },
+        eqAns: `${prA}+${prB}=${M}`,
+        eqWrong: {
+            k1: [`${a}x+${b}x=${M}`, `${a}(${N}-x)+${b}x=${M}`, `${a}x+${b}(${N}-x)=${N}`],
+            k2: [`${a}x+${b}x=${M}`, `${a}x+${b}(${N}-x)=${M}`, `${a}(${N}-x)+${b}x=${N}`],
+            k3: [`${a * n}+${b}x=${M}`, `${a * n}+${b}(x+${n})=${M}`, `${a}x+${b}(x-${n})=${M}`]
+        }[k],
+        eqHint: `整理した「${A}の代金＋${B}の代金＝代金の合計」と見比べよう。`,
+        best: 'table',
+        fit: {
+            words:   {mark: '〇', msg: `言葉の式は「${A}の代金＋${B}の代金＝代金の合計」と書けるけれど、個数を x で表す部分が少しむずかしいかも。`},
+            diagram: {mark: '〇', msg: `線分図は「代金の合計」を「${A}の代金」と「${B}の代金」に分けて見られるけれど、個数の関係までは図に書きにくいかも。`},
+            table:   {mark: '◎', msg: '表は「単価・個数・代金」を品物ごとに整理できて、「あわせて何個」という個数の関係も書き込めるので、見やすい！'}
+        }
+    };
+}
+
+/* 合わせて〇個②：個数の差で表す（AはBよりd個多い。Bの個数をxとおく） */
+function specKAwaseteDiff(p) {
+    const {A, B, d, N} = p;
+    const lab = (t, s) => `<div class="col"><div class="lab">${t}</div>${s}</div>`;
+    const U = t => `${t}（個）`;
+    const hX = `求めたいもの（${B}の個数）を x 個とおいたね。`;
+    const hA = `${A}は${B}より${d}個多いから、「${B}の個数＋${d}」だよ。`;
+    const hN = 'あわせた個数は問題文に書いてあるよ。';
+    const sB = sl(U('x'), hX);
+    const sA = sl(U(`x+${d}`), hA);
+    const sN = sl(U(`${N}`), hN);
+    const wrong = [U(`x-${d}`), U(`${d}`)];
+    const wSlots = [sB, sA, sN];
+    const dSlots = [sN, sB, sA];
+    const tans = [`${d}`, 'x', `x+${d}`, `${N}`];
+    const tHints = [`${A}は${B}より何個多いかな？`, hX, hA, hN];
+    const f = clampT(0.46, 0.35, 0.65);
+    return {
+        text: `${A}は${B}より${d}個多く買い、あわせて${N}個買いました。${B}は何個買いましたか。`,
+        varAns: `買った${B}の個数`,
+        varWrong: [`買った${A}の個数`, 'あわせた個数', `${A}と${B}の個数の差`],
+        fill: {
+            words: {
+                slots: wSlots,
+                pool: mkPool(wSlots.map(q => q.ans), wrong),
+                layout: s => `<div class="words">${lab(B + 'の個数', s[0])}<div class="op">＋</div>${lab(A + 'の個数', s[1])}<div class="op">＝</div>${lab('あわせた個数', s[2])}</div>`
+            },
+            diagram: {
+                slots: dSlots,
+                pool: mkPool(dSlots.map(q => q.ans), wrong),
+                layout: s => dgI(barTopT('あわせた個数', s[0], [[B + 'の個数', s[1], Math.round(f * 100)], [A + 'の個数', s[2], 100 - Math.round(f * 100)]], 100))
+            },
+            table: {
+                slots: tans.map((a, i) => sl(a, tHints[i])),
+                pool: mkPool(tans, [`x-${d}`, `${d}x`, `${N - d}`]),
+                layout: s => tableT(['', B, A, 'あわせて'], [
+                    [`${B}より多い個数（個）`, '0', s[0], ''],
+                    ['個数（個）', s[1], s[2], s[3]]
+                ])
+            }
+        },
+        eqAns: `x+(x+${d})=${N}`,
+        eqWrong: [`x+(x-${d})=${N}`, `x+${d}x=${N}`, `x(x+${d})=${N}`],
+        eqHint: `整理した「${B}の個数＋${A}の個数＝あわせた個数」と見比べよう。`,
+        best: 'diagram',
+        fit: {
+            words:   {mark: '〇', msg: `言葉の式は「${B}の個数＋${A}の個数＝あわせた個数」と書けるけれど、${A}の個数を x で表す部分が少しむずかしいかも。`},
+            diagram: {mark: '◎', msg: `線分図は「あわせた個数」を「${B}の個数」と「${A}の個数」に分けて見られるので、全体＝部分の和がそのまま見えやすい！`},
+            table:   {mark: '〇', msg: '表は「多い個数」と「個数」を整理できるけれど、「あわせて」の関係は線分図のほうが見やすいかも。'}
+        }
+    };
+}
+
+function eqFormKAwasete(p) {
+    if (p.kind === 'k2') {
+        const {d, N} = p;
+        return {diagram: eqf(`${N}=x+(x+${d})`, [`${N}=x+(x-${d})`, `${N}=x+${d}x`, `x=${N}+(x+${d})`], '線分図は「全体＝部分の和」。「あわせた個数 ＝ Bの個数 ＋ Aの個数」を式にしよう。')};
+    }
+    const {a, b, M, N, n} = p;
+    const k = p.kind;
+    const prA = (k === 'k1') ? `${a}x` : (k === 'k2') ? `${a}(${N}-x)` : `${a * n}`;
+    const prB = (k === 'k1') ? `${b}(${N}-x)` : (k === 'k2') ? `${b}x` : `${b}(x-${n})`;
+    return {diagram: eqf(`${M}=${prA}+${prB}`, [`${M}=${prA}-${prB}`, `${prA}=${M}+${prB}`, `${M}=${prB}`], '線分図は「全体＝部分の和」。「代金の合計 ＝ 代金 ＋ 代金」を式にしよう。')};
+}
+
+/* ---------- 基本問題：平均（k1:3回目の得点をx／k2:合計点をx／k3:4回目の得点をx） ---------- */
+function genKHeikin(kind) {
+    if (kind === 'k1') {
+        let s1, s2, t;
+        do {
+            s1 = randInt(60, 95); s2 = randInt(60, 95); t = randInt(60, 98);
+        } while ((s1 + s2 + t) % 3 !== 0);
+        return {kind: kind, s1: s1, s2: s2, t: t, m: (s1 + s2 + t) / 3};
+    }
+    if (kind === 'k2') {
+        const c = randInt(3, 5), m = randInt(13, 18) * 5;
+        return {kind: kind, c: c, m: m, x: c * m};
+    }
+    let m, d, t;
+    do {
+        m = randInt(65, 85); d = randInt(1, 4); t = m + 4 * d;
+    } while (t > 100);
+    return {kind: kind, m: m, m2: m + d, t: t};
+}
+
+function specKHeikin(p) {
+    const k = p.kind;
+    const lab = (t, s) => `<div class="col"><div class="lab">${t}</div>${s}</div>`;
+    let sum, cnt, avg, text, varAns, varWrong, dTop, dParts, dEq, hSum;
+    if (k === 'k1') {
+        const {s1, s2, m} = p;
+        sum = `${s1}+${s2}+x`; cnt = 3; avg = m;
+        text = `3回のテストを受けました。1回目は${s1}点、2回目は${s2}点で、3回の平均点は${m}点でした。3回目の得点を求めなさい。`;
+        varAns = '3回目の得点'; varWrong = ['3回の合計点', '3回の平均点', '1回目の得点'];
+        dTop = `${m}\\times 3`;
+        dParts = [['1回目', `${s1}`], ['2回目', `${s2}`], ['3回目', 'x']];
+        dEq = `${m}\\times 3=${s1}+${s2}+x`;
+        hSum = '3回の合計点は「1回目＋2回目＋3回目」だよ。';
+    } else if (k === 'k2') {
+        const {c, m} = p;
+        sum = 'x'; cnt = c; avg = m;
+        text = `${c}回のテストの平均点は${m}点でした。${c}回の合計点を求めなさい。`;
+        varAns = `${c}回の合計点`; varWrong = ['1回の得点', `${c}回の平均点`, '回数'];
+        dTop = 'x';
+        dParts = Array.from({length: c}, (_, i) => [`${i + 1}回目`, `${m}`]);
+        dEq = 'x=' + Array.from({length: c}, () => `${m}`).join('+');
+        hSum = '求めたいもの（合計点）を x 点とおいたね。';
+    } else {
+        const {m, m2} = p;
+        sum = `${m}\\times 3+x`; cnt = 4; avg = m2;
+        text = `3回のテストの平均点は${m}点でした。4回目のテストで何点かとったところ、4回の平均点は${m2}点になりました。4回目の得点を求めなさい。`;
+        varAns = '4回目の得点'; varWrong = ['4回の合計点', '3回の合計点', '4回の平均点'];
+        dTop = `${m2}\\times 4`;
+        dParts = [['3回の合計点', `${m}\\times 3`], ['4回目の得点', 'x']];
+        dEq = `${m2}\\times 4=${m}\\times 3+x`;
+        hSum = '4回の合計点は「3回の合計点＋4回目の得点」。3回の合計点は「平均点×3」だよ。';
+    }
+    const P = t => `${t}（点）`;
+    const wSlots = [
+        sl(P(sum), hSum),
+        sl(`${cnt}（回）`, '回数は問題文からわかるよ。'),
+        sl(P(`${avg}`), '平均点は問題文に書いてあるよ。')
+    ];
+    const wrongW = {
+        k1: [P(`${p.s1}+${p.s2}`), P('x'), `${p.m}（回）`],
+        k2: [P(`${p.m}`), `x（回）`, P(`${p.c}`)],
+        k3: [P(`${p.m}\\times 3`), P('x'), `${p.m2}（回）`]
+    }[k];
+    const wPool = mkPool(wSlots.map(q => q.ans), wrongW);
+    const dSlots = [sl(P(dTop), hSum), ...dParts.map(q => sl(P(q[1]), (q[1] === 'x') ? `求めたいもの（${q[0]}）を x 点とおいたね。` : `${q[0]}は問題文からわかるよ。`))];
+    const dPool = mkPool(dSlots.map(q => q.ans), [P('x+x'), `${cnt}（回）`]);
+    const w = Math.floor(100 / dParts.length);
+    const tans = [sum, `${cnt}`, `${avg}`];
+    const tHints = [hSum, '回数は問題文からわかるよ。', '平均点は問題文に書いてあるよ。'];
+    return {
+        text: text,
+        varAns: varAns,
+        varWrong: varWrong,
+        fill: {
+            words: {
+                slots: wSlots,
+                pool: wPool,
+                layout: s => `<div class="words">${lab('合計点', s[0])}<div class="op">÷</div>${lab('回数', s[1])}<div class="op">＝</div>${lab('平均点', s[2])}</div>`
+            },
+            diagram: {
+                slots: dSlots,
+                pool: dPool,
+                layout: s => dgI(barTopT('合計点', s[0], dParts.map((q, i) => [q[0], s[i + 1], w]), 100))
+            },
+            table: {
+                slots: tans.map((a, i) => sl(a, tHints[i])),
+                pool: mkPool(tans, [`${cnt}x`, `x+${cnt}`]),
+                layout: s => tableT(['', 'テスト'], [
+                    ['合計点（点）', s[0]],
+                    ['回数（回）', s[1]],
+                    ['平均点（点）', s[2]]
+                ])
+            }
+        },
+        eqAns: `${fracT(sum, cnt)}=${avg}`,
+        eqWrong: [`${sum}${cnt}=${avg}`, `${fracT(cnt, sum)}=${avg}`, `${fracT(sum, cnt)}=x`],
+        eqHint: '整理した「合計点÷回数＝平均点」を式にしよう。合計点は、足し算の式のままでいいよ。',
+        dEq: dEq,
+        best: 'words',
+        fit: {
+            words:   {mark: '◎', msg: '言葉の式は「合計点÷回数＝平均点」と、そのまま式にできる！'},
+            diagram: {mark: '〇', msg: '線分図は「合計点」を各回の得点に分けて見られるけれど、平均点との関係は言葉の式のほうが近道かも。'},
+            table:   {mark: '〇', msg: '表は合計点・回数・平均点を縦に整理できるけれど、少し手順が多かったかも。'}
+        }
+    };
+}
+
+function eqFormKHeikin(p) {
+    const sp = specKHeikin(p);
+    return {diagram: eqf(sp.dEq, [`${sp.dEq.split('=')[1]}=${sp.dEq.split('=')[0]}x`, `${sp.dEq.split('=')[0]}=${sp.dEq.split('=')[1]}x`, `${sp.dEq.split('=')[0]}x=${sp.dEq.split('=')[1]}`], '線分図は「全体＝部分の和」。「合計点 ＝ 各回の得点の和」を式にしよう。')};
+}
+
+/* ---------- 基本問題：食塩水・濃度（k1:食塩水の量をx／k2:濃度をx／k3:加える水の量をx） ---------- */
+function genKNoudo(kind) {
+    if (kind === 'k3') {
+        const pairs = [[10, 8], [10, 5], [12, 8], [6, 4]];
+        const [r, r2] = pairs[randInt(0, pairs.length - 1)];
+        const W = randInt(1, 4) * 100;
+        const x = W * (r - r2) / r2;
+        return {kind: kind, r: r, r2: r2, W: W, x: x, s: W * r / 100};
+    }
+    const W = randInt(1, 5) * 100;
+    const r = [4, 5, 8, 10, 12, 15][randInt(0, 5)];
+    return {kind: kind, r: r, W: W, s: W * r / 100};
+}
+
+function specKNoudo(p) {
+    const k = p.kind;
+    const {r, W, s} = p;
+    const lab = (t, s2) => `<div class="col"><div class="lab">${t}</div>${s2}</div>`;
+    const G = t => `${t}（g）`;
+    const fr = fracT(r, 100);
+    if (k === 'k1' || k === 'k2') {
+        const salt = G(`${s}`);
+        const amtS = (k === 'k1') ? 'x' : `${W}`;
+        const rateS = (k === 'k1') ? fr : fracT('x', 100);
+        const hAmt = (k === 'k1') ? '求めたいもの（食塩水の量）を x g とおいたね。' : '食塩水の量は問題文に書いてあるよ。';
+        const hRate = (k === 'k1') ? `濃度${r}%を分数で表すと${fr}だよ。` : '求めたいもの（濃度）を x% とおいたね。分数で表すと x/100 だよ。';
+        const hSalt = 'ふくまれる食塩の量は問題文に書いてあるよ。';
+        const ws = [sl(G(amtS), hAmt), sl(rateS, hRate), sl(salt, hSalt)];
+        const wrong = (k === 'k1') ? [G(`${s}x`), fracT(100, r), G(`${r}`)] : [G('x'), fracT(100, 'x'), G(`${W}x`)];
+        const pool = mkPool(ws.map(q => q.ans), wrong);
+        const one = (t, s3, w) => `<div style="width:${w}%"><div class="dg-top">${labT(t, s3)}</div><div class="dg-bracket up"></div><div class="dg-line">${segT(1)}</div></div>`;
+        const tans = [amtS, (k === 'k1') ? fr : fracT('x', 100), `${s}`];
+        const th = [hAmt, hRate, hSalt];
+        return {
+            text: (k === 'k1')
+                ? `濃度${r}%の食塩水があります。この食塩水にふくまれる食塩は${s}gです。食塩水は何gですか。`
+                : `${W}gの食塩水に、食塩が${s}gふくまれています。この食塩水の濃度は何%ですか。`,
+            varAns: (k === 'k1') ? '食塩水の量' : '食塩水の濃度',
+            varWrong: (k === 'k1') ? ['食塩の量', '食塩水の濃度', '水の量'] : ['食塩水の量', '食塩の量', '水の量'],
+            fill: {
+                words: {
+                    slots: ws,
+                    pool: pool,
+                    layout: s3 => wordsT([labT('食塩水の量', s3[0]), opT('×'), labT('濃度', s3[1]), opT('＝'), labT('食塩の量', s3[2])])
+                },
+                diagram: {
+                    slots: ws,
+                    pool: pool,
+                    layout: s3 => dgI(one('食塩水の量', s3[0], 100)
+                        + `<div class="lab" style="margin:6px 3px;">↓ 下の線の長さは、上の線の ${s3[1]} 倍</div>`
+                        + one('食塩の量', s3[2], clampT(r / 100 * 4, 0.25, 0.7)))
+                },
+                table: {
+                    slots: tans.map((a, i) => sl(a, th[i])),
+                    pool: mkPool(tans, [`${s}x`, fracT(100, 'x')]),
+                    layout: s3 => tableT(['', '食塩水'], [
+                        ['食塩水の量（g）', s3[0]],
+                        ['濃度', s3[1]],
+                        ['食塩の量（g）', s3[2]]
+                    ])
+                }
+            },
+            eqAns: (k === 'k1') ? `x\\times ${fr}=${s}` : `${W}\\times ${fracT('x', 100)}=${s}`,
+            eqWrong: (k === 'k1')
+                ? [`x\\times ${fracT(100 - r, 100)}=${s}`, `x\\times ${r}=${s}`, `x+${fr}=${s}`]
+                : [`${W}\\times ${fracT(100, 'x')}=${s}`, `${W}x=${s}`, `${W}+${fracT('x', 100)}=${s}`],
+            eqHint: '「食塩水の量 × 濃度 ＝ 食塩の量」を式にしよう。濃度は分数で表すよ。',
+            best: 'table',
+            fit: {
+                words:   {mark: '〇', msg: '言葉の式は「食塩水の量×濃度＝食塩の量」と、そのまま式にできるよ。'},
+                diagram: {mark: '〇', msg: '線分図は「何倍か」は見やすいけれど、式にするには言葉の式のほうが近道かも。'},
+                table:   {mark: '◎', msg: '表は「食塩水の量・濃度・食塩の量」の3つを縦に整理できるので、式の形が見えやすい！'}
+            }
+        };
+    }
+    /* k3：加える水の量をxとおく（食塩の量は変わらない） */
+    const {r2, x} = p;
+    const fr2 = fracT(r2, 100);
+    const ws = [
+        sl(G(`${W}`), '水を加える前の食塩水の量は、問題文に書いてあるよ。'),
+        sl(fr, `加える前の濃度${r}%を分数で表すと${fr}だよ。`),
+        sl(G(`${W}+x`), '水を加えたあとの食塩水の量は「加える前＋加える水」。加える水を x g とおいたよ。'),
+        sl(fr2, `加えたあとの濃度${r2}%を分数で表すと${fr2}だよ。`)
+    ];
+    const pool = mkPool(ws.map(q => q.ans), [G('x'), fracT(100, r), G(`${W}-x`)]);
+    const ds = [ws[2], ws[0], sl(G('x'), '加える水の量を x g とおいたね。')];
+    const dPool = mkPool(ds.map(q => q.ans), [G(`${W}-x`), G(`${W}x`)]);
+    const tans = [`${W}`, `${W}+x`, fr, fr2, `${s}`, `${fr2}(${W}+x)`];
+    const th = ['水を加える前の食塩水の量は、問題文に書いてあるよ。', '水を加えたあとの食塩水の量は「加える前＋加える水」だよ。', `加える前の濃度${r}%を分数で表すと${fr}だよ。`, `加えたあとの濃度${r2}%を分数で表すと${fr2}だよ。`, `加える前の食塩の量は「${W}×${fr}」を計算した数だよ。`, '加えたあとの食塩の量は「濃度×食塩水の量」。食塩の量は変わらないよ。'];
+    return {
+        text: `濃度${r}%の食塩水${W}gに水を加えて、濃度${r2}%の食塩水をつくります。加える水は何gですか。`,
+        varAns: '加える水の量',
+        varWrong: ['食塩の量', '加えたあとの食塩水の量', '加える食塩の量'],
+        fill: {
+            words: {
+                slots: ws,
+                pool: pool,
+                layout: s3 => `<div class="words tight">${lab('加える前の食塩水', s3[0])}<div class="op">×</div>${lab('濃度', s3[1])}<div class="op">＝</div>${lab('加えたあとの食塩水', s3[2])}<div class="op">×</div>${lab('濃度', s3[3])}</div>`
+            },
+            diagram: {
+                slots: ds,
+                pool: dPool,
+                layout: s3 => dgI(barTopT('加えたあとの食塩水', s3[0], [['加える前の食塩水', s3[1], 70], ['加える水', s3[2], 30]], 100))
+            },
+            table: {
+                slots: tans.map((a, i) => sl(a, th[i])),
+                pool: mkPool(tans, [`${W}-x`, `${W}x`, `${s}x`]),
+                layout: s3 => tableT(['', '加える前', '加えたあと'], [
+                    ['食塩水の量（g）', s3[0], s3[1]],
+                    ['濃度', s3[2], s3[3]],
+                    ['食塩の量（g）', s3[4], s3[5]]
+                ])
+            }
+        },
+        eqAns: `${W}\\times ${fr}=(${W}+x)\\times ${fr2}`,
+        eqWrong: [`${W}\\times ${fr}=(${W}-x)\\times ${fr2}`, `${W}\\times ${fr}=${W}\\times ${fr2}+x`, `(${W}+x)\\times ${fr}=${W}\\times ${fr2}`],
+        eqHint: '水を加えても、食塩の量は変わらないよ。「加える前の食塩の量 ＝ 加えたあとの食塩の量」を式にしよう。',
+        best: 'table',
+        fit: {
+            words:   {mark: '〇', msg: '言葉の式は「食塩水の量×濃度」を2回書くので、少し長くなるかも。'},
+            diagram: {mark: '△', msg: '線分図は、水を加える前と加えたあとの食塩水の量はわかるけれど、食塩の量や濃度までは図に書きにくくて、少し使いづらかったかも。'},
+            table:   {mark: '◎', msg: '表は「加える前」と「加えたあと」を横に並べて、食塩の量が変わらないことが見えやすい！'}
+        }
+    };
+}
+
+function eqFormKNoudo(p) {
+    if (p.kind !== 'k3') return {};
+    const {r, r2, W, s} = p;
+    const fr2 = fracT(r2, 100);
+    return {table: eqf(`${s}=${fr2}(${W}+x)`, [`${s}=${fr2}(${W}-x)`, `${W}=${fr2}(${s}+x)`, `${s}x=${fr2}${W}`], '表の「食塩の量」の行を読もう。加える前の食塩の量 ＝ 加えたあとの食塩の量 だよ。')};
+}
+
+/* ==========================================================================
+   演習：合わせて〇個・平均・食塩水・濃度（共通の組み立て）
+   ========================================================================== */
+function bSpec(c) {
+    const mk = f => ({
+        slots: f.slots.map(q => sl(q[0], q[1])),
+        pool: mkPool(f.slots.map(q => q[0]), f.wrong || []),
+        layout: f.layout
+    });
+    return {
+        text: c.text,
+        varAns: c.varAns,
+        varWrong: c.varWrong,
+        fill: {words: mk(c.words), diagram: mk(c.diagram), table: mk(c.table)},
+        eqAns: c.eqAns,
+        eqWrong: c.eqWrong,
+        eqHint: c.eqHint,
+        best: c.best,
+        fit: c.fit,
+        forms: c.forms || {}
+    };
+}
+
+const wRow = (parts, tight) => s => {
+    const h = wordsT(parts.map(q => (typeof q === 'string') ? opT(q) : labT(q[0], s[q[1]])));
+    return tight ? h.replace('class="words"', 'class="words tight"') : h;
+};
+const dBar = (top, parts) => s => dgI(barTopT(top, s[0], parts.map((q, i) => [q[0], s[i + 1], q[1]]), 100));
+const mkForms = (d, t) => {
+    const o = {};
+    if (d) o.diagram = eqf(d[0], d[1], d[2]);
+    if (t) o.table = eqf(t[0], t[1], t[2]);
+    return o;
+};
+const UN = (v, u) => `${v}（${u}）`;
+
+/* ---------- 演習：合わせて〇個（unit:単価をx／crane:つるとかめ／stairs:階段ゲーム） ---------- */
+function genAwasete(kind) {
+    if (kind === 'crane') {
+        const N = randInt(8, 15), k = randInt(2, N - 2);
+        return {kind: kind, N: N, x: k, L: 2 * (N - k) + 4 * k};
+    }
+    if (kind === 'stairs') {
+        const a = randInt(2, 5), b = randInt(1, 3), N = randInt(8, 14);
+        const wmin = Math.floor(b * N / (a + b)) + 1;
+        const w = randInt(Math.min(wmin, N - 1), N - 1);
+        return {kind: kind, a: a, b: b, N: N, x: w, net: a * w - b * (N - w)};
+    }
+    const pairs = [['りんご', 'みかん'], ['パン', 'ドーナツ'], ['あめ', 'チョコ'], ['クッキー', 'ケーキ']];
+    const [A, B] = pairs[randInt(0, pairs.length - 1)];
+    const x = randInt(8, 15) * 10, d = randInt(3, 8) * 10, n = randInt(2, 5), m = randInt(2, 4);
+    return {kind: kind, A: A, B: B, x: x, d: d, n: n, m: m, M: n * x + m * (x + d)};
+}
+
+function specAwasete(p) {
+    const k = p.kind;
+    if (k === 'crane') {
+        const {N, L} = p;
+        const pA = `2(${N}-x)`, pB = '4x';
+        const hA = 'つるの足の数は「1匹の足の数×匹数」だよ。つるは2本足。';
+        const hB = 'かめの足の数は「1匹の足の数×匹数」だよ。かめは4本足。';
+        const hT = '足の数の合計は問題文に書いてあるよ。';
+        const wrong = [UN(`4(${N}-x)`, '本'), UN('2x', '本')];
+        return bSpec({
+            text: `つるとかめがあわせて${N}匹います。足の数をあわせると${L}本です。かめは何匹いますか。`,
+            varAns: 'かめの匹数',
+            varWrong: ['つるの匹数', '足の数の合計', 'あわせた匹数'],
+            words: {slots: [[UN(pA, '本'), hA], [UN(pB, '本'), hB], [UN(`${L}`, '本'), hT]], wrong: wrong,
+                layout: wRow([['つるの足の数', 0], '＋', ['かめの足の数', 1], '＝', ['足の数の合計', 2]])},
+            diagram: {slots: [[UN(`${L}`, '本'), hT], [UN(pA, '本'), hA], [UN(pB, '本'), hB]], wrong: wrong,
+                layout: dBar('足の数の合計', [['つるの足の数', 50], ['かめの足の数', 50]])},
+            table: {slots: [['2', 'つるの足は1匹2本だよ。'], ['4', 'かめの足は1匹4本だよ。'], [`${N}-x`, 'つるの匹数は「あわせた匹数−かめの匹数」だよ。'], ['x', '求めたいもの（かめの匹数）を x 匹とおいたね。'], [`${N}`, 'あわせた匹数は問題文に書いてあるよ。'], [pA, hA], [pB, hB], [`${L}`, hT]],
+                wrong: [`${N}x`, `x-${N}`],
+                layout: s => tableT(['', 'つる', 'かめ', '合計'], [['1匹の足の数（本）', s[0], s[1], ''], ['匹数（匹）', s[2], s[3], s[4]], ['足の数（本）', s[5], s[6], s[7]]])},
+            eqAns: `${pA}+${pB}=${L}`,
+            eqWrong: [`2x+4(${N}-x)=${L}`, `2x+4x=${L}`, `${pA}+${pB}=${N}`],
+            eqHint: '整理した「つるの足の数＋かめの足の数＝足の数の合計」と見比べよう。',
+            best: 'table',
+            fit: {
+                words:   {mark: '〇', msg: '言葉の式は「つるの足＋かめの足＝足の合計」と書けるけれど、つるの匹数を x で表す部分が少しむずかしいかも。'},
+                diagram: {mark: '〇', msg: '線分図は「足の合計」を「つるの足」と「かめの足」に分けて見られるけれど、匹数の関係までは図に書きにくいかも。'},
+                table:   {mark: '◎', msg: '表は「1匹の足の数・匹数・足の数」を動物ごとに整理できて、「あわせて何匹」という関係も書き込めるので、見やすい！'}
+            },
+            forms: mkForms([`${L}=${pA}+${pB}`, [`${L}=${pA}-${pB}`, `${pA}=${L}+${pB}`, `${L}=${pB}`], '線分図は「全体＝部分の和」。「足の合計 ＝ つるの足 ＋ かめの足」を式にしよう。'])
+        });
+    }
+    if (k === 'stairs') {
+        const {a, b, N, net} = p;
+        const pA = `${a}x`, pB = `-${b}(${N}-x)`;
+        const hA = `勝った分の段数は「1回の段数×勝った回数」だよ。勝つと${a}段上がるね。`;
+        const hB = `負けた分は下がるので、符号は「−」だよ。負けると${b}段下がるね。`;
+        const hT = '最終的に上がった段数は問題文に書いてあるよ。';
+        const wrong = [UN(`${b}(${N}-x)`, '段'), UN(`${a}(${N}-x)`, '段')];
+        return bSpec({
+            text: `じゃんけんで勝つと${a}段上がり、負けると${b}段下がります。${N}回じゃんけんをして、あいこはなく、はじめの位置から${net}段上がりました。勝ったのは何回ですか。`,
+            varAns: '勝った回数',
+            varWrong: ['負けた回数', '上がった段数', 'じゃんけんの回数'],
+            words: {slots: [[UN(pA, '段'), hA], [UN(pB, '段'), hB], [UN(`${net}`, '段'), hT]], wrong: wrong,
+                layout: wRow([['勝った分の段数', 0], '＋', ['負けた分の段数', 1], '＝', ['上がった段数', 2]])},
+            diagram: {slots: [[UN(pA, '段'), '勝って上がった段数は「1回の段数×勝った回数」だよ。'], [UN(`${net}`, '段'), hT], [UN(`${b}(${N}-x)`, '段'), '負けて下がった段数は「1回の段数×負けた回数」だよ。（線分図では、下がった長さを正の数で表すよ）']], wrong: [UN(pB, '段'), UN(`${a}(${N}-x)`, '段')],
+                layout: dBar('勝って上がった段数', [['最終的に上がった段数', 55], ['負けて下がった段数', 45]])},
+            table: {slots: [[`+${a}`, `勝つと${a}段上がるので、符号は「＋」だよ。`], [`-${b}`, `負けると${b}段下がるので、符号は「−」だよ。`], ['x', '求めたいもの（勝った回数）を x 回とおいたね。'], [`${N}-x`, '負けた回数は「全体の回数−勝った回数」だよ。'], [`${N}`, 'じゃんけんの回数は問題文に書いてあるよ。'], [pA, hA], [pB, hB], [`${net}`, hT]],
+                wrong: [`-${a}`, `+${b}`, `${b}(${N}-x)`],
+                layout: s => tableT(['', '勝ち', '負け', '合計'], [['1回の段数（段）', s[0], s[1], ''], ['回数（回）', s[2], s[3], s[4]], ['上がった段数（段）', s[5], s[6], s[7]]])},
+            eqAns: `${a}x-${b}(${N}-x)=${net}`,
+            eqWrong: [`${a}x+${b}(${N}-x)=${net}`, `${a}x-${b}x=${net}`, `${a}x-${b}(${N}-x)=${N}`],
+            eqHint: '整理した「勝った分の段数＋負けた分の段数＝上がった段数」と見比べよう。負けた分は下がるので、引き算になるよ。',
+            best: 'table',
+            fit: {
+                words:   {mark: '〇', msg: '言葉の式は「勝った分＋負けた分＝上がった段数」と書けるけれど、負けた分の符号が「−」になるのが少しむずかしいかも。'},
+                diagram: {mark: '〇', msg: '線分図は「勝って上がった分」を「最後に上がった分」と「負けて下がった分」に分けて見られるけれど、符号の考え方は表のほうが整理しやすいかも。'},
+                table:   {mark: '◎', msg: '表は「1回の段数（＋と−）・回数・上がった段数」を整理できて、符号つきの数を扱いやすい！'}
+            },
+            forms: mkForms([`${a}x=${net}+${b}(${N}-x)`, [`${a}x=${net}-${b}(${N}-x)`, `${net}=${a}x+${b}(${N}-x)`, `${a}x+${b}(${N}-x)=${net}`], '線分図は「全体＝部分の和」。「勝って上がった分 ＝ 最後に上がった分 ＋ 負けて下がった分」を式にしよう。'])
+        });
+    }
+    /* unit：単価をxとおく */
+    const {A, B, n, m, d, M} = p;
+    const pA = `${n}x`, pB = `${m}(x+${d})`;
+    const hA = `${A}の代金は「単価×個数」だよ。${A}1個の値段を x 円とおいたね。`;
+    const hB = `${B}は${A}より${d}円高いから、${B}の単価は「${A}の単価＋${d}」だよ。`;
+    const hT = '代金の合計は問題文に書いてあるよ。';
+    const wrong = [UN(`${n}(x+${d})`, '円'), UN(`${m}x`, '円')];
+    return bSpec({
+        text: `${A}を${n}個と、${A}より${d}円高い${B}を${m}個買ったところ、代金の合計は${M}円でした。${A}1個の値段を求めなさい。`,
+        varAns: `${A}1個の値段`,
+        varWrong: [`${B}1個の値段`, '買った個数', '代金の合計'],
+        words: {slots: [[UN(pA, '円'), hA], [UN(pB, '円'), hB], [UN(`${M}`, '円'), hT]], wrong: wrong,
+            layout: wRow([[A + 'の代金', 0], '＋', [B + 'の代金', 1], '＝', ['代金の合計', 2]])},
+        diagram: {slots: [[UN(`${M}`, '円'), hT], [UN(pA, '円'), hA], [UN(pB, '円'), hB]], wrong: wrong,
+            layout: dBar('代金の合計', [[A + 'の代金', 45], [B + 'の代金', 55]])},
+        table: {slots: [['x', `求めたいもの（${A}1個の値段）を x 円とおいたね。`], [`x+${d}`, hB], [`${n}`, `${A}の個数は問題文に書いてあるよ。`], [`${m}`, `${B}の個数は問題文に書いてあるよ。`], [`${n + m}`, 'あわせた個数は「Aの個数＋Bの個数」だよ。'], [pA, hA], [pB, hB], [`${M}`, hT]],
+            wrong: [`x-${d}`, `${n + m}x`],
+            layout: s => tableT(['', A, B, '合計'], [['単価（円）', s[0], s[1], ''], ['個数（個）', s[2], s[3], s[4]], ['代金（円）', s[5], s[6], s[7]]])},
+        eqAns: `${pA}+${pB}=${M}`,
+        eqWrong: [`${n}x+${m}x=${M}`, `${n}x+${m}(x-${d})=${M}`, `${n}(x+${d})+${m}x=${M}`],
+        eqHint: `整理した「${A}の代金＋${B}の代金＝代金の合計」と見比べよう。`,
+        best: 'table',
+        fit: {
+            words:   {mark: '〇', msg: `言葉の式は「${A}の代金＋${B}の代金＝代金の合計」と書けるけれど、${B}の単価を x で表す部分が少しむずかしいかも。`},
+            diagram: {mark: '〇', msg: `線分図は「代金の合計」を2つの代金に分けて見られるけれど、単価の関係までは図に書きにくいかも。`},
+            table:   {mark: '◎', msg: `表は「単価・個数・代金」を品物ごとに整理できて、「${B}の単価は${A}より高い」関係も書き込めるので、見やすい！`}
+        },
+        forms: mkForms([`${M}=${pA}+${pB}`, [`${M}=${pA}-${pB}`, `${pA}=${M}+${pB}`, `${M}=${pB}`], '線分図は「全体＝部分の和」。「代金の合計 ＝ 代金 ＋ 代金」を式にしよう。'])
+    });
+}
+
+function eqFormAwasete(p) {
+    return specAwasete(p).forms;
+}
+
+/* ---------- 演習：平均（group:2つのグループ／leave:1人抜ける／diff:差で表す） ---------- */
+function genHeikin(kind) {
+    if (kind === 'group') {
+        let m, f, am, x, tot;
+        do {
+            m = randInt(10, 20); f = randInt(10, 20); am = randInt(55, 80); x = randInt(55, 85);
+            tot = am * m + f * x;
+        } while (tot % (m + f) !== 0);
+        return {kind: kind, m: m, f: f, am: am, x: x, av: tot / (m + f)};
+    }
+    if (kind === 'leave') {
+        const n = randInt(5, 8), av1 = randInt(60, 80), dd = randInt(1, 4);
+        return {kind: kind, n: n, av1: av1, av2: av1 + dd, x: av1 - dd * (n - 1)};
+    }
+    let d1, d2;
+    do {
+        d1 = randInt(3, 9); d2 = randInt(1, d1 - 1);
+    } while ((2 * d1 - d2) % 3 !== 0);
+    const m = randInt(65, 85);
+    return {kind: kind, d1: d1, d2: d2, d3: d1 - d2, m: m, x: m - (2 * d1 - d2) / 3};
+}
+
+function specHeikin(p) {
+    const k = p.kind;
+    const T = v => UN(v, '点');
+    if (k === 'group') {
+        const {m, f, am, av} = p;
+        const sM = `${am}\\times ${m}`, sF = `${f}x`, sA = `${av}\\times ${m + f}`;
+        const hM = '男子の合計点は「男子の平均点×男子の人数」だよ。';
+        const hF = '女子の合計点は「女子の平均点×女子の人数」。女子の平均点を x 点とおいたね。';
+        const hA = '全員の合計点は「全員の平均点×全員の人数」だよ。';
+        const wrong = [T(`${am}+${f}x`), T(`${f}`)];
+        return bSpec({
+            text: `男子${m}人の平均点は${am}点、女子${f}人の平均点はわかりません。男女あわせた${m + f}人の平均点は${av}点でした。女子の平均点は何点ですか。`,
+            varAns: '女子の平均点',
+            varWrong: ['男子の平均点', '全員の合計点', '女子の人数'],
+            words: {slots: [[T(sM), hM], [T(sF), hF], [UN(`${m + f}`, '人'), '全員の人数は「男子の人数＋女子の人数」だよ。'], [T(`${av}`), '全員の平均点は問題文に書いてあるよ。']], wrong: wrong,
+                layout: wRow(['(', ['男子の合計点', 0], '＋', ['女子の合計点', 1], ')', '÷', ['全員の人数', 2], '＝', ['全員の平均点', 3]], true)},
+            diagram: {slots: [[T(sA), hA], [T(sM), hM], [T(sF), hF]], wrong: wrong,
+                layout: dBar('全員の合計点', [['男子の合計点', 50], ['女子の合計点', 50]])},
+            table: {slots: [[`${am}`, '男子の平均点は問題文に書いてあるよ。'], ['x', '求めたいもの（女子の平均点）を x 点とおいたね。'], [`${av}`, '全員の平均点は問題文に書いてあるよ。'], [`${m}`, '男子の人数は問題文に書いてあるよ。'], [`${f}`, '女子の人数は問題文に書いてあるよ。'], [`${m + f}`, '全員の人数は「男子＋女子」だよ。'], [sM, hM], [sF, hF], [sA, hA]],
+                wrong: [`${m}x`, `${am}x`],
+                layout: s => tableT(['', '男子', '女子', '全員'], [['平均点（点）', s[0], s[1], s[2]], ['人数（人）', s[3], s[4], s[5]], ['合計点（点）', s[6], s[7], s[8]]])},
+            eqAns: `${fracT(`${sM}+${sF}`, m + f)}=${av}`,
+            eqWrong: [`${fracT(`${sM}+x`, m + f)}=${av}`, `${fracT(`${am}+x`, 2)}=${av}`, `${sM}+${sF}=${av}`],
+            eqHint: '整理した「(男子の合計点＋女子の合計点)÷全員の人数＝全員の平均点」と見比べよう。',
+            best: 'table',
+            fit: {
+                words:   {mark: '〇', msg: '言葉の式は「(男子の合計点＋女子の合計点)÷全員の人数＝全員の平均点」と書けるけれど、式が長くなるかも。'},
+                diagram: {mark: '〇', msg: '線分図は「全員の合計点」を男子と女子に分けて見られるけれど、平均点との関係までは図に書きにくいかも。'},
+                table:   {mark: '◎', msg: '表は「平均点・人数・合計点」を男子・女子・全員で整理できて、合計点どうしの関係が見えやすい！'}
+            },
+            forms: mkForms([`${sA}=${sM}+${sF}`, [`${sA}=${sM}-${sF}`, `${sM}=${sA}+${sF}`, `${sA}=${sF}`], '線分図は「全体＝部分の和」。「全員の合計点 ＝ 男子の合計点 ＋ 女子の合計点」を式にしよう。'], [`${sM}+${sF}=${sA}`, [`${sM}-${sF}=${sA}`, `${sM}+${sF}=${av}`, `${sM}+x=${sA}`], '表の「合計点」の行を読もう。「男子の合計点＋女子の合計点＝全員の合計点」を式にしよう。'])
+        });
+    }
+    if (k === 'leave') {
+        const {n, av1, av2} = p;
+        const sAll = `${av1}\\times ${n}`, sRest = `${av2}\\times ${n - 1}`;
+        const hAll = '全員の合計点は「全員の平均点×全員の人数」だよ。';
+        const hX = '求めたいもの（抜けた人の得点）を x 点とおいたね。';
+        const hRest = '残りの合計点は「残りの平均点×残りの人数」だよ。';
+        const wrong = [T(`${av1}`), T(`${av2}\\times ${n}`)];
+        return bSpec({
+            text: `${n}人の平均点は${av1}点でした。1人が抜けたので、残りの${n - 1}人の平均点は${av2}点になりました。抜けた人の得点は何点ですか。`,
+            varAns: '抜けた人の得点',
+            varWrong: ['全員の合計点', '残りの人数', '残りの平均点'],
+            words: {slots: [[T(sAll), hAll], [T('x'), hX], [UN(`${n - 1}`, '人'), '残りの人数は「全員の人数−1」だよ。'], [T(`${av2}`), '残りの平均点は問題文に書いてあるよ。']], wrong: wrong,
+                layout: wRow(['(', ['全員の合計点', 0], '−', ['抜けた人の得点', 1], ')', '÷', ['残りの人数', 2], '＝', ['残りの平均点', 3]], true)},
+            diagram: {slots: [[T(sAll), hAll], [T('x'), hX], [T(sRest), hRest]], wrong: wrong,
+                layout: dBar('全員の合計点', [['抜けた人の得点', 30], ['残りの合計点', 70]])},
+            table: {slots: [[`${n}`, '全員の人数は問題文に書いてあるよ。'], ['1', '抜けたのは1人だね。'], [`${n - 1}`, '残りの人数は「全員の人数−1」だよ。'], [`${av1}`, '全員の平均点は問題文に書いてあるよ。'], [`${av2}`, '残りの平均点は問題文に書いてあるよ。'], [sAll, hAll], ['x', hX], [sRest, hRest]],
+                wrong: [`${n}x`, `${av1}x`],
+                layout: s => tableT(['', '全員', '抜けた人', '残り'], [['人数（人）', s[0], s[1], s[2]], ['平均点（点）', s[3], '', s[4]], ['合計点（点）', s[5], s[6], s[7]]])},
+            eqAns: `${fracT(`${sAll}-x`, n - 1)}=${av2}`,
+            eqWrong: [`${fracT(`${sAll}+x`, n - 1)}=${av2}`, `${fracT(`${sAll}-x`, n)}=${av2}`, `${sAll}-x=${av2}`],
+            eqHint: '整理した「(全員の合計点−抜けた人の得点)÷残りの人数＝残りの平均点」と見比べよう。',
+            best: 'table',
+            fit: {
+                words:   {mark: '〇', msg: '言葉の式は「(全員の合計点−抜けた人の得点)÷残りの人数＝残りの平均点」と書けるけれど、式が長くなるかも。'},
+                diagram: {mark: '〇', msg: '線分図は「全員の合計点」を「抜けた人」と「残り」に分けて見られるけれど、平均点との関係までは図に書きにくいかも。'},
+                table:   {mark: '◎', msg: '表は「人数・平均点・合計点」を整理できて、合計点どうしの関係が見えやすい！'}
+            },
+            forms: mkForms([`${sAll}=x+${sRest}`, [`${sAll}=x-${sRest}`, `x=${sAll}+${sRest}`, `${sAll}=${sRest}`], '線分図は「全体＝部分の和」。「全員の合計点 ＝ 抜けた人の得点 ＋ 残りの合計点」を式にしよう。'], [`${sAll}=x+${sRest}`, [`${sAll}=x-${sRest}`, `x=${sAll}+${sRest}`, `${sAll}=${sRest}`], '表の「合計点」の行を読もう。「全員の合計点＝抜けた人の得点＋残りの合計点」を式にしよう。'])
+        });
+    }
+    /* diff：差で表す */
+    const {d1, d2, d3, m} = p;
+    const sum = `x+(x+${d1})+(x+${d3})`;
+    const hX = '求めたいもの（1回目の得点）を x 点とおいたね。';
+    const h2 = `2回目は1回目より${d1}点高いから、「1回目の得点＋${d1}」だよ。`;
+    const h3 = `3回目は2回目より${d2}点低いから、1回目より${d3}点高いよ（${d1}−${d2}）。「1回目の得点＋${d3}」だよ。`;
+    const hSum = '3回の合計点は「1回目＋2回目＋3回目」だよ。';
+    const wrong = [T(`x+${d1}+${d2}`), T(`${m}`)];
+    return bSpec({
+        text: `3回のテストを受けました。2回目の得点は1回目より${d1}点高く、3回目の得点は2回目より${d2}点低くなりました。3回の平均点は${m}点でした。1回目の得点を求めなさい。`,
+        varAns: '1回目の得点',
+        varWrong: ['2回目の得点', '3回の合計点', '3回目の得点'],
+        words: {slots: [[T(sum), hSum], [UN('3', '回'), '回数は3回だよ。'], [T(`${m}`), '平均点は問題文に書いてあるよ。']], wrong: wrong,
+            layout: wRow([['合計点', 0], '÷', ['回数', 1], '＝', ['平均点', 2]])},
+        diagram: {slots: [[T(`${m}\\times 3`), '3回の合計点は「平均点×回数」だよ。'], [T('x'), hX], [T(`x+${d1}`), h2], [T(`x+${d3}`), h3]], wrong: wrong,
+            layout: dBar('合計点', [['1回目', 30], ['2回目', 35], ['3回目', 35]])},
+        table: {slots: [[`+${d1}`, `2回目は1回目より${d1}点高いね。`], [`+${d3}`, h3], ['x', hX], [`x+${d1}`, h2], [`x+${d3}`, h3]],
+            wrong: [`-${d1}`, `-${d2}`],
+            layout: s => tableT(['', '1回目', '2回目', '3回目'], [['1回目との差（点）', '0', s[0], s[1]], ['得点（点）', s[2], s[3], s[4]]])},
+        eqAns: `${fracT(sum, 3)}=${m}`,
+        eqWrong: [`${fracT(`x+(x+${d1})+(x-${d3})`, 3)}=${m}`, `${fracT(`x+(x+${d1})+(x+${d2})`, 3)}=${m}`, `${sum}=${m}`],
+        eqHint: '整理した「合計点÷回数＝平均点」を式にしよう。合計点は、1回目をもとにした足し算で表すよ。',
+        best: 'words',
+        fit: {
+            words:   {mark: '◎', msg: '言葉の式は「合計点÷回数＝平均点」と、そのまま式にできる！'},
+            diagram: {mark: '〇', msg: '線分図は「合計点」を各回の得点に分けて見られるけれど、平均点との関係は言葉の式のほうが近道かも。'},
+            table:   {mark: '〇', msg: '表は「1回目との差」と「得点」を整理できるけれど、平均点との関係は言葉の式のほうが近道かも。'}
+        },
+        forms: mkForms([`${m}\\times 3=${sum}`, [`${m}\\times 3=x+(x+${d1})-(x+${d3})`, `${sum}=${m}`, `${m}=${sum}`], '線分図は「全体＝部分の和」。「3回の合計点 ＝ 1回目＋2回目＋3回目」を式にしよう。'])
+    });
+}
+
+function eqFormHeikin(p) {
+    return specHeikin(p).forms;
+}
+
+/* ---------- 演習：食塩水・濃度（mix:混ぜる／evap:蒸発／addsalt:食塩を加える） ---------- */
+function genNoudo(kind) {
+    if (kind === 'mix') {
+        const t = [[4, 10, 8], [3, 9, 5], [5, 8, 6], [2, 8, 5], [6, 12, 10]][randInt(0, 4)];
+        const W1 = randInt(1, 3) * 100;
+        return {kind: kind, r1: t[0], r2: t[1], r3: t[2], W1: W1, x: W1 * (t[2] - t[0]) / (t[1] - t[2])};
+    }
+    if (kind === 'evap') {
+        const t = [[5, 8], [4, 5], [5, 10], [6, 8], [8, 10]][randInt(0, 4)];
+        const W = [200, 400][randInt(0, 1)];
+        return {kind: kind, r: t[0], r2: t[1], W: W, x: W * (t[1] - t[0]) / t[1]};
+    }
+    const t = [[5, 10, [180, 360]], [4, 10, [150, 300]], [10, 20, [200, 400]], [5, 20, [160, 320]]][randInt(0, 3)];
+    const W = t[2][randInt(0, 1)];
+    return {kind: kind, r: t[0], r2: t[1], W: W, x: W * (t[1] - t[0]) / (100 - t[1])};
+}
+
+function specNoudo(p) {
+    const k = p.kind;
+    const G = v => UN(v, 'g');
+    if (k === 'mix') {
+        const {r1, r2, r3, W1} = p;
+        const f1 = fracT(r1, 100), f2 = fracT(r2, 100), f3 = fracT(r3, 100);
+        const s1 = W1 * r1 / 100;
+        const wA = `${W1}\\times ${f1}`, wB = `x\\times ${f2}`, wC = `(${W1}+x)\\times ${f3}`;
+        const hA = `食塩の量は「食塩水の量×濃度」。濃度${r1}%は分数で${f1}だよ。`;
+        const hB = `濃度${r2}%の食塩水を x g とおいたね。食塩の量は「食塩水の量×濃度」だよ。`;
+        const hC = '混ぜたあとの食塩水は「W1＋x」g。食塩の量は「食塩水の量×濃度」だよ。'.replace('W1', `${W1}`);
+        const cB = `${f2}x`, cC = `${f3}(${W1}+x)`;
+        const wrong = [G(`${W1}\\times ${f2}`), G(`x\\times ${f1}`)];
+        return bSpec({
+            text: `濃度${r1}%の食塩水${W1}gと、濃度${r2}%の食塩水を混ぜて、濃度${r3}%の食塩水をつくります。濃度${r2}%の食塩水は何g必要ですか。`,
+            varAns: `混ぜる濃度${r2}%の食塩水の量`,
+            varWrong: ['混ぜたあとの食塩水の量', '食塩の量', '混ぜたあとの濃度'],
+            words: {slots: [[G(wA), hA], [G(wB), hB], [G(wC), hC]], wrong: wrong,
+                layout: wRow([[`濃度${r1}%の食塩`, 0], '＋', [`濃度${r2}%の食塩`, 1], '＝', ['混ぜたあとの食塩', 2]])},
+            diagram: {slots: [[G(cC), hC], [G(`${s1}`), hA], [G(cB), hB]], wrong: wrong,
+                layout: dBar('混ぜたあとの食塩', [[`濃度${r1}%の食塩`, 45], [`濃度${r2}%の食塩`, 55]])},
+            table: {slots: [[`${W1}`, '食塩水の量は問題文に書いてあるよ。'], ['x', hB], [`${W1}+x`, '混ぜたあとの食塩水の量は「W1＋x」だよ。'.replace('W1', `${W1}`)], [f1, `濃度${r1}%を分数で表すと${f1}だよ。`], [f2, `濃度${r2}%を分数で表すと${f2}だよ。`], [f3, `濃度${r3}%を分数で表すと${f3}だよ。`], [`${s1}`, `食塩の量は「${W1}×${f1}」を計算した数だよ。`], [cB, hB], [cC, hC]],
+                wrong: [`${W1}-x`, `${s1}x`],
+                layout: s => tableT(['', `濃度${r1}%`, `濃度${r2}%`, '混ぜたあと'], [['食塩水の量（g）', s[0], s[1], s[2]], ['濃度', s[3], s[4], s[5]], ['食塩の量（g）', s[6], s[7], s[8]]])},
+            eqAns: `${wA}+${wB}=${wC}`,
+            eqWrong: [`${wA}+${wB}=(${W1}-x)\\times ${f3}`, `${wA}=${wB}+${wC}`, `${wA}+${wB}=${W1}\\times ${f3}`],
+            eqHint: '「Aの食塩の量＋Bの食塩の量＝混ぜたあとの食塩の量」を式にしよう。食塩の量は「食塩水の量×濃度」だよ。',
+            best: 'table',
+            fit: {
+                words:   {mark: '〇', msg: '言葉の式は「食塩の量＋食塩の量＝混ぜたあとの食塩の量」と書けるけれど、食塩の量を3回かけ算で表すので、少し長くなるかも。'},
+                diagram: {mark: '〇', msg: '線分図は「混ぜたあとの食塩」を2つの食塩に分けて見られるけれど、食塩水の量や濃度までは図に書きにくいかも。'},
+                table:   {mark: '◎', msg: '表は「食塩水の量・濃度・食塩の量」を3つの食塩水で整理できるので、式の形が見えやすい！'}
+            },
+            forms: mkForms([`${cC}=${s1}+${cB}`, [`${cC}=${s1}-${cB}`, `${s1}=${cC}+${cB}`, `${cC}=${cB}`], '線分図は「全体＝部分の和」。「混ぜたあとの食塩 ＝ 食塩 ＋ 食塩」を式にしよう。'], [`${s1}+${cB}=${cC}`, [`${s1}-${cB}=${cC}`, `${s1}+${cB}=${W1}${f3}`, `${s1}=${cB}+${cC}`], '表の「食塩の量」の行を読もう。「Aの食塩＋Bの食塩＝混ぜたあとの食塩」を式にしよう。'])
+        });
+    }
+    const {r, r2, W} = p;
+    const fr = fracT(r, 100), fr2 = fracT(r2, 100);
+    const s = W * r / 100;
+    if (k === 'evap') {
+        const hW = '蒸発させる前の食塩水の量は、問題文に書いてあるよ。';
+        const hW2 = '蒸発させたあとの食塩水の量は「蒸発前−蒸発させた水」。蒸発させる水を x g とおいたよ。';
+        const hr = `蒸発前の濃度${r}%を分数で表すと${fr}だよ。`;
+        const hr2 = `蒸発後の濃度${r2}%を分数で表すと${fr2}だよ。`;
+        const cC = `${fr2}(${W}-x)`;
+        const wrong = [G('x'), fracT(100, r), G(`${W}+x`)];
+        return bSpec({
+            text: `濃度${r}%の食塩水${W}gから水を蒸発させて、濃度${r2}%の食塩水をつくります。蒸発させる水は何gですか。`,
+            varAns: '蒸発させる水の量',
+            varWrong: ['蒸発したあとの食塩水の量', '食塩の量', '蒸発前の食塩水の量'],
+            words: {slots: [[G(`${W}`), hW], [fr, hr], [G(`${W}-x`), hW2], [fr2, hr2]], wrong: wrong,
+                layout: wRow([['蒸発前の食塩水', 0], '×', ['濃度', 1], '＝', ['蒸発後の食塩水', 2], '×', ['濃度', 3]], true)},
+            diagram: {slots: [[G(`${W}`), hW], [G(`${W}-x`), hW2], [G('x'), '蒸発させる水の量を x g とおいたね。']], wrong: [G(`${W}+x`), G(`${W}x`)],
+                layout: dBar('蒸発前の食塩水', [['蒸発後の食塩水', 65], ['蒸発させた水', 35]])},
+            table: {slots: [[`${W}`, hW], [`${W}-x`, hW2], [fr, hr], [fr2, hr2], [`${s}`, `蒸発前の食塩の量は「${W}×${fr}」を計算した数だよ。`], [cC, '蒸発後の食塩の量は「濃度×食塩水の量」。食塩の量は変わらないよ。']],
+                wrong: [`${W}+x`, `${W}x`, `${s}x`],
+                layout: t => tableT(['', '蒸発前', '蒸発後'], [['食塩水の量（g）', t[0], t[1]], ['濃度', t[2], t[3]], ['食塩の量（g）', t[4], t[5]]])},
+            eqAns: `${W}\\times ${fr}=(${W}-x)\\times ${fr2}`,
+            eqWrong: [`${W}\\times ${fr}=(${W}+x)\\times ${fr2}`, `${W}\\times ${fr}=${W}\\times ${fr2}-x`, `(${W}-x)\\times ${fr}=${W}\\times ${fr2}`],
+            eqHint: '水を蒸発させても、食塩の量は変わらないよ。「蒸発前の食塩の量＝蒸発後の食塩の量」を式にしよう。',
+            best: 'table',
+            fit: {
+                words:   {mark: '〇', msg: '言葉の式は「食塩水の量×濃度」を2回書くので、少し長くなるかも。'},
+                diagram: {mark: '△', msg: '線分図は、蒸発前後の食塩水の量はわかるけれど、食塩の量や濃度までは図に書きにくくて、少し使いづらかったかも。'},
+                table:   {mark: '◎', msg: '表は「蒸発前」と「蒸発後」を横に並べて、食塩の量が変わらないことが見えやすい！'}
+            },
+            forms: mkForms(null, [`${s}=${cC}`, [`${s}=${fr2}(${W}+x)`, `${W}=${fr2}(${s}-x)`, `${s}x=${fr2}${W}`], '表の「食塩の量」の行を読もう。蒸発前の食塩の量 ＝ 蒸発後の食塩の量 だよ。'])
+        });
+    }
+    /* addsalt：食塩を加える */
+    const hW = '食塩を加える前の食塩水の量は、問題文に書いてあるよ。';
+    const hr = `加える前の濃度${r}%を分数で表すと${fr}だよ。`;
+    const hr2 = `加えたあとの濃度${r2}%を分数で表すと${fr2}だよ。`;
+    const hX = '加える食塩の量を x g とおいたね。';
+    const hAfter = '加えたあとの食塩水の量は「加える前＋加える食塩」だよ。';
+    const cC = `${fr2}(${W}+x)`;
+    const wA = `${W}\\times ${fr}`, wC = `(${W}+x)\\times ${fr2}`;
+    const wrong = [G(`${W}\\times ${fr2}`), G(`${W}-x`)];
+    return bSpec({
+        text: `濃度${r}%の食塩水${W}gに食塩を加えて、濃度${r2}%の食塩水をつくります。加える食塩は何gですか。`,
+        varAns: '加える食塩の量',
+        varWrong: ['加えたあとの食塩水の量', '加える前の食塩の量', '加える水の量'],
+        words: {slots: [[G(wA), `加える前の食塩の量は「食塩水の量×濃度」。濃度${r}%は分数で${fr}だよ。`], [G('x'), hX], [G(wC), '加えたあとの食塩の量は「食塩水の量×濃度」。加えたあとの食塩水は「加える前＋加える食塩」だよ。']], wrong: wrong,
+            layout: wRow([['加える前の食塩', 0], '＋', ['加える食塩', 1], '＝', ['加えたあとの食塩', 2]])},
+        diagram: {slots: [[G(cC), '加えたあとの食塩の量は「濃度×食塩水の量」だよ。'], [G(`${s}`), `加える前の食塩の量は「${W}×${fr}」を計算した数だよ。`], [G('x'), hX]], wrong: wrong,
+            layout: dBar('加えたあとの食塩', [['加える前の食塩', 70], ['加える食塩', 30]])},
+        table: {slots: [[`${W}`, hW], ['x', hX], [`${W}+x`, hAfter], [fr, hr], [fr2, hr2], [`${s}`, `加える前の食塩の量は「${W}×${fr}」を計算した数だよ。`], ['x', '加える食塩そのものの量だよ。'], [cC, '加えたあとの食塩の量は「濃度×食塩水の量」だよ。']],
+            wrong: [`${W}-x`, `${W}x`],
+            layout: t => tableT(['', '加える前', '加える食塩', '加えたあと'], [['食塩水の量（g）', t[0], t[1], t[2]], ['濃度', t[3], '100%', t[4]], ['食塩の量（g）', t[5], t[6], t[7]]])},
+        eqAns: `${wA}+x=${wC}`,
+        eqWrong: [`${wA}=${wC}`, `${wA}+x=(${W}-x)\\times ${fr2}`, `${wA}+x=${W}\\times ${fr2}`],
+        eqHint: '「加える前の食塩の量＋加える食塩の量＝加えたあとの食塩の量」を式にしよう。',
+        best: 'table',
+        fit: {
+            words:   {mark: '〇', msg: '言葉の式は「食塩の量＋食塩の量＝食塩の量」と書けるけれど、加えたあとの食塩水の量が「W＋x」になる点が少しむずかしいかも。'.replace('W', `${W}`)},
+            diagram: {mark: '〇', msg: '線分図は「加えたあとの食塩」を2つの食塩に分けて見られるけれど、食塩水の量や濃度までは図に書きにくいかも。'},
+            table:   {mark: '◎', msg: '表は「加える前」「加える食塩」「加えたあと」を横に並べて、食塩の量の関係が見えやすい！'}
+        },
+        forms: mkForms([`${cC}=${s}+x`, [`${cC}=${s}-x`, `${s}=${cC}+x`, `${cC}=x`], '線分図は「全体＝部分の和」。「加えたあとの食塩 ＝ 加える前の食塩 ＋ 加える食塩」を式にしよう。'], [`${s}+x=${cC}`, [`${s}-x=${cC}`, `${s}=${cC}+x`, `${s}+x=${fr2}${W}`], '表の「食塩の量」の行を読もう。「加える前の食塩＋加える食塩＝加えたあとの食塩」を式にしよう。'])
+    });
+}
+
+function eqFormNoudo(p) {
+    return specNoudo(p).forms;
 }
 
 function eqFormKKafusoku(p) {
@@ -3949,11 +4916,11 @@ function eqFormWariai(p) {
     };
 }
 
-const EQ_FORMS = {k_kafusoku: eqFormKKafusoku, k_hirei: eqFormKHirei, k_hayasa: eqFormKHayasa, k_otsuri: eqFormKOtsuri, k_daikin: eqFormKDaikin, wariai: eqFormWariai, otsuri: eqFormOtsuri, daikin: eqFormDaikin, kafusoku: eqFormKafusoku, hayasa: eqFormHayasa, hirei: eqFormHirei, nenrei: eqFormNenrei};
+const EQ_FORMS = {awasete: eqFormAwasete, heikin: eqFormHeikin, noudo: eqFormNoudo, k_awasete: eqFormKAwasete, k_heikin: eqFormKHeikin, k_noudo: eqFormKNoudo, k_nenrei: eqFormKNenrei, k_wariai: eqFormKWariai, k_kafusoku: eqFormKKafusoku, k_hirei: eqFormKHirei, k_hayasa: eqFormKHayasa, k_otsuri: eqFormKOtsuri, k_daikin: eqFormKDaikin, wariai: eqFormWariai, otsuri: eqFormOtsuri, daikin: eqFormDaikin, kafusoku: eqFormKafusoku, hayasa: eqFormHayasa, hirei: eqFormHirei, nenrei: eqFormNenrei};
 
 const GENS  = {
-k_kafusoku: genKKafusoku, k_hirei: genKHirei, k_hayasa: genKHayasa, k_otsuri: genKOtsuri, k_daikin: genKDaikin, daikin: genDaikin, otsuri: genOtsuri, kafusoku: genKafusoku, hayasa: genHayasa, hirei: genHirei, nenrei: genNenrei, wariai: genWariai, hatten1: genHatten1, hatten2: genHatten2};
-const SPECS = {k_kafusoku: specKKafusoku, k_hirei: specKHirei, k_hayasa: specKHayasa, k_otsuri: specKOtsuri, k_daikin: specKDaikin, daikin: specDaikin, otsuri: specOtsuri, kafusoku: specKafusoku, hayasa: specHayasa, hirei: specHirei, nenrei: specNenrei, wariai: specWariai, hatten1: specHatten1, hatten2: specHatten2};
+awasete: genAwasete, heikin: genHeikin, noudo: genNoudo, k_awasete: genKAwasete, k_heikin: genKHeikin, k_noudo: genKNoudo, k_nenrei: genKNenrei, k_wariai: genKWariai, k_kafusoku: genKKafusoku, k_hirei: genKHirei, k_hayasa: genKHayasa, k_otsuri: genKOtsuri, k_daikin: genKDaikin, daikin: genDaikin, otsuri: genOtsuri, kafusoku: genKafusoku, hayasa: genHayasa, hirei: genHirei, nenrei: genNenrei, wariai: genWariai, hatten1: genHatten1, hatten2: genHatten2};
+const SPECS = {awasete: specAwasete, heikin: specHeikin, noudo: specNoudo, k_awasete: specKAwasete, k_heikin: specKHeikin, k_noudo: specKNoudo, k_nenrei: specKNenrei, k_wariai: specKWariai, k_kafusoku: specKKafusoku, k_hirei: specKHirei, k_hayasa: specKHayasa, k_otsuri: specKOtsuri, k_daikin: specKDaikin, daikin: specDaikin, otsuri: specOtsuri, kafusoku: specKafusoku, hayasa: specHayasa, hirei: specHirei, nenrei: specNenrei, wariai: specWariai, hatten1: specHatten1, hatten2: specHatten2};
 
 /* ==========================================================================
    4. 画面・保存・記録【共通】
@@ -4006,14 +4973,13 @@ function renderStart() {
     const saved = loadSession();
     const btn = $('btn-resume');
     if (saved) {
-        btn.textContent = `▶ 続きから（${typeName(saved.typeId)}）`;
+        btn.innerHTML = `▶ 続きから<br>（${typeName(saved.typeId)}）`;
         btn.disabled = false;
     } else {
         btn.textContent = '▶ 続きから';
         btn.disabled = true;
     }
 }
-
 function renderTypeSelect() {
     $('type-grid').innerHTML = TYPES.map(t =>
         `<button class="type-btn" ${t.ready ? `onclick="openType('${t.id}')"` : 'disabled'}>${t.name}${t.ready ? '' : '（準備中）'}</button>`
@@ -4093,6 +5059,14 @@ function setHand(hand) {
    ========================================================================== */
 /* --- 各タイプのパターンを同じ割合で出題する（1周に全パターンを1回ずつ。ブラウザを閉じるとリセット） --- */
 const PATTERNS = {
+    awasete:  ['unit', 'crane', 'stairs'],
+    heikin:   ['group', 'leave', 'diff'],
+    noudo:    ['mix', 'evap', 'addsalt'],
+    k_awasete: ['k1', 'k2', 'k3'],
+    k_heikin: ['k1', 'k2', 'k3'],
+    k_noudo: ['k1', 'k2', 'k3'],
+    k_nenrei: ['k1', 'k2', 'k3'],
+    k_wariai: ['k1', 'k2', 'k3'],
     k_kafusoku: ['k1', 'k2'],
     k_hirei: ['k1', 'k2', 'k3'],
     k_hayasa: ['k1', 'k2', 'k3'],
