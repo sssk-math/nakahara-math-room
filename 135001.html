@@ -90,7 +90,7 @@ footer {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    width: 300px;
+    width: 320px;
 }
 .menu-btn {
     height: 56px;
@@ -148,6 +148,44 @@ footer {
     color: #90a4ae;
     cursor: not-allowed;
 }
+.list-btn {
+    width: 300px;
+    height: 44px;
+    font-size: 17px;
+    font-weight: bold;
+    color: #fff;
+    background: #f57c00;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+.list-btn:active {
+    transform: scale(0.97);
+}
+.list-body {
+    width: 880px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 10px 20px;
+    text-align: left;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+.list-type {
+    margin: 12px 0 4px;
+    padding-left: 8px;
+    font-size: 18px;
+    color: #e65100;
+    border-left: 5px solid #f57c00;
+}
+.list-item {
+    margin: 3px 0 3px 8px;
+    font-size: 16px;
+    line-height: 1.5;
+    color: #333;
+}
 .num-grid {
     display: grid;
     grid-template-columns: repeat(10, 38px);
@@ -187,6 +225,30 @@ footer {
 .rec-table tbody th {
     text-align: left;
     background: #f8f9fa;
+}
+.rec-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    touch-action: pan-y;
+}
+.rec-arrow {
+    width: 44px;
+    height: 120px;
+    font-size: 22px;
+    font-weight: bold;
+    color: #fff;
+    background: #1a73e8;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+.rec-arrow:active {
+    transform: scale(0.95);
+}
+.rec-page {
+    font-size: 14px;
+    color: #546e7a;
 }
 .reset-btn {
     width: 280px;
@@ -757,13 +819,21 @@ footer {
     <div id="screen-types" class="app-screen center">
         <div class="sub-header"><h1>📚 演習問題（タイプを選ぼう）</h1></div>
         <div class="type-grid" id="type-grid"></div>
+        <button class="list-btn" onclick="openList('types')">📖 問題一覧</button>
         <button class="btn-sub" onclick="goStart()">←開始画面へ</button>
     </div>
 
     <div id="screen-kihon" class="app-screen center">
         <div class="sub-header"><h1>📘 基本問題（タイプを選ぼう）</h1></div>
         <div class="type-grid" id="kihon-grid"></div>
+        <button class="list-btn" onclick="openList('kihon')">📖 問題一覧</button>
         <button class="btn-sub" onclick="goStart()">←開始画面へ</button>
+    </div>
+
+    <div id="screen-list" class="app-screen center" style="gap:10px;">
+        <div class="sub-header"><h1 id="list-title">📖 問題一覧</h1></div>
+        <div class="list-body" id="list-body"></div>
+        <button class="btn-sub" onclick="backFromList()">←戻る</button>
     </div>
 
     <div id="screen-nyushi" class="app-screen center" style="gap:12px;">
@@ -773,13 +843,18 @@ footer {
     </div>
 
     <div id="screen-kiroku" class="app-screen center" style="gap:12px;">
-        <div class="sub-header"><h1>🏆 記録</h1></div>
-        <table class="rec-table">
-            <thead>
-                <tr><th>タイプ</th><th>取り組み回数</th><th>ノーミスクリア数</th><th>📝 言葉の式</th><th>📏 線分図</th><th>📊 表</th></tr>
-            </thead>
-            <tbody id="kiroku-body"></tbody>
-        </table>
+        <div class="sub-header"><h1 id="kiroku-title">🏆 記録</h1></div>
+        <div class="rec-row" id="rec-row">
+            <button class="rec-arrow" onclick="switchKiroku(-1)">◀</button>
+            <table class="rec-table">
+                <thead>
+                    <tr><th>タイプ</th><th>取り組み数</th><th>ノーミス数</th><th>📝 言葉の式</th><th>📏 線分図</th><th>📊 表</th></tr>
+                </thead>
+                <tbody id="kiroku-body"></tbody>
+            </table>
+            <button class="rec-arrow" onclick="switchKiroku(1)">▶</button>
+        </div>
+        <div class="rec-page" id="kiroku-page"></div>
         <button class="btn-sub" onclick="goStart()">←開始画面へ</button>
     </div>
 
@@ -1673,7 +1748,7 @@ function genDaikinBai() {
         c = randInt(3, 15) * 10;
         k = randInt(2, 3);
         b = k * (q * x + c) - n * x;
-    } while (b < 30 || b > 600 || n === q);
+    } while (b < 30 || b > 600 || n === q || n === k * q);   /* n＝k×qだとxが消えて解が決まらない */
     return {kind: 'bai', A, uA, B, uB, C, uC, x, n, q, b, c, k};
 }
 
@@ -1862,7 +1937,7 @@ function specOikake(p) {
         '弟の道のりは「速さ×時間」だよ。時間は(x＋早く出発した分)だよ。'
     ];
     return {
-        text: `弟が${D}m離れた駅に向かって家を出発しました。その${t}分後に、兄は家を出発し、弟と同じ道を通って追いかけました。弟は分速${v1}m、兄は分速${v2}mで歩くとすると、兄は出発してから何分後に弟に追いつきますか。`,
+        text: `弟が分速${v1}mで駅（${D}m先）へ向かって出発し、${t}分後に兄が分速${v2}mで同じ道を追いかけました。兄は出発してから何分後に弟に追いつきますか。`,
         varAns: '兄が出発してからの時間',
         varWrong: ['弟が出発してからの時間', '兄が進んだ道のり', '兄と弟の速さの差'],
         fill: {
@@ -1998,9 +2073,9 @@ function specDeau(p) {
     const slots3 = [
         sl(sA, 'Aさんの道のりは「速さ×時間」。Aさんは x 分歩いたね。'),
         sl(sB, `Bさんの道のりは「速さ×時間」。BさんはAさんより${t}分あとに出発したので、歩いた時間は x 分より短いよ。`),
-        sl(sT, '2人の家の間の道のりは問題文に書いてあるよ。速さが分速(m)なので、kmをmに直そう。')
+        sl(sT, '2人の家の間の道のりは問題文に書いてあるよ。')
     ];
-    const pool3 = [...new Set([sA, sB, sT, `${v2}x（m）`, `${v1}(x-${t})（m）`, `${D}（km）`])];
+    const pool3 = [...new Set([sA, sB, sT, `${v2}x（m）`, `${v1}(x-${t})（m）`, `${v2}(x+${t})（m）`])];
     const tans = [`${v1}`, `${v2}`, 'x', `x-${t}`, `${v1}x`, `${v2}(x-${t})`, `${Dm}`];
     const thints = [
         'Aさんの速さは問題文に書いてあるよ。',
@@ -2009,11 +2084,11 @@ function specDeau(p) {
         `BさんはAさんより${t}分あとに出発したね。Bさんが歩いた時間は？`,
         'Aさんの道のりは「速さ×時間」だよ。',
         'Bさんの道のりは「速さ×時間」だよ。時間は(x−あとで出発した分)だよ。',
-        '2人の家の間の道のりは問題文に書いてあるよ。速さが分速(m)なので、kmをmに直そう。'
+        '2人の家の間の道のりは問題文に書いてあるよ。'
     ];
     const f1 = clampT((v1 * x) / Dm, 0.35, 0.65);
     return {
-        text: `AさんとBさんの家は${D}km離れています。Aさんは家を出発して分速${v1}mでBさんの家に、BさんはAさんが出発してから${t}分後に家を出発し、同じ道を通って分速${v2}mでAさんの家にそれぞれ向かいました。2人が出会うのはAさんが出発してから何分後になりますか。`,
+        text: `${Dm}m離れたAさんの家とBさんの家の間を、Aさんが分速${v1}mで出発し、${t}分後にBさんが分速${v2}mで向かい合って出発しました。2人が出会うのはAさんが出発してから何分後ですか。`,
         varAns: 'Aさんが出発してからの時間',
         varWrong: ['Bさんが出発してからの時間', '2人の家の間の道のり', 'Aさんが進んだ道のり'],
         fill: {
@@ -2029,7 +2104,7 @@ function specDeau(p) {
             },
             table: {
                 slots: tans.map((ans, i) => sl(ans, thints[i])),
-                pool: mkPool(tans, [`x+${t}`, `${v1 + v2}`, `${D}`]),
+                pool: mkPool(tans, [`x+${t}`, `${v1 + v2}`, `${t}`]),
                 layout: s => tableT(['', 'Aさん', 'Bさん', '合計'], [
                     ['道のり（m）', s[4], s[5], s[6]],
                     ['速さ（m/分）', s[0], s[1], ''],
@@ -2038,12 +2113,12 @@ function specDeau(p) {
             }
         },
         eqAns: `${v1}x+${v2}(x-${t})=${Dm}`,
-        eqWrong: [`${v1}x+${v2}(x-${t})=${D}`, `${v1}x+${v2}(x+${t})=${Dm}`, `${v1}x+${v2}x-${t}=${Dm}`],
-        eqHint: '2人が出会うとき、2人が進んだ道のりの和が、2人の家の間の道のりになるよ。単位をそろえることと、Bさんの時間は(x−あとで出発した分)であることに気をつけよう。',
+        eqWrong: [`${v1}(x-${t})+${v2}x=${Dm}`, `${v1}x+${v2}(x+${t})=${Dm}`, `${v1}x+${v2}x-${t}=${Dm}`],
+        eqHint: '2人が出会うとき、2人が進んだ道のりの和が、2人の家の間の道のりになるよ。Bさんの時間は(x−あとで出発した分)であることに気をつけよう。',
         best: 'table',
         fit: {
             words:   {mark: '〇', msg: '言葉の式は「Aさんの道のり ＋ Bさんの道のり ＝ 家の間の道のり」と、そのまま書けるね。'},
-            diagram: {mark: '〇', msg: '線分図は「全体＝部分の和」が見やすいけれど、速さ・時間・道のりの関係や、kmとmの単位は表のほうが整理しやすいよ。'},
+            diagram: {mark: '〇', msg: '線分図は「全体＝部分の和」が見やすいけれど、速さ・時間・道のりの関係は表のほうが整理しやすいよ。'},
             table:   {mark: '◎', msg: '表は「速さ・時間・道のり」の関係を、2人で縦横に整理できて、速さ×時間＝道のり の計算が見えやすい！'}
         }
     };
@@ -4006,7 +4081,11 @@ function genKAwasete(kind) {
         const cB = randInt(3, 8), d = randInt(2, 6);
         return {kind: kind, A: A, B: B, d: d, N: 2 * cB + d, x: cB};
     }
-    const N = randInt(8, 15), cA = randInt(2, N - 2);
+    let N, cA;
+    do {
+        N = randInt(8, 15);
+        cA = randInt(2, N - 2);
+    } while (2 * cA === N);   /* 同数だと、まちがいの式でも同じxになる */
     return {kind: kind, A: A, B: B, a: a, b: b, N: N, x: cA, M: a * cA + b * (N - cA)};
 }
 
@@ -4161,7 +4240,7 @@ function genKHeikin(kind) {
         let s1, s2, t;
         do {
             s1 = randInt(60, 95); s2 = randInt(60, 95); t = randInt(60, 98);
-        } while ((s1 + s2 + t) % 3 !== 0);
+        } while ((s1 + s2 + t) % 3 !== 0 || s1 + s2 === 2 * t);   /* 求める得点＝平均点だと、まちがいの式でも同じxになる */
         return {kind: kind, s1: s1, s2: s2, t: t, m: (s1 + s2 + t) / 3};
     }
     if (kind === 'k2') {
@@ -4439,18 +4518,33 @@ const UN = (v, u) => `${v}（${u}）`;
 /* ---------- 演習：合わせて〇個（unit:単価をx／crane:つるとかめ／stairs:階段ゲーム） ---------- */
 function genAwasete(kind) {
     if (kind === 'crane') {
-        const N = randInt(8, 15), k = randInt(2, N - 2);
+        let N, k;
+        do {
+            N = randInt(8, 15);
+            k = randInt(2, N - 2);
+        } while (2 * k === N);   /* つる＝かめの匹数だと、まちがいの式でも同じxになる */
         return {kind: kind, N: N, x: k, L: 2 * (N - k) + 4 * k};
     }
     if (kind === 'stairs') {
-        const a = randInt(2, 5), b = randInt(1, 3), N = randInt(8, 14);
-        const wmin = Math.floor(b * N / (a + b)) + 1;
-        const w = randInt(Math.min(wmin, N - 1), N - 1);
-        return {kind: kind, a: a, b: b, N: N, x: w, net: a * w - b * (N - w)};
+        let a, b, N, w, net;
+        do {
+            a = randInt(2, 5);
+            b = randInt(1, 3);
+            N = randInt(8, 14);
+            const wmin = Math.floor(b * N / (a + b)) + 1;
+            w = randInt(Math.min(wmin, N - 1), N - 1);
+            net = a * w - b * (N - w);
+        } while (net === N || 2 * w === N);   /* 上がった段数＝回数、勝ち＝負けだと、まちがいの式が正解と重なる */
+        return {kind: kind, a: a, b: b, N: N, x: w, net: net};
     }
     const pairs = [['りんご', 'みかん'], ['パン', 'ドーナツ'], ['あめ', 'チョコ'], ['クッキー', 'ケーキ']];
     const [A, B] = pairs[randInt(0, pairs.length - 1)];
-    const x = randInt(8, 15) * 10, d = randInt(3, 8) * 10, n = randInt(2, 5), m = randInt(2, 4);
+    const x = randInt(8, 15) * 10, d = randInt(3, 8) * 10;
+    let n, m;
+    do {
+        n = randInt(2, 5);
+        m = randInt(2, 4);
+    } while (n === m);   /* 個数が同じだと、まちがいの選択肢が正解と同じ式になってしまう */
     return {kind: kind, A: A, B: B, x: x, d: d, n: n, m: m, M: n * x + m * (x + d)};
 }
 
@@ -4558,7 +4652,7 @@ function genHeikin(kind) {
         do {
             m = randInt(10, 20); f = randInt(10, 20); am = randInt(55, 80); x = randInt(55, 85);
             tot = am * m + f * x;
-        } while (tot % (m + f) !== 0);
+        } while (tot % (m + f) !== 0 || m === f || x === am);   /* 男女同数、または男女の平均が同じだと、まちがいの式でも同じxになる */
         return {kind: kind, m: m, f: f, am: am, x: x, av: tot / (m + f)};
     }
     if (kind === 'leave') {
@@ -4568,7 +4662,7 @@ function genHeikin(kind) {
     let d1, d2;
     do {
         d1 = randInt(3, 9); d2 = randInt(1, d1 - 1);
-    } while ((2 * d1 - d2) % 3 !== 0);
+    } while ((2 * d1 - d2) % 3 !== 0 || d1 === 2 * d2);   /* 2回目−1回目と3回目の差が同じだと、まちがいの選択肢が正解と同じになる */
     const m = randInt(65, 85);
     return {kind: kind, d1: d1, d2: d2, d3: d1 - d2, m: m, x: m - (2 * d1 - d2) / 3};
 }
@@ -4951,7 +5045,10 @@ function clearSession() {
 function loadSession() {
     try {
         const s = JSON.parse(localStorage.getItem(SESSION_KEY));
-        if (s && GENS[s.typeId] && s.p && s.step) return s;
+        if (s && GENS[s.typeId] && s.p && s.step) {
+            SPECS[s.typeId](s.p);   /* 古い保存データで問題を組み立てられない場合は無視する */
+            return s;
+        }
     } catch (e) { /* 読み込み失敗時は無視 */ }
     return null;
 }
@@ -4964,8 +5061,8 @@ function loadRecords() {
     let r = null;
     try { r = JSON.parse(localStorage.getItem(RECORDS_KEY)); } catch (e) { /* 初期化 */ }
     R = (r && r.types) ? r : {types: {}};
-    TYPES.forEach(t => {
-        R.types[t.id] = Object.assign({count: 0, nomiss: 0, words: 0, diagram: 0, table: 0}, R.types[t.id]);
+    recordIds().forEach(id => {
+        R.types[id] = Object.assign({count: 0, nomiss: 0, words: 0, diagram: 0, table: 0}, R.types[id]);
     });
 }
 
@@ -4980,6 +5077,7 @@ function renderStart() {
         btn.disabled = true;
     }
 }
+
 function renderTypeSelect() {
     $('type-grid').innerHTML = TYPES.map(t =>
         `<button class="type-btn" ${t.ready ? `onclick="openType('${t.id}')"` : 'disabled'}>${t.name}${t.ready ? '' : '（準備中）'}</button>`
@@ -5012,12 +5110,90 @@ function backNyushi() {
     showScreen('screen-nyushi');
 }
 
+/* --- 問題一覧：各タイプの問題文の例（数字は固定。パターンごとに決まった乱数の種で作る） --- */
+let listFrom = 'types';
+const EXAMPLE_CACHE = {};
+
+function exampleTexts(typeId) {
+    if (EXAMPLE_CACHE[typeId]) return EXAMPLE_CACHE[typeId];
+    const original = Math.random;
+    const texts = [];
+    try {
+        PATTERNS[typeId].forEach(kind => {
+            let seed = 12345;
+            (typeId + kind).split('').forEach(ch => { seed = (seed * 31 + ch.charCodeAt(0)) >>> 0; });
+            Math.random = () => {
+                seed = (seed + 0x6D2B79F5) >>> 0;
+                let t = seed;
+                t = Math.imul(t ^ (t >>> 15), t | 1);
+                t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+                return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+            };
+            texts.push(SPECS[typeId](GENS[typeId](kind)).text);
+        });
+    } finally {
+        Math.random = original;
+    }
+    EXAMPLE_CACHE[typeId] = texts;
+    return texts;
+}
+
+function openList(from) {
+    listFrom = from;
+    $('list-title').textContent = `📖 問題一覧（${from === 'kihon' ? '基本問題' : '演習問題'}）`;
+    $('list-body').innerHTML = TYPES.map(t => {
+        const id = (from === 'kihon') ? KIHON[t.id] : t.id;
+        if (!id) return '';
+        const items = exampleTexts(id).map((text, i) => `<div class="list-item">(${i + 1}) ${text}</div>`).join('');
+        return `<h3 class="list-type">${t.name}</h3>${items}`;
+    }).join('');
+    $('list-body').scrollTop = 0;
+    showScreen('screen-list');
+}
+
+function backFromList() {
+    showScreen(listFrom === 'kihon' ? 'screen-kihon' : 'screen-types');
+}
+
+/* --- 記録の保存対象：演習問題のタイプ＋基本問題のタイプ --- */
+function recordIds() {
+    const ids = TYPES.map(t => t.id);
+    TYPES.forEach(t => { if (KIHON[t.id]) ids.push(KIHON[t.id]); });
+    return ids;
+}
+
+/* --- 記録画面：0＝演習問題、1＝基本問題（左右のボタン・スワイプで切り替え） --- */
+let kirokuPage = 0;
+const KIROKU_NAMES = ['演習問題', '基本問題'];
+
 function renderKiroku() {
+    $('kiroku-title').textContent = `🏆 記録（${KIROKU_NAMES[kirokuPage]}）`;
+    $('kiroku-page').textContent = `${kirokuPage + 1} / ${KIROKU_NAMES.length}　◀ ▶ ボタンかスワイプで切り替え`;
     $('kiroku-body').innerHTML = TYPES.map(t => {
-        const r = R.types[t.id];
+        const id = (kirokuPage === 0) ? t.id : KIHON[t.id];
+        const r = R.types[id] || {count: 0, nomiss: 0, words: 0, diagram: 0, table: 0};
         return `<tr><th>${t.name}</th><td>${r.count}</td><td>${r.nomiss}</td><td>${r.words}</td><td>${r.diagram}</td><td>${r.table}</td></tr>`;
     }).join('');
 }
+
+function switchKiroku(dir) {
+    kirokuPage = (kirokuPage + dir + KIROKU_NAMES.length) % KIROKU_NAMES.length;
+    renderKiroku();
+}
+
+/* --- スワイプ（左へ→次、右へ→前） --- */
+(function () {
+    let startX = null;
+    const row = document.getElementById('rec-row');
+    row.addEventListener('pointerdown', e => { startX = e.clientX; });
+    row.addEventListener('pointerup', e => {
+        if (startX === null) return;
+        const dx = e.clientX - startX;
+        startX = null;
+        if (Math.abs(dx) > 40) switchKiroku(dx < 0 ? 1 : -1);
+    });
+    row.addEventListener('pointercancel', () => { startX = null; });
+})();
 
 function openReset(type) {
     pendingReset = type;
@@ -5045,7 +5221,7 @@ function confirmReset() {
 }
 
 function loadRecordsDefaults() {
-    TYPES.forEach(t => { R.types[t.id] = {count: 0, nomiss: 0, words: 0, diagram: 0, table: 0}; });
+    recordIds().forEach(id => { R.types[id] = {count: 0, nomiss: 0, words: 0, diagram: 0, table: 0}; });
 }
 
 function setHand(hand) {
@@ -5144,8 +5320,18 @@ function enterStep() {
     kbReset();
     const sp = buildSpec();
     if (S.step === 'var') curOpts = shuffle([sp.varAns, ...sp.varWrong]);
-    else if (S.step === 'fill') curOpts = shuffle(sp.fill[S.method].pool);
-    else if (S.step === 'eq') curOpts = shuffle([sp.eqAns, ...sp.eqWrong]);
+    else if (S.step === 'fill') {
+        /* 同じ答えの空欄が複数あっても、その数だけ選択肢を用意する（足りないと進めなくなる） */
+        const base = sp.fill[S.method].pool.slice();
+        const rest = base.slice();
+        sp.fill[S.method].slots.forEach(q => {
+            const i = rest.indexOf(q.ans);
+            if (i >= 0) rest.splice(i, 1);
+            else base.push(q.ans);
+        });
+        curOpts = shuffle(base);
+    }
+    else if (S.step === 'eq') curOpts = shuffle([sp.eqAns, ...sp.eqWrong.filter((w, i) => w !== sp.eqAns && sp.eqWrong.indexOf(w) === i)]);
     else curOpts = [];
 }
 
