@@ -5162,15 +5162,15 @@ function recordIds() {
     return ids;
 }
 
-/* --- 記録画面：0＝演習問題、1＝基本問題（左右のボタン・スワイプで切り替え） --- */
+/* --- 記録画面：0＝基本問題、1＝演習問題（左右のボタン・スワイプで切り替え） --- */
 let kirokuPage = 0;
-const KIROKU_NAMES = ['演習問題', '基本問題'];
+const KIROKU_NAMES = ['基本問題', '演習問題'];
 
 function renderKiroku() {
     $('kiroku-title').textContent = `🏆 記録（${KIROKU_NAMES[kirokuPage]}）`;
     $('kiroku-page').textContent = `${kirokuPage + 1} / ${KIROKU_NAMES.length}　◀ ▶ ボタンかスワイプで切り替え`;
     $('kiroku-body').innerHTML = TYPES.map(t => {
-        const id = (kirokuPage === 0) ? t.id : KIHON[t.id];
+        const id = (kirokuPage === 0) ? KIHON[t.id] : t.id;
         const r = R.types[id] || {count: 0, nomiss: 0, words: 0, diagram: 0, table: 0};
         return `<tr><th>${t.name}</th><td>${r.count}</td><td>${r.nomiss}</td><td>${r.words}</td><td>${r.diagram}</td><td>${r.table}</td></tr>`;
     }).join('');
