@@ -4,6 +4,33 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>文章題に挑戦！</title>
+<!-- MathJax 3(数式の表示)。読み込めないときは、これまでの簡易表示で動く -->
+<script>
+window.MathJax = {
+  loader: { load: ['[tex]/html'] },
+  tex: {
+    packages: { '[+]': ['html'] },
+    inlineMath: [['\\(', '\\)']]
+  },
+  chtml: { scale: 1.1 },
+  options: {
+    enableMenu: false,
+    enableAssistiveMml: false
+  },
+  startup: {
+    typeset: false,
+    pageReady: function () {
+      return MathJax.startup.defaultPageReady().then(function () {
+        window.mjReady = true;
+        if (typeof onMathReady === 'function') {
+          onMathReady();
+        }
+      });
+    }
+  }
+};
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 <style>
 /* ========== 色・基本 ========== */
 :root {
@@ -304,8 +331,18 @@ button {
   padding: 6px 12px;
   border-left: 8px solid var(--marker);
   background: var(--card);
-  font-size: 17px;
-  line-height: 1.5;
+  font-size: 21px;
+  line-height: 1.4;
+}
+
+/* 問題文は、文をひとまとまりにして、入りきらないときだけ次の行へ送る(1文が長いときは文節の切れ目で折り返す) */
+.sent {
+  display: inline-block;
+  max-width: 100%;
+}
+
+.bun {
+  display: inline-block;
 }
 
 /* ========== 問題画面: ノート(左右2ページ) ========== */
@@ -560,6 +597,32 @@ button {
   border-radius: 3px;
 }
 
+/* ========== MathJaxで表示する数式 ========== */
+.mj {
+  display: inline-block;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.mj mjx-container {
+  margin: 0 !important;
+}
+
+/* 数式のなかのカーソル */
+.mjxcaret {
+  display: inline-block;
+  background: var(--main);
+  animation: blink 1s steps(1) infinite;
+}
+
+/* 分数の空き枠 */
+.mjxslot {
+  display: inline-block;
+  border: 1.5px dashed var(--ink-soft);
+  border-radius: 3px;
+  background: transparent !important;
+}
+
 /* ========== 整理: 表(縦横に線をひく) ========== */
 .orgtable {
   border-collapse: collapse;
@@ -604,6 +667,10 @@ button {
   justify-content: center;
   gap: 4px;
   font-size: 15px;
+}
+
+.bar-extra {
+  margin-left: 18px;
 }
 
 .bar-brace {
@@ -701,7 +768,7 @@ button {
 .result {
   flex: none;
   min-height: 52px;
-  margin-top: auto;
+  margin-top: 6px;
   padding: 8px 12px;
   border: 2px solid var(--line);
   border-radius: 6px;
@@ -727,6 +794,20 @@ button {
 .result.none {
   border-color: transparent;
   background: transparent;
+}
+
+/* 入力中の部分に入りきらないときは、右ページの下に固定して出す */
+.result.fixed {
+  margin-top: auto;
+  position: sticky;
+  bottom: 0;
+}
+
+/* 「せいかい！」だけのときは、縦の幅を文字の大きさに合わせる */
+.result.compact {
+  min-height: 0;
+  padding: 2px 12px;
+  line-height: 1.3;
 }
 
 .result .score {
@@ -879,6 +960,44 @@ button {
   font-weight: normal;
   color: var(--ink-soft);
 }
+
+.wprompt {
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--main);
+}
+
+/* ========== 確認メッセージ ========== */
+.modal {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(27, 42, 61, 0.45);
+}
+
+.modal-box {
+  padding: 26px 40px 24px;
+  border: 3px solid var(--main);
+  border-radius: 10px;
+  background: #fff;
+  text-align: center;
+}
+
+.modal-box p {
+  margin: 0 0 20px;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.modal-btns {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
 </style>
 </head>
 <body>
@@ -956,7 +1075,7 @@ button {
   <!-- 問題画面 -->
   <section id="scr-problem" class="screen hidden">
     <div class="topbar">
-      <button class="btn small sub" data-nav="select">← 問題を選ぶ</button>
+      <button class="btn small sub" data-act="backSelect">← 問題を選ぶ</button>
       <h2 id="probTitle"></h2>
       <span class="note">途中経過は自動で保存されます</span>
     </div>
@@ -982,6 +1101,17 @@ button {
     </div>
   </section>
 
+  <!-- 確認メッセージ(取り組み途中に「問題を選ぶ」へ戻るとき) -->
+  <div id="confirm" class="modal hidden">
+    <div class="modal-box">
+      <p>「問題を選ぶ」に戻りますか？</p>
+      <div class="modal-btns">
+        <button class="btn" data-act="confirmYes">戻る</button>
+        <button class="btn sub" data-act="confirmNo">戻らない</button>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -1002,13 +1132,13 @@ const STORAGE_KEYS = {
 };
 
 // 途中経過のデータ形式の版(古い形式の途中経過は読み込まない)
-const SESSION_VERSION = 2;
+const SESSION_VERSION = 3;
 
 const METHODS = [
-  { id: 'word', name: '言葉の式', icon: '📝', desc: '言葉で「〇＋〇＝〇」と表す' },
-  { id: 'line', name: '線分図', icon: '📏', desc: '全体と部分を線で表す' },
-  { id: 'table', name: '表', icon: '📊', desc: '縦横のマスに整理する' },
-  { id: 'other', name: 'その他', icon: '💭', desc: '整理せず、直接答えを出す' }
+  { id: 'word', name: '言葉の式', icon: '📝', desc: '「〇＋〇＝〇」<br>などと表す' },
+  { id: 'line', name: '線分図', icon: '📏', desc: '全体と部分を<br>線で表す' },
+  { id: 'table', name: '表', icon: '📊', desc: '縦横のマスに<br>整理する' },
+  { id: 'other', name: 'その他', icon: '💭', desc: '直接答えを<br>考える' }
 ];
 
 const TYPES = [
@@ -1397,7 +1527,112 @@ function tokenHTML(t) {
   return '<span class="tk">' + t + '</span>';
 }
 
-function renderTokens(tokens, caret, showCaret) {
+// MathJaxが使えるか
+function mathReady() {
+  return !!(window.mjReady && window.MathJax && typeof window.MathJax.typeset === 'function');
+}
+
+const TEX_MAP = { '−': '-', '×': '\\times ', '÷': '\\div ' };
+const CARET_TEX = '\\class{mjxcaret}{\\rule{0.08em}{1.1em}}';
+const SLOT_TEX = '\\class{mjxslot}{\\rule{0.6em}{0.8em}}';
+
+// トークン列をTeXにする(カーソルも数式のなかに入れる)
+function tokensToTeX(tokens, caret, showCaret) {
+  let i = 0;
+
+  function seq() {
+    let out = '';
+    let sup = false;
+    while (true) {
+      if (showCaret && i === caret) {
+        out += CARET_TEX;
+        sup = false;
+      }
+      if (i >= tokens.length || tokens[i] === 'F|' || tokens[i] === 'F]') {
+        break;
+      }
+      const t = tokens[i];
+      if (t === 'F[') {
+        i++;
+        const den = seq();
+        if (tokens[i] === 'F|') {
+          i++;
+        }
+        const num = seq();
+        if (tokens[i] === 'F]') {
+          i++;
+        }
+        out += '\\frac{' + (num || SLOT_TEX) + '}{' + (den || SLOT_TEX) + '}';
+        sup = false;
+      } else if (t === '²') {
+        out += sup ? '{}^{2}' : '^{2}';
+        sup = true;
+        i++;
+      } else {
+        out += TEX_MAP[t] || t;
+        sup = false;
+        i++;
+      }
+    }
+    return out;
+  }
+
+  let tex = '';
+  while (true) {
+    tex += seq();
+    if (i >= tokens.length) {
+      break;
+    }
+    i++;
+  }
+  return tex;
+}
+
+// 数式のHTML。MathJaxで組んだあと(typesetMath)に数式として表示される
+// plain が true のとき(④答えの欄)は、MathJaxを使わない簡易表示にする
+function renderTokens(tokens, caret, showCaret, plain) {
+  if (plain || !mathReady()) {
+    return renderTokensPlain(tokens, caret, showCaret);
+  }
+  if (!tokens.length) {
+    return showCaret ? '<span class="caret"></span>' : '';
+  }
+  return '<span class="mj">\\(\\displaystyle ' + tokensToTeX(tokens, caret, showCaret) + '\\)</span>';
+}
+
+function mathTargets() {
+  return [$('pageL'), $('pageR'), $('chips')];
+}
+
+function clearMath() {
+  if (mathReady()) {
+    try {
+      MathJax.typesetClear(mathTargets());
+    } catch (e) {
+      // 何もしない
+    }
+  }
+}
+
+function typesetMath() {
+  if (mathReady()) {
+    try {
+      MathJax.typeset(mathTargets());
+    } catch (e) {
+      // 何もしない
+    }
+  }
+}
+
+// MathJaxの準備ができたら、いまの画面を数式で描きなおす
+function onMathReady() {
+  if (S && !$('scr-problem').classList.contains('hidden')) {
+    renderProblem();
+  }
+}
+
+// MathJaxが使えないときの簡易表示
+function renderTokensPlain(tokens, caret, showCaret) {
   let i = 0;
 
   function seq() {
@@ -1485,8 +1720,11 @@ function touch(f) {
   if (f.status === 'ng') {
     f.status = 'idle';
   }
-  S.msg = '';
-  S.msgType = '';
+  // ③立式は、入力をし直してもリザルトメッセージを残しておく
+  if (S.stage !== 'equation') {
+    S.msg = '';
+    S.msgType = '';
+  }
 }
 
 function insertToken(f, t) {
@@ -1621,7 +1859,7 @@ function makeTsurukame(spec) {
 
       function valueHint(k) {
         const X = spec[k];
-        let t = X.valWord + 'は、' + X.perText + ' × ' + X.cntWord + ' で表すよ。' + X.cntWord +
+        let t = X.valWord + 'は、(' + X.perText + ') × (' + X.cntWord + ') で表すよ。' + X.cntWord +
           'は「' + v[k] + '」だったね。';
         if (!/^[xy0-9]+$/.test(v[k])) {
           t += '計算した形ではなく、「' + coef(X.per, v[k]) + '」のようにかっこをつけて書こう。';
@@ -1668,18 +1906,17 @@ function makeTsurukame(spec) {
       ];
 
       // 言葉の式(立式と同じ式の行は書かない)
+      // 言葉の選択肢の並び順は、1つの問題で1つにそろえる(S.wordPool)
       const pool = [A.cntWord, B.cntWord, spec.totalCntWord, A.valWord, B.valWord, spec.totalValWord];
-      const hintCount = '数の行だよ。' + A.col + 'と' + B.col + 'をあわせると、全部でどうなるかな。言葉で表そう。';
-      const hintValue = spec.valRowName + 'の行だよ。' + A.segVal + 'と' + B.segVal +
-        'をあわせると、全部で' + spec.valHow + 'になるかな。言葉で表そう。';
       const wordFields = {};
       const words = [];
       let cnt = 0;
 
-      function W(word, hint) {
+      // line: 何行目か(0から)  slot: 行のなかの何番目の空欄か(1〜3)
+      function W(line, slot) {
         cnt++;
         const id = 'w' + cnt;
-        wordFields[id] = { kind: 'word', accept: [word], pool: pool, hint: hint };
+        wordFields[id] = { kind: 'word', pool: pool, wline: line, wslot: slot };
         return { id: id };
       }
 
@@ -1687,11 +1924,32 @@ function makeTsurukame(spec) {
         return { text: text };
       }
 
-      // 2つの文字をおくときだけ、「数」の言葉の式も書く
-      if (cid === 'c') {
-        words.push({ kind: 'word', parts: [W(A.cntWord, hintCount), T_('＋'), W(B.cntWord, hintCount), T_('＝'), W(spec.totalCntWord, hintCount)] });
+      function wordLine(line) {
+        return { kind: 'word', parts: [W(line, 1), T_('＋'), W(line, 2), T_('＝'), W(line, 3)] };
       }
-      words.push({ kind: 'word', parts: [W(A.valWord, hintValue), T_('＋'), W(B.valWord, hintValue), T_('＝'), W(spec.totalValWord, hintValue)] });
+
+      // 一方だけを文字でおくときは「脚の本数」の行が1本、
+      // 2つの文字をおくときは「数」の行と「脚の本数」の行の2本(どちらを先に書いてもよい)
+      words.push(wordLine(0));
+      if (cid === 'c') {
+        words.push(wordLine(1));
+      }
+
+      // 言葉の式の判定に使う言葉と、まちがえたときのメッセージ
+      const wordInfo = {
+        fixed: cid === 'c' ? null : 'val',
+        words: {
+          cnt: [A.cntWord, B.cntWord, spec.totalCntWord],
+          val: [A.valWord, B.valWord, spec.totalValWord]
+        },
+        rowMsg: {
+          cnt: '「数」についての式をつくろう。' + A.col + 'と' + B.col + 'をあわせると、全部でどうなるかな。',
+          val: '「' + spec.valRowName + '」についての式をつくろう。' + A.segVal + 'と' + B.segVal +
+            'をあわせると、全部で' + spec.valHow + 'になるかな。'
+        },
+        orderMsg: '間違っていないけど問題文の順番でつくろう。問題文を丁寧に読む練習だよ。',
+        formMsg: '式の形をよくみてみよう。「〇＋〇＝〇」の形だよ。'
+      };
 
       // 立式(言葉の式でできた式をそのまま答える)
       const eqA = p + 'x+' + coef(q, n + '−x') + '=' + T;
@@ -1714,13 +1972,13 @@ function makeTsurukame(spec) {
       function eqHint(method) {
         if (method === 'word') {
           return cid === 'c'
-            ? '2本の式をつくろう。1本目は「数」の言葉の式、2本目は「' + spec.valRowName +
+            ? '2本の式をつくろう。1本は「数」の言葉の式、もう1本は「' + spec.valRowName +
               '」の言葉の式を、文字と数で書きかえるよ。' + A.perFull + '、' + B.perFull + 'だったね。'
             : '「' + spec.valRowName + '」の言葉の式を、文字と数で書きかえよう。' + A.perFull + '、' + B.perFull + '。' +
               A.cntWord + 'は「' + v.A + '」、' + B.cntWord + 'は「' + v.B + '」だったね。';
         }
         return cid === 'c'
-          ? '2本の式をつくろう。1本目は「数」の関係、2本目は「' + spec.valRowName + '」の関係を、整理した文字と数で式にするよ。'
+          ? '2本の式をつくろう。1本は「数」の関係、もう1本は「' + spec.valRowName + '」の関係を、整理した文字と数で式にするよ。'
           : spec.valRowName + 'に注目しよう。整理した「' + coef(p, v.A) + '」と「' + coef(q, v.B) + '」をあわせた' +
             spec.valCountWord + 'が、合計の' + T + spec.valUnit + 'になるんだったね。';
       }
@@ -1743,7 +2001,7 @@ function makeTsurukame(spec) {
           '2つの式から、xかyのどちらかを消せないかな。x+y=' + n + ' を' + p + '倍すると、xの係数がそろうよ。',
           'x+y=' + n + ' を' + p + '倍して ' + p + 'x+' + p + 'y=' + (p * n) + '。' + p + 'x+' + q + 'y=' + T +
             ' から引くと ' + signedTerm(q - p, 'y') + '=' + signedNum(T - p * n) + '。',
-          'y=' + yB + '。x+y=' + n + ' に代入すると、x=' + (n - yB) + '。'
+          'y=' + yB + '。x+y=' + n + ' に代入すると、x+' + yB + '=' + n + '。'
         ]
       }[cid];
 
@@ -1753,6 +2011,7 @@ function makeTsurukame(spec) {
         bars: bars,
         wordFields: wordFields,
         words: words,
+        wordInfo: wordInfo,
         equations: equations,
         eqOptions: eqOptions,
         eqHint: eqHint,
@@ -1767,7 +2026,7 @@ function makeTsurukame(spec) {
 PROBLEMS['tsurukame-1'] = makeTsurukame({
   id: 'tsurukame-1',
   no: 1,
-  text: 'つるとかめがあわせて12匹いる。脚の本数を数えると合計34本であった。つるは何羽、かめは何匹いるか。',
+  text: 'つると|かめが|あわせて|12匹|いる。\n脚の本数を|数えると|合計34本|であった。\nつるは|何羽、|かめは|何匹|いるか。',
   asks: [
     { label: 'つる', unit: '羽', value: 7 },
     { label: 'かめ', unit: '匹', value: 5 }
@@ -1794,7 +2053,7 @@ PROBLEMS['tsurukame-1'] = makeTsurukame({
 PROBLEMS['tsurukame-2'] = makeTsurukame({
   id: 'tsurukame-2',
   no: 2,
-  text: '1粒100円と60円のキャラメルを合計19粒購入し、1420円支払った。それぞれのキャラメルを何粒ずつ購入したか。',
+  text: '1粒100円と|60円の|キャラメルを|合計19粒|購入し、|1420円|支払った。\nそれぞれの|キャラメルを|何粒ずつ|購入したか。',
   asks: [
     { label: '100円', unit: '粒', value: 7 },
     { label: '60円', unit: '粒', value: 12 }
@@ -1821,9 +2080,11 @@ PROBLEMS['tsurukame-2'] = makeTsurukame({
 PROBLEMS['tsurukame-3'] = makeTsurukame({
   id: 'tsurukame-3',
   no: 3,
-  text: 'ゆういちさんは、正解すると10点、間違えると5点もらえる問題を全部で20問解いた。その結果、ゆういちさんの点数は165点だった。ゆういちさんは何問正解したか。',
-  asks: [{ label: '正解', unit: '問', value: 13 }],
-  others: [{ label: '間違い', value: 7 }],
+  text: 'ゆういちさんは、|正解すると|10点、|間違えると|5点|もらえる|問題を|全部で|20問|解いた。\nその結果、|ゆういちさんの|点数は|165点|だった。\nゆういちさんの|正解と|間違いは|それぞれ|何問|したか。',
+  asks: [
+    { label: '正解', unit: '問', value: 13 },
+    { label: '間違い', unit: '問', value: 7 }
+  ],
   A: { short: '正解の数', col: '正解', cntWord: '正解の数', valWord: '正解の得点', segVal: '正解の得点',
        unit: '問', per: 10, perText: '1問10点', perFull: '正解すると1問10点' },
   B: { short: '間違いの数', col: '間違い', cntWord: '間違いの数', valWord: '間違いの得点', segVal: '間違いの得点',
@@ -1840,6 +2101,310 @@ PROBLEMS['tsurukame-3'] = makeTsurukame({
   totalValWord: '得点の合計',
   totalCntHint: '全部の数は、問題文の「全部で20問」の20だよ。',
   totalValHint: '得点の合計は、問題文の「165点」の165だよ。'
+});
+
+/* =====================================================
+   5b. 問題データ: 過不足算
+   ===================================================== */
+function gcd(a, b) {
+  return b === 0 ? a : gcd(b, a % b);
+}
+
+// 過不足算の問題を、数値と言葉(spec)から組み立てる
+//   1つ目の分け方: 1人に per1 ずつ配ると rem あまる
+//   2つ目の分け方: 1人に per2 ずつ配ると short 不足する
+//   people: 人数  total: ものの数
+//   文字のおき方: a=人数をx  b=ものの数をx  c=人数をx、ものの数をy
+function makeKabusoku(spec) {
+  const p1 = spec.per1;
+  const p2 = spec.per2;
+  const r = spec.rem;
+  const s = spec.short;
+  const U = spec.unit;
+  const th = spec.thing;
+  const lcm = p1 * p2 / gcd(p1, p2);
+
+  // 言葉
+  const wThing = th + 'の数';
+  const wPeople = '人数';
+  const w1 = p1 + U + 'ずつ配る数';
+  const w2 = p2 + U + 'ずつ配る数';
+  const wRem = 'あまり';
+  const wShort = '不足';
+  const wOne = '1人に配る数';
+  const wMinus = wThing + '－' + wRem;
+  const wPlus = wThing + '＋' + wShort;
+  const sit1 = p1 + U + 'ずつ分けると' + r + U + 'あまる';
+  const sit2 = p2 + U + 'ずつ分けると' + s + U + '不足する';
+
+  return {
+    id: spec.id,
+    typeId: 'kabusoku',
+    no: spec.no,
+    text: spec.text,
+    asks: spec.asks,
+    others: [],
+    choices: [
+      { id: 'a', label: wPeople + 'をx人とおく' },
+      { id: 'b', label: wThing + 'をx' + U + 'とおく' },
+      { id: 'c', label: wPeople + 'をx人、' + wThing + 'をy' + U + 'とおく' }
+    ],
+    comments: {
+      word: '言葉の式にすると、「あまり」と「不足」で、たすかひくかの向きがちがうことをたしかめながら式をつくれるね。',
+      line: '線分図は、あまりと不足を線の長さで表せるので、過不足算とは相性がいいよ。',
+      table: '表にすると、2通りの分け方を並べて比べやすいね。ただ、「あまり」と「不足」は、たすかひくかの向きがちがうから、わかりにくいかも。',
+      other: 'じっくり考えて答えを出せたね。整理すると、考えがまとまりやすくなるよ。'
+    },
+
+    plan: function (cid) {
+      const mode = { a: 'P', b: 'T', c: 'B' }[cid]; // P: 人数x  T: ものの数x  B: 人数x・ものの数y
+      const tl = mode === 'T' ? 'x' : 'y';          // ものの数を表す文字
+
+      // 文字でおいたものに合わせた、それぞれの欄の式
+      const X = {
+        P: {
+          ppl1: 'x', ppl2: 'x',
+          give1: p1 + 'x', give2: p2 + 'x',
+          tot1: p1 + 'x+' + r, tot2: p2 + 'x−' + s
+        },
+        T: {
+          ppl1: '(x−' + r + ')÷' + p1, ppl2: '(x+' + s + ')÷' + p2,
+          give1: 'x−' + r, give2: 'x+' + s,
+          tot1: 'x', tot2: 'x'
+        },
+        B: {
+          ppl1: 'x', ppl2: 'x',
+          give1: p1 + 'x', give2: p2 + 'x',
+          tot1: 'y', tot2: 'y'
+        }
+      }[mode];
+
+      // まちがえたときに出す、くわしいヒント
+      function pplHint(k) {
+        if (mode === 'T') {
+          return wPeople + 'は、(' + (k === 1 ? w1 : w2) + ') ÷ (1人に配る' + (k === 1 ? p1 : p2) + U + ') で表すよ。' +
+            (k === 1 ? w1 : w2) + 'は「' + X['give' + k] + '」だったね。かっこをつけて書こう。';
+        }
+        return wPeople + 'は、文字でおいた「x」だよ。';
+      }
+
+      function giveHint(k) {
+        const gname = k === 1 ? w1 : w2;
+        if (mode === 'T') {
+          return k === 1
+            ? gname + 'は、(' + wThing + ') − (' + wRem + ') で表すよ。' + wThing + 'は「x」、' + wRem + 'は「' + r + '」だったね。'
+            : gname + 'は、(' + wThing + ') + (' + wShort + ') で表すよ。' + wThing + 'は「x」、' + wShort + 'は「' + s + '」だったね。';
+        }
+        return gname + 'は、(1人に配る' + (k === 1 ? p1 : p2) + U + ') × (' + wPeople + ') で表すよ。' +
+          wPeople + 'は「x」だったね。';
+      }
+
+      function totHint(k) {
+        if (mode === 'P') {
+          return k === 1
+            ? wThing + 'は、(' + w1 + ') + (' + wRem + ') で表すよ。' + w1 + 'は「' + p1 + 'x」、' + wRem + 'は「' + r + '」だったね。'
+            : wThing + 'は、(' + w2 + ') − (' + wShort + ') で表すよ。' + w2 + 'は「' + p2 + 'x」、' + wShort + 'は「' + s + '」だったね。';
+        }
+        return wThing + 'は、文字でおいた「' + tl + '」だよ。';
+      }
+
+      const remHint = wRem + 'は、問題文の「' + r + U + 'あまり」の' + r + 'だよ。';
+      const shortHint = wShort + 'は、問題文の「' + s + U + '不足する」の' + s + 'だよ。';
+
+      // 表・線分図で使う空欄(表は、上の行から順に並べる)
+      const cells = {
+        ppl1: { kind: 'expr', ans: X.ppl1, hint: pplHint(1) },
+        ppl2: { kind: 'expr', ans: X.ppl2, hint: pplHint(2) },
+        give1: { kind: 'expr', ans: X.give1, hint: giveHint(1) },
+        give2: { kind: 'expr', ans: X.give2, hint: giveHint(2) },
+        ex1: { kind: 'expr', ans: String(r), hint: remHint },
+        ex2: { kind: 'expr', ans: String(s), hint: shortHint },
+        tot1: { kind: 'expr', ans: X.tot1, hint: totHint(1) },
+        tot2: { kind: 'expr', ans: X.tot2, hint: totHint(2) }
+      };
+
+      // 表は、横に「2通りの分け方」、縦に「人数・配る数・あまり不足・ものの数」
+      const table = {
+        cols: [p1 + U + 'ずつ分ける', p2 + U + 'ずつ分ける'],
+        rows: [
+          { label: '人数(人)', keys: ['ppl1', 'ppl2'] },
+          { label: '配る数(' + U + ')', keys: ['give1', 'give2'] },
+          { label: 'あまり・不足(' + U + ')', keys: ['ex1', 'ex2'] },
+          { label: th + 'の数(' + U + ')', keys: ['tot1', 'tot2'] }
+        ]
+      };
+
+      // 線分図は、2通りの分け方を左をそろえて1本ずつ。
+      // 上の線全体(配る数＋あまり)は、下の線の「ものの数」の部分と同じ長さ。
+      // 下の線は、そこから「不足」の分だけ長くなる(widthPct・wは線の長さの割合)
+      const bars = [
+        {
+          title: sit1,
+          widthPct: 74,
+          totalLabel: wThing,
+          total: 'tot1',
+          parts: [
+            { label: w1, key: 'give1', w: 58 },
+            { label: wRem, key: 'ex1', w: 42 }
+          ],
+          extra: { label: wPeople, key: 'ppl1' }
+        },
+        {
+          title: sit2,
+          widthPct: 100,
+          totalLabel: w2,
+          total: 'give2',
+          parts: [
+            { label: wThing, key: 'tot2', w: 74 },
+            { label: wShort, key: 'ex2', w: 26 }
+          ],
+          extra: { label: wPeople, key: 'ppl2' }
+        }
+      ];
+
+      // 入力する順番(線分図は、上から順に)
+      const order = { line: ['tot1', 'give1', 'ex1', 'ppl1', 'give2', 'tot2', 'ex2', 'ppl2'] };
+
+      // 言葉の式(立式と同じ式の行は書かない)
+      // 言葉の選択肢の並び順は、1つの問題で1つにそろえる(S.wordPool)
+      const pool = mode === 'T'
+        ? [wPeople, wMinus, wPlus, wOne]
+        : [w1, w2, wRem, wShort, wThing];
+      const wordFields = {};
+      let cnt = 0;
+      const msg1 = 'この行は「' + sit1 + '」ほうの式だよ。問題文の1つ目の分け方を読み直そう。';
+      const msg2 = 'この行は「' + sit2 + '」ほうの式だよ。問題文の2つ目の分け方を読み直そう。';
+      const formAdd = '式の形をよくみてみよう。「〇＋〇＝〇」の形だよ。';
+      const formSub = '式の形をよくみてみよう。「〇－〇＝〇」の形だよ。';
+      const formDiv = '式の形をよくみてみよう。「人数＝〇÷〇」の形だよ。';
+
+      // line: 何行目か(0から)  slot: 行のなかの何番目の空欄か  accept: 正解の言葉  swap: 別の行の言葉
+      function W(line, slot, accept, swap, smsg, fmsg) {
+        cnt++;
+        const id = 'w' + cnt;
+        wordFields[id] = {
+          kind: 'word', pool: pool, wline: line, wslot: slot,
+          accept: accept, swap: swap, smsg: smsg, fmsg: fmsg
+        };
+        return { id: id };
+      }
+
+      function T_(text) {
+        return { text: text };
+      }
+
+      let words;
+      if (mode === 'T') {
+        // ものの数をxとおく: 人数を2通りの式で表す
+        words = [
+          { kind: 'word', parts: [W(0, 1, wPeople, [], msg1, formDiv), T_('＝'), W(0, 2, wMinus, [wPlus], msg1, formDiv),
+            T_('÷'), W(0, 3, wOne, [], msg1, formDiv)] },
+          { kind: 'word', parts: [W(1, 1, wPeople, [], msg2, formDiv), T_('＝'), W(1, 2, wPlus, [wMinus], msg2, formDiv),
+            T_('÷'), W(1, 3, wOne, [], msg2, formDiv)] }
+        ];
+      } else {
+        // 人数をxとおく・両方をおく: ものの数を2通りの式で表す
+        words = [
+          { kind: 'word', parts: [W(0, 1, w1, [w2], msg1, formAdd), T_('＋'), W(0, 2, wRem, [wShort], msg1, formAdd),
+            T_('＝'), W(0, 3, wThing, [], msg1, formAdd)] },
+          { kind: 'word', parts: [W(1, 1, w2, [w1], msg2, formSub), T_('－'), W(1, 2, wShort, [wRem], msg2, formSub),
+            T_('＝'), W(1, 3, wThing, [], msg2, formSub)] }
+        ];
+      }
+
+      // 立式(言葉の式でできた式をそのまま答える)
+      const eqT = '(x−' + r + ')÷' + p1 + '=(x+' + s + ')÷' + p2;
+      const eqP = p1 + 'x+' + r + '=' + p2 + 'x−' + s;
+      const equations = {
+        P: [eqP],
+        T: [eqT],
+        B: ['y=' + p1 + 'x+' + r, 'y=' + p2 + 'x−' + s]
+      }[mode];
+
+      const eqOptions = {
+        P: [eqP, p1 + 'x−' + r + '=' + p2 + 'x+' + s, p1 + 'x+' + r + '=' + p2 + 'x+' + s,
+          p1 + 'x−' + r + '=' + p2 + 'x−' + s, p2 + 'x+' + r + '=' + p1 + 'x−' + s, p1 + 'x+' + r + '=' + p2 + 'x'],
+        T: [eqT, '(x+' + r + ')÷' + p1 + '=(x−' + s + ')÷' + p2, '(x−' + r + ')÷' + p1 + '=(x−' + s + ')÷' + p2,
+          '(x+' + r + ')÷' + p1 + '=(x+' + s + ')÷' + p2, '(x−' + r + ')÷' + p2 + '=(x+' + s + ')÷' + p1,
+          '(x−' + r + ')×' + p1 + '=(x+' + s + ')×' + p2],
+        B: ['y=' + p1 + 'x+' + r, 'y=' + p2 + 'x−' + s, 'y=' + p1 + 'x−' + r, 'y=' + p2 + 'x+' + s,
+          'x=' + p1 + 'y+' + r, 'x=' + p2 + 'y−' + s]
+      }[mode];
+
+      // 立式をまちがえたときのヒント(整理の方法に合わせて出す)
+      function eqHint(method) {
+        if (mode === 'B') {
+          return method === 'word'
+            ? '2本の式をつくろう。1本は「' + sit1 + '」とき、もう1本は「' + sit2 + '」ときの言葉の式を、文字と数で書きかえるよ。' +
+              wPeople + 'は「x」、' + wThing + 'は「y」だったね。'
+            : '2本の式をつくろう。「' + sit1 + '」ときの関係と、「' + sit2 + '」ときの関係を、整理した文字と数で式にするよ。';
+        }
+        if (mode === 'T') {
+          return method === 'word'
+            ? '2つの言葉の式の「' + wPeople + '」が等しいことを使うよ。' + wThing + 'は「x」、' + wRem + 'は' + r + '、' + wShort + 'は' + s +
+              '、1人に配る数は' + p1 + 'と' + p2 + 'だったね。'
+            : wPeople + 'に注目しよう。整理した「' + X.ppl1 + '」と「' + X.ppl2 + '」は、どちらも' + wPeople + 'を表しているから等しいんだったね。';
+        }
+        return method === 'word'
+          ? '2つの言葉の式の「' + wThing + '」が等しいことを使うよ。' + w1 + 'は「' + p1 + 'x」、' + w2 + 'は「' + p2 + 'x」、' +
+            wRem + 'は' + r + '、' + wShort + 'は' + s + 'だったね。'
+          : wThing + 'に注目しよう。整理した「' + X.tot1 + '」と「' + X.tot2 + '」は、どちらも' + wThing + 'を表しているから等しいんだったね。';
+      }
+
+      // ヒント(1段階ずつ出す)
+      const hints = {
+        P: [
+          'xの項を左辺に、数の項を右辺に集めてみよう(移項)。',
+          eqP + ' → ' + p1 + 'x−' + p2 + 'x=−' + s + '−' + r + ' → ' + signedTerm(p1 - p2, 'x') + '=' + signedNum(-s - r),
+          'x=' + spec.people + '。xは' + wPeople + '。' + wThing + 'は ' + p1 + 'x+' + r + ' で求めよう。'
+        ],
+        T: [
+          '分数をなくすために、両辺に' + p1 + 'と' + p2 + 'の最小公倍数' + lcm + 'をかけてみよう。',
+          eqT + ' の両辺に' + lcm + 'をかけると ' + p2 + '(x−' + r + ')=' + p1 + '(x+' + s + ')。かっこをはずして、xの項と数の項をそれぞれ計算してみよう。',
+          p2 + 'x−' + (p2 * r) + '=' + p1 + 'x+' + (p1 * s) + ' より x=' + spec.total + '。xは' + wThing + '。' +
+            wPeople + 'は (x−' + r + ')÷' + p1 + ' で求めよう。'
+        ],
+        B: [
+          '2つの式の左辺はどちらも' + wThing + 'のyだね。右辺どうしを等しいとおいて、xだけの式をつくってみよう。',
+          p1 + 'x+' + r + '=' + p2 + 'x−' + s + ' → ' + p1 + 'x−' + p2 + 'x=−' + s + '−' + r + ' → ' +
+            signedTerm(p1 - p2, 'x') + '=' + signedNum(-s - r) + '。',
+          'x=' + spec.people + '。y=' + p1 + 'x+' + r + ' に代入すると、y=' + p1 + '×' + spec.people + '+' + r + '。'
+        ]
+      }[mode];
+
+      return {
+        cells: cells,
+        table: table,
+        bars: bars,
+        order: order,
+        wordFields: wordFields,
+        words: words,
+        equations: equations,
+        eqOptions: eqOptions,
+        eqHint: eqHint,
+        hints: hints
+      };
+    }
+  };
+}
+
+// ---- 過不足算 問題1: 反物(7反ずつと8反ずつ) ----
+PROBLEMS['kabusoku-1'] = makeKabusoku({
+  id: 'kabusoku-1',
+  no: 1,
+  text: '反物を|7反ずつ|分けると|8反|あまり、|8反ずつ|分けると|7反|不足する。\n何人で|分けましたか。\nまた、|反物は|何反|ありますか。',
+  asks: [
+    { label: '人数', unit: '人', value: 15 },
+    { label: '反物', unit: '反', value: 113 }
+  ],
+  thing: '反物',
+  unit: '反',
+  per1: 7,
+  rem: 8,
+  per2: 8,
+  short: 7,
+  people: 15,
+  total: 113
 });
 
 /* =====================================================
@@ -1911,6 +2476,16 @@ function renderRecord() {
   }).join('');
 }
 
+// 取り組み途中に「← 問題を選ぶ」を押したときは、確認メッセージを出す
+function askBackToSelect() {
+  if (S && S.stage !== 'clear') {
+    $('confirm').classList.remove('hidden');
+  } else {
+    clearTimeout(advanceTimer);
+    showScreen('select');
+  }
+}
+
 function resetResume() {
   if (window.confirm('途中経過をリセットします。よろしいですか？')) {
     removeKey(STORAGE_KEYS.resume);
@@ -1938,6 +2513,9 @@ function newSession(pid) {
     mistakes: 0,
     hints: 0,
     fields: {},
+    wordPool: null,   // 言葉の選択肢の並び順(1問につき1つ)
+    cellPool: null,   // 表・線分図の選択肢の並び順(1問につき1つ)
+    eqPool: null,     // 立式の選択肢の並び順(1問につき1つ)
     orders: { organize: {}, equation: [], solve: [] },
     activeId: null,
     msg: '',
@@ -2018,6 +2596,19 @@ function buildOptions(ans, pool) {
   return shuffle(list);
 }
 
+// 同じ答えの選択肢をまとめる
+function uniqueOptions(list) {
+  const seen = {};
+  return list.filter(function (s) {
+    const k = canonicalKey(s);
+    if (seen[k]) {
+      return false;
+    }
+    seen[k] = true;
+    return true;
+  });
+}
+
 function makeField(def, pool) {
   const f = {
     kind: def.kind,
@@ -2033,11 +2624,16 @@ function makeField(def, pool) {
     hint: def.hint || ''
   };
   if (def.kind === 'word') {
-    f.accept = def.accept;
-    f.pool = shuffle(def.pool); // 言葉の選択肢は、取り組むたびにランダムに並べる
+    f.wline = def.wline;
+    f.wslot = def.wslot;
+    f.accept = def.accept;   // 正解の言葉を直接決める問題で使う
+    f.swap = def.swap;       // 別の行の言葉(まちがえたときに専用メッセージを出す)
+    f.smsg = def.smsg;
+    f.fmsg = def.fmsg;
+    f.pool = def.pool.slice(); // 並び順は1問につき1つ(S.wordPool)
   } else {
     f.ans = def.ans;
-    f.options = def.options || buildOptions(def.ans, pool || []);
+    f.options = def.options ? def.options.slice() : buildOptions(def.ans, pool || []);
   }
   return f;
 }
@@ -2062,24 +2658,24 @@ function ensureOrganize(m) {
   const ids = [];
   if (m === 'word') {
     const keys = Object.keys(plan.wordFields);
-    const exprAns = keys.filter(function (k) {
-      return plan.wordFields[k].kind === 'expr';
-    }).map(function (k) {
-      return plan.wordFields[k].ans;
-    }).concat(plan.extras);
+    if (!S.wordPool) {
+      S.wordPool = shuffle(plan.wordFields[keys[0]].pool);
+    }
     keys.forEach(function (k) {
       const fid = 'word:' + k;
-      S.fields[fid] = makeField(plan.wordFields[k], exprAns);
+      S.fields[fid] = makeField(Object.assign({}, plan.wordFields[k], { pool: S.wordPool }), []);
       ids.push(fid);
     });
   } else {
-    const keys = Object.keys(plan.cells);
-    const pool = keys.map(function (k) {
-      return plan.cells[k].ans;
-    });
+    const keys = (plan.order && plan.order[m]) || Object.keys(plan.cells);
+    if (!S.cellPool) {
+      S.cellPool = shuffle(uniqueOptions(keys.map(function (k) {
+        return plan.cells[k].ans;
+      })));
+    }
     keys.forEach(function (k) {
       const fid = m + ':' + k;
-      S.fields[fid] = makeField(plan.cells[k], pool);
+      S.fields[fid] = makeField(Object.assign({}, plan.cells[k], { options: S.cellPool }), []);
       ids.push(fid);
     });
   }
@@ -2091,9 +2687,12 @@ function ensureEquation() {
     return;
   }
   const plan = getPlan();
+  if (!S.eqPool) {
+    S.eqPool = shuffle(plan.eqOptions);
+  }
   plan.equations.forEach(function (eq, i) {
     const id = 'e' + (i + 1);
-    S.fields[id] = makeField({ kind: 'expr', ans: eq, eq: true, options: shuffle(plan.eqOptions) });
+    S.fields[id] = makeField({ kind: 'expr', ans: eq, eq: true, options: S.eqPool });
     S.orders.equation.push(id);
   });
 }
@@ -2190,9 +2789,97 @@ function commit() {
 /* =====================================================
    9. 答え合わせ
    ===================================================== */
+// ---- 言葉の式の判定 ----
+// 言葉が「数」の言葉か「脚の本数など」の言葉か
+function wordFamilyOf(info, w) {
+  if (info.words.cnt.indexOf(w) >= 0) {
+    return 'cnt';
+  }
+  if (info.words.val.indexOf(w) >= 0) {
+    return 'val';
+  }
+  return null;
+}
+
+// その欄がある行は、どちらの行か。2つの文字をおくときは、先に正解になった欄で決まる
+function expectedWordFamily(f, info) {
+  if (info.fixed) {
+    return info.fixed;
+  }
+  let own = null;
+  let other = null;
+  Object.keys(S.fields).forEach(function (id) {
+    const g = S.fields[id];
+    if (g.kind !== 'word' || g === f || g.status !== 'ok') {
+      return;
+    }
+    const fam = wordFamilyOf(info, g.word);
+    if (g.wline === f.wline) {
+      own = fam;
+    } else {
+      other = fam;
+    }
+  });
+  if (own) {
+    return own;
+  }
+  if (other) {
+    return other === 'cnt' ? 'val' : 'cnt';
+  }
+  return null;
+}
+
+function firstWordSlotField(line) {
+  const ids = Object.keys(S.fields).filter(function (id) {
+    const g = S.fields[id];
+    return g.kind === 'word' && g.wline === line && g.wslot === 1;
+  });
+  return ids.length ? S.fields[ids[0]] : null;
+}
+
+// 選んだ言葉の正誤と、まちがえたときのメッセージ
+function judgeWordChoice(f, word) {
+  // 正解の言葉が決まっている問題(過不足算)
+  if (f.accept !== undefined) {
+    if (word === f.accept) {
+      return { ok: true, msg: '' };
+    }
+    if (f.swap && f.swap.indexOf(word) >= 0) {
+      return { ok: false, msg: f.smsg };
+    }
+    return { ok: false, msg: f.fmsg };
+  }
+  const info = getPlan().wordInfo;
+  const fam = wordFamilyOf(info, word);
+  const want = expectedWordFamily(f, info) || fam;
+  if (!want) {
+    return { ok: false, msg: info.formMsg };
+  }
+  // 行の種類がちがう(「数」の行に脚の本数の言葉を選んだ、など)
+  if (fam !== want) {
+    return { ok: false, msg: info.rowMsg[want] };
+  }
+  const idx = info.words[want].indexOf(word); // 0: 1つ目(つる) 1: 2つ目(かめ) 2: 全部
+  if (idx === f.wslot - 1) {
+    return { ok: true, msg: '' };
+  }
+  // 順番がちがうだけ(問題文の順番でつくる)
+  if (f.wslot === 1 && idx === 1) {
+    return { ok: false, msg: info.orderMsg };
+  }
+  if (f.wslot === 2 && idx === 0) {
+    const first = firstWordSlotField(f.wline);
+    if (!(first && first.status === 'ok')) {
+      return { ok: false, msg: info.orderMsg };
+    }
+  }
+  // 式の形がちがう(「全部」が＝の前に入っている、など)
+  return { ok: false, msg: info.formMsg };
+}
+
 function judgeField(f) {
   if (f.kind === 'word') {
-    return f.accept.indexOf(f.word) >= 0;
+    return judgeWordChoice(f, f.word).ok;
   }
   const infix = tokensToInfix(f.tokens);
   if (f.eq) {
@@ -2287,9 +2974,6 @@ function proportionalEquation(a, b) {
 
 // まちがえた欄ごとの、くわしいヒント
 function wrongDetail(f) {
-  if (f.kind === 'word') {
-    return f.hint;
-  }
   const plan = getPlan();
   const infix = tokensToInfix(f.tokens);
   if (f.eq) {
@@ -2300,10 +2984,12 @@ function wrongDetail(f) {
     }
     return plan.eqHint(S.method);
   }
+  // 表・線分図: 1行目に「まちがっているところがあるよ。」、改行して2行目にくわしいヒント
+  const lead = 'まちがっているところがあるよ。\n';
   if (samePoly(infix, tokensToInfix(strToTokens(f.ans)))) {
-    return '値はあっているよ。計算した形ではなく、計算する前の形(かっこをつけた形)で書こう。';
+    return lead + '値はあっているよ。計算した形ではなく、計算する前の形(かっこをつけた形)で書こう。';
   }
-  return f.hint;
+  return lead + f.hint;
 }
 
 function checkStage() {
@@ -2336,7 +3022,7 @@ function checkStage() {
   });
   if (wrong) {
     S.mistakes++;
-    S.msg = (S.stage === 'equation' ? 'ちがうみたい。' : 'まちがっているところがあるよ。') + detail;
+    S.msg = detail;
     S.msgType = 'ng';
   } else if (!filled) {
     S.msg = '入力してから、答え合わせをしよう。';
@@ -2353,7 +3039,7 @@ function wrongNote(v, i) {
   }).filter(Boolean).concat(p.others || []);
   for (let j = 0; j < others.length; j++) {
     if (Math.abs(v - others[j].value) < 1e-9) {
-      return v + 'は' + others[j].label + 'の数だね。' + asks[i].label + 'の数を答えよう。';
+      return '「解」と「答え」の組み合わせを確認しよう。「解」があっていても「答え」を間違えたらもったいないよ。';
     }
   }
   return 'もう一度、方程式を解きなおしてみよう。ヒントも使えるよ。';
@@ -2405,13 +3091,15 @@ function tapChip(idx) {
     return;
   }
   const val = chipOptions(f)[idx];
+  let wordResult = null;
   if (f.kind === 'word') {
     f.word = val;
+    wordResult = judgeWordChoice(f, val);
   } else {
     f.tokens = strToTokens(val);
     f.caret = f.tokens.length;
   }
-  if (judgeField(f)) {
+  if (wordResult ? wordResult.ok : judgeField(f)) {
     f.status = 'ok';
     S.msg = '';
     S.msgType = '';
@@ -2419,7 +3107,7 @@ function tapChip(idx) {
     f.status = 'ng';
     f.everWrong = true;
     S.mistakes++;
-    S.msg = 'ちがうみたい。' + wrongDetail(f);
+    S.msg = wordResult ? wordResult.msg : wrongDetail(f);
     S.msgType = 'ng';
   }
   afterCheck();
@@ -2436,17 +3124,18 @@ function fieldHTML(id, extraCls) {
   const f = S.fields[id];
   const active = S.activeId === id;
   let inner;
+  // 選択肢から選ぶ欄にも、いま選んでいる欄がわかるようにカーソルを出す
+  const showCaret = active && f.status !== 'ok';
   if (f.kind === 'word') {
-    inner = esc(f.word);
+    inner = esc(f.word) + (showCaret ? '<span class="caret"></span>' : '');
   } else {
-    const showCaret = active && f.status !== 'ok' && !f.selectMode;
-    inner = renderTokens(f.tokens, f.caret, showCaret);
+    inner = renderTokens(f.tokens, f.caret, showCaret, /^a\d+$/.test(id));
   }
   const cls = 'fld ' + f.kind + (extraCls ? ' ' + extraCls : '') + (active ? ' active' : '') +
     (f.status === 'ok' ? ' ok' : f.status === 'ng' ? ' ng' : '');
   let sw = '';
   if (f.kind === 'expr' && f.everWrong && f.status !== 'ok' && !f.selectMode && !f.noSwitch) {
-    sw = '<button class="sw" data-switch="' + id + '">選択式</button>';
+    sw = '<button class="sw" data-switch="' + id + '">選択肢</button>';
   }
   return '<span class="' + cls + '" data-fid="' + id + '">' + inner + '</span>' + sw;
 }
@@ -2479,12 +3168,15 @@ function tableHTML(plan) {
 
 function barsHTML(plan) {
   return plan.bars.map(function (b) {
-    return '<div class="bar">' +
+    return '<div class="bar"' + (b.widthPct ? ' style="width:' + b.widthPct + '%"' : '') + '>' +
       '<div class="bar-title">' + b.title + '</div>' +
-      '<div class="bar-total">全部で' + cellHTML('line:' + b.total) + '</div>' +
+      '<div class="bar-total">' + (b.totalLabel || '全部で') + cellHTML('line:' + b.total) +
+      (b.extra ? '<span class="bar-extra">' + b.extra.label + cellHTML('line:' + b.extra.key) + '</span>' : '') +
+      '</div>' +
       '<div class="bar-brace"></div>' +
       '<div class="bar-line">' + b.parts.map(function (p) {
-        return '<div class="seg">' + p.label + cellHTML('line:' + p.key) + '</div>';
+        return '<div class="seg"' + (p.w ? ' style="flex:none;width:' + p.w + '%"' : '') + '>' +
+          p.label + cellHTML('line:' + p.key) + '</div>';
       }).join('') + '</div></div>';
   }).join('');
 }
@@ -2525,6 +3217,14 @@ function tabsHTML() {
   }).join('') + '</div>';
 }
 
+// 「文字におく」の文: 1行に入りきらないときは「、」の切れ目で折り返す
+function choiceLabelHTML(label) {
+  const parts = label.split('、');
+  return parts.map(function (part, i) {
+    return '<span class="bun">' + esc(part + (i < parts.length - 1 ? '、' : '')) + '</span>';
+  }).join('');
+}
+
 // 左ページ: ①文字におく → ②整理
 function leftHTML(p) {
   const choice = p.choices.filter(function (c) {
@@ -2536,11 +3236,11 @@ function leftHTML(p) {
   if (!choice) {
     h += '<div class="step now"><h3>① 何を文字におく？</h3><div class="pick-col">' +
       p.choices.map(function (c) {
-        return '<button class="pick" data-choice="' + c.id + '">' + c.label + '</button>';
+        return '<button class="pick" data-choice="' + c.id + '">' + choiceLabelHTML(c.label) + '</button>';
       }).join('') + '</div></div>';
     return h;
   }
-  h += '<div class="step"><h3>① 文字におく</h3><div class="summary">' + choice.label + '</div></div>';
+  h += '<div class="step"><h3>① 文字におく</h3><div class="summary">' + choiceLabelHTML(choice.label) + '</div></div>';
 
   // ②(整理が終わったら、選んだ方法を見出しの横に出し、ほかの方法は消す)
   const finished = !!S.method && (S.stage === 'clear' || organizeDone());
@@ -2564,10 +3264,10 @@ function leftHTML(p) {
     } else if (S.method === 'line') {
       h += barsHTML(plan);
     } else {
-      h += wordsHTML(plan);
+      h += (finished ? '' : '<div class="wprompt">下の選択肢から言葉を選ぼう</div>') + wordsHTML(plan);
     }
   }
-  return h + '</div>';
+  return h + resultSlot('organize') + '</div>';
 }
 
 // 「{」は式2本の高さにぴったり合わせて伸び縮みさせる
@@ -2591,6 +3291,7 @@ function rightHTML(p) {
     }).join('');
     // 2本のときは連立方程式なので「{」でまとめる
     h += multi ? '<div class="eqblock">' + BRACE_SVG + '<div class="eqcol">' + rows + '</div></div>' : rows;
+    h += resultSlot('equation');
     h += '</div>';
   }
   if (S.choice && idx >= 4) {
@@ -2600,10 +3301,11 @@ function rightHTML(p) {
     h += '<div class="answerrow">' + p.asks.map(function (ask, i) {
       const id = 'a' + (i + 1);
       const val = S.stage === 'clear'
-        ? '<span class="plainv">' + renderTokens(S.fields[id].tokens, -1, false) + '</span>'
+        ? '<span class="plainv">' + renderTokens(S.fields[id].tokens, -1, false, true) + '</span>'
         : fieldHTML(id);
       return ask.label + 'は' + val + ask.unit;
     }).join('<span class="gap"></span>') + '</div>';
+    h += resultSlot('solve');
     // クリア後は、ヒントの文は閉じて場所をあける(見た数はリザルトに出す)
     h += (S.stage === 'clear' ? [] : plan.hints.slice(0, S.hints)).map(function (t, i) {
       return '<div class="hintbox">ヒント' + (i + 1) + '：' + esc(t) + '</div>';
@@ -2613,10 +3315,41 @@ function rightHTML(p) {
   return h || '<div class="placeholder">ここに、立式と答えを書いていくよ。</div>';
 }
 
-// 右ページいちばん下のリザルトメッセージ(クリア時は結果とボタンも)
-function resultHTML() {
+// 問題文: 文ごとに行をかえ、文のなかも文節(「|」で区切った部分)の切れ目でだけ折り返す
+function probTextHTML(text) {
+  return text.split('\n').map(function (sentence) {
+    return '<div class="sent">' + sentence.split('|').map(function (b) {
+      return '<span class="bun">' + esc(b) + '</span>';
+    }).join('') + '</div>';
+  }).join('');
+}
+
+function msgHTML(s) {
+  return esc(s).replace(/\n/g, '<br>');
+}
+
+// リザルトメッセージは、いま入力している部分の真下に出す
+function resultPlace() {
+  if (S.stage === 'organize') {
+    return S.msg ? 'organize' : '';
+  }
+  if (S.stage === 'equation') {
+    return S.msg ? 'equation' : '';
+  }
+  if (S.stage === 'solve' || S.stage === 'clear') {
+    return S.msg ? 'solve' : '';
+  }
+  return '';
+}
+
+function resultSlot(place) {
+  return resultPlace() === place ? resultHTML('inline') : '';
+}
+
+// mode: 'inline'(入力中の部分の真下) / 'fixed'(右ページの下に固定)
+function resultHTML(mode) {
   if (S.stage === 'clear') {
-    return '<div class="result ok"><div>' + esc(S.msg) + '</div>' +
+    return '<div class="result ok ' + mode + '"><div>' + msgHTML(S.msg) + '</div>' +
       '<div class="score">まちがえた回数：' + S.mistakes + '回　ヒントを見た数：' + S.hints + '</div>' +
       '<div class="resbtns">' +
       '<button class="btn small" data-act="retry">もう一度</button>' +
@@ -2624,8 +3357,28 @@ function resultHTML() {
       '<button class="btn small sub" data-nav="start">タイトルへ</button>' +
       '</div></div>';
   }
-  const cls = S.msgType ? ' ' + S.msgType : (S.msg ? '' : ' none');
-  return '<div class="result' + cls + '">' + esc(S.msg || '') + '</div>';
+  if (!S.msg) {
+    return '';
+  }
+  const cls = (S.msgType ? ' ' + S.msgType : '') + (S.msg === 'せいかい！' ? ' compact' : '');
+  return '<div class="result ' + mode + cls + '">' + msgHTML(S.msg) + '</div>';
+}
+
+// 入力中の部分の真下に出したメッセージが見切れるときは、右ページの下の固定位置に出す
+function settleResult() {
+  const box = document.querySelector('#scr-problem .result.inline');
+  if (!box) {
+    return;
+  }
+  const page = box.closest('.page');
+  const pr = page.getBoundingClientRect();
+  const br = box.getBoundingClientRect();
+  const k = pr.height / page.offsetHeight || 1;
+  if (br.top >= pr.top && br.bottom <= pr.bottom - 3 * k) {
+    return;
+  }
+  box.parentNode.removeChild(box);
+  $('pageR').insertAdjacentHTML('beforeend', resultHTML('fixed'));
 }
 
 function renderChips() {
@@ -2667,15 +3420,18 @@ function renderProblem() {
   const p = PROBLEMS[S.pid];
   const left = $('pageL').scrollTop;
   const right = $('pageR').scrollTop;
+  clearMath();
   $('probTitle').textContent = typeOf(p.typeId).name + ' 問題' + p.no;
-  $('probText').textContent = p.text;
+  $('probText').innerHTML = probTextHTML(p.text);
   $('pageL').innerHTML = leftHTML(p);
-  $('pageR').innerHTML = '<div class="steps">' + rightHTML(p) + '</div>' + resultHTML();
+  $('pageR').innerHTML = '<div class="steps">' + rightHTML(p) + '</div>';
   $('pageL').scrollTop = left;
   $('pageR').scrollTop = right;
   renderActions();
   renderChips();
   renderPad();
+  typesetMath();
+  settleResult();
 }
 
 /* =====================================================
@@ -2715,6 +3471,9 @@ const KEY_SYMBOLS = { '+': '+', '-': '−', '*': '×', '/': '÷', '(': '(', ')':
 
 document.addEventListener('keydown', function (e) {
   if (!S || $('scr-problem').classList.contains('hidden') || S.stage === 'clear') {
+    return;
+  }
+  if (!$('confirm').classList.contains('hidden')) {
     return;
   }
   if (e.ctrlKey || e.metaKey || e.altKey) {
@@ -2790,6 +3549,14 @@ document.addEventListener('click', function (e) {
         S.hints++;
         commit();
       }
+    } else if (d.act === 'backSelect') {
+      askBackToSelect();
+    } else if (d.act === 'confirmYes') {
+      $('confirm').classList.add('hidden');
+      clearTimeout(advanceTimer);
+      showScreen('select');
+    } else if (d.act === 'confirmNo') {
+      $('confirm').classList.add('hidden');
     } else if (d.act === 'retry') {
       openProblem(S.pid);
     } else if (d.act === 'resetResume') {
