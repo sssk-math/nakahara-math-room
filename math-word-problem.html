@@ -673,6 +673,46 @@ button {
   margin-left: 18px;
 }
 
+.bar-extra-l {
+  margin-right: 18px;
+}
+
+/* 表の1行目を選ぶ */
+.tpick-q {
+  margin: 6px 0;
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.tpick-btns {
+  display: flex;
+  gap: 10px;
+}
+
+.tpick-btns .pick {
+  flex: 1;
+  width: auto;
+  text-align: center;
+}
+
+/* 言葉の式の分数 */
+.wfrac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 4px;
+  vertical-align: middle;
+}
+
+.wfrac .wfn {
+  padding-bottom: 3px;
+  border-bottom: 2px solid var(--ink);
+}
+
+.wfrac .wfd {
+  padding-top: 3px;
+}
+
 .bar-brace {
   height: 8px;
   border: 2px solid var(--main);
@@ -1090,11 +1130,10 @@ button {
       <button class="padbtn" data-pad="+">＋</button>
       <button class="padbtn" data-pad="−">−</button>
       <button class="padbtn" data-pad="×">×</button>
-      <button class="padbtn" data-pad="÷">÷</button>
+      <button class="padbtn" data-pad="frac" title="分数"><span class="frac"><span class="fn"><span class="tk v">x</span></span><span class="fd"><span class="tk v">y</span></span></span></button>
       <button class="padbtn" data-pad="(">（</button>
       <button class="padbtn" data-pad=")">）</button>
       <button class="padbtn" data-pad="=">＝</button>
-      <button class="padbtn" data-pad="frac" title="分数"><span class="frac"><span class="fn"><span class="tk v">x</span></span><span class="fd"><span class="tk v">y</span></span></span></button>
       <button class="padbtn" data-pad="²">²</button>
     </div>
     <div id="actions" class="actions"></div>
@@ -1236,8 +1275,66 @@ function validResume(r) {
    ===================================================== */
 const INFIX_MAP = { '−': '-', '×': '*', '÷': '/', '²': '^2' };
 
+// 答えの式の文字列をトークンにする(「÷」は分数の形に直す)
 function strToTokens(s) {
-  return s.split('');
+  const t = s.split('');
+  const isAtom = function (c) {
+    return /[0-9a-z.]/.test(c);
+  };
+  let i = t.indexOf('÷');
+  while (i >= 0) {
+    // 分子: すぐ前のかっこ、または数・文字のまとまり
+    let ns = i - 1;
+    let num;
+    if (t[i - 1] === ')') {
+      let depth = 0;
+      for (let j = i - 1; j >= 0; j--) {
+        if (t[j] === ')') {
+          depth++;
+        } else if (t[j] === '(') {
+          depth--;
+          if (depth === 0) {
+            ns = j;
+            break;
+          }
+        }
+      }
+      num = t.slice(ns + 1, i - 1);
+    } else {
+      while (ns > 0 && isAtom(t[ns - 1])) {
+        ns--;
+      }
+      num = t.slice(ns, i);
+    }
+    // 分母: すぐ後ろのかっこ、または数・文字のまとまり
+    let de = i + 1;
+    let den;
+    if (t[de] === '(') {
+      let depth = 0;
+      let close = de;
+      for (let j = de; j < t.length; j++) {
+        if (t[j] === '(') {
+          depth++;
+        } else if (t[j] === ')') {
+          depth--;
+          if (depth === 0) {
+            close = j;
+            break;
+          }
+        }
+      }
+      den = t.slice(de + 1, close);
+      de = close + 1;
+    } else {
+      while (de < t.length && isAtom(t[de])) {
+        de++;
+      }
+      den = t.slice(i + 1, de);
+    }
+    t.splice.apply(t, [ns, de - ns, 'F['].concat(den, ['F|'], num, ['F]']));
+    i = t.indexOf('÷');
+  }
+  return t;
 }
 
 function tokensToInfix(tokens) {
@@ -1598,6 +1695,22 @@ function renderTokens(tokens, caret, showCaret, plain) {
     return showCaret ? '<span class="caret"></span>' : '';
   }
   return '<span class="mj">\\(\\displaystyle ' + tokensToTeX(tokens, caret, showCaret) + '\\)</span>';
+}
+
+// 表・線分図の欄は、分数に合わせて枠を大きくせず、分数のほうを小さくする
+const FIT_HEIGHT = 28;
+
+function fitMath() {
+  if (!mathReady()) {
+    return;
+  }
+  document.querySelectorAll('.orgtable .mj, .seg .mj, .bar-total .mj').forEach(function (el) {
+    el.style.zoom = '';
+    const h = el.offsetHeight;
+    if (h > FIT_HEIGHT) {
+      el.style.zoom = FIT_HEIGHT / h;
+    }
+  });
 }
 
 function mathTargets() {
@@ -2136,6 +2249,92 @@ function makeKabusoku(spec) {
   const wPlus = wThing + '＋' + wShort;
   const sit1 = p1 + U + 'ずつ分けると' + r + U + 'あまる';
   const sit2 = p2 + U + 'ずつ分けると' + s + U + '不足する';
+  const sg1 = '+' + r; // 過不足(あまりは「+」)
+  const sg2 = '−' + s; // 過不足(不足は「−」)
+
+  // 文章中の式では、分数を「/」で書く
+  function txt(str) {
+    return str.replace(/÷/g, '/');
+  }
+
+  // 表の中身。kind='P': 人数が文字(x)  kind='T': ものの数が文字(L)
+  function tableParts(kind, L) {
+    const E = kind === 'P'
+      ? {
+        ppl1: 'x', ppl2: 'x',
+        give1: p1 + 'x', give2: p2 + 'x',
+        tot1: p1 + 'x+' + r, tot2: p2 + 'x−' + s
+      }
+      : {
+        ppl1: '(' + L + '−' + r + ')÷' + p1, ppl2: '(' + L + '+' + s + ')÷' + p2,
+        give1: L + '−' + r, give2: L + '+' + s,
+        tot1: L, tot2: L
+      };
+    const gname = function (k) {
+      return k === 1 ? w1 : w2;
+    };
+    const per = function (k) {
+      return k === 1 ? p1 : p2;
+    };
+    const sign = function (k) {
+      return k === 1 ? sg1 : sg2;
+    };
+    const exHint = function (k) {
+      return '過不足は、あまりなら「+」、不足なら「−」をつけて表すよ。「' +
+        (k === 1 ? r + U + 'あまり」だから「' + sg1 : s + U + '不足する」だから「' + sg2) + '」だね。';
+    };
+    const hint = {};
+    if (kind === 'P') {
+      hint.ppl = function () {
+        return wPeople + 'は、文字でおいた「x」だよ。';
+      };
+      hint.give = function (k) {
+        return gname(k) + 'は、(1人に配る' + per(k) + U + ') × (' + wPeople + ') で表すよ。' + wPeople + 'は「x」だったね。';
+      };
+      hint.tot = function (k) {
+        return wThing + 'は、(' + gname(k) + ') + (過不足) で表すよ。' + gname(k) + 'は「' + per(k) + 'x」、過不足は「' + sign(k) + '」だったね。';
+      };
+    } else {
+      hint.tot = function () {
+        return wThing + 'は、文字でおいた「' + L + '」だよ。';
+      };
+      hint.give = function (k) {
+        return gname(k) + 'は、(' + wThing + ') − (過不足) で表すよ。' + wThing + 'は「' + L + '」、過不足は「' + sign(k) + '」だったね。' +
+          (k === 2 ? 'ひく数が負の数のときは、符号に気をつけよう。' : '');
+      };
+      hint.ppl = function (k) {
+        return wPeople + 'は、(' + gname(k) + ')を(1人に配る' + per(k) + U + ')でわった数だよ。' + gname(k) + 'は「' + E['give' + k] +
+          '」だったね。分数で書こう。';
+      };
+    }
+    hint.ex = exHint;
+
+    // 行の並び順(上の行から)
+    const names = kind === 'P' ? ['ppl', 'give', 'ex', 'tot'] : ['tot', 'ex', 'give', 'ppl'];
+    const labels = {
+      ppl: '人数(人)', give: '配る数(' + U + ')', ex: '過不足(' + U + ')', tot: th + 'の数(' + U + ')'
+    };
+    const cells = {};
+    names.forEach(function (name) {
+      [1, 2].forEach(function (k) {
+        cells[name + k] = {
+          kind: 'expr',
+          ans: name === 'ex' ? sign(k) : E[name + k],
+          hint: hint[name](k)
+        };
+      });
+    });
+    return {
+      cells: cells,
+      order: Object.keys(cells),
+      table: {
+        cols: [p1 + U + 'ずつ分ける', p2 + U + 'ずつ分ける'],
+        rows: names.map(function (name) {
+          return { label: labels[name], keys: [name + '1', name + '2'] };
+        })
+      }
+    };
+  }
 
   return {
     id: spec.id,
@@ -2159,8 +2358,29 @@ function makeKabusoku(spec) {
     plan: function (cid) {
       const mode = { a: 'P', b: 'T', c: 'B' }[cid]; // P: 人数x  T: ものの数x  B: 人数x・ものの数y
       const tl = mode === 'T' ? 'x' : 'y';          // ものの数を表す文字
+      // 2つの文字をおくときの、表の1行目(人数 or ものの数)。表を選んだあとで決まる
+      const first = (mode === 'B' && S && S.method === 'table') ? S.tableFirst : null;
 
-      // 文字でおいたものに合わせた、それぞれの欄の式
+      // ---- 表 ----
+      let tableDef;
+      if (mode === 'B' && !first) {
+        tableDef = {
+          cells: {},
+          order: [],
+          table: {
+            pick: true,
+            choices: [{ v: 'ppl', label: wPeople }, { v: 'thing', label: wThing }]
+          }
+        };
+      } else if (mode === 'T') {
+        tableDef = tableParts('T', 'x');
+      } else if (mode === 'B' && first === 'thing') {
+        tableDef = tableParts('T', 'y'); // 「ものの数をxとおく」の表の、xをyに入れかえた表
+      } else {
+        tableDef = tableParts('P', 'x');
+      }
+
+      // ---- 線分図 ----
       const X = {
         P: {
           ppl1: 'x', ppl2: 'x',
@@ -2179,11 +2399,10 @@ function makeKabusoku(spec) {
         }
       }[mode];
 
-      // まちがえたときに出す、くわしいヒント
       function pplHint(k) {
         if (mode === 'T') {
-          return wPeople + 'は、(' + (k === 1 ? w1 : w2) + ') ÷ (1人に配る' + (k === 1 ? p1 : p2) + U + ') で表すよ。' +
-            (k === 1 ? w1 : w2) + 'は「' + X['give' + k] + '」だったね。かっこをつけて書こう。';
+          return wPeople + 'は、(' + (k === 1 ? w1 : w2) + ')を(1人に配る' + (k === 1 ? p1 : p2) + U + ')でわった数だよ。' +
+            (k === 1 ? w1 : w2) + 'は「' + X['give' + k] + '」だったね。分数で書こう。';
         }
         return wPeople + 'は、文字でおいた「x」だよ。';
       }
@@ -2211,8 +2430,7 @@ function makeKabusoku(spec) {
       const remHint = wRem + 'は、問題文の「' + r + U + 'あまり」の' + r + 'だよ。';
       const shortHint = wShort + 'は、問題文の「' + s + U + '不足する」の' + s + 'だよ。';
 
-      // 表・線分図で使う空欄(表は、上の行から順に並べる)
-      const cells = {
+      const cellsLine = {
         ppl1: { kind: 'expr', ans: X.ppl1, hint: pplHint(1) },
         ppl2: { kind: 'expr', ans: X.ppl2, hint: pplHint(2) },
         give1: { kind: 'expr', ans: X.give1, hint: giveHint(1) },
@@ -2223,20 +2441,11 @@ function makeKabusoku(spec) {
         tot2: { kind: 'expr', ans: X.tot2, hint: totHint(2) }
       };
 
-      // 表は、横に「2通りの分け方」、縦に「人数・配る数・あまり不足・ものの数」
-      const table = {
-        cols: [p1 + U + 'ずつ分ける', p2 + U + 'ずつ分ける'],
-        rows: [
-          { label: '人数(人)', keys: ['ppl1', 'ppl2'] },
-          { label: '配る数(' + U + ')', keys: ['give1', 'give2'] },
-          { label: 'あまり・不足(' + U + ')', keys: ['ex1', 'ex2'] },
-          { label: th + 'の数(' + U + ')', keys: ['tot1', 'tot2'] }
-        ]
-      };
-
       // 線分図は、2通りの分け方を左をそろえて1本ずつ。
       // 上の線全体(配る数＋あまり)は、下の線の「ものの数」の部分と同じ長さ。
       // 下の線は、そこから「不足」の分だけ長くなる(widthPct・wは線の長さの割合)
+      // 人数をxとおくとき(P・B)は、人数を「ものの数」の左側に置く
+      const peopleLeft = mode !== 'T';
       const bars = [
         {
           title: sit1,
@@ -2247,7 +2456,7 @@ function makeKabusoku(spec) {
             { label: w1, key: 'give1', w: 58 },
             { label: wRem, key: 'ex1', w: 42 }
           ],
-          extra: { label: wPeople, key: 'ppl1' }
+          extra: { label: wPeople, key: 'ppl1', left: peopleLeft }
         },
         {
           title: sit2,
@@ -2258,14 +2467,17 @@ function makeKabusoku(spec) {
             { label: wThing, key: 'tot2', w: 74 },
             { label: wShort, key: 'ex2', w: 26 }
           ],
-          extra: { label: wPeople, key: 'ppl2' }
+          extra: { label: wPeople, key: 'ppl2', left: peopleLeft }
         }
       ];
 
-      // 入力する順番(線分図は、上から順に)
-      const order = { line: ['tot1', 'give1', 'ex1', 'ppl1', 'give2', 'tot2', 'ex2', 'ppl2'] };
+      // 入力する順番(線分図は、7反ずつの線から順に)
+      const lineOrder = mode === 'T'
+        ? ['tot1', 'ex1', 'give1', 'ppl1', 'tot2', 'ex2', 'give2', 'ppl2']
+        : ['ppl1', 'give1', 'ex1', 'tot1', 'ppl2', 'give2', 'ex2', 'tot2'];
+      const order = { line: lineOrder, table: tableDef.order };
 
-      // 言葉の式(立式と同じ式の行は書かない)
+      // ---- 言葉の式(立式と同じ式の行は書かない) ----
       // 言葉の選択肢の並び順は、1つの問題で1つにそろえる(S.wordPool)
       const pool = mode === 'T'
         ? [wPeople, wMinus, wPlus, wOne]
@@ -2276,7 +2488,7 @@ function makeKabusoku(spec) {
       const msg2 = 'この行は「' + sit2 + '」ほうの式だよ。問題文の2つ目の分け方を読み直そう。';
       const formAdd = '式の形をよくみてみよう。「〇＋〇＝〇」の形だよ。';
       const formSub = '式の形をよくみてみよう。「〇－〇＝〇」の形だよ。';
-      const formDiv = '式の形をよくみてみよう。「人数＝〇÷〇」の形だよ。';
+      const formDiv = '式の形をよくみてみよう。「人数＝〇/〇」の分数の形だよ。';
 
       // line: 何行目か(0から)  slot: 行のなかの何番目の空欄か  accept: 正解の言葉  swap: 別の行の言葉
       function W(line, slot, accept, swap, smsg, fmsg) {
@@ -2295,12 +2507,14 @@ function makeKabusoku(spec) {
 
       let words;
       if (mode === 'T') {
-        // ものの数をxとおく: 人数を2通りの式で表す
+        // ものの数をxとおく: 人数を2通りの式で表す(割り算は分数で書く)
         words = [
-          { kind: 'word', parts: [W(0, 1, wPeople, [], msg1, formDiv), T_('＝'), W(0, 2, wMinus, [wPlus], msg1, formDiv),
-            T_('÷'), W(0, 3, wOne, [], msg1, formDiv)] },
-          { kind: 'word', parts: [W(1, 1, wPeople, [], msg2, formDiv), T_('＝'), W(1, 2, wPlus, [wMinus], msg2, formDiv),
-            T_('÷'), W(1, 3, wOne, [], msg2, formDiv)] }
+          { kind: 'word', parts: [W(0, 1, wPeople, [], msg1, formDiv), T_('＝'), {
+            frac: { num: W(0, 2, wMinus, [wPlus], msg1, formDiv), den: W(0, 3, wOne, [], msg1, formDiv) }
+          }] },
+          { kind: 'word', parts: [W(1, 1, wPeople, [], msg2, formDiv), T_('＝'), {
+            frac: { num: W(1, 2, wPlus, [wMinus], msg2, formDiv), den: W(1, 3, wOne, [], msg2, formDiv) }
+          }] }
         ];
       } else {
         // 人数をxとおく・両方をおく: ものの数を2通りの式で表す
@@ -2312,13 +2526,15 @@ function makeKabusoku(spec) {
         ];
       }
 
-      // 立式(言葉の式でできた式をそのまま答える)
+      // ---- 立式(言葉の式でできた式をそのまま答える) ----
       const eqT = '(x−' + r + ')÷' + p1 + '=(x+' + s + ')÷' + p2;
       const eqP = p1 + 'x+' + r + '=' + p2 + 'x−' + s;
+      const eqBp = ['y=' + p1 + 'x+' + r, 'y=' + p2 + 'x−' + s];                     // 表の1行目が「人数」
+      const eqBt = ['x=(y−' + r + ')÷' + p1, 'x=(y+' + s + ')÷' + p2];               // 表の1行目が「ものの数」
       const equations = {
         P: [eqP],
         T: [eqT],
-        B: ['y=' + p1 + 'x+' + r, 'y=' + p2 + 'x−' + s]
+        B: first === 'thing' ? eqBt : eqBp
       }[mode];
 
       const eqOptions = {
@@ -2327,23 +2543,29 @@ function makeKabusoku(spec) {
         T: [eqT, '(x+' + r + ')÷' + p1 + '=(x−' + s + ')÷' + p2, '(x−' + r + ')÷' + p1 + '=(x−' + s + ')÷' + p2,
           '(x+' + r + ')÷' + p1 + '=(x+' + s + ')÷' + p2, '(x−' + r + ')÷' + p2 + '=(x+' + s + ')÷' + p1,
           '(x−' + r + ')×' + p1 + '=(x+' + s + ')×' + p2],
-        B: ['y=' + p1 + 'x+' + r, 'y=' + p2 + 'x−' + s, 'y=' + p1 + 'x−' + r, 'y=' + p2 + 'x+' + s,
-          'x=' + p1 + 'y+' + r, 'x=' + p2 + 'y−' + s]
+        B: first === 'thing'
+          ? [eqBt[0], eqBt[1], 'x=(y+' + r + ')÷' + p1, 'x=(y−' + s + ')÷' + p2,
+            'y=(x−' + r + ')÷' + p1, 'y=(x+' + s + ')÷' + p2]
+          : [eqBp[0], eqBp[1], 'y=' + p1 + 'x−' + r, 'y=' + p2 + 'x+' + s,
+            'x=' + p1 + 'y+' + r, 'x=' + p2 + 'y−' + s]
       }[mode];
 
       // 立式をまちがえたときのヒント(整理の方法に合わせて出す)
       function eqHint(method) {
         if (mode === 'B') {
-          return method === 'word'
-            ? '2本の式をつくろう。1本は「' + sit1 + '」とき、もう1本は「' + sit2 + '」ときの言葉の式を、文字と数で書きかえるよ。' +
-              wPeople + 'は「x」、' + wThing + 'は「y」だったね。'
+          if (method === 'word') {
+            return '2本の式をつくろう。1本は「' + sit1 + '」とき、もう1本は「' + sit2 + '」ときの言葉の式を、文字と数で書きかえるよ。' +
+              wPeople + 'は「x」、' + wThing + 'は「y」だったね。';
+          }
+          return first === 'thing'
+            ? '2本の式をつくろう。表の「' + wPeople + '」の行の2つの式は、どちらも人数のxと等しいね。' + wThing + 'は「y」だったね。'
             : '2本の式をつくろう。「' + sit1 + '」ときの関係と、「' + sit2 + '」ときの関係を、整理した文字と数で式にするよ。';
         }
         if (mode === 'T') {
           return method === 'word'
             ? '2つの言葉の式の「' + wPeople + '」が等しいことを使うよ。' + wThing + 'は「x」、' + wRem + 'は' + r + '、' + wShort + 'は' + s +
               '、1人に配る数は' + p1 + 'と' + p2 + 'だったね。'
-            : wPeople + 'に注目しよう。整理した「' + X.ppl1 + '」と「' + X.ppl2 + '」は、どちらも' + wPeople + 'を表しているから等しいんだったね。';
+            : wPeople + 'に注目しよう。整理した「' + txt(X.ppl1) + '」と「' + txt(X.ppl2) + '」は、どちらも' + wPeople + 'を表しているから等しいんだったね。';
         }
         return method === 'word'
           ? '2つの言葉の式の「' + wThing + '」が等しいことを使うよ。' + w1 + 'は「' + p1 + 'x」、' + w2 + 'は「' + p2 + 'x」、' +
@@ -2351,7 +2573,7 @@ function makeKabusoku(spec) {
           : wThing + 'に注目しよう。整理した「' + X.tot1 + '」と「' + X.tot2 + '」は、どちらも' + wThing + 'を表しているから等しいんだったね。';
       }
 
-      // ヒント(1段階ずつ出す)
+      // ---- ヒント(1段階ずつ出す) ----
       const hints = {
         P: [
           'xの項を左辺に、数の項を右辺に集めてみよう(移項)。',
@@ -2360,23 +2582,32 @@ function makeKabusoku(spec) {
         ],
         T: [
           '分数をなくすために、両辺に' + p1 + 'と' + p2 + 'の最小公倍数' + lcm + 'をかけてみよう。',
-          eqT + ' の両辺に' + lcm + 'をかけると ' + p2 + '(x−' + r + ')=' + p1 + '(x+' + s + ')。かっこをはずして、xの項と数の項をそれぞれ計算してみよう。',
+          txt(eqT) + ' の両辺に' + lcm + 'をかけると ' + p2 + '(x−' + r + ')=' + p1 + '(x+' + s + ')。かっこをはずして、xの項と数の項をそれぞれ計算してみよう。',
           p2 + 'x−' + (p2 * r) + '=' + p1 + 'x+' + (p1 * s) + ' より x=' + spec.total + '。xは' + wThing + '。' +
-            wPeople + 'は (x−' + r + ')÷' + p1 + ' で求めよう。'
+            wPeople + 'は (x−' + r + ')/' + p1 + ' で求めよう。'
         ],
-        B: [
-          '2つの式の左辺はどちらも' + wThing + 'のyだね。右辺どうしを等しいとおいて、xだけの式をつくってみよう。',
-          p1 + 'x+' + r + '=' + p2 + 'x−' + s + ' → ' + p1 + 'x−' + p2 + 'x=−' + s + '−' + r + ' → ' +
-            signedTerm(p1 - p2, 'x') + '=' + signedNum(-s - r) + '。',
-          'x=' + spec.people + '。y=' + p1 + 'x+' + r + ' に代入すると、y=' + p1 + '×' + spec.people + '+' + r + '。'
-        ]
+        B: first === 'thing'
+          ? [
+            '2つの式の左辺はどちらも人数のxだね。右辺どうしを等しいとおいて、yだけの式をつくってみよう。分数は、両辺に' + lcm + 'をかけてなくそう。',
+            '(y−' + r + ')/' + p1 + '=(y+' + s + ')/' + p2 + ' の両辺に' + lcm + 'をかけると ' + p2 + '(y−' + r + ')=' + p1 + '(y+' + s + ')。かっこをはずして、yの項と数の項をそれぞれ計算してみよう。',
+            p2 + 'y−' + (p2 * r) + '=' + p1 + 'y+' + (p1 * s) + ' より y=' + spec.total + '。yは' + wThing + '。' +
+              wPeople + 'は x=(y−' + r + ')/' + p1 + ' で求めよう。'
+          ]
+          : [
+            '2つの式の左辺はどちらも' + wThing + 'のyだね。右辺どうしを等しいとおいて、xだけの式をつくってみよう。',
+            p1 + 'x+' + r + '=' + p2 + 'x−' + s + ' → ' + p1 + 'x−' + p2 + 'x=−' + s + '−' + r + ' → ' +
+              signedTerm(p1 - p2, 'x') + '=' + signedNum(-s - r) + '。',
+            'x=' + spec.people + '。y=' + p1 + 'x+' + r + ' に代入すると、y=' + p1 + '×' + spec.people + '+' + r + '。'
+          ]
       }[mode];
 
       return {
-        cells: cells,
-        table: table,
+        cells: cellsLine,
+        cellsBy: { table: tableDef.cells, line: cellsLine },
+        table: tableDef.table,
         bars: bars,
         order: order,
+        extraOptions: { table: ['−' + r, '+' + s] }, // 表の「過不足」の選択肢にまぜる(符号ちがい)
         wordFields: wordFields,
         words: words,
         equations: equations,
@@ -2392,7 +2623,7 @@ function makeKabusoku(spec) {
 PROBLEMS['kabusoku-1'] = makeKabusoku({
   id: 'kabusoku-1',
   no: 1,
-  text: '反物を|7反ずつ|分けると|8反|あまり、|8反ずつ|分けると|7反|不足する。\n何人で|分けましたか。\nまた、|反物は|何反|ありますか。',
+  text: '反物を|7反ずつ|分けると|8反|あまり、|8反ずつ|分けると|7反|不足する。\n何人で|分けましたか。|また、|反物は|何反|ありますか。',
   asks: [
     { label: '人数', unit: '人', value: 15 },
     { label: '反物', unit: '反', value: 113 }
@@ -2667,15 +2898,19 @@ function ensureOrganize(m) {
       ids.push(fid);
     });
   } else {
-    const keys = (plan.order && plan.order[m]) || Object.keys(plan.cells);
-    if (!S.cellPool) {
-      S.cellPool = shuffle(uniqueOptions(keys.map(function (k) {
-        return plan.cells[k].ans;
-      })));
+    // 表と線分図で欄の中身がちがう問題は、方法ごとに欄(plan.cellsBy)と選択肢の並びを持つ
+    const cs = (plan.cellsBy && plan.cellsBy[m]) || plan.cells;
+    const keys = (plan.order && plan.order[m]) || Object.keys(cs);
+    const pk = plan.cellsBy ? m : 'all';
+    S.cellPools = S.cellPools || {};
+    if (!S.cellPools[pk]) {
+      S.cellPools[pk] = shuffle(uniqueOptions(keys.map(function (k) {
+        return cs[k].ans;
+      }).concat((plan.extraOptions && plan.extraOptions[m]) || [])));
     }
     keys.forEach(function (k) {
       const fid = m + ':' + k;
-      S.fields[fid] = makeField(Object.assign({}, plan.cells[k], { options: S.cellPool }), []);
+      S.fields[fid] = makeField(Object.assign({}, cs[k], { options: S.cellPools[pk] }), []);
       ids.push(fid);
     });
   }
@@ -2706,6 +2941,26 @@ function ensureAnswers() {
     S.fields[id] = makeField({ kind: 'expr', ans: String(ask.value), noSwitch: true }, []);
     S.orders.solve.push(id);
   });
+}
+
+// 表の1行目を選ぶ(表の欄は、選んだあとに作る)
+function chooseTableFirst(v) {
+  if (S.stage !== 'organize' || S.method !== 'table' || S.tableFirst) {
+    return;
+  }
+  S.tableFirst = v;
+  delete S.orders.organize.table;
+  if (S.cellPools) {
+    delete S.cellPools.table;
+  }
+  Object.keys(S.fields).forEach(function (id) {
+    if (id.indexOf('table:') === 0) {
+      delete S.fields[id];
+    }
+  });
+  ensureOrganize('table');
+  setActiveFirst();
+  commit();
 }
 
 // ①文字におく
@@ -3155,6 +3410,12 @@ function cellHTML(id) {
 }
 
 function tableHTML(plan) {
+  if (plan.table.pick) {
+    return '<div class="tpick"><div class="tpick-q">表の1行目に書くのは、どちら？</div><div class="tpick-btns">' +
+      plan.table.choices.map(function (c) {
+        return '<button class="pick" data-tfirst="' + c.v + '">' + c.label + '</button>';
+      }).join('') + '</div></div>';
+  }
   let h = '<table class="orgtable"><tr><th></th>' + plan.table.cols.map(function (c) {
     return '<th>' + c + '</th>';
   }).join('') + '</tr>';
@@ -3170,8 +3431,10 @@ function barsHTML(plan) {
   return plan.bars.map(function (b) {
     return '<div class="bar"' + (b.widthPct ? ' style="width:' + b.widthPct + '%"' : '') + '>' +
       '<div class="bar-title">' + b.title + '</div>' +
-      '<div class="bar-total">' + (b.totalLabel || '全部で') + cellHTML('line:' + b.total) +
-      (b.extra ? '<span class="bar-extra">' + b.extra.label + cellHTML('line:' + b.extra.key) + '</span>' : '') +
+      '<div class="bar-total">' +
+      (b.extra && b.extra.left ? '<span class="bar-extra-l">' + b.extra.label + cellHTML('line:' + b.extra.key) + '</span>' : '') +
+      (b.totalLabel || '全部で') + cellHTML('line:' + b.total) +
+      (b.extra && !b.extra.left ? '<span class="bar-extra">' + b.extra.label + cellHTML('line:' + b.extra.key) + '</span>' : '') +
       '</div>' +
       '<div class="bar-brace"></div>' +
       '<div class="bar-line">' + b.parts.map(function (p) {
@@ -3184,6 +3447,10 @@ function barsHTML(plan) {
 // 言葉の式(整理が終わったあと): 言葉に半角のかっこをつけて、1行ずつ表示
 function plainLineHTML(line) {
   return '<div class="wplain">' + line.parts.map(function (part) {
+    if (part.frac) {
+      return '<span class="wfrac"><span class="wfn">' + esc(S.fields['word:' + part.frac.num.id].word) + '</span>' +
+        '<span class="wfd">' + esc(S.fields['word:' + part.frac.den.id].word) + '</span></span>';
+    }
     if (!part.id) {
       return esc(part.text);
     }
@@ -3197,6 +3464,10 @@ function wordsHTML(plan) {
   }
   return plan.words.map(function (line) {
     return '<div class="wline">' + line.parts.map(function (part) {
+      if (part.frac) {
+        return '<span class="wfrac"><span class="wfn">' + fieldHTML('word:' + part.frac.num.id) + '</span>' +
+          '<span class="wfd">' + fieldHTML('word:' + part.frac.den.id) + '</span></span>';
+      }
       return part.id ? fieldHTML('word:' + part.id) : '<span class="wt">' + part.text + '</span>';
     }).join('') + '</div>';
   }).join('');
@@ -3431,6 +3702,7 @@ function renderProblem() {
   renderChips();
   renderPad();
   typesetMath();
+  fitMath();
   settleResult();
 }
 
@@ -3467,7 +3739,7 @@ function focusNextField(back) {
 }
 
 // キーボードから入れられる演算記号
-const KEY_SYMBOLS = { '+': '+', '-': '−', '*': '×', '/': '÷', '(': '(', ')': ')', '=': '=' };
+const KEY_SYMBOLS = { '+': '+', '-': '−', '*': '×', '(': '(', ')': ')', '=': '=' };
 
 document.addEventListener('keydown', function (e) {
   if (!S || $('scr-problem').classList.contains('hidden') || S.stage === 'clear') {
@@ -3508,6 +3780,8 @@ document.addEventListener('keydown', function (e) {
     insertToken(f, k);
   } else if (/^[xyXY]$/.test(k)) {
     insertToken(f, k.toLowerCase());
+  } else if (k === '/') {
+    insertFraction(f); // 割り算は、すべて分数で入力する
   } else if (KEY_SYMBOLS[k]) {
     insertToken(f, KEY_SYMBOLS[k]);
   } else {
@@ -3525,7 +3799,7 @@ document.addEventListener('mousedown', function (e) {
 
 document.addEventListener('click', function (e) {
   const t = e.target.closest(
-    '[data-nav],[data-open],[data-act],[data-method],[data-tab],[data-choice],[data-fid],[data-switch],[data-chip],[data-pad]'
+    '[data-nav],[data-open],[data-act],[data-method],[data-tab],[data-choice],[data-fid],[data-switch],[data-chip],[data-pad],[data-tfirst]'
   );
   if (!t) {
     return;
@@ -3590,6 +3864,8 @@ document.addEventListener('click', function (e) {
     tapChip(parseInt(d.chip, 10));
   } else if (d.pad) {
     padInput(d.pad);
+  } else if (d.tfirst) {
+    chooseTableFirst(d.tfirst);
   }
 });
 
