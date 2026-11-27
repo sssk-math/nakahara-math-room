@@ -459,10 +459,16 @@ button {
 }
 
 /* 整理方法のタブ(整理が終わるまで切りかえ可能) */
+/* 「② 整理しよう」の見出しの横に、方法のボタンをならべる */
+.step h3.withtabs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .mtabs {
   display: flex;
   gap: 6px;
-  margin-bottom: 8px;
 }
 
 .mtab {
@@ -606,6 +612,24 @@ button {
 
 .mj mjx-container {
   margin: 0 !important;
+}
+
+/* 分数: 分数の文字を75%にして、括線のすきまと左右の余白を詰める */
+.mj mjx-frac {
+  padding: 0 0.06em !important;
+  font-size: 75% !important;
+}
+
+.mj mjx-line {
+  margin-top: 0.02em !important;
+  margin-bottom: 0.02em !important;
+}
+
+/* 分数のなかの「＋」「−」の左右のすきま */
+.mj mjx-frac mjx-mo,
+.mj mjx-frac mjx-mo + mjx-mn,
+.mj mjx-frac mjx-mo + mjx-mi {
+  margin-left: 0.12em !important;
 }
 
 /* 数式のなかのカーソル */
@@ -881,7 +905,7 @@ button {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  max-height: 72px;
+  max-height: 100px;
   padding: 2px;
   overflow-y: auto;
 }
@@ -1697,8 +1721,9 @@ function renderTokens(tokens, caret, showCaret, plain) {
   return '<span class="mj">\\(\\displaystyle ' + tokensToTeX(tokens, caret, showCaret) + '\\)</span>';
 }
 
-// 表・線分図の欄は、分数に合わせて枠を大きくせず、分数のほうを小さくする
+// 表・線分図の分数は、基本の大きさ(高さ28pxに合わせた大きさ)の1.25倍にする
 const FIT_HEIGHT = 28;
+const FRAC_SCALE = 1.25;
 
 function fitMath() {
   if (!mathReady()) {
@@ -1708,7 +1733,7 @@ function fitMath() {
     el.style.zoom = '';
     const h = el.offsetHeight;
     if (h > FIT_HEIGHT) {
-      el.style.zoom = FIT_HEIGHT / h;
+      el.style.zoom = (FIT_HEIGHT / h) * FRAC_SCALE;
     }
   });
 }
@@ -2258,15 +2283,16 @@ function makeKabusoku(spec) {
   }
 
   // 表の中身。kind='P': 人数が文字(x)  kind='T': ものの数が文字(L)
-  function tableParts(kind, L) {
+  // both=true(2つの文字をおくとき)は、人数の欄は「x」、ものの数の欄は「y」
+  function tableParts(kind, L, both) {
     const E = kind === 'P'
       ? {
         ppl1: 'x', ppl2: 'x',
         give1: p1 + 'x', give2: p2 + 'x',
-        tot1: p1 + 'x+' + r, tot2: p2 + 'x−' + s
+        tot1: both ? 'y' : p1 + 'x+' + r, tot2: both ? 'y' : p2 + 'x−' + s
       }
       : {
-        ppl1: '(' + L + '−' + r + ')÷' + p1, ppl2: '(' + L + '+' + s + ')÷' + p2,
+        ppl1: both ? 'x' : '(' + L + '−' + r + ')÷' + p1, ppl2: both ? 'x' : '(' + L + '+' + s + ')÷' + p2,
         give1: L + '−' + r, give2: L + '+' + s,
         tot1: L, tot2: L
       };
@@ -2292,6 +2318,9 @@ function makeKabusoku(spec) {
         return gname(k) + 'は、(1人に配る' + per(k) + U + ') × (' + wPeople + ') で表すよ。' + wPeople + 'は「x」だったね。';
       };
       hint.tot = function (k) {
+        if (both) {
+          return wThing + 'は、文字でおいた「y」だよ。';
+        }
         return wThing + 'は、(' + gname(k) + ') + (過不足) で表すよ。' + gname(k) + 'は「' + per(k) + 'x」、過不足は「' + sign(k) + '」だったね。';
       };
     } else {
@@ -2303,6 +2332,9 @@ function makeKabusoku(spec) {
           (k === 2 ? 'ひく数が負の数のときは、符号に気をつけよう。' : '');
       };
       hint.ppl = function (k) {
+        if (both) {
+          return wPeople + 'は、文字でおいた「x」だよ。';
+        }
         return wPeople + 'は、(' + gname(k) + ')を(1人に配る' + per(k) + U + ')でわった数だよ。' + gname(k) + 'は「' + E['give' + k] +
           '」だったね。分数で書こう。';
       };
@@ -2373,11 +2405,11 @@ function makeKabusoku(spec) {
           }
         };
       } else if (mode === 'T') {
-        tableDef = tableParts('T', 'x');
+        tableDef = tableParts('T', 'x', false);
       } else if (mode === 'B' && first === 'thing') {
-        tableDef = tableParts('T', 'y'); // 「ものの数をxとおく」の表の、xをyに入れかえた表
+        tableDef = tableParts('T', 'y', true); // ものの数の欄は「y」、人数の欄は「x」
       } else {
-        tableDef = tableParts('P', 'x');
+        tableDef = tableParts('P', 'x', mode === 'B'); // 人数の欄は「x」、ものの数の欄は「y」
       }
 
       // ---- 線分図 ----
@@ -2453,8 +2485,8 @@ function makeKabusoku(spec) {
           totalLabel: wThing,
           total: 'tot1',
           parts: [
-            { label: w1, key: 'give1', w: 58 },
-            { label: wRem, key: 'ex1', w: 42 }
+            { label: w1, key: 'give1', w: 66 },
+            { label: wRem, key: 'ex1', w: 34 }
           ],
           extra: { label: wPeople, key: 'ppl1', left: peopleLeft }
         },
@@ -2558,7 +2590,7 @@ function makeKabusoku(spec) {
               wPeople + 'は「x」、' + wThing + 'は「y」だったね。';
           }
           return first === 'thing'
-            ? '2本の式をつくろう。表の「' + wPeople + '」の行の2つの式は、どちらも人数のxと等しいね。' + wThing + 'は「y」だったね。'
+            ? '2本の式をつくろう。表の「配る数」を、人数xを使った式と、' + wThing + 'yを使った式で表して、等しいとおくよ。人数xについて、分数で書こう。'
             : '2本の式をつくろう。「' + sit1 + '」ときの関係と、「' + sit2 + '」ときの関係を、整理した文字と数で式にするよ。';
         }
         if (mode === 'T') {
@@ -3483,8 +3515,8 @@ function methodCardsHTML() {
 function tabsHTML() {
   const unlocked = S.stage === 'organize' || (S.stage === 'solve' && S.method === 'other');
   return '<div class="mtabs">' + METHODS.map(function (m) {
-    return '<button class="mtab' + (m.id === S.method ? ' on' : '') + '" data-tab="' + m.id + '"' +
-      (unlocked ? '' : ' disabled') + '>' + m.icon + ' ' + m.name + '</button>';
+    return '<button class="mtab' + (m.id === S.method ? ' on' : '') + '" data-tab="' + m.id + '" title="' + m.name + '"' +
+      (unlocked ? '' : ' disabled') + '>' + m.icon + (m.id === S.method ? ' ' + m.name : '') + '</button>';
   }).join('') + '</div>';
 }
 
@@ -3518,13 +3550,11 @@ function leftHTML(p) {
   const now = !finished && (S.stage === 'method' || S.stage === 'organize' || (S.stage === 'solve' && S.method === 'other'));
   const title = !S.method ? '② 整理の方法を選ぼう' : S.stage === 'organize' ? '② 整理しよう' : '② 整理';
   const tag = finished ? '<span class="mtag">' + methodOf(S.method).icon + ' ' + methodOf(S.method).name + '</span>' : '';
-  h += '<div class="step' + (now ? ' now' : '') + '"><h3>' + title + tag + '</h3>';
+  const tabs = S.method && !finished ? tabsHTML() : '';
+  h += '<div class="step' + (now ? ' now' : '') + '"><h3' + (tabs ? ' class="withtabs"' : '') + '>' + title + tag + tabs + '</h3>';
   if (!S.method) {
     h += methodCardsHTML();
   } else {
-    if (!finished) {
-      h += tabsHTML();
-    }
     const plan = getPlan();
     if (S.method === 'other') {
       if (!finished) {
